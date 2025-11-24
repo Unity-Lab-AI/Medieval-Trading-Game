@@ -795,12 +795,12 @@
         <!-- Game Controls -->
         <footer id="game-controls">
             <div class="control-group">
-                <button id="menu-btn">Menu</button>
-                <button id="inventory-btn">Inventory</button>
-                <button id="property-employee-btn">Properties</button>
-                <button id="transportation-quick-btn">Transport</button>
-                <button id="save-btn">Save</button>
-                <button id="load-btn">Load</button>
+                <button id="menu-btn">📜 Menu</button>
+                <button id="inventory-btn">🎒 Inventory</button>
+                <button id="property-employee-btn">🏠 Properties</button>
+                <button id="transportation-quick-btn">🚚 Transport</button>
+                <button id="save-btn">💾 Save</button>
+                <button id="load-btn">📂 Load</button>
             </div>
             <div class="time-controls">
                 <button id="pause-btn" class="time-control-btn">⏸️ Pause</button>
@@ -809,6 +809,50 @@
                 <button id="very-fast-speed-btn" class="time-control-btn">⏭️ Very Fast</button>
             </div>
         </footer>
+    </div>
+
+    <div id="controls-help-overlay" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="controls-help-title">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="controls-help-title">Controls & Shortcuts</h2>
+                <button id="close-controls-help" class="close-btn" aria-label="Close controls help">×</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-lead">Use these shortcuts and quick actions to stay efficient. Tooltips on every button remind you what they do.</p>
+                <div class="controls-help-grid">
+                    <div class="controls-section">
+                        <h3>Core Shortcuts</h3>
+                        <ul class="shortcut-list">
+                            <li><strong>Ctrl + S</strong> — Quick Save anywhere</li>
+                            <li><strong>Ctrl + L</strong> — Quick Load (confirms during play)</li>
+                            <li><strong>Shift + /</strong> — Toggle this help overlay</li>
+                            <li><strong>Esc</strong> — Toggle menu / close panels</li>
+                            <li><strong>1-7 in Market</strong> — Jump between tabs</li>
+                        </ul>
+                    </div>
+                    <div class="controls-section">
+                        <h3>Panel Navigation</h3>
+                        <ul class="shortcut-list">
+                            <li><strong>I</strong> — Inventory</li>
+                            <li><strong>M</strong> — Market</li>
+                            <li><strong>T</strong> — Transportation</li>
+                            <li><strong>B</strong> — Bulk trade toggle</li>
+                            <li><strong>Tab</strong> — Move between inputs/buttons</li>
+                        </ul>
+                    </div>
+                    <div class="controls-section">
+                        <h3>Starter Play Guide</h3>
+                        <ol class="tutorial-steps">
+                            <li>Open <strong>🎮 New Game</strong> and pick a difficulty that matches your experience.</li>
+                            <li>Choose perks, then press <strong>Start Adventure</strong> to enter the world.</li>
+                            <li>Use <strong>M</strong> to visit the market and buy low; check <strong>History</strong> for trends.</li>
+                            <li>Travel with <strong>T</strong> when prices stagnate; time controls in the footer adjust pace.</li>
+                            <li>Quick Save before risky trades or travel, and Quick Load if you need to rewind.</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div id="controls-help-overlay" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="controls-help-title">
@@ -850,9 +894,9 @@
         <div class="menu-content">
             <h1>Trading Game</h1>
             <div class="menu-buttons">
-                <button id="new-game-btn">New Game</button>
-                <button id="load-game-btn" disabled>Load Game</button>
-                <button id="settings-btn">Settings</button>
+                <button id="new-game-btn">🎮 New Game</button>
+                <button id="load-game-btn" disabled>📂 Load Game</button>
+                <button id="settings-btn">⚙️ Settings</button>
             </div>
         </div>
     </div>

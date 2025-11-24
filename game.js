@@ -2109,6 +2109,10 @@ const AUTO_SAVE_INTERVAL = 180000; // 3 minutes
 let autoSaveTimerId = null;
 let loadingProgressTimer = null;
 
+const AUTO_SAVE_INTERVAL = 180000; // 3 minutes
+let autoSaveTimerId = null;
+let loadingProgressTimer = null;
+
 // Initialize the game when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     initializeElements();

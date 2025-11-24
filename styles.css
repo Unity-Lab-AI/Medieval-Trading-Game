@@ -1,4 +1,22 @@
 /* CSS Reset and Base Styles */
+:root {
+    --bg-page: #0f1624;
+    --bg-panel: #1d2735;
+    --bg-panel-alt: #243449;
+    --bg-contrast: #0a0f18;
+    --border-soft: #2a3a4f;
+    --border-strong: #3b4c63;
+    --text-primary: #e7f0ff;
+    --text-secondary: #c8d6e8;
+    --accent: #4fc3f7;
+    --accent-strong: #7ee0ff;
+    --success: #81c784;
+    --warning: #ffb74d;
+    --danger: #ef5350;
+    --shadow-elevated: 0 10px 30px rgba(0, 0, 0, 0.4);
+    --radius: 10px;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -7,9 +25,33 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #1a1a1a;
-    color: #e0e0e0;
+    background-color: var(--bg-page);
+    color: var(--text-primary);
     line-height: 1.6;
+}
+
+button {
+    font-family: inherit;
+    background: linear-gradient(135deg, #1f3650, #264364);
+    color: var(--text-primary);
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    padding: 0.6rem 0.9rem;
+    cursor: pointer;
+    transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.2s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+button:hover {
+    background: linear-gradient(135deg, #2a4d77, #2f5c8f);
+    border-color: var(--accent);
+    transform: translateY(-1px);
+}
+
+button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px rgba(79, 195, 247, 0.35);
 }
 
 /* Game Container */
@@ -19,8 +61,10 @@ body {
     min-height: 100vh;
     max-width: 1400px;
     margin: 0 auto;
-    background-color: #2a2a2a;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    background-color: var(--bg-panel-alt);
+    box-shadow: var(--shadow-elevated);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
 }
 
 /* Header */
@@ -29,12 +73,12 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 1rem 2rem;
-    background-color: #1e3a5f;
-    border-bottom: 2px solid #0f2338;
+    background: linear-gradient(135deg, #163357, #1f4677);
+    border-bottom: 2px solid var(--border-strong);
 }
 
 #game-header h1 {
-    color: #f0f0f0;
+    color: var(--text-primary);
     font-size: 1.8rem;
 }
 
@@ -61,15 +105,117 @@ body {
     align-items: center;
     gap: 0.2rem;
     padding: 0.2rem 0.5rem;
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    border: 1px solid var(--border-soft);
     transition: all 0.2s ease;
 }
 
 .attribute-display:hover {
     background-color: rgba(255, 255, 255, 0.15);
     transform: translateY(-1px);
+}
+
+.quick-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.save-indicators {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    align-items: center;
+    margin-top: 0.35rem;
+}
+
+.save-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.6rem;
+    background-color: rgba(79, 195, 247, 0.12);
+    border: 1px solid rgba(79, 195, 247, 0.32);
+    color: var(--text-primary);
+    border-radius: 6px;
+    font-size: 0.85rem;
+}
+
+.save-indicator.subtle {
+    background-color: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.06);
+    color: var(--text-secondary);
+}
+
+.save-indicator.success {
+    background-color: rgba(129, 199, 132, 0.18);
+    border-color: rgba(129, 199, 132, 0.35);
+    color: #e5ffe7;
+}
+
+.save-indicator.error {
+    background-color: rgba(244, 67, 54, 0.16);
+    border-color: rgba(244, 67, 54, 0.35);
+    color: #ffd7d7;
+}
+
+.spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-top-color: #4fc3f7;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.quick-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.75rem;
+    background-color: #214d7a;
+    color: #f0f0f0;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: transform 0.15s ease, background-color 0.15s ease;
+    font-size: 0.9rem;
+}
+
+.quick-action-btn:hover {
+    background-color: #2c5f95;
+    transform: translateY(-1px);
+}
+
+.status-banner {
+    margin-left: 0.5rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 6px;
+    font-weight: bold;
+    background-color: rgba(76, 175, 80, 0.2);
+    border: 1px solid rgba(76, 175, 80, 0.4);
+    color: #a5d6a7;
+    min-width: 120px;
+    text-align: center;
+}
+
+.status-banner.warning {
+    background-color: rgba(255, 193, 7, 0.16);
+    border-color: rgba(255, 193, 7, 0.4);
+    color: #ffecb3;
+}
+
+.status-banner.error {
+    background-color: rgba(244, 67, 54, 0.16);
+    border-color: rgba(244, 67, 54, 0.4);
+    color: #ffcdd2;
 }
 
 .quick-actions {
@@ -229,23 +375,24 @@ body {
 
 /* Panel Styles */
 .panel {
-    background-color: #1e1e1e;
-    border: 1px solid #444;
-    border-radius: 8px;
-    padding: 1rem;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius);
+    padding: 1.1rem;
+    box-shadow: var(--shadow-elevated);
 }
 
 .panel h2 {
-    color: #4fc3f7;
+    color: var(--accent);
     margin-bottom: 1rem;
     font-size: 1.3rem;
-    border-bottom: 1px solid #444;
+    border-bottom: 1px solid var(--border-soft);
     padding-bottom: 0.5rem;
+    letter-spacing: 0.2px;
 }
 
 .panel h3 {
-    color: #81c784;
+    color: var(--success);
     margin-bottom: 0.8rem;
     font-size: 1.1rem;
 }
@@ -833,6 +980,87 @@ button.secondary:hover {
     color: #4fc3f7;
 }
 
+.modal-lead {
+    color: var(--text-secondary);
+    margin-bottom: 0.75rem;
+    line-height: 1.5;
+}
+
+.controls-help-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+}
+
+.controls-section {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+}
+
+.controls-section h3 {
+    margin-bottom: 0.6rem;
+    color: var(--accent);
+    font-size: 1.05rem;
+}
+
+.shortcut-list,
+.tutorial-steps {
+    padding-left: 1.1rem;
+    display: grid;
+    gap: 0.35rem;
+    color: var(--text-secondary);
+}
+
+.tutorial-steps li::marker {
+    color: var(--accent);
+    font-weight: bold;
+}
+
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+    padding: 1rem;
+}
+
+.modal .modal-content {
+    background: #1f2a36;
+    border: 1px solid #2f3c4a;
+    border-radius: 8px;
+    width: min(520px, 100%);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #2f3c4a;
+}
+
+.modal-body {
+    padding: 1rem 1.25rem 1.5rem;
+    color: #d6e4ff;
+}
+
+.modal-body ul {
+    margin: 0.5rem 0 0;
+    padding-left: 1.2rem;
+    display: grid;
+    gap: 0.35rem;
+}
+
+.modal-body li strong {
+    color: #4fc3f7;
+}
+
 .loading-content,
 .menu-content {
     text-align: center;
@@ -845,6 +1073,13 @@ button.secondary:hover {
     color: #4fc3f7;
     margin-bottom: 2rem;
     font-size: 2.5rem;
+}
+
+.loading-message {
+    color: #d0e7ff;
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+    letter-spacing: 0.2px;
 }
 
 .loading-message {
@@ -909,6 +1144,15 @@ button.secondary:hover {
         flex: 1;
         min-width: 280px;
     }
+
+    #game-header {
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .quick-actions {
+        width: 100%;
+    }
 }
 
 @media (max-width: 768px) {
@@ -917,9 +1161,10 @@ button.secondary:hover {
         gap: 1rem;
         text-align: center;
     }
-    
+
     #player-info {
         justify-content: center;
+        width: 100%;
     }
     
     #game-main {
@@ -933,9 +1178,19 @@ button.secondary:hover {
     .panel {
         min-width: auto;
     }
-    
+
     #game-controls {
         padding: 1rem;
+    }
+
+    .player-main-info,
+    .player-attributes {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .quick-actions {
+        justify-content: center;
     }
     
     .control-group {
@@ -2867,9 +3122,9 @@ button.secondary:hover {
 
 /* Financial Overview */
 .financial-overview {
-    background-color: #2a2a2a;
-    border: 1px solid #444;
-    border-radius: 4px;
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius);
     padding: 1rem;
     margin-bottom: 1rem;
 }
@@ -2891,9 +3146,9 @@ button.secondary:hover {
     flex-direction: column;
     align-items: center;
     padding: 0.8rem;
-    background-color: #333;
-    border-radius: 4px;
-    border: 1px solid #555;
+    background-color: var(--bg-panel-alt);
+    border-radius: var(--radius);
+    border: 1px solid var(--border-soft);
 }
 
 .stat-label {
@@ -2910,9 +3165,9 @@ button.secondary:hover {
 
 /* Transaction History */
 .financial-history {
-    background-color: #2a2a2a;
-    border: 1px solid #444;
-    border-radius: 4px;
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius);
     padding: 1rem;
 }
 
@@ -3376,6 +3631,7 @@ button.secondary:hover {
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 0;
 }
 
 .map-controls button:hover {
