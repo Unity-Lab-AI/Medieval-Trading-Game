@@ -2067,6 +2067,7 @@ const elements = {
     newGameBtn: null,
     loadGameBtn: null,
     settingsBtn: null,
+    inGameSettingsBtn: null,
     createCharacterBtn: null,
     visitMarketBtn: null,
     travelBtn: null,
@@ -2084,6 +2085,23 @@ const elements = {
     quickLoadBtn: null,
     controlsHelpBtn: null,
     closeControlsHelpBtn: null,
+    onboardingBtn: null,
+    onboardingModal: null,
+    onboardingPrevBtn: null,
+    onboardingNextBtn: null,
+    onboardingDoneBtn: null,
+    onboardingProgress: null,
+    onboardingProgressFill: null,
+    skipOnboardingBtn: null,
+    settingsModal: null,
+    closeSettingsBtn: null,
+    saveSettingsBtn: null,
+    resetSettingsBtn: null,
+    highContrastToggle: null,
+    colorblindToggle: null,
+    keyboardNavToggle: null,
+    fontSizeRange: null,
+    fontSizeLabel: null,
     statusBanner: null,
     controlsHelpOverlay: null,
     autosaveIndicator: null,
@@ -2109,14 +2127,25 @@ const AUTO_SAVE_INTERVAL = 180000; // 3 minutes
 let autoSaveTimerId = null;
 let loadingProgressTimer = null;
 
-const AUTO_SAVE_INTERVAL = 180000; // 3 minutes
-let autoSaveTimerId = null;
-let loadingProgressTimer = null;
+const SETTINGS_STORAGE_KEY = 'tradingGamePreferences';
+const ONBOARDING_STORAGE_KEY = 'tradingGameOnboardingComplete';
+
+const defaultPreferences = {
+    highContrast: false,
+    colorblind: false,
+    keyboardNav: true,
+    fontScale: 100
+};
+
+let userPreferences = { ...defaultPreferences };
+let onboardingStepIndex = 0;
 
 // Initialize the game when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     initializeElements();
+    loadPreferencesFromStorage();
     setupEventListeners();
+    initializeOnboarding();
     showScreen('main-menu');
     addMessage('Welcome to the Trading Game!');
 });
@@ -2155,6 +2184,7 @@ function initializeElements() {
     elements.newGameBtn = document.getElementById('new-game-btn');
     elements.loadGameBtn = document.getElementById('load-game-btn');
     elements.settingsBtn = document.getElementById('settings-btn');
+    elements.inGameSettingsBtn = document.getElementById('in-game-settings-btn');
     elements.createCharacterBtn = document.getElementById('create-character-btn');
     elements.visitMarketBtn = document.getElementById('visit-market-btn');
     elements.travelBtn = document.getElementById('travel-btn');
@@ -2172,6 +2202,23 @@ function initializeElements() {
     elements.quickLoadBtn = document.getElementById('quick-load-btn');
     elements.controlsHelpBtn = document.getElementById('controls-help-btn');
     elements.closeControlsHelpBtn = document.getElementById('close-controls-help');
+    elements.onboardingBtn = document.getElementById('onboarding-btn');
+    elements.onboardingModal = document.getElementById('onboarding-modal');
+    elements.onboardingPrevBtn = document.getElementById('onboarding-prev-btn');
+    elements.onboardingNextBtn = document.getElementById('onboarding-next-btn');
+    elements.onboardingDoneBtn = document.getElementById('onboarding-done-btn');
+    elements.onboardingProgress = document.querySelector('.onboarding-progress');
+    elements.onboardingProgressFill = document.querySelector('.onboarding-progress-fill');
+    elements.skipOnboardingBtn = document.getElementById('skip-onboarding-btn');
+    elements.settingsModal = document.getElementById('settings-modal');
+    elements.closeSettingsBtn = document.getElementById('close-settings-btn');
+    elements.saveSettingsBtn = document.getElementById('save-settings-btn');
+    elements.resetSettingsBtn = document.getElementById('reset-settings-btn');
+    elements.highContrastToggle = document.getElementById('high-contrast-toggle');
+    elements.colorblindToggle = document.getElementById('colorblind-toggle');
+    elements.keyboardNavToggle = document.getElementById('keyboard-nav-toggle');
+    elements.fontSizeRange = document.getElementById('font-size-range');
+    elements.fontSizeLabel = document.getElementById('font-size-label');
     elements.statusBanner = document.getElementById('status-banner');
     elements.controlsHelpOverlay = document.getElementById('controls-help-overlay');
     elements.autosaveIndicator = document.getElementById('autosave-indicator');
@@ -2222,6 +2269,68 @@ function setupEventListeners() {
     elements.quickLoadBtn.addEventListener('click', () => loadGame());
     elements.controlsHelpBtn.addEventListener('click', toggleControlsHelp);
     elements.closeControlsHelpBtn.addEventListener('click', toggleControlsHelp);
+    if (elements.onboardingBtn) {
+        elements.onboardingBtn.addEventListener('click', () => openOnboarding(true));
+    }
+    if (elements.onboardingPrevBtn) {
+        elements.onboardingPrevBtn.addEventListener('click', () => changeOnboardingStep(-1));
+    }
+    if (elements.onboardingNextBtn) {
+        elements.onboardingNextBtn.addEventListener('click', () => changeOnboardingStep(1));
+    }
+    if (elements.onboardingDoneBtn) {
+        elements.onboardingDoneBtn.addEventListener('click', completeOnboarding);
+    }
+    if (elements.skipOnboardingBtn) {
+        elements.skipOnboardingBtn.addEventListener('click', () => closeOnboarding(true));
+    }
+    if (elements.inGameSettingsBtn) {
+        elements.inGameSettingsBtn.addEventListener('click', showSettings);
+    }
+    if (elements.closeSettingsBtn) {
+        elements.closeSettingsBtn.addEventListener('click', closeSettings);
+    }
+    if (elements.saveSettingsBtn) {
+        elements.saveSettingsBtn.addEventListener('click', () => {
+            savePreferences();
+            closeSettings();
+            showStatusBanner('Settings saved', 'success');
+        });
+    }
+    if (elements.resetSettingsBtn) {
+        elements.resetSettingsBtn.addEventListener('click', () => {
+            userPreferences = { ...defaultPreferences };
+            applyPreferences();
+            syncSettingsUI();
+            savePreferences();
+            showStatusBanner('Preferences reset', 'success');
+        });
+    }
+    if (elements.highContrastToggle) {
+        elements.highContrastToggle.addEventListener('change', (event) => {
+            userPreferences.highContrast = event.target.checked;
+            applyPreferences();
+        });
+    }
+    if (elements.colorblindToggle) {
+        elements.colorblindToggle.addEventListener('change', (event) => {
+            userPreferences.colorblind = event.target.checked;
+            applyPreferences();
+        });
+    }
+    if (elements.keyboardNavToggle) {
+        elements.keyboardNavToggle.addEventListener('change', (event) => {
+            userPreferences.keyboardNav = event.target.checked;
+            applyPreferences();
+        });
+    }
+    if (elements.fontSizeRange) {
+        elements.fontSizeRange.addEventListener('input', (event) => {
+            userPreferences.fontScale = parseInt(event.target.value, 10);
+            applyPreferences();
+            updateFontSizeLabel();
+        });
+    }
 
     if (elements.controlsHelpOverlay) {
         elements.controlsHelpOverlay.addEventListener('click', (event) => {
@@ -2262,6 +2371,146 @@ function setupEventListeners() {
     
     // Keyboard shortcuts
     document.addEventListener('keydown', handleKeyPress);
+}
+
+function loadPreferencesFromStorage() {
+    try {
+        const stored = localStorage.getItem(SETTINGS_STORAGE_KEY);
+        if (stored) {
+            userPreferences = { ...defaultPreferences, ...JSON.parse(stored) };
+        }
+    } catch (error) {
+        console.warn('Unable to load preferences', error);
+        userPreferences = { ...defaultPreferences };
+    }
+
+    applyPreferences();
+    syncSettingsUI();
+}
+
+function savePreferences() {
+    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(userPreferences));
+}
+
+function applyPreferences() {
+    document.body.classList.toggle('high-contrast', userPreferences.highContrast);
+    document.body.classList.toggle('colorblind-friendly', userPreferences.colorblind);
+    document.body.classList.toggle('keyboard-nav-enabled', userPreferences.keyboardNav);
+    document.documentElement.style.setProperty('--font-size', `${userPreferences.fontScale}%`);
+    updateFontSizeLabel();
+}
+
+function syncSettingsUI() {
+    if (elements.highContrastToggle) {
+        elements.highContrastToggle.checked = userPreferences.highContrast;
+    }
+    if (elements.colorblindToggle) {
+        elements.colorblindToggle.checked = userPreferences.colorblind;
+    }
+    if (elements.keyboardNavToggle) {
+        elements.keyboardNavToggle.checked = userPreferences.keyboardNav;
+    }
+    if (elements.fontSizeRange) {
+        elements.fontSizeRange.value = userPreferences.fontScale;
+    }
+    updateFontSizeLabel();
+}
+
+function updateFontSizeLabel() {
+    if (elements.fontSizeLabel) {
+        elements.fontSizeLabel.textContent = `${userPreferences.fontScale}%`;
+    }
+}
+
+function showSettings() {
+    if (!elements.settingsModal) {
+        addMessage('Settings are unavailable.');
+        return;
+    }
+
+    syncSettingsUI();
+    elements.settingsModal.classList.remove('hidden');
+
+    const modalContent = elements.settingsModal.querySelector('.modal-content');
+    if (modalContent) {
+        modalContent.setAttribute('tabindex', '-1');
+        modalContent.focus();
+    }
+}
+
+function closeSettings() {
+    if (elements.settingsModal) {
+        elements.settingsModal.classList.add('hidden');
+    }
+}
+
+function initializeOnboarding() {
+    if (!elements.onboardingModal) return;
+
+    updateOnboardingStep();
+
+    const hasSeenOnboarding = localStorage.getItem(ONBOARDING_STORAGE_KEY) === 'true';
+    if (!hasSeenOnboarding) {
+        openOnboarding();
+    }
+}
+
+function openOnboarding() {
+    if (!elements.onboardingModal) return;
+
+    onboardingStepIndex = 0;
+    updateOnboardingStep();
+    elements.onboardingModal.classList.remove('hidden');
+
+    const modalContent = elements.onboardingModal.querySelector('.modal-content');
+    if (modalContent) {
+        modalContent.setAttribute('tabindex', '-1');
+        modalContent.focus();
+    }
+}
+
+function changeOnboardingStep(delta) {
+    const steps = document.querySelectorAll('.onboarding-step');
+    const nextIndex = onboardingStepIndex + delta;
+    onboardingStepIndex = Math.max(0, Math.min(nextIndex, steps.length - 1));
+    updateOnboardingStep();
+}
+
+function updateOnboardingStep() {
+    const steps = document.querySelectorAll('.onboarding-step');
+    steps.forEach((step, index) => {
+        step.classList.toggle('active', index === onboardingStepIndex);
+        step.setAttribute('aria-current', index === onboardingStepIndex ? 'step' : 'false');
+    });
+
+    if (elements.onboardingProgress && elements.onboardingProgressFill) {
+        const totalSteps = steps.length || 1;
+        const percentage = ((onboardingStepIndex + 1) / totalSteps) * 100;
+        elements.onboardingProgress.setAttribute('aria-valuenow', onboardingStepIndex + 1);
+        elements.onboardingProgressFill.style.width = `${percentage}%`;
+    }
+
+    if (elements.onboardingPrevBtn) {
+        elements.onboardingPrevBtn.disabled = onboardingStepIndex === 0;
+    }
+    if (elements.onboardingNextBtn) {
+        elements.onboardingNextBtn.disabled = onboardingStepIndex >= steps.length - 1;
+    }
+}
+
+function closeOnboarding(markComplete = false) {
+    if (elements.onboardingModal) {
+        elements.onboardingModal.classList.add('hidden');
+    }
+
+    if (markComplete) {
+        localStorage.setItem(ONBOARDING_STORAGE_KEY, 'true');
+    }
+}
+
+function completeOnboarding() {
+    closeOnboarding(true);
+    showStatusBanner('Tutorial ready', 'success');
 }
 
 // Game State Management Functions
@@ -4296,11 +4545,6 @@ function loadGame(options = {}) {
             stopProgress('Loaded');
         }
     }
-}
-
-function showSettings() {
-    // Show high scores instead of settings for now
-    HighScoreSystem.showHighScores();
 }
 
 // Transportation System Implementation Notes:

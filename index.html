@@ -27,6 +27,8 @@
                     <button id="quick-save-btn" class="quick-action-btn" title="Quick Save (Ctrl+S)">💾 Quick Save</button>
                     <button id="quick-load-btn" class="quick-action-btn" title="Quick Load (Ctrl+L)">📂 Quick Load</button>
                     <button id="controls-help-btn" class="quick-action-btn" title="Show control help (Shift + /)">❔ Controls</button>
+                    <button id="onboarding-btn" class="quick-action-btn" title="Replay the guided tour">🎓 Tour</button>
+                    <button id="in-game-settings-btn" class="quick-action-btn" title="Adjust accessibility and preferences">⚙️ Settings</button>
                     <div id="status-banner" class="status-banner hidden" role="status" aria-live="polite">Saved</div>
                 </div>
                 <div class="save-indicators" aria-live="polite">
@@ -851,6 +853,82 @@
                         </ol>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="onboarding-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="onboarding-title">Welcome to Trading Game</h2>
+                <button id="skip-onboarding-btn" class="close-btn" aria-label="Close onboarding">×</button>
+            </div>
+            <div class="modal-body onboarding-body">
+                <p class="modal-lead">Follow these quick steps to get comfortable. You can replay this tour anytime.</p>
+                <div class="onboarding-stepper" role="list" aria-live="polite">
+                    <div class="onboarding-step" data-step="0" role="listitem">
+                        <h3>1. Create your trader</h3>
+                        <p>Choose a name, difficulty, and perks. Watch the preview to see starting gold and attributes update.</p>
+                    </div>
+                    <div class="onboarding-step" data-step="1" role="listitem">
+                        <h3>2. Learn the panels</h3>
+                        <p>Use <strong>M</strong> for Market, <strong>I</strong> for Inventory, and <strong>T</strong> for Transportation. Tabs are keyboard-accessible.</p>
+                    </div>
+                    <div class="onboarding-step" data-step="2" role="listitem">
+                        <h3>3. Trade and travel smart</h3>
+                        <p>Check History and Alerts, set routes, and travel when prices stagnate. Quick save before risky trips.</p>
+                    </div>
+                </div>
+                <div class="onboarding-progress" role="progressbar" aria-valuemin="1" aria-valuemax="3" aria-valuenow="1">
+                    <div class="onboarding-progress-fill"></div>
+                </div>
+            </div>
+            <div class="modal-footer onboarding-actions">
+                <button id="onboarding-prev-btn" class="secondary" aria-label="Previous step">Previous</button>
+                <button id="onboarding-next-btn" aria-label="Next step">Next</button>
+                <button id="onboarding-done-btn" class="primary">Got it</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="settings-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="settings-title">Settings</h2>
+                <button id="close-settings-btn" class="close-btn" aria-label="Close settings">×</button>
+            </div>
+            <div class="modal-body settings-body">
+                <section class="settings-section">
+                    <h3>Accessibility</h3>
+                    <label class="toggle">
+                        <input type="checkbox" id="high-contrast-toggle">
+                        <span>High contrast mode</span>
+                    </label>
+                    <label class="toggle">
+                        <input type="checkbox" id="colorblind-toggle">
+                        <span>Colorblind-friendly palette</span>
+                    </label>
+                    <label class="toggle">
+                        <input type="checkbox" id="keyboard-nav-toggle" checked>
+                        <span>Enhanced keyboard navigation</span>
+                    </label>
+                </section>
+                <section class="settings-section">
+                    <h3>Text & Scale</h3>
+                    <div class="setting-control">
+                        <label for="font-size-range">Font size</label>
+                        <input type="range" id="font-size-range" min="90" max="120" step="5" value="100">
+                        <div class="setting-hint" id="font-size-label">100%</div>
+                    </div>
+                </section>
+                <section class="settings-section">
+                    <h3>Preferences</h3>
+                    <p class="setting-hint">Changes apply instantly and save to your browser.</p>
+                </section>
+            </div>
+            <div class="modal-footer settings-actions">
+                <button id="reset-settings-btn" class="secondary">Reset to Default</button>
+                <button id="save-settings-btn" class="primary">Save & Close</button>
             </div>
         </div>
     </div>

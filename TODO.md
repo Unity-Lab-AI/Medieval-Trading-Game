@@ -17,7 +17,7 @@ Comprehensive feature roadmap for the trading game to reach 100% completion.
 - [x] Icon improvements and additions
 
 ## User Experience Enhancements
-- [ ] Onboarding tutorial for new players
+- [x] Onboarding tutorial for new players
 - [x] Tooltips and help text throughout the interface
 - [x] Confirmation dialogs for important actions
 - [x] Loading indicators and progress bars
@@ -25,17 +25,17 @@ Comprehensive feature roadmap for the trading game to reach 100% completion.
 - [ ] Undo/redo functionality where appropriate
 
 ## Accessibility Features
-- [ ] High contrast mode option
-- [ ] Font size adjustment
-- [ ] Colorblind-friendly options
-- [ ] Keyboard navigation support
+- [x] High contrast mode option
+- [x] Font size adjustment
+- [x] Colorblind-friendly options
+- [x] Keyboard navigation support
 - [ ] Screen reader compatibility improvements
 
 ## Quality of Life Improvements
 - [x] Auto-save indicators
 - [x] Quick save/load buttons
 - [ ] Game statistics and achievements display
-- [ ] Settings menu with various options
+- [x] Settings menu with various options
 - [ ] Minimap or quick navigation
 - [ ] Notification system for important events
 
