@@ -22,7 +22,7 @@ Comprehensive feature roadmap for the trading game to reach 100% completion.
 - [x] Confirmation dialogs for important actions
 - [x] Loading indicators and progress bars
 - [x] Error handling with user-friendly messages
-- [ ] Undo/redo functionality where appropriate
+- [x] Undo/redo functionality where appropriate
 
 ## Accessibility Features
 - [x] High contrast mode option
@@ -42,7 +42,7 @@ Comprehensive feature roadmap for the trading game to reach 100% completion.
 ## Visual Polish
 - [x] Improved hover states and micro-interactions
 - [x] Better visual feedback for user actions
-- [ ] Particle effects for important events
+- [x] Particle effects for important events
 - [ ] Improved game world visuals
 - [ ] Better item and character representations
 
@@ -56,6 +56,7 @@ Comprehensive feature roadmap for the trading game to reach 100% completion.
 
 ## Visual Effects System
 - [ ] Create a particle effects system for visual feedback (gold transactions, item pickups, level progression, combat, etc.)
+- [x] Create a particle effects system for visual feedback (gold transactions, item pickups, level progression, combat, etc.)
 - [ ] Implement screen shake for important events
 - [ ] Add fade transitions between scenes
 - [ ] Create highlighting system for important elements

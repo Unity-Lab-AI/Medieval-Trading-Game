@@ -4891,3 +4891,32 @@ button:focus-visible, .quick-action-btn:focus-visible {
 @keyframes toast-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes toast-out { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(8px); } }
 .toast.hide { animation: toast-out 220ms ease forwards; }
+
+#particle-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 1200;
+}
+
+.particle {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.7);
+    animation: particle-drift 900ms ease-out forwards;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.particle.gold { background: radial-gradient(circle at 30% 30%, #fff8c4 0%, #f6c342 55%, #c79100 100%); }
+.particle.success { background: radial-gradient(circle at 30% 30%, #e8fff1 0%, #66bb6a 55%, #2e7d32 100%); }
+.particle.travel { background: radial-gradient(circle at 30% 30%, #e3f2fd 0%, #90caf9 55%, #1565c0 100%); }
+
+@keyframes particle-drift {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); }
+    20% { opacity: 1; }
+    100% { opacity: 0; transform: translate(calc(-50% + var(--drift-x)), calc(-50% - 60px)) scale(1.1); }
+}

@@ -976,7 +976,11 @@ const TravelSystem = {
         }
         
         const travelInfo = this.calculateTravelInfo(destination);
-        
+
+        if (typeof UndoRedoManager !== 'undefined') {
+            UndoRedoManager.record(`Travel to ${destination.name}`);
+        }
+
         // Start travel
         this.playerPosition.isTraveling = true;
         this.playerPosition.destination = destination;
@@ -1060,8 +1064,10 @@ const TravelSystem = {
             name: destination.name,
             type: destination.type
         };
-        
+
         addMessage(`Arrived at ${destination.name}!`);
+
+        ParticleSystem?.spawnBurst('travel', { origin: document.getElementById('map-container') });
         
         // Trigger location-specific events
         this.triggerLocationEvents(destination);
@@ -1658,6 +1664,17 @@ const TravelSystem = {
         if (state.pointsOfInterest) {
             this.pointsOfInterest = state.pointsOfInterest;
         }
+    },
+
+    // Persist travel state for saving/undo
+    getState() {
+        return deepClone({
+            playerPosition: this.playerPosition,
+            travelHistory: this.travelHistory,
+            favoriteRoutes: this.favoriteRoutes,
+            resourceNodes: this.resourceNodes,
+            pointsOfInterest: this.pointsOfInterest
+        });
     }
 };
 

@@ -26,6 +26,8 @@
                 <div class="quick-actions" aria-label="Quick actions">
                     <button id="quick-save-btn" class="quick-action-btn" title="Quick Save (Ctrl+S)">💾 Quick Save</button>
                     <button id="quick-load-btn" class="quick-action-btn" title="Quick Load (Ctrl+L)">📂 Quick Load</button>
+                    <button id="undo-btn" class="quick-action-btn" title="Undo last action (Ctrl+Z)">↩️ Undo</button>
+                    <button id="redo-btn" class="quick-action-btn" title="Redo last action (Ctrl+Shift+Z)">↪️ Redo</button>
                     <button id="controls-help-btn" class="quick-action-btn" title="Show control help (Shift + /)">❔ Controls</button>
                     <button id="onboarding-btn" class="quick-action-btn" title="Replay the guided tour">🎓 Tour</button>
                     <button id="in-game-settings-btn" class="quick-action-btn" title="Adjust accessibility and preferences">⚙️ Settings</button>
@@ -1019,6 +1021,14 @@
                             <span>Controls Help</span>
                             <input type="text" class="control-binding-input" data-action="controlsHelp" aria-label="Controls help key" readonly>
                         </label>
+                        <label class="control-binding">
+                            <span>Undo</span>
+                            <input type="text" class="control-binding-input" data-action="undoAction" aria-label="Undo key" readonly>
+                        </label>
+                        <label class="control-binding">
+                            <span>Redo</span>
+                            <input type="text" class="control-binding-input" data-action="redoAction" aria-label="Redo key" readonly>
+                        </label>
                     </div>
                     <div class="control-binding-actions">
                         <button id="reset-bindings-btn" class="secondary">Reset Bindings</button>
@@ -1034,6 +1044,8 @@
     </div>
 
     <div id="live-region" class="sr-only" aria-live="polite"></div>
+
+    <div id="particle-layer" aria-hidden="true"></div>
 
     <div id="notification-tray" aria-live="polite" role="status"></div>
 

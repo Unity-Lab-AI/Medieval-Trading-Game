@@ -2161,7 +2161,9 @@ const defaultControlBindings = {
     quickSave: 'Ctrl+S',
     quickLoad: 'Ctrl+L',
     controlsHelp: 'Shift+/',
-    saveGame: 'S'
+    saveGame: 'S',
+    undoAction: 'Ctrl+Z',
+    redoAction: 'Ctrl+Shift+Z'
 };
 
 const defaultPreferences = {
@@ -2174,6 +2176,94 @@ const defaultPreferences = {
 
 let userPreferences = { ...defaultPreferences };
 let onboardingStepIndex = 0;
+
+function deepClone(data) {
+    if (typeof structuredClone === 'function') {
+        return structuredClone(data);
+    }
+    return JSON.parse(JSON.stringify(data));
+}
+
+const ParticleSystem = {
+    layer: null,
+    init() {
+        this.layer = document.getElementById('particle-layer');
+    },
+    spawnBurst(type = 'gold', options = {}) {
+        if (!this.layer) return;
+
+        const { count = 12, origin } = options;
+        const bounds = origin?.getBoundingClientRect();
+        const originX = bounds ? bounds.left + bounds.width / 2 : window.innerWidth / 2;
+        const originY = bounds ? bounds.top + bounds.height / 2 : window.innerHeight / 2;
+
+        for (let i = 0; i < count; i++) {
+            const particle = document.createElement('span');
+            particle.className = `particle ${type}`;
+            particle.style.left = `${originX}px`;
+            particle.style.top = `${originY}px`;
+            particle.style.setProperty('--drift-x', `${(Math.random() - 0.5) * 120}px`);
+            particle.style.animationDelay = `${Math.random() * 120}ms`;
+            this.layer.appendChild(particle);
+
+            particle.addEventListener('animationend', () => {
+                particle.remove();
+            });
+        }
+    }
+};
+
+const UndoRedoManager = {
+    undoStack: [],
+    redoStack: [],
+    maxHistory: 20,
+    record(reason = 'state change') {
+        const snapshot = deepClone(game.saveState());
+        this.undoStack.push(snapshot);
+        if (this.undoStack.length > this.maxHistory) {
+            this.undoStack.shift();
+        }
+        this.redoStack.length = 0;
+    },
+    undo() {
+        if (!this.undoStack.length) {
+            addMessage('Nothing to undo yet.');
+            return;
+        }
+
+        const current = deepClone(game.saveState());
+        this.redoStack.push(current);
+        const previous = this.undoStack.pop();
+        this.applySnapshot(previous, 'Action undone');
+    },
+    redo() {
+        if (!this.redoStack.length) {
+            addMessage('Nothing to redo yet.');
+            return;
+        }
+
+        const current = deepClone(game.saveState());
+        this.undoStack.push(current);
+        const restored = this.redoStack.pop();
+        this.applySnapshot(restored, 'Action redone');
+    },
+    applySnapshot(snapshot, bannerText) {
+        game.loadState(snapshot);
+        updatePlayerInfo();
+        updateLocationInfo();
+        updateMarketDisplay();
+        updateInventoryDisplay();
+        updateNavigationPanel();
+        updateCurrentLoad();
+        StatsSystem.updateFromGame();
+        if (typeof TravelSystem !== 'undefined') {
+            TravelSystem.loadState(snapshot.travelState || {});
+            TravelSystem.render?.();
+            TravelSystem.updateTravelUI?.();
+        }
+        showStatusBanner(bannerText, 'info');
+    }
+};
 
 const StatsSystem = {
     data: {
@@ -2320,6 +2410,7 @@ const NotificationCenter = {
 // Initialize the game when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     initializeElements();
+    ParticleSystem.init();
     loadPreferencesFromStorage();
     setupEventListeners();
     initializeOnboarding();
@@ -2387,6 +2478,8 @@ function initializeElements() {
     elements.saveBtn = document.getElementById('save-btn');
     elements.quickSaveBtn = document.getElementById('quick-save-btn');
     elements.quickLoadBtn = document.getElementById('quick-load-btn');
+    elements.undoBtn = document.getElementById('undo-btn');
+    elements.redoBtn = document.getElementById('redo-btn');
     elements.controlsHelpBtn = document.getElementById('controls-help-btn');
     elements.closeControlsHelpBtn = document.getElementById('close-controls-help');
     elements.onboardingBtn = document.getElementById('onboarding-btn');
@@ -2458,6 +2551,12 @@ function setupEventListeners() {
     elements.saveBtn.addEventListener('click', saveGame);
     elements.quickSaveBtn.addEventListener('click', saveGame);
     elements.quickLoadBtn.addEventListener('click', () => loadGame());
+    if (elements.undoBtn) {
+        elements.undoBtn.addEventListener('click', () => UndoRedoManager.undo());
+    }
+    if (elements.redoBtn) {
+        elements.redoBtn.addEventListener('click', () => UndoRedoManager.redo());
+    }
     elements.controlsHelpBtn.addEventListener('click', toggleControlsHelp);
     elements.closeControlsHelpBtn.addEventListener('click', toggleControlsHelp);
     if (elements.onboardingBtn) {
@@ -2675,7 +2774,9 @@ function renderControlsHelpList() {
         market: getBinding('openMarket'),
         transportation: getBinding('openTransportation'),
         menu: getBinding('toggleMenu'),
-        help: getBinding('controlsHelp')
+        help: getBinding('controlsHelp'),
+        undo: getBinding('undoAction'),
+        redo: getBinding('redoAction')
     };
 
     list.innerHTML = `
@@ -2686,6 +2787,8 @@ function renderControlsHelpList() {
         <li><strong>${bindings.transportation}</strong>: Open Transportation</li>
         <li><strong>${bindings.menu}</strong>: Toggle menu or return to game</li>
         <li><strong>${bindings.help}</strong>: Toggle this help panel</li>
+        <li><strong>${bindings.undo}</strong>: Undo last action</li>
+        <li><strong>${bindings.redo}</strong>: Redo last undone action</li>
         <li><strong>1-7 (in Market)</strong>: Switch between market tabs</li>
     `;
 }
@@ -3261,11 +3364,13 @@ function createCharacter(event) {
     // Update UI
     updatePlayerInfo();
     updatePlayerStats();
-    
+
     // Change to playing state
     changeState(GameState.PLAYING);
     addMessage(`Welcome, ${name} ${characterClass}!`);
     addMessage('You start with some basic supplies for your journey.');
+
+    UndoRedoManager.record('Game start');
 }
 
 function initializeGameWorld() {
@@ -4430,7 +4535,9 @@ function buyItem(itemId, quantity = 1) {
         addMessage(`You don't have enough carrying capacity! Need ${newWeight - transport.carryCapacity} lbs more capacity.`);
         return;
     }
-    
+
+    UndoRedoManager.record(`Buy ${actualQuantity} ${item.name}`);
+
     // Complete purchase
     game.player.gold -= totalPrice;
     marketData.stock = Math.max(0, marketData.stock - actualQuantity);
@@ -4458,6 +4565,8 @@ function buyItem(itemId, quantity = 1) {
     CityReputationSystem.changeReputation(currentLocation.id, 0.1 * actualQuantity);
     
     addMessage(`Bought ${actualQuantity} × ${item.name} for ${totalPrice} gold!`);
+
+    ParticleSystem.spawnBurst('gold', { origin: elements.playerGold });
     
     updatePlayerInfo();
     if (typeof InventorySystem !== 'undefined') {
@@ -4494,7 +4603,9 @@ function sellItem(itemId, quantity = 1) {
     
     const currentLocation = GameWorld.locations[game.currentLocation.id];
     if (!currentLocation) return;
-    
+
+    UndoRedoManager.record(`Sell ${actualQuantity} ${item.name}`);
+
     // Calculate sell price with reputation modifier
     const reputationModifier = CityReputationSystem.getPriceModifier(currentLocation.id);
     const baseSellPrice = Math.round(ItemDatabase.calculatePrice(itemId) * 0.7);
@@ -4536,6 +4647,8 @@ function sellItem(itemId, quantity = 1) {
     CityReputationSystem.changeReputation(currentLocation.id, 0.1 * actualQuantity);
     
     addMessage(`Sold ${actualQuantity} × ${item.name} for ${totalSellPrice} gold!`);
+
+    ParticleSystem.spawnBurst('success', { origin: elements.playerGold });
     
     updatePlayerInfo();
     if (typeof InventorySystem !== 'undefined') {
@@ -4809,6 +4922,18 @@ function handleKeyPress(event) {
     if (bindingMatches(event, 'controlsHelp')) {
         event.preventDefault();
         toggleControlsHelp();
+        return;
+    }
+
+    if (bindingMatches(event, 'undoAction')) {
+        event.preventDefault();
+        UndoRedoManager.undo();
+        return;
+    }
+
+    if (bindingMatches(event, 'redoAction')) {
+        event.preventDefault();
+        UndoRedoManager.redo();
         return;
     }
 
