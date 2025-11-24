@@ -962,7 +962,14 @@
                 <button id="close-settings-btn" class="close-btn" aria-label="Close settings">×</button>
             </div>
             <div class="modal-body settings-body">
-                <section class="settings-section">
+                <div class="settings-tabs" role="tablist">
+                    <button class="settings-tab active" data-settings-tab="accessibility" role="tab">Accessibility</button>
+                    <button class="settings-tab" data-settings-tab="audio" role="tab">Audio</button>
+                    <button class="settings-tab" data-settings-tab="visual" role="tab">Visual</button>
+                    <button class="settings-tab" data-settings-tab="controls" role="tab">Controls</button>
+                </div>
+
+                <section class="settings-section settings-tab-content active" id="settings-accessibility" role="tabpanel">
                     <h3>Accessibility</h3>
                     <label class="toggle">
                         <input type="checkbox" id="high-contrast-toggle">
@@ -976,21 +983,20 @@
                         <input type="checkbox" id="keyboard-nav-toggle" checked>
                         <span>Enhanced keyboard navigation</span>
                     </label>
-                </section>
-                <section class="settings-section">
-                    <h3>Text & Scale</h3>
+                    <label class="toggle">
+                        <input type="checkbox" id="reduced-motion-toggle">
+                        <span>Reduce motion & flashes</span>
+                    </label>
                     <div class="setting-control">
                         <label for="font-size-range">Font size</label>
                         <input type="range" id="font-size-range" min="90" max="120" step="5" value="100">
                         <div class="setting-hint" id="font-size-label">100%</div>
                     </div>
                 </section>
-                <section class="settings-section">
-                    <h3>Preferences</h3>
-                    <p class="setting-hint">Changes apply instantly and save to your browser.</p>
-                </section>
-                <section class="settings-section">
+
+                <section class="settings-section settings-tab-content" id="settings-audio" role="tabpanel">
                     <h3>Audio & Atmosphere</h3>
+                    <p class="setting-hint">Changes apply instantly and save to your browser.</p>
                     <div class="setting-control slider-control">
                         <div class="setting-label">
                             <span>Master Volume</span>
@@ -1036,7 +1042,49 @@
                         <span>Enable ambient soundscapes</span>
                     </label>
                 </section>
-                <section class="settings-section">
+
+                <section class="settings-section settings-tab-content" id="settings-visual" role="tabpanel">
+                    <h3>Visual</h3>
+                    <div class="setting-control">
+                        <label for="vfx-quality-select">Graphics Quality</label>
+                        <select id="vfx-quality-select">
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high" selected>High</option>
+                        </select>
+                    </div>
+                    <div class="setting-control slider-control">
+                        <div class="setting-label">
+                            <span>Particle Density</span>
+                            <span id="particle-density-label" class="setting-value">100%</span>
+                        </div>
+                        <input type="range" id="particle-density-range" min="25" max="150" step="5" value="100">
+                    </div>
+                    <div class="setting-control slider-control">
+                        <div class="setting-label">
+                            <span>Screen Shake</span>
+                            <span id="screen-shake-label" class="setting-value">70%</span>
+                        </div>
+                        <input type="range" id="screen-shake-range" min="0" max="100" step="5" value="70">
+                    </div>
+                    <div class="setting-control slider-control">
+                        <div class="setting-label">
+                            <span>Animation Speed</span>
+                            <span id="animation-speed-label" class="setting-value">100%</span>
+                        </div>
+                        <input type="range" id="animation-speed-range" min="70" max="130" step="5" value="100">
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="performance-overlay-toggle">
+                        <span>Show performance overlay</span>
+                    </label>
+                    <label class="toggle">
+                        <input type="checkbox" id="flash-warning-toggle">
+                        <span>Soften flashes and screen shake</span>
+                    </label>
+                </section>
+
+                <section class="settings-section settings-tab-content" id="settings-controls" role="tabpanel">
                     <h3>Controls</h3>
                     <p class="setting-hint">Click a binding, then press the new key or combo. Escape cancels.</p>
                     <div class="control-binding-grid">
@@ -1092,7 +1140,15 @@
 
     <div id="live-region" class="sr-only" aria-live="polite"></div>
 
+    <div id="performance-overlay" class="performance-overlay hidden" aria-live="polite">
+        <div class="perf-row"><span>FPS</span><strong id="perf-fps">60</strong></div>
+        <div class="perf-row"><span>Frame Time</span><strong id="perf-frame">16 ms</strong></div>
+        <div class="perf-row"><span>Memory</span><strong id="perf-memory">—</strong></div>
+    </div>
+
     <div id="particle-layer" aria-hidden="true"></div>
+
+    <div id="screen-fader" aria-hidden="true"></div>
 
     <div id="notification-tray" aria-live="polite" role="status"></div>
 

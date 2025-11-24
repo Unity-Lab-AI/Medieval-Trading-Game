@@ -618,10 +618,12 @@ const game = {
         
         // Update game systems
         this.update(deltaTime);
-        
+
         // Render
         this.render();
-        
+
+        PerformanceMonitor.update(deltaTime);
+
         // Continue loop
         requestAnimationFrame((time) => this.gameLoop(time));
     },
@@ -2200,6 +2202,11 @@ const elements = {
     navigationCurrentLocation: null,
     liveRegion: null,
     notificationTray: null,
+    performanceOverlay: null,
+    performanceFps: null,
+    performanceFrame: null,
+    performanceMemory: null,
+    screenFader: null,
 
     // Buttons
     newGameBtn: null,
@@ -2298,6 +2305,13 @@ const defaultPreferences = {
     colorblind: false,
     keyboardNav: true,
     fontScale: 100,
+    reducedMotion: false,
+    flashWarnings: false,
+    vfxQuality: 'high',
+    particleDensity: 100,
+    screenShake: 70,
+    animationSpeed: 100,
+    performanceOverlay: false,
     audio: {
         master: 80,
         music: 60,
@@ -2330,11 +2344,16 @@ const ParticleSystem = {
         if (!this.layer) return;
 
         const { count = 12, origin } = options;
+        const density = (userPreferences?.particleDensity ?? 100) / 100;
+        const qualityScale = userPreferences?.vfxQuality === 'low' ? 0.6 : userPreferences?.vfxQuality === 'medium' ? 0.85 : 1;
+        const adjustedCount = Math.max(3, Math.round(count * density * qualityScale));
+        const prefersCalm = userPreferences?.reducedMotion || userPreferences?.flashWarnings;
+        if (prefersCalm && type === 'alert') return;
         const bounds = origin?.getBoundingClientRect();
         const originX = bounds ? bounds.left + bounds.width / 2 : window.innerWidth / 2;
         const originY = bounds ? bounds.top + bounds.height / 2 : window.innerHeight / 2;
 
-        for (let i = 0; i < count; i++) {
+        for (let i = 0; i < adjustedCount; i++) {
             const particle = document.createElement('span');
             particle.className = `particle ${type}`;
             particle.style.left = `${originX}px`;
@@ -2346,6 +2365,73 @@ const ParticleSystem = {
             particle.addEventListener('animationend', () => {
                 particle.remove();
             });
+        }
+    }
+};
+
+const VisualEffectsSystem = {
+    container: null,
+    fader: null,
+    init() {
+        this.container = document.getElementById('game-container') || document.body;
+        this.fader = document.getElementById('screen-fader');
+    },
+    shake(intensity = 8, duration = 420) {
+        if (!this.container || userPreferences.reducedMotion) return;
+        const preferenceScale = (userPreferences.screenShake ?? 70) / 100;
+        const flashDampening = userPreferences.flashWarnings ? 0.6 : 1;
+        const magnitude = Math.max(0, intensity * preferenceScale * flashDampening);
+        if (magnitude <= 0.5) return;
+
+        this.container.style.setProperty('--shake-intensity', `${magnitude}px`);
+        this.container.style.setProperty('--shake-duration', `${duration}ms`);
+        this.container.classList.remove('screen-shake');
+        void this.container.offsetWidth; // restart animation
+        this.container.classList.add('screen-shake');
+        setTimeout(() => this.container.classList.remove('screen-shake'), duration + 50);
+    },
+    transition(callback) {
+        if (!this.fader) {
+            callback();
+            return;
+        }
+
+        this.fader.classList.add('active');
+        setTimeout(() => {
+            callback();
+            requestAnimationFrame(() => {
+                this.fader.classList.remove('active');
+            });
+        }, 140);
+    }
+};
+
+const PerformanceMonitor = {
+    enabled: false,
+    smoothFrame: 16,
+    init() {
+        this.overlay = elements.performanceOverlay;
+        this.fpsEl = elements.performanceFps;
+        this.frameEl = elements.performanceFrame;
+        this.memoryEl = elements.performanceMemory;
+        this.setEnabled(this.enabled);
+    },
+    setEnabled(value) {
+        this.enabled = value;
+        if (this.overlay) {
+            this.overlay.classList.toggle('hidden', !value);
+        }
+    },
+    update(deltaTime) {
+        if (!this.enabled || !this.overlay || this.overlay.classList.contains('hidden')) return;
+        this.smoothFrame = this.smoothFrame * 0.9 + deltaTime * 0.1;
+        const fps = Math.round(1000 / Math.max(1, this.smoothFrame));
+        if (this.fpsEl) this.fpsEl.textContent = fps.toString();
+        if (this.frameEl) this.frameEl.textContent = `${Math.round(this.smoothFrame)} ms`;
+
+        if (performance && performance.memory && this.memoryEl) {
+            const mb = performance.memory.usedJSHeapSize / 1024 / 1024;
+            this.memoryEl.textContent = `${mb.toFixed(1)} MB`;
         }
     }
 };
@@ -2547,8 +2633,10 @@ const NotificationCenter = {
 // Initialize the game when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     initializeElements();
+    VisualEffectsSystem.init();
     ParticleSystem.init();
     loadPreferencesFromStorage();
+    PerformanceMonitor.init();
     setupEventListeners();
     initializeOnboarding();
     showScreen('main-menu');
@@ -2594,6 +2682,11 @@ function initializeElements() {
     elements.navigationCurrentLocation = document.getElementById('nav-current-location');
     elements.liveRegion = document.getElementById('live-region');
     elements.notificationTray = document.getElementById('notification-tray');
+    elements.performanceOverlay = document.getElementById('performance-overlay');
+    elements.performanceFps = document.getElementById('perf-fps');
+    elements.performanceFrame = document.getElementById('perf-frame');
+    elements.performanceMemory = document.getElementById('perf-memory');
+    elements.screenFader = document.getElementById('screen-fader');
     
     // Buttons
     elements.newGameBtn = document.getElementById('new-game-btn');
@@ -2648,6 +2741,17 @@ function initializeElements() {
     elements.musicMuteToggle = document.getElementById('music-mute-toggle');
     elements.sfxMuteToggle = document.getElementById('sfx-mute-toggle');
     elements.ambientToggle = document.getElementById('ambient-toggle');
+    elements.reducedMotionToggle = document.getElementById('reduced-motion-toggle');
+    elements.flashWarningToggle = document.getElementById('flash-warning-toggle');
+    elements.vfxQualitySelect = document.getElementById('vfx-quality-select');
+    elements.particleDensityRange = document.getElementById('particle-density-range');
+    elements.particleDensityLabel = document.getElementById('particle-density-label');
+    elements.screenShakeRange = document.getElementById('screen-shake-range');
+    elements.screenShakeLabel = document.getElementById('screen-shake-label');
+    elements.animationSpeedRange = document.getElementById('animation-speed-range');
+    elements.animationSpeedLabel = document.getElementById('animation-speed-label');
+    elements.performanceOverlayToggle = document.getElementById('performance-overlay-toggle');
+    elements.settingsTabs = Array.from(document.querySelectorAll('.settings-tab'));
     elements.statusBanner = document.getElementById('status-banner');
     elements.controlsHelpOverlay = document.getElementById('controls-help-overlay');
     elements.autosaveIndicator = document.getElementById('autosave-indicator');
@@ -2763,11 +2867,56 @@ function setupEventListeners() {
             applyPreferences();
         });
     }
+    if (elements.reducedMotionToggle) {
+        elements.reducedMotionToggle.addEventListener('change', (event) => {
+            userPreferences.reducedMotion = event.target.checked;
+            applyPreferences();
+        });
+    }
+    if (elements.flashWarningToggle) {
+        elements.flashWarningToggle.addEventListener('change', (event) => {
+            userPreferences.flashWarnings = event.target.checked;
+            applyPreferences();
+        });
+    }
     if (elements.fontSizeRange) {
         elements.fontSizeRange.addEventListener('input', (event) => {
             userPreferences.fontScale = parseInt(event.target.value, 10);
             applyPreferences();
             updateFontSizeLabel();
+        });
+    }
+
+    if (elements.vfxQualitySelect) {
+        elements.vfxQualitySelect.addEventListener('change', (event) => {
+            userPreferences.vfxQuality = event.target.value;
+            applyPreferences();
+        });
+    }
+    if (elements.particleDensityRange) {
+        elements.particleDensityRange.addEventListener('input', (event) => {
+            userPreferences.particleDensity = parseInt(event.target.value, 10);
+            updateVisualLabels();
+        });
+    }
+    if (elements.screenShakeRange) {
+        elements.screenShakeRange.addEventListener('input', (event) => {
+            userPreferences.screenShake = parseInt(event.target.value, 10);
+            updateVisualLabels();
+            applyPreferences();
+        });
+    }
+    if (elements.animationSpeedRange) {
+        elements.animationSpeedRange.addEventListener('input', (event) => {
+            userPreferences.animationSpeed = parseInt(event.target.value, 10);
+            updateVisualLabels();
+            applyPreferences();
+        });
+    }
+    if (elements.performanceOverlayToggle) {
+        elements.performanceOverlayToggle.addEventListener('change', (event) => {
+            userPreferences.performanceOverlay = event.target.checked;
+            applyPreferences();
         });
     }
 
@@ -2817,6 +2966,12 @@ function setupEventListeners() {
         elements.ambientToggle.addEventListener('change', (event) => {
             userPreferences.audio.ambientEnabled = event.target.checked;
             applyAudioPreferences();
+        });
+    }
+
+    if (elements.settingsTabs?.length) {
+        elements.settingsTabs.forEach((tab) => {
+            tab.addEventListener('click', () => switchSettingsTab(tab.dataset.settingsTab));
         });
     }
 
@@ -2919,8 +3074,12 @@ function applyPreferences() {
     document.body.classList.toggle('high-contrast', userPreferences.highContrast);
     document.body.classList.toggle('colorblind-friendly', userPreferences.colorblind);
     document.body.classList.toggle('keyboard-nav-enabled', userPreferences.keyboardNav);
+    document.body.classList.toggle('reduced-motion', userPreferences.reducedMotion);
     document.documentElement.style.setProperty('--font-size', `${userPreferences.fontScale}%`);
+    document.documentElement.style.setProperty('--animation-scale', `${userPreferences.animationSpeed / 100}`);
+    document.documentElement.style.setProperty('--shake-intensity', `${(userPreferences.screenShake / 100) * 8}px`);
     applyAudioPreferences();
+    PerformanceMonitor.setEnabled(userPreferences.performanceOverlay);
     updateFontSizeLabel();
 }
 
@@ -2950,17 +3109,51 @@ function syncSettingsUI() {
     if (elements.keyboardNavToggle) {
         elements.keyboardNavToggle.checked = userPreferences.keyboardNav;
     }
+    if (elements.reducedMotionToggle) {
+        elements.reducedMotionToggle.checked = userPreferences.reducedMotion;
+    }
+    if (elements.flashWarningToggle) {
+        elements.flashWarningToggle.checked = userPreferences.flashWarnings;
+    }
     if (elements.fontSizeRange) {
         elements.fontSizeRange.value = userPreferences.fontScale;
     }
+    if (elements.vfxQualitySelect) {
+        elements.vfxQualitySelect.value = userPreferences.vfxQuality;
+    }
+    if (elements.particleDensityRange) {
+        elements.particleDensityRange.value = userPreferences.particleDensity;
+    }
+    if (elements.screenShakeRange) {
+        elements.screenShakeRange.value = userPreferences.screenShake;
+    }
+    if (elements.animationSpeedRange) {
+        elements.animationSpeedRange.value = userPreferences.animationSpeed;
+    }
+    if (elements.performanceOverlayToggle) {
+        elements.performanceOverlayToggle.checked = userPreferences.performanceOverlay;
+    }
     updateFontSizeLabel();
     syncAudioUI();
+    updateVisualLabels();
     updateBindingInputs();
 }
 
 function updateFontSizeLabel() {
     if (elements.fontSizeLabel) {
         elements.fontSizeLabel.textContent = `${userPreferences.fontScale}%`;
+    }
+}
+
+function updateVisualLabels() {
+    if (elements.particleDensityLabel) {
+        elements.particleDensityLabel.textContent = `${userPreferences.particleDensity}%`;
+    }
+    if (elements.screenShakeLabel) {
+        elements.screenShakeLabel.textContent = `${userPreferences.screenShake}%`;
+    }
+    if (elements.animationSpeedLabel) {
+        elements.animationSpeedLabel.textContent = `${userPreferences.animationSpeed}%`;
     }
 }
 
@@ -3049,6 +3242,13 @@ function showSettings() {
     syncSettingsUI();
     elements.settingsModal.classList.remove('hidden');
 
+    if (elements.settingsTabs?.length) {
+        const active = elements.settingsTabs.find((tab) => tab.classList.contains('active')) || elements.settingsTabs[0];
+        if (active) {
+            switchSettingsTab(active.dataset.settingsTab);
+        }
+    }
+
     const modalContent = elements.settingsModal.querySelector('.modal-content');
     if (modalContent) {
         modalContent.setAttribute('tabindex', '-1');
@@ -3060,6 +3260,18 @@ function closeSettings() {
     if (elements.settingsModal) {
         elements.settingsModal.classList.add('hidden');
     }
+}
+
+function switchSettingsTab(tabName = '') {
+    elements.settingsTabs?.forEach((tab) => {
+        tab.classList.toggle('active', tab.dataset.settingsTab === tabName);
+        tab.setAttribute('aria-selected', tab.dataset.settingsTab === tabName);
+    });
+
+    document.querySelectorAll('.settings-tab-content').forEach((section) => {
+        section.classList.toggle('active', section.id === `settings-${tabName}`);
+        section.setAttribute('aria-hidden', section.id !== `settings-${tabName}`);
+    });
 }
 
 function initializeOnboarding() {
@@ -3225,16 +3437,18 @@ function playAmbientForLocation(locationId) {
 
 // Screen Management
 function showScreen(screenId) {
-    // Hide all screens
-    document.querySelectorAll('.screen').forEach(screen => {
-        screen.classList.add('hidden');
-    });
-    
-    // Show the requested screen
-    const screen = document.getElementById(screenId);
-    if (screen) {
-        screen.classList.remove('hidden');
-    }
+    const swapScreens = () => {
+        document.querySelectorAll('.screen').forEach(screen => {
+            screen.classList.add('hidden');
+        });
+
+        const screen = document.getElementById(screenId);
+        if (screen) {
+            screen.classList.remove('hidden');
+        }
+    };
+
+    VisualEffectsSystem.transition(swapScreens);
 }
 
 // Panel Management
@@ -5001,6 +5215,10 @@ function addMessage(text, type = 'info') {
 
     if (NotificationCenter) {
         NotificationCenter.show(text, type === 'error' ? 'error' : (type === 'success' ? 'success' : 'info'));
+    }
+
+    if (type === 'success' || type === 'error') {
+        VisualEffectsSystem.shake(type === 'error' ? 10 : 6, 360);
     }
 
     if (window.AudioSystem && type === 'success') {
