@@ -836,10 +836,51 @@ button:focus-visible {
     padding: 0.3rem 0.5rem;
     border-radius: 4px;
     font-size: 0.9rem;
+    overflow: hidden;
+    position: relative;
 }
 
 .message:nth-child(odd) {
     background-color: rgba(255, 255, 255, 0.05);
+}
+
+.message-text {
+    display: inline-block;
+    max-width: 100%;
+    white-space: nowrap;
+    vertical-align: top;
+}
+
+.message.scrolling .message-text {
+    animation: scroll-text var(--scroll-duration, 8s) linear infinite;
+    padding-right: 3rem;
+}
+
+.message.scrolling::after,
+.message.scrolling::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 32px;
+    pointer-events: none;
+}
+
+.message.scrolling::before {
+    left: 0;
+    background: linear-gradient(90deg, #1e1e1e 0%, rgba(30, 30, 30, 0) 100%);
+}
+
+.message.scrolling::after {
+    right: 0;
+    background: linear-gradient(270deg, #1e1e1e 0%, rgba(30, 30, 30, 0) 100%);
+}
+
+@keyframes scroll-text {
+    0% { transform: translateX(0); }
+    10% { transform: translateX(0); }
+    90% { transform: translateX(calc(-1 * var(--scroll-distance, 120px))); }
+    100% { transform: translateX(calc(-1 * var(--scroll-distance, 120px))); }
 }
 
 /* Panel Footer */

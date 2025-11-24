@@ -4978,9 +4978,26 @@ function renderGameWorld() {
 function addMessage(text, type = 'info') {
     const messageElement = document.createElement('p');
     messageElement.className = 'message';
-    messageElement.textContent = text;
+
+    const messageText = document.createElement('span');
+    messageText.className = 'message-text';
+    messageText.textContent = text;
+    messageElement.appendChild(messageText);
 
     elements.messages.appendChild(messageElement);
+
+    requestAnimationFrame(() => {
+        const containerWidth = messageElement.clientWidth;
+        const textWidth = messageText.scrollWidth;
+
+        if (textWidth > containerWidth + 12) {
+            messageElement.classList.add('scrolling');
+            const distance = Math.min(textWidth - containerWidth + 32, textWidth);
+            const duration = Math.min(18, Math.max(6, distance / 25));
+            messageText.style.setProperty('--scroll-distance', `${distance}px`);
+            messageText.style.setProperty('--scroll-duration', `${duration}s`);
+        }
+    });
 
     if (NotificationCenter) {
         NotificationCenter.show(text, type === 'error' ? 'error' : (type === 'success' ? 'success' : 'info'));
