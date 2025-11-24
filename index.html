@@ -29,7 +29,24 @@
         <main id="game-main">
             <!-- Game World Area -->
             <section id="game-world">
-                <canvas id="game-canvas" width="800" height="600"></canvas>
+                <!-- World Map Container -->
+                <div id="map-container" class="map-container">
+                    <canvas id="world-map-canvas" width="800" height="600"></canvas>
+                    <div id="map-controls" class="map-controls">
+                        <button id="zoom-in-btn" title="Zoom In">+</button>
+                        <button id="zoom-out-btn" title="Zoom Out">-</button>
+                        <button id="reset-view-btn" title="Reset View">⟲</button>
+                        <button id="toggle-grid-btn" title="Toggle Grid">⊞</button>
+                    </div>
+                </div>
+                
+                <!-- Location Details Panel -->
+                <div id="location-details" class="location-details-panel hidden">
+                    <!-- Location details will be populated by JavaScript -->
+                </div>
+                
+                <!-- Legacy game canvas (kept for compatibility) -->
+                <canvas id="game-canvas" width="800" height="600" class="hidden"></canvas>
             </section>
 
             <!-- UI Panels Container -->
@@ -396,14 +413,131 @@
                     </div>
                 </section>
 
-                <!-- Travel Panel -->
+                <!-- Enhanced Travel Panel -->
                 <section id="travel-panel" class="panel hidden">
-                    <h2>Travel</h2>
-                    <div id="destinations" class="destinations-list">
-                        <!-- Destinations will be populated by JavaScript -->
+                    <div class="travel-header">
+                        <h2>Travel & Exploration</h2>
+                        <div class="travel-tabs">
+                            <button class="travel-tab-btn active" data-travel-tab="destinations">Destinations</button>
+                            <button class="travel-tab-btn" data-travel-tab="map">World Map</button>
+                            <button class="travel-tab-btn" data-travel-tab="resources">Resources</button>
+                            <button class="travel-tab-btn" data-travel-tab="history">History</button>
+                        </div>
                     </div>
+                    
+                    <div id="travel-content">
+                        <!-- Destinations Tab -->
+                        <div id="destinations-tab" class="travel-tab-content active">
+                            <div class="travel-controls">
+                                <div class="travel-filter">
+                                    <label for="destination-filter">Filter:</label>
+                                    <select id="destination-filter">
+                                        <option value="all">All Locations</option>
+                                        <option value="city">Cities</option>
+                                        <option value="town">Towns</option>
+                                        <option value="village">Villages</option>
+                                    </select>
+                                </div>
+                                <div class="travel-sort">
+                                    <label for="destination-sort">Sort by:</label>
+                                    <select id="destination-sort">
+                                        <option value="distance">Distance</option>
+                                        <option value="name">Name</option>
+                                        <option value="type">Type</option>
+                                        <option value="safety">Safety</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div id="destinations" class="destinations-list">
+                                <!-- Destinations will be populated by JavaScript -->
+                            </div>
+                        </div>
+                        
+                        <!-- Map Tab -->
+                        <div id="map-tab" class="travel-tab-content">
+                            <div class="map-controls-expanded">
+                                <div class="map-info">
+                                    <p><strong>Current Location:</strong> <span id="current-location-name">Unknown</span></p>
+                                    <p><strong>Map Position:</strong> <span id="map-position">0, 0</span></p>
+                                    <p><strong>Zoom:</strong> <span id="zoom-level">100%</span></p>
+                                </div>
+                                <div class="map-actions">
+                                    <button id="center-on-player-btn">Center on Player</button>
+                                    <button id="toggle-locations-btn">Toggle Locations</button>
+                                    <button id="toggle-resources-btn">Toggle Resources</button>
+                                    <button id="toggle-poi-btn">Toggle Points of Interest</button>
+                                </div>
+                            </div>
+                            <div class="map-legend">
+                                <h4>Map Legend</h4>
+                                <div class="legend-items">
+                                    <div class="legend-item">
+                                        <span class="legend-color" style="background: #FF6B6B;"></span>
+                                        <span>Cities</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <span class="legend-color" style="background: #4ECDC4;"></span>
+                                        <span>Towns</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <span class="legend-color" style="background: #95E77E;"></span>
+                                        <span>Villages</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <span class="legend-icon">🌲</span>
+                                        <span>Forests</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <span class="legend-icon">⛏️</span>
+                                        <span>Mines</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <span class="legend-icon">🏠</span>
+                                        <span>Inns</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <span class="legend-icon">🏪</span>
+                                        <span>Trading Posts</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <span class="legend-icon">🛡️</span>
+                                        <span>Guard Posts</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Resources Tab -->
+                        <div id="resources-tab" class="travel-tab-content">
+                            <div class="resource-controls">
+                                <label for="resource-filter">Filter Resources:</label>
+                                <select id="resource-filter">
+                                    <option value="all">All Resources</option>
+                                    <option value="forest">Forests</option>
+                                    <option value="mine">Mines</option>
+                                    <option value="herb">Herb Gardens</option>
+                                </select>
+                                <button id="refresh-resources-btn">Refresh Resources</button>
+                            </div>
+                            <div id="resource-nodes" class="resource-nodes-list">
+                                <!-- Resource nodes will be populated by JavaScript -->
+                            </div>
+                        </div>
+                        
+                        <!-- History Tab -->
+                        <div id="history-tab" class="travel-tab-content">
+                            <div class="history-controls">
+                                <button id="clear-history-btn">Clear History</button>
+                                <button id="export-history-btn">Export History</button>
+                            </div>
+                            <div id="travel-history" class="travel-history-list">
+                                <!-- Travel history will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="panel-footer">
-                        <button id="close-travel-btn">Cancel</button>
+                        <button id="close-travel-btn">Close</button>
                     </div>
                 </section>
 
@@ -690,6 +824,7 @@
     <script src="employee-system.js"></script>
     <script src="trade-route-system.js"></script>
     <script src="property-employee-ui.js"></script>
+    <script src="travel-system.js"></script>
     <script src="game.js"></script>
 </body>
 </html>

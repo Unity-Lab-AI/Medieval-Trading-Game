@@ -363,29 +363,81 @@ const PropertyEmployeeUI = {
         document.getElementById('property-details-condition').textContent = `${property.condition}%`;
         document.getElementById('property-details-income').textContent = `${PropertySystem.calculatePropertyIncome(property)} gold/day`;
         
-        // Update upgrades list
+        // Update upgrades list with enhanced interface
         const upgradesList = document.getElementById('property-upgrades-list');
         upgradesList.innerHTML = '';
         
-        Object.keys(PropertySystem.upgrades).forEach(upgradeId => {
-            const upgrade = PropertySystem.upgrades[upgradeId];
-            const isOwned = property.upgrades.includes(upgradeId);
-            const upgradeCost = Math.round(propertyType.basePrice * upgrade.costMultiplier);
-            
-            const upgradeElement = document.createElement('div');
-            upgradeElement.className = `upgrade-item ${isOwned ? 'owned' : ''}`;
-            upgradeElement.innerHTML = `
-                <span class="upgrade-icon">${upgrade.icon}</span>
-                <span class="upgrade-name">${upgrade.name}</span>
-                <span class="upgrade-cost">${upgradeCost} gold</span>
-                <span class="upgrade-description">${upgrade.description}</span>
-                ${!isOwned ? `<button class="upgrade-action-btn" onclick="PropertySystem.upgradeProperty('${propertyId}', '${upgradeId}')">Buy</button>` : '<span class="upgrade-owned">Owned</span>'}
-            `;
-            
-            upgradesList.appendChild(upgradeElement);
-        });
+        const availableUpgrades = PropertySystem.getAvailableUpgrades(propertyId);
         
-        // Update assigned employees list
+        if (availableUpgrades.length > 0) {
+            availableUpgrades.forEach(upgrade => {
+                const upgradeElement = document.createElement('div');
+                upgradeElement.className = `upgrade-item ${upgrade.affordability && upgrade.requirementsMet ? 'available' : 'unavailable'}`;
+                upgradeElement.innerHTML = `
+                    <div class="upgrade-header">
+                        <span class="upgrade-icon">${upgrade.icon}</span>
+                        <span class="upgrade-name">${upgrade.name}</span>
+                        <span class="upgrade-cost">${upgrade.cost} gold</span>
+                    </div>
+                    <div class="upgrade-description">
+                        <p>${upgrade.description}</p>
+                    </div>
+                    <div class="upgrade-benefits">
+                        <h5>Benefits:</h5>
+                        <div class="benefits-list">
+                            ${upgrade.projectedBenefits.incomeIncrease ? `
+                            <div class="benefit-item">
+                                <span class="benefit-icon">💰</span>
+                                <span class="benefit-text">+${upgrade.projectedBenefits.incomeIncrease} gold/day income</span>
+                            </div>
+                            ` : ''}
+                            ${upgrade.projectedBenefits.maintenanceSavings ? `
+                            <div class="benefit-item">
+                                <span class="benefit-icon">💾</span>
+                                <span class="benefit-text">-${upgrade.projectedBenefits.maintenanceSavings} gold/day maintenance</span>
+                            </div>
+                            ` : ''}
+                            ${upgrade.projectedBenefits.storageIncrease ? `
+                            <div class="benefit-item">
+                                <span class="benefit-icon">📦</span>
+                                <span class="benefit-text">+${upgrade.projectedBenefits.storageIncrease} lbs storage</span>
+                            </div>
+                            ` : ''}
+                            ${upgrade.projectedBenefits.productionIncrease ? `
+                            <div class="benefit-item">
+                                <span class="benefit-icon">⚡</span>
+                                <span class="benefit-text">+${upgrade.projectedBenefits.productionIncrease} production</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    <div class="upgrade-requirements">
+                        <h5>Requirements:</h5>
+                        <div class="requirements-list">
+                            ${upgrade.requirements?.map(req => `
+                                <div class="requirement ${req.met ? 'met' : 'unmet'}">
+                                    <span class="requirement-icon">${req.met ? '✓' : '✗'}</span>
+                                    <span class="requirement-text">${req.description}</span>
+                                </div>
+                            `).join('') || '<div class="requirement met">No special requirements</div>'}
+                        </div>
+                    </div>
+                    <div class="upgrade-actions">
+                        <button class="upgrade-action-btn ${upgrade.affordability && upgrade.requirementsMet ? 'enabled' : 'disabled'}"
+                                onclick="PropertySystem.upgradeProperty('${propertyId}', '${upgrade.id}')"
+                                ${!upgrade.affordability || !upgrade.requirementsMet ? 'disabled' : ''}>
+                            ${upgrade.affordability && upgrade.requirementsMet ? 'Purchase Upgrade' : 'Cannot Purchase'}
+                        </button>
+                    </div>
+                `;
+                
+                upgradesList.appendChild(upgradeElement);
+            });
+        } else {
+            upgradesList.innerHTML = '<p class="no-upgrades">No upgrades available for this property.</p>';
+        }
+        
+        // Update assigned employees list with enhanced interface
         const employeesList = document.getElementById('property-employees-list');
         employeesList.innerHTML = '';
         
@@ -396,15 +448,106 @@ const PropertyEmployeeUI = {
                     const employeeElement = document.createElement('div');
                     employeeElement.className = 'assigned-employee';
                     employeeElement.innerHTML = `
-                        <span class="employee-icon">${EmployeeSystem.employeeTypes[employee.type].icon}</span>
-                        <span class="employee-name">${employee.name}</span>
-                        <span class="employee-type">${EmployeeSystem.employeeTypes[employee.type].name}</span>
+                        <div class="employee-header">
+                            <span class="employee-icon">${EmployeeSystem.employeeTypes[employee.type].icon}</span>
+                            <span class="employee-name">${employee.name}</span>
+                            <span class="employee-level">Level ${employee.level}</span>
+                        </div>
+                        <div class="employee-stats">
+                            <div class="employee-stat">
+                                <span class="stat-label">Type:</span>
+                                <span class="stat-value">${EmployeeSystem.employeeTypes[employee.type].name}</span>
+                            </div>
+                            <div class="employee-stat">
+                                <span class="stat-label">Morale:</span>
+                                <span class="stat-value morale-${employee.morale > 70 ? 'good' : employee.morale > 40 ? 'fair' : 'poor'}">${employee.morale}%</span>
+                            </div>
+                            <div class="employee-stat">
+                                <span class="stat-label">Productivity:</span>
+                                <span class="stat-value">${(employee.productivity * 100).toFixed(0)}%</span>
+                            </div>
+                            <div class="employee-stat">
+                                <span class="stat-label">Performance:</span>
+                                <span class="stat-value performance-${employee.performance > 70 ? 'good' : employee.performance > 40 ? 'fair' : 'poor'}">${employee.performance || 50}/100</span>
+                            </div>
+                        </div>
+                        <div class="employee-actions">
+                            <button class="employee-action-btn" onclick="EmployeeSystem.showAssignmentInterface('${empId}')">Reassign</button>
+                            <button class="employee-action-btn" onclick="EmployeeSystem.showEmployeeDetails('${empId}')">Manage</button>
+                        </div>
                     `;
                     employeesList.appendChild(employeeElement);
                 }
             });
         } else {
             employeesList.innerHTML = '<p class="no-employees">No employees assigned</p>';
+        }
+        
+        // Update property benefits display
+        const benefits = PropertySystem.getPropertyBenefits(propertyId);
+        const benefitsList = document.getElementById('property-benefits-list');
+        if (benefitsList) {
+            benefitsList.innerHTML = `
+                <h5>Property Benefits:</h5>
+                <div class="benefits-grid">
+                    ${benefits.storageCapacity ? `
+                    <div class="benefit-item">
+                        <span class="benefit-icon">📦</span>
+                        <span class="benefit-text">${benefits.storageCapacity} lbs storage capacity</span>
+                    </div>
+                    ` : ''}
+                    ${benefits.workerSlots ? `
+                    <div class="benefit-item">
+                        <span class="benefit-icon">👷</span>
+                        <span class="benefit-text">${benefits.workerSlots} worker slots</span>
+                    </div>
+                    ` : ''}
+                    ${benefits.merchantSlots ? `
+                    <div class="benefit-item">
+                        <span class="benefit-icon">🧑‍💼</span>
+                        <span class="benefit-text">${benefits.merchantSlots} merchant slots</span>
+                    </div>
+                    ` : ''}
+                    ${benefits.restBonus ? `
+                    <div class="benefit-item">
+                        <span class="benefit-icon">😴</span>
+                        <span class="benefit-text">Rest bonus available</span>
+                    </div>
+                    ` : ''}
+                    ${benefits.reputationBonus ? `
+                    <div class="benefit-item">
+                        <span class="benefit-icon">⭐</span>
+                        <span class="benefit-text">+${benefits.reputationBonus} reputation/day</span>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+        
+        // Update work queue display
+        const workQueue = PropertySystem.getWorkQueue(propertyId);
+        const workQueueList = document.getElementById('property-work-queue-list');
+        if (workQueueList) {
+            workQueueList.innerHTML = `
+                <h5>Production Queue:</h5>
+                ${workQueue.length > 0 ? `
+                    <div class="work-queue-items">
+                        ${workQueue.map(work => `
+                            <div class="work-queue-item">
+                                <span class="work-type">${PropertySystem.getItemIcon(work.type)} ${PropertySystem.getItemName(work.type)}</span>
+                                <span class="work-quantity">×${work.quantity}</span>
+                                <div class="work-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: ${(work.progress / work.quantity) * 100}%"></div>
+                                    </div>
+                                    <span class="progress-text">${Math.round((work.progress / work.quantity) * 100)}%</span>
+                                </div>
+                                <button class="work-cancel-btn" onclick="PropertySystem.cancelWorkItem('${propertyId}', '${work.id}')" title="Cancel">✕</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : '<p class="no-work">No production in progress.</p>'}
+            `;
         }
         
         // Store selected property for modal actions
@@ -468,11 +611,11 @@ const PropertyEmployeeUI = {
         document.getElementById('employee-details-avatar').textContent = employeeType.icon;
         document.getElementById('employee-details-type').textContent = employeeType.name;
         document.getElementById('employee-details-level').textContent = employee.level;
-        document.getElementById('employee-details-experience').textContent = `${employee.experience}/${employee.experienceToNext}`;
+        document.getElementById('employee-details-experience').textContent = `${employee.experience}/${employee.level * 100}`;
         document.getElementById('employee-details-morale').textContent = this.getMoraleText(employee.morale);
         document.getElementById('employee-details-wage').textContent = `${employee.wage} gold/week`;
         
-        // Update skills list
+        // Update skills list with enhanced interface
         const skillsList = document.getElementById('employee-skills-list');
         skillsList.innerHTML = '';
         
@@ -480,28 +623,54 @@ const PropertyEmployeeUI = {
             const skillElement = document.createElement('div');
             skillElement.className = 'skill-item';
             skillElement.innerHTML = `
-                <span class="skill-name">${skill}</span>
-                <span class="skill-level">${level}</span>
+                <div class="skill-header">
+                    <span class="skill-name">${skill.charAt(0).toUpperCase() + skill.slice(1)}</span>
+                    <span class="skill-level">Level ${level}/5</span>
+                </div>
+                <div class="skill-bar">
+                    <div class="skill-fill" style="width: ${(level / 5) * 100}%"></div>
+                </div>
+                <div class="skill-description">
+                    ${EmployeeSystem.getSkillDescription(skill, level)}
+                </div>
             `;
             skillsList.appendChild(skillElement);
         });
         
-        // Update assignment info
+        // Update assignment info with enhanced interface
         const assignmentInfo = document.getElementById('employee-assignment-info');
         if (employee.assignedProperty) {
             const property = PropertySystem.getProperty(employee.assignedProperty);
             if (property) {
                 const propertyType = PropertySystem.propertyTypes[property.type];
+                const isOptimal = EmployeeSystem.isOptimalAssignment(employee.type, property.type);
                 assignmentInfo.innerHTML = `
-                    <p><strong>Property:</strong> ${propertyType.name}</p>
-                    <p><strong>Location:</strong> ${GameWorld.locations[property.location].name}</p>
+                    <div class="assignment-details">
+                        <div class="assignment-item">
+                            <span class="assignment-label">Property:</span>
+                            <span class="assignment-value">${propertyType.icon} ${propertyType.name}</span>
+                            <span class="assignment-status ${isOptimal ? 'optimal' : 'standard'}">${isOptimal ? '⭐ Optimal' : 'Standard'}</span>
+                        </div>
+                        <div class="assignment-item">
+                            <span class="assignment-label">Location:</span>
+                            <span class="assignment-value">${GameWorld.locations[property.location].name}</span>
+                        </div>
+                        <div class="assignment-item">
+                            <span class="assignment-label">Role:</span>
+                            <span class="assignment-value">${employee.role || EmployeeSystem.determineEmployeeRole(employee.type, property.type)}</span>
+                        </div>
+                        <div class="assignment-item">
+                            <span class="assignment-label">Current Task:</span>
+                            <span class="assignment-value">${employee.currentTask ? `${PropertySystem.getItemIcon(employee.currentTask)} ${PropertySystem.getItemName(employee.currentTask)}` : 'None'}</span>
+                        </div>
+                    </div>
                 `;
             }
         } else {
-            assignmentInfo.innerHTML = '<p>Unassigned</p>';
+            assignmentInfo.innerHTML = '<div class="assignment-details"><p class="unassigned">Unassigned</p></div>';
         }
         
-        // Update assignment property select
+        // Update assignment property select with compatibility info
         const assignmentSelect = document.getElementById('assignment-property-select');
         assignmentSelect.innerHTML = '<option value="">Select Property</option>';
         
@@ -509,7 +678,14 @@ const PropertyEmployeeUI = {
         properties.forEach(property => {
             const option = document.createElement('option');
             option.value = property.id;
-            option.textContent = PropertySystem.propertyTypes[property.type].name;
+            const propertyType = PropertySystem.propertyTypes[property.type];
+            const isCompatible = EmployeeSystem.isEmployeeCompatibleWithProperty(employee.type, property.type);
+            const canAccept = PropertySystem.canAcceptEmployee(property.id, employee.type);
+            const isOptimal = EmployeeSystem.isOptimalAssignment(employee.type, property.type);
+            
+            option.textContent = `${propertyType.icon} ${propertyType.name} (${isCompatible ? (canAccept ? (isOptimal ? '⭐ Optimal' : '✓ Compatible') : '🔒 Full') : '✗ Incompatible'})`;
+            option.disabled = !isCompatible || !canAccept;
+            
             assignmentSelect.appendChild(option);
         });
         
@@ -517,11 +693,103 @@ const PropertyEmployeeUI = {
             assignmentSelect.value = employee.assignedProperty;
         }
         
+        // Update task assignment interface
+        const taskAssignmentList = document.getElementById('employee-task-assignments');
+        if (taskAssignmentList && employee.assignedProperty) {
+            const property = PropertySystem.getProperty(employee.assignedProperty);
+            if (property && PropertySystem.propertyTypes[property.type].production) {
+                const productionCapacity = PropertySystem.getProductionCapacity(property.id);
+                const workQueue = PropertySystem.getWorkQueue(property.id);
+                
+                taskAssignmentList.innerHTML = `
+                    <h5>Task Assignment:</h5>
+                    <div class="task-options">
+                        ${Object.entries(productionCapacity).map(([item, amount]) => `
+                            <div class="task-option">
+                                <span class="task-item">${PropertySystem.getItemIcon(item)} ${PropertySystem.getItemName(item)}</span>
+                                <span class="task-capacity">Max: ${amount}/day</span>
+                                <button class="task-assign-btn" onclick="EmployeeSystem.assignTaskToEmployee('${employeeId}', '${item}')">Assign</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="current-task">
+                        <span class="task-label">Current Task:</span>
+                        <span class="task-value">${employee.currentTask ? `${PropertySystem.getItemIcon(employee.currentTask)} ${PropertySystem.getItemName(employee.currentTask)} (${employee.taskProgress || 0}%)` : 'None'}</span>
+                    </div>
+                    <div class="work-queue-summary">
+                        <h6>Property Work Queue:</h6>
+                        ${workQueue.length > 0 ? `
+                            <div class="queue-items">
+                                ${workQueue.map(work => `
+                                    <div class="queue-item">
+                                        <span class="queue-task">${PropertySystem.getItemIcon(work.type)} ${PropertySystem.getItemName(work.type)}</span>
+                                        <span class="queue-progress">${Math.round((work.progress / work.quantity) * 100)}%</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : '<p class="no-queue">No tasks in queue</p>'}
+                    </div>
+                `;
+            } else {
+                taskAssignmentList.innerHTML = '<p class="no-tasks">This property type doesn\'t support task assignment.</p>';
+            }
+        }
+        
+        // Update performance and recent events
+        const performanceSection = document.getElementById('employee-performance-section');
+        if (performanceSection) {
+            performanceSection.innerHTML = `
+                <h5>Performance & Events:</h5>
+                <div class="performance-metrics">
+                    <div class="metric-item">
+                        <span class="metric-label">Performance Score:</span>
+                        <span class="metric-value performance-${employee.performance > 70 ? 'good' : employee.performance > 40 ? 'fair' : 'poor'}">${employee.performance || 50}/100</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Productivity:</span>
+                        <span class="metric-value">${(employee.productivity * 100).toFixed(0)}%</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Total Wages Paid:</span>
+                        <span class="metric-value">${employee.totalWagesPaid || 0} gold</span>
+                    </div>
+                </div>
+                <div class="recent-events">
+                    <h6>Recent Events:</h6>
+                    ${employee.recentEvents && employee.recentEvents.length > 0 ? `
+                        <div class="events-list">
+                            ${employee.recentEvents.slice(-5).map(event => `
+                                <div class="event-item ${event.type}">
+                                    <span class="event-icon">${event.type === 'achievement' ? '🏆' : event.type === 'mistake' ? '❌' : '📝'}</span>
+                                    <span class="event-description">${event.description}</span>
+                                    <span class="event-time">${this.formatEventTime(event.timestamp)}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : '<p class="no-events">No recent events</p>'}
+                </div>
+            `;
+        }
+        
         // Store selected employee for modal actions
         this.selectedEmployeeId = employeeId;
         
         // Show modal
         document.getElementById('employee-details-modal').classList.remove('hidden');
+    },
+    
+    // Format event time for display
+    formatEventTime(timestamp) {
+        const now = TimeSystem.getTotalMinutes();
+        const minutesAgo = now - timestamp;
+        
+        if (minutesAgo < 60) {
+            return `${minutesAgo} minutes ago`;
+        } else if (minutesAgo < 24 * 60) {
+            return `${Math.floor(minutesAgo / 60)} hours ago`;
+        } else {
+            return `${Math.floor(minutesAgo / (24 * 60))} days ago`;
+        }
     },
     
     // Get morale text
