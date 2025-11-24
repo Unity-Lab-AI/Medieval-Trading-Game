@@ -387,6 +387,9 @@ const PropertySystem = {
         game.player.ownedProperties.push(newProperty);
 
         addMessage(`Purchased ${propertyType.name} in ${game.currentLocation.name} for ${price} gold!`);
+        if (typeof celebrateTrade === 'function') {
+            celebrateTrade(`Claimed ${propertyType.name}`, elements?.locationPanel);
+        }
         if (typeof StatsSystem !== 'undefined') {
             StatsSystem.recordAction('propertyPurchased');
             StatsSystem.updateFromGame();
@@ -628,12 +631,15 @@ const PropertySystem = {
         // Apply upgrade
         game.player.gold -= upgradeCost;
         property.upgrades.push(upgradeId);
-        
+
         // Apply upgrade effects
         this.applyUpgradeEffects(propertyId, upgradeId);
-        
+
         addMessage(`Upgraded ${propertyType.name} with ${upgrade.name} for ${upgradeCost} gold!`);
-        
+        if (typeof celebrateTrade === 'function') {
+            celebrateTrade(`Upgraded ${propertyType.name}`, elements?.locationPanel);
+        }
+
         // Update UI
         updatePlayerInfo();
         this.updatePropertyDisplay();

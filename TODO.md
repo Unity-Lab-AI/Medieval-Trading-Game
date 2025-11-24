@@ -72,10 +72,10 @@ Comprehensive feature roadmap for the trading game to reach 100% completion.
 
 ## Animation System
 - [x] Implement character movement animations with different states (idle, walk, run, jump, attack, etc.)
-- [ ] Add item usage animations with visual feedback
-- [ ] Create building/property animations for construction, upgrades, and active states
+- [x] Add item usage animations with visual feedback
+- [x] Create building/property animations for construction, upgrades, and active states
 - [x] Implement travel animations with smooth transitions
-- [ ] Add market stall animations for trading activities
+- [x] Add market stall animations for trading activities
 - [ ] Create loading animations with progress indicators
 
 ## UI Polish System
@@ -88,10 +88,10 @@ Comprehensive feature roadmap for the trading game to reach 100% completion.
 
 ## Environmental Effects System
 - [x] Create dynamic lighting based on time of day with color temperature changes
-- [ ] Implement weather system affecting visuals (rain, snow, fog, sandstorm)
-- [ ] Add location-specific atmosphere effects with ambient sounds and visual filters
-- [ ] Implement seasonal visual changes with appropriate color schemes
-- [ ] Create resource particle effects for gathering activities
+- [x] Implement weather system affecting visuals (rain, snow, fog, sandstorm)
+- [x] Add location-specific atmosphere effects with ambient sounds and visual filters
+- [x] Implement seasonal visual changes with appropriate color schemes
+- [x] Create resource particle effects for gathering activities
 
 ## Settings Panel
 - [x] Create comprehensive audio/visual settings panel with tabs for different categories
@@ -105,7 +105,7 @@ Comprehensive feature roadmap for the trading game to reach 100% completion.
 - [x] Create seamless integration system that connects all new systems with existing game code
 - [x] Implement performance optimization system that monitors FPS, memory usage, and effect counts
 - [x] Add adaptive quality adjustment based on device capabilities
-- [ ] Create performance monitoring display and optimization controls
+- [x] Create performance monitoring display and optimization controls
 - [ ] Ship cinematic set-pieces (travel departures, market reveals, boss events)
 - [ ] Add narrative questlines with branching outcomes and voiced narration stubs
 

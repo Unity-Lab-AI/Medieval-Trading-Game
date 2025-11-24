@@ -1547,9 +1547,13 @@ const TravelSystem = {
         
         // Gain experience
         this.gainGatheringExperience(resourceType, yield);
-        
+
         addMessage(`Gathered ${yield} ${this.getItemName(resourceType)}!`);
-        
+
+        if (typeof ParticleSystem !== 'undefined') {
+            ParticleSystem.spawnResource();
+        }
+
         // Update UI
         updateInventoryDisplay();
         

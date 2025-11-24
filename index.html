@@ -50,6 +50,10 @@
                 <span id="weather-label">Calm Skies</span>
             </div>
             <div class="status-pill">
+                <span class="pill-label">Season</span>
+                <span id="season-label">Spring</span>
+            </div>
+            <div class="status-pill">
                 <span class="pill-label">Cycle</span>
                 <span id="cycle-label">Dawn</span>
             </div>
@@ -1099,9 +1103,21 @@
                         </div>
                         <input type="range" id="animation-speed-range" min="70" max="130" step="5" value="100">
                     </div>
+                    <div class="setting-control">
+                        <label for="environment-quality-select">Environment Fidelity</label>
+                        <select id="environment-quality-select">
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high" selected>High</option>
+                        </select>
+                    </div>
                     <label class="toggle">
                         <input type="checkbox" id="performance-overlay-toggle">
                         <span>Show performance overlay</span>
+                    </label>
+                    <label class="toggle">
+                        <input type="checkbox" id="auto-quality-toggle" checked>
+                        <span>Auto-adjust quality to protect FPS</span>
                     </label>
                     <label class="toggle">
                         <input type="checkbox" id="flash-warning-toggle">
@@ -1168,6 +1184,7 @@
     <div id="performance-overlay" class="performance-overlay hidden" aria-live="polite">
         <div class="perf-row"><span>FPS</span><strong id="perf-fps">60</strong></div>
         <div class="perf-row"><span>Frame Time</span><strong id="perf-frame">16 ms</strong></div>
+        <div class="perf-row"><span>Quality</span><strong id="perf-quality">High • 100%</strong></div>
         <div class="perf-row"><span>Memory</span><strong id="perf-memory">—</strong></div>
     </div>
 

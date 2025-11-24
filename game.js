@@ -2225,11 +2225,13 @@ const elements = {
     performanceFps: null,
     performanceFrame: null,
     performanceMemory: null,
+    performanceQuality: null,
     screenFader: null,
     atmosphereLayer: null,
     environmentOverlay: null,
     highlightLayer: null,
     weatherLabel: null,
+    seasonLabel: null,
     cycleLabel: null,
     atmosphereNote: null,
     animationState: null,
@@ -2288,6 +2290,8 @@ const elements = {
     musicMuteToggle: null,
     sfxMuteToggle: null,
     ambientToggle: null,
+    environmentQualitySelect: null,
+    autoQualityToggle: null,
     statusBanner: null,
     controlsHelpOverlay: null,
     autosaveIndicator: null,
@@ -2448,8 +2452,14 @@ const EnvironmentSystem = {
     highlightLayer: null,
     weatherLabel: null,
     cycleLabel: null,
+    seasonLabel: null,
     atmosphereNote: null,
     currentWeather: 'clear',
+    currentSeason: 'spring',
+    seasonClass: '',
+    seasonNote: '',
+    locationNote: '',
+    locationClass: '',
     nextWeatherChange: 0,
     highlightMap: new Map(),
     init() {
@@ -2458,15 +2468,47 @@ const EnvironmentSystem = {
         this.highlightLayer = elements.highlightLayer;
         this.weatherLabel = elements.weatherLabel;
         this.cycleLabel = elements.cycleLabel;
+        this.seasonLabel = elements.seasonLabel;
         this.atmosphereNote = elements.atmosphereNote;
 
+        this.currentSeason = this.deriveSeason(TimeSystem.currentTime.month);
         this.scheduleNextWeather();
         this.applyLighting(TimeSystem.getTimeInfo());
+        this.applySeason(this.currentSeason, { silent: true });
         this.applyWeather(this.currentWeather, { silent: true });
     },
     scheduleNextWeather() {
         const variance = Math.round(Math.random() * 120);
         this.nextWeatherChange = TimeSystem.getTotalMinutes() + 90 + variance;
+    },
+    deriveSeason(month = 1) {
+        if ([12, 1, 2].includes(month)) return 'winter';
+        if ([3, 4, 5].includes(month)) return 'spring';
+        if ([6, 7, 8].includes(month)) return 'summer';
+        return 'autumn';
+    },
+    applySeason(season, options = {}) {
+        this.currentSeason = season;
+        this.seasonClass = season;
+        const label = season.charAt(0).toUpperCase() + season.slice(1);
+        const seasonNotes = {
+            spring: 'Spring caravans surge with fresh harvests.',
+            summer: 'Summer heat swells demand for water and shade.',
+            autumn: 'Autumn fairs promise exotic wares and coin.',
+            winter: 'Winter snows slow caravans but raise fur prices.'
+        };
+
+        this.seasonNote = seasonNotes[season] || '';
+        if (this.seasonLabel) {
+            this.seasonLabel.textContent = label;
+        }
+
+        this.refreshOverlayClasses();
+        if (!options.silent) {
+            addMessage(`Season shifted to ${label}.`);
+            NotificationCenter.show(`Season: ${label}`, 'info');
+        }
+        this.updateAtmosphereNote();
     },
     rollWeather() {
         const patterns = [
@@ -2500,11 +2542,7 @@ const EnvironmentSystem = {
             sandstorm: 'Sandstorm'
         }[type] || 'Calm Skies';
 
-        if (this.overlay) {
-            this.overlay.className = 'environment-overlay';
-            this.overlay.classList.add(type);
-            this.overlay.style.opacity = userPreferences.environmentQuality === 'low' ? 0.16 : '';
-        }
+        this.refreshOverlayClasses(type);
 
         if (this.weatherLabel) {
             this.weatherLabel.textContent = label;
@@ -2515,6 +2553,25 @@ const EnvironmentSystem = {
             NotificationCenter.show(`Weather: ${label}`, 'info');
         }
 
+        this.updateAtmosphereNote();
+    },
+    applyLocationAtmosphere(locationId) {
+        const location = GameWorld.locations?.[locationId];
+        if (!location) return;
+
+        const regionMood = {
+            starter: { note: 'Riverlands trade flows steady along the banks.', overlayClass: 'riverlands' },
+            northern: { note: 'Highland winds bite; pack animals slow on ridges.', overlayClass: 'highlands' },
+            eastern: { note: 'Spiced sea breeze hints at eastern luxuries.', overlayClass: 'port' },
+            western: { note: 'Dusty frontier roads reward hardy caravans.', overlayClass: 'desert' },
+            southern: { note: 'Sun-baked dunes shimmer with merchant banners.', overlayClass: 'desert' },
+            capital: { note: 'The capital watches; nobles judge every bargain.', overlayClass: 'riverlands' }
+        };
+
+        const mood = regionMood[location.region] || { note: '', overlayClass: '' };
+        this.locationNote = mood.note;
+        this.locationClass = mood.overlayClass;
+        this.refreshOverlayClasses();
         this.updateAtmosphereNote();
     },
     applyLighting(timeInfo) {
@@ -2530,7 +2587,9 @@ const EnvironmentSystem = {
         else cycle = 'Nightfall';
 
         const dimming = cycle === 'Night' || cycle === 'Nightfall' ? 0.65 : cycle === 'Golden Hour' ? 0.45 : 0.3;
-        const saturation = userPreferences.environmentQuality === 'high' ? 1.1 : 0.95;
+        const saturationBase = userPreferences.environmentQuality === 'high' ? 1.1 : 0.95;
+        const seasonalShift = this.currentSeason === 'winter' ? 0.92 : this.currentSeason === 'autumn' ? 1.02 : 1;
+        const saturation = saturationBase * seasonalShift;
 
         if (this.cycleLabel) {
             this.cycleLabel.textContent = cycle;
@@ -2546,6 +2605,11 @@ const EnvironmentSystem = {
     },
     update(timeInfo) {
         this.applyLighting(timeInfo);
+
+        const season = this.deriveSeason(timeInfo.month);
+        if (season !== this.currentSeason) {
+            this.applySeason(season);
+        }
 
         if (userPreferences.dynamicWeather && TimeSystem.getTotalMinutes() >= this.nextWeatherChange) {
             const nextWeather = this.rollWeather();
@@ -2603,7 +2667,16 @@ const EnvironmentSystem = {
             sandstorm: 'Sandstorm reduces visibility and morale.'
         }[this.currentWeather] || 'Atmosphere steady and safe.';
 
-        this.atmosphereNote.textContent = weatherText;
+        const fragments = [weatherText, this.locationNote, this.seasonNote].filter(Boolean);
+        this.atmosphereNote.textContent = fragments.join(' ');
+    },
+    refreshOverlayClasses(weatherType = this.currentWeather) {
+        if (!this.overlay) return;
+        this.overlay.className = 'environment-overlay';
+        if (this.seasonClass) this.overlay.classList.add(this.seasonClass);
+        if (this.locationClass) this.overlay.classList.add(this.locationClass);
+        if (weatherType) this.overlay.classList.add(weatherType);
+        this.overlay.style.opacity = userPreferences.environmentQuality === 'low' ? 0.16 : '';
     }
 };
 
@@ -2793,6 +2866,7 @@ const PerformanceMonitor = {
         this.fpsEl = elements.performanceFps;
         this.frameEl = elements.performanceFrame;
         this.memoryEl = elements.performanceMemory;
+        this.qualityEl = elements.performanceQuality;
         this.setEnabled(this.enabled);
     },
     setEnabled(value) {
@@ -2807,6 +2881,12 @@ const PerformanceMonitor = {
         const fps = Math.round(1000 / Math.max(1, this.smoothFrame));
         if (this.fpsEl) this.fpsEl.textContent = fps.toString();
         if (this.frameEl) this.frameEl.textContent = `${Math.round(this.smoothFrame)} ms`;
+
+        if (this.qualityEl) {
+            const quality = userPreferences.environmentQuality || 'medium';
+            const density = userPreferences.particleDensity || 100;
+            this.qualityEl.textContent = `${quality.charAt(0).toUpperCase() + quality.slice(1)} • ${density}%`;
+        }
 
         if (performance && performance.memory && this.memoryEl) {
             const mb = performance.memory.usedJSHeapSize / 1024 / 1024;
@@ -3069,11 +3149,13 @@ function initializeElements() {
     elements.performanceFps = document.getElementById('perf-fps');
     elements.performanceFrame = document.getElementById('perf-frame');
     elements.performanceMemory = document.getElementById('perf-memory');
+    elements.performanceQuality = document.getElementById('perf-quality');
     elements.screenFader = document.getElementById('screen-fader');
     elements.atmosphereLayer = document.getElementById('atmosphere-layer');
     elements.environmentOverlay = document.getElementById('environment-overlay');
     elements.highlightLayer = document.getElementById('highlight-layer');
     elements.weatherLabel = document.getElementById('weather-label');
+    elements.seasonLabel = document.getElementById('season-label');
     elements.cycleLabel = document.getElementById('cycle-label');
     elements.atmosphereNote = document.getElementById('atmosphere-note');
     elements.animationState = document.getElementById('animation-state');
@@ -3143,7 +3225,9 @@ function initializeElements() {
     elements.screenShakeLabel = document.getElementById('screen-shake-label');
     elements.animationSpeedRange = document.getElementById('animation-speed-range');
     elements.animationSpeedLabel = document.getElementById('animation-speed-label');
+    elements.environmentQualitySelect = document.getElementById('environment-quality-select');
     elements.performanceOverlayToggle = document.getElementById('performance-overlay-toggle');
+    elements.autoQualityToggle = document.getElementById('auto-quality-toggle');
     elements.settingsTabs = Array.from(document.querySelectorAll('.settings-tab'));
     elements.statusBanner = document.getElementById('status-banner');
     elements.controlsHelpOverlay = document.getElementById('controls-help-overlay');
@@ -3306,9 +3390,21 @@ function setupEventListeners() {
             applyPreferences();
         });
     }
+    if (elements.environmentQualitySelect) {
+        elements.environmentQualitySelect.addEventListener('change', (event) => {
+            userPreferences.environmentQuality = event.target.value;
+            applyPreferences();
+        });
+    }
     if (elements.performanceOverlayToggle) {
         elements.performanceOverlayToggle.addEventListener('change', (event) => {
             userPreferences.performanceOverlay = event.target.checked;
+            applyPreferences();
+        });
+    }
+    if (elements.autoQualityToggle) {
+        elements.autoQualityToggle.addEventListener('change', (event) => {
+            userPreferences.autoQuality = event.target.checked;
             applyPreferences();
         });
     }
@@ -3475,11 +3571,18 @@ function applyPreferences() {
     if (elements.environmentOverlay) {
         elements.environmentOverlay.style.opacity = userPreferences.environmentQuality === 'low' ? 0.16 : '';
     }
+    if (elements.environmentQualitySelect) {
+        elements.environmentQualitySelect.value = userPreferences.environmentQuality;
+    }
+    if (elements.autoQualityToggle) {
+        elements.autoQualityToggle.checked = userPreferences.autoQuality;
+    }
     if (elements.qualityLabel) {
         const label = userPreferences.environmentQuality === 'low' ? 'Performance' :
             userPreferences.environmentQuality === 'medium' ? 'Balanced' : 'High Fidelity';
         elements.qualityLabel.textContent = label;
     }
+    EnvironmentSystem.refreshOverlayClasses();
     if (EnvironmentSystem.overlay && !userPreferences.dynamicWeather) {
         EnvironmentSystem.applyWeather('clear', { silent: true });
     }
@@ -3535,8 +3638,14 @@ function syncSettingsUI() {
     if (elements.animationSpeedRange) {
         elements.animationSpeedRange.value = userPreferences.animationSpeed;
     }
+    if (elements.environmentQualitySelect) {
+        elements.environmentQualitySelect.value = userPreferences.environmentQuality;
+    }
     if (elements.performanceOverlayToggle) {
         elements.performanceOverlayToggle.checked = userPreferences.performanceOverlay;
+    }
+    if (elements.autoQualityToggle) {
+        elements.autoQualityToggle.checked = userPreferences.autoQuality;
     }
     updateFontSizeLabel();
     syncAudioUI();
@@ -4373,6 +4482,7 @@ function updateLocationInfo() {
         document.getElementById('location-name').textContent = game.currentLocation.name;
         document.getElementById('location-description').textContent = game.currentLocation.description;
         playAmbientForLocation(game.currentLocation.id);
+        EnvironmentSystem.applyLocationAtmosphere(game.currentLocation.id);
     }
 
     updateNavigationPanel();
@@ -4922,6 +5032,22 @@ function updateCurrentLoad() {
     updateTransportationInfo();
 }
 
+function celebrateAction(state, reason, particleType = 'success', origin) {
+    AnimationSystem.setState(state, { reason, context: state });
+    AnimationSystem.registerBeat(0.12);
+    ParticleSystem.spawnBurst(particleType, { count: 12, origin });
+    VisualEffectsSystem.shake(4, 240);
+}
+
+function playItemUseEffects(item) {
+    const particleType = item.category === 'medical' ? 'heal' : 'success';
+    celebrateAction('rest', `Using ${item.name}`, particleType, elements.inventoryPanel);
+}
+
+function celebrateTrade(reason, origin) {
+    celebrateAction('trade', reason, 'deal', origin || elements.marketPanel);
+}
+
 // Item Usage System
 function useItem(itemId) {
     if (!game.player || !game.player.inventory) return false;
@@ -5027,7 +5153,9 @@ function useConsumable(item) {
     // Update UI
     updatePlayerStats();
     updateInventoryDisplay();
-    
+
+    playItemUseEffects(item);
+
     return true;
 }
 
@@ -5046,7 +5174,9 @@ function useTool(item) {
     
     addMessage(`You equipped your ${item.name} for ${item.toolType}.`);
     game.player.equippedTool = item.id;
-    
+
+    celebrateAction('trade', `Equipped ${item.name}`, 'success', elements.inventoryPanel);
+
     return true;
 }
 
@@ -5482,6 +5612,7 @@ function buyItem(itemId, quantity = 1) {
     CityReputationSystem.changeReputation(currentLocation.id, 0.1 * actualQuantity);
 
     addMessage(`Bought ${actualQuantity} × ${item.name} for ${totalPrice} gold!`);
+    celebrateTrade(`Secured ${item.name}`, elements.marketPanel);
 
     ParticleSystem.spawnBurst('gold', { origin: elements.playerGold });
     if (window.AudioSystem) {
@@ -5567,6 +5698,7 @@ function sellItem(itemId, quantity = 1) {
     CityReputationSystem.changeReputation(currentLocation.id, 0.1 * actualQuantity);
 
     addMessage(`Sold ${actualQuantity} × ${item.name} for ${totalSellPrice} gold!`);
+    celebrateTrade(`Closed ${item.name} sale`, elements.marketPanel);
 
     ParticleSystem.spawnBurst('success', { origin: elements.playerGold });
     if (window.AudioSystem) {

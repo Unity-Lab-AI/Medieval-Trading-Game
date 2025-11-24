@@ -4934,6 +4934,16 @@ button:focus-visible, .quick-action-btn:focus-visible {
     animation: sand-sweep 2.4s linear infinite;
 }
 
+#environment-overlay.spring { background-blend-mode: screen; background-color: rgba(120, 200, 140, 0.06); }
+#environment-overlay.summer { background-color: rgba(240, 200, 120, 0.06); }
+#environment-overlay.autumn { background-color: rgba(200, 140, 80, 0.07); }
+#environment-overlay.winter { background-color: rgba(140, 180, 240, 0.08); filter: saturate(0.9); }
+
+#environment-overlay.riverlands { box-shadow: inset 0 0 120px rgba(79, 195, 247, 0.1); }
+#environment-overlay.highlands { box-shadow: inset 0 0 120px rgba(142, 124, 195, 0.12); }
+#environment-overlay.desert { box-shadow: inset 0 0 120px rgba(230, 190, 138, 0.14); }
+#environment-overlay.port { box-shadow: inset 0 0 120px rgba(90, 180, 200, 0.12); }
+
 #highlight-layer {
     z-index: 1180;
     background: radial-gradient(circle at 50% 50%, rgba(79, 195, 247, 0.06), transparent 60%);
@@ -5287,6 +5297,8 @@ button:focus-visible, .quick-action-btn:focus-visible {
 .particle.success { background: radial-gradient(circle at 30% 30%, #e8fff1 0%, #66bb6a 55%, #2e7d32 100%); }
 .particle.travel { background: radial-gradient(circle at 30% 30%, #e3f2fd 0%, #90caf9 55%, #1565c0 100%); }
 .particle.resource { background: radial-gradient(circle at 30% 30%, #f2fff5 0%, #a5d6a7 55%, #2e7d32 100%); }
+.particle.heal { background: radial-gradient(circle at 30% 30%, #f4e7ff 0%, #b39ddb 55%, #6a1b9a 100%); }
+.particle.deal { background: radial-gradient(circle at 30% 30%, #fff4e5 0%, #ffcc80 55%, #ef6c00 100%); }
 
 @keyframes particle-drift {
     0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); }
