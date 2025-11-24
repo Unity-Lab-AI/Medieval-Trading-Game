@@ -1,0 +1,3181 @@
+/* CSS Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #1a1a1a;
+    color: #e0e0e0;
+    line-height: 1.6;
+}
+
+/* Game Container */
+#game-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    max-width: 1400px;
+    margin: 0 auto;
+    background-color: #2a2a2a;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+/* Header */
+#game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background-color: #1e3a5f;
+    border-bottom: 2px solid #0f2338;
+}
+
+#game-header h1 {
+    color: #f0f0f0;
+    font-size: 1.8rem;
+}
+
+#player-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.player-main-info {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.player-attributes {
+    display: flex;
+    gap: 0.8rem;
+    font-size: 0.9rem;
+}
+
+.attribute-display {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.2rem 0.5rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.2s ease;
+}
+
+.attribute-display:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+}
+
+#player-name {
+    font-weight: bold;
+    color: #4fc3f7;
+}
+
+#player-gold {
+    color: #ffd700;
+}
+
+.time-display {
+    color: #81c784;
+    font-weight: bold;
+    padding: 0.2rem 0.5rem;
+    background-color: rgba(129, 199, 132, 0.1);
+    border-radius: 4px;
+    border: 1px solid rgba(129, 199, 132, 0.3);
+}
+
+/* Main Game Area */
+#game-main {
+    display: flex;
+    flex: 1;
+    padding: 1rem;
+    gap: 1rem;
+}
+
+/* Game World */
+#game-world {
+    flex: 2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #0a0a0a;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+#game-canvas {
+    background-color: #0a0a0a;
+    border: 2px solid #333;
+    max-width: 100%;
+    height: auto;
+}
+
+/* UI Panels Container */
+#ui-panels {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 300px;
+}
+
+/* Panel Styles */
+.panel {
+    background-color: #1e1e1e;
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.panel h2 {
+    color: #4fc3f7;
+    margin-bottom: 1rem;
+    font-size: 1.3rem;
+    border-bottom: 1px solid #444;
+    padding-bottom: 0.5rem;
+}
+
+.panel h3 {
+    color: #81c784;
+    margin-bottom: 0.8rem;
+    font-size: 1.1rem;
+}
+
+/* Panel Visibility */
+.hidden {
+    display: none !important;
+}
+
+/* Character Panel */
+#character-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Character Visual Representation */
+.character-visual {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+    background-color: #2a2a2a;
+    border-radius: 8px;
+    padding: 1.5rem;
+    border: 1px solid #444;
+}
+
+.character-avatar {
+    width: 80px;
+    height: 80px;
+    background-color: #1e3a5f;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 2px solid #4fc3f7;
+}
+
+.avatar-icon {
+    font-size: 2.5rem;
+}
+
+.character-preview {
+    flex: 1;
+}
+
+.character-preview h3 {
+    margin: 0 0 0.5rem 0;
+    color: #4fc3f7;
+}
+
+.starting-gold-display {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.gold-label {
+    color: #bbbbbb;
+}
+
+.gold-amount {
+    font-weight: bold;
+    color: #ffd700;
+    font-size: 1.2rem;
+}
+
+/* Perk Selection */
+.perk-selection-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 0.8rem;
+    background-color: #2a2a2a;
+    border-radius: 4px;
+    border: 1px solid #444;
+}
+
+.perk-selection-info p {
+    margin: 0;
+    color: #bbbbbb;
+    font-size: 0.9rem;
+}
+
+.perk-counter {
+    font-weight: bold;
+    color: #4fc3f7;
+}
+
+.perks-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 0.5rem;
+    border: 1px solid #444;
+    border-radius: 4px;
+    background-color: #252525;
+}
+
+.perk-card {
+    background-color: #2a2a2a;
+    border: 2px solid #444;
+    border-radius: 8px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.perk-card:hover {
+    border-color: #4fc3f7;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(79, 195, 247, 0.2);
+}
+
+.perk-card.selected {
+    border-color: #4fc3f7;
+    background-color: rgba(79, 195, 247, 0.1);
+}
+
+.perk-card.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.perk-card.disabled:hover {
+    transform: none;
+    border-color: #444;
+    box-shadow: none;
+}
+
+.perk-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.8rem;
+}
+
+.perk-icon {
+    font-size: 1.5rem;
+}
+
+.perk-name {
+    font-weight: bold;
+    color: #4fc3f7;
+    font-size: 1.1rem;
+}
+
+.perk-description {
+    color: #bbbbbb;
+    font-size: 0.9rem;
+    margin-bottom: 0.8rem;
+    line-height: 1.4;
+}
+
+.perk-effects {
+    font-size: 0.85rem;
+}
+
+.perk-effect {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-bottom: 0.3rem;
+}
+
+.perk-effect.positive {
+    color: #81c784;
+}
+
+.perk-effect.negative {
+    color: #e57373;
+}
+
+.perk-effect-icon {
+    font-size: 0.9rem;
+}
+
+/* Character Attributes */
+.attributes-display {
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.attributes-display h3 {
+    margin: 0 0 1rem 0;
+    color: #4fc3f7;
+    font-size: 1.1rem;
+}
+
+.attributes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+}
+
+.attribute {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background-color: #333;
+    border-radius: 4px;
+    border: 1px solid #555;
+}
+
+.attribute-name {
+    color: #bbbbbb;
+    font-size: 0.9rem;
+}
+
+.attribute-value {
+    font-weight: bold;
+    color: #ffd700;
+    font-size: 1rem;
+}
+
+/* Form Actions */
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.form-actions button {
+    flex: 1;
+    padding: 0.8rem 1.5rem;
+    font-size: 1.1rem;
+}
+
+/* Scrollbar Styling */
+.perks-grid::-webkit-scrollbar {
+    width: 8px;
+}
+
+.perks-grid::-webkit-scrollbar-track {
+    background: #1a1a1a;
+    border-radius: 4px;
+}
+
+.perks-grid::-webkit-scrollbar-thumb {
+    background: #4fc3f7;
+    border-radius: 4px;
+}
+
+.perks-grid::-webkit-scrollbar-thumb:hover {
+    background: #29b6f6;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    font-weight: bold;
+    color: #bbbbbb;
+}
+
+.form-group input,
+.form-group select {
+    padding: 0.5rem;
+    border: 1px solid #555;
+    border-radius: 4px;
+    background-color: #333;
+    color: #e0e0e0;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #4fc3f7;
+    box-shadow: 0 0 0 2px rgba(79, 195, 247, 0.2);
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.tab-btn {
+    padding: 0.5rem 1rem;
+    background-color: #333;
+    color: #e0e0e0;
+    border: 1px solid #555;
+    border-radius: 4px 4px 0 0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tab-btn:hover {
+    background-color: #444;
+}
+
+.tab-btn.active {
+    background-color: #4fc3f7;
+    color: #1a1a1a;
+    border-color: #4fc3f7;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Items Grid */
+.items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+}
+
+.item {
+    background-color: #2a2a2a;
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 0.8rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.item:hover {
+    background-color: #333;
+    border-color: #4fc3f7;
+}
+
+.item-name {
+    font-weight: bold;
+    margin-bottom: 0.3rem;
+}
+
+.item-price {
+    color: #ffd700;
+    font-size: 0.9rem;
+}
+
+.item-quantity {
+    color: #81c784;
+    font-size: 0.8rem;
+}
+
+/* Destinations List */
+.destinations-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.destination {
+    background-color: #2a2a2a;
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.destination:hover {
+    background-color: #333;
+    border-color: #4fc3f7;
+}
+
+.destination-name {
+    font-weight: bold;
+    margin-bottom: 0.3rem;
+}
+
+.destination-info {
+    font-size: 0.9rem;
+    color: #bbbbbb;
+}
+
+/* Transportation Info */
+.transportation-info {
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 4px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.transportation-info p {
+    margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+}
+
+.transportation-info span {
+    font-weight: bold;
+    color: #4fc3f7;
+}
+
+/* Message Log */
+#message-log {
+    background-color: #1e1e1e;
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 1rem;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+#messages {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.message {
+    padding: 0.3rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.message:nth-child(odd) {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Panel Footer */
+.panel-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 0.8rem;
+    border-top: 1px solid #444;
+}
+
+/* Buttons */
+button {
+    padding: 0.5rem 1rem;
+    background-color: #4fc3f7;
+    color: #1a1a1a;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s ease;
+}
+
+button:hover {
+    background-color: #29b6f6;
+    transform: translateY(-1px);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+button:disabled {
+    background-color: #555;
+    color: #999;
+    cursor: not-allowed;
+    transform: none;
+}
+
+button.secondary {
+    background-color: #666;
+    color: #e0e0e0;
+}
+
+button.secondary:hover {
+    background-color: #777;
+}
+
+/* Game Controls */
+#game-controls {
+    padding: 1rem 2rem;
+    background-color: #1e3a5f;
+    border-top: 2px solid #0f2338;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.control-group {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.time-controls {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.time-control-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+    background-color: #333;
+    color: #e0e0e0;
+    border: 1px solid #555;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.time-control-btn:hover {
+    background-color: #444;
+    transform: translateY(-1px);
+}
+
+.time-control-btn.active {
+    background-color: #81c784;
+    color: #1a1a1a;
+    border-color: #81c784;
+}
+
+/* Screens (Loading, Main Menu) */
+.screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #0a0a0a;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.screen.hidden {
+    display: none;
+}
+
+.loading-content,
+.menu-content {
+    text-align: center;
+    max-width: 500px;
+    padding: 2rem;
+}
+
+.loading-content h2,
+.menu-content h1 {
+    color: #4fc3f7;
+    margin-bottom: 2rem;
+    font-size: 2.5rem;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 20px;
+    background-color: #333;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 1rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background-color: #4fc3f7;
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.menu-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.menu-buttons button {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+}
+
+/* Location Actions */
+#location-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    #game-main {
+        flex-direction: column;
+    }
+    
+    #game-world {
+        order: 2;
+    }
+    
+    #ui-panels {
+        order: 1;
+        flex-direction: row;
+        flex-wrap: wrap;
+        min-width: auto;
+    }
+    
+    .panel {
+        flex: 1;
+        min-width: 280px;
+    }
+}
+
+@media (max-width: 768px) {
+    #game-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    #player-info {
+        justify-content: center;
+    }
+    
+    #game-main {
+        padding: 0.5rem;
+    }
+    
+    #ui-panels {
+        flex-direction: column;
+    }
+    
+    .panel {
+        min-width: auto;
+    }
+    
+    #game-controls {
+        padding: 1rem;
+    }
+    
+    .control-group {
+        flex-wrap: wrap;
+    }
+    
+    #game-controls {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .time-controls {
+        order: -1;
+    }
+    
+    #location-actions {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    #game-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    #player-info {
+        flex-direction: column;
+        gap: 0.5rem;
+        font-size: 1rem;
+    }
+    
+    .items-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    }
+    
+    .menu-buttons button {
+        padding: 0.8rem 1.5rem;
+        font-size: 1rem;
+    }
+}
+
+/* Utility Classes */
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.mt-1 {
+    margin-top: 1rem;
+}
+
+.mb-1 {
+    margin-bottom: 1rem;
+}
+
+/* Animation Classes */
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+.fade-out {
+    animation: fadeOut 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+/* Location Details */
+.location-details {
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 4px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.location-details p {
+    margin: 0.5rem 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.location-details strong {
+    color: #4fc3f7;
+}
+
+/* Region Unlocks */
+.region-unlocks {
+    background-color: #1e3a5f;
+    border: 1px solid #0f2338;
+    border-radius: 4px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.region-unlocks h3 {
+    color: #81c784;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.region-option {
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 4px;
+    padding: 0.8rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.region-option strong {
+    color: #4fc3f7;
+    flex: 1;
+}
+
+.region-cost {
+    color: #ffd700;
+    font-weight: bold;
+    margin: 0 1rem;
+}
+
+.unlock-btn {
+    background-color: #81c784;
+    color: #1a1a1a;
+    border: none;
+    border-radius: 4px;
+    padding: 0.4rem 0.8rem;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s ease;
+}
+
+.unlock-btn:hover {
+    background-color: #66bb6a;
+    transform: translateY(-1px);
+}
+
+.unlock-btn:disabled {
+    background-color: #555;
+    color: #999;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Enhanced Destination Styles */
+.destination-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0.3rem 0;
+    font-size: 0.9rem;
+    color: #bbbbbb;
+}
+
+.destination-type {
+    background-color: #4fc3f7;
+    color: #1a1a1a;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.destination-population {
+    color: #81c784;
+}
+
+.destination-details {
+    display: flex;
+    justify-content: space-between;
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
+}
+
+.destination-cost {
+    color: #ffd700;
+    font-weight: bold;
+}
+
+.destination-time {
+    color: #4fc3f7;
+}
+
+.destination-specialties {
+    background-color: #333;
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 0.5rem;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.destination-specialties strong {
+    color: #81c784;
+}
+
+/* Enhanced Item Styles */
+.item-demand {
+    font-size: 0.75rem;
+    margin-top: 0.2rem;
+    padding: 0.2rem 0.3rem;
+    border-radius: 3px;
+    background-color: rgba(129, 199, 132, 0.1);
+    border: 1px solid rgba(129, 199, 132, 0.3);
+}
+
+/* Time Display Enhancement */
+.time-display {
+    color: #81c784;
+    font-weight: bold;
+    padding: 0.2rem 0.5rem;
+    background-color: rgba(129, 199, 132, 0.1);
+    border-radius: 4px;
+    border: 1px solid rgba(129, 199, 132, 0.3);
+    transition: all 0.3s ease;
+}
+
+.time-display:hover {
+    background-color: rgba(129, 199, 132, 0.2);
+    transform: translateY(-1px);
+}
+
+.slide-up {
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* Player Stats Display */
+.player-stats {
+    background-color: #1e3a5f;
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.stat-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    min-width: 80px;
+    font-size: 0.9rem;
+    color: #bbbbbb;
+}
+
+.stat-progress {
+    flex: 1;
+    height: 8px;
+    background-color: #333;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+.stat-fill {
+    height: 100%;
+    transition: width 0.3s ease;
+    border-radius: 4px;
+}
+
+.health-fill {
+    background-color: #e57373;
+}
+
+.hunger-fill {
+    background-color: #ff9800;
+}
+
+.thirst-fill {
+    background-color: #2196f3;
+}
+
+.stamina-fill {
+    background-color: #4caf50;
+}
+
+.happiness-fill {
+    background-color: #ffeb3b;
+}
+
+.stat-value {
+    min-width: 50px;
+    font-size: 0.8rem;
+    color: #e0e0e0;
+    text-align: right;
+}
+
+/* Enhanced Item Styles */
+.inventory-item,
+.market-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.8rem;
+    background-color: #2a2a2a;
+    border: 1px solid #555;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.inventory-item:hover,
+.market-item:hover {
+    background-color: #333;
+    border-color: #4fc3f7;
+    transform: translateY(-2px);
+}
+
+.item-icon {
+    font-size: 1.5rem;
+    margin-bottom: 0.2rem;
+}
+
+.item-name {
+    font-weight: bold;
+    color: #4fc3f7;
+    margin-bottom: 0.2rem;
+}
+
+.item-quantity {
+    font-size: 0.8rem;
+    color: #81c784;
+    background-color: rgba(129, 199, 132, 0.1);
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    margin-bottom: 0.2rem;
+}
+
+.item-weight {
+    font-size: 0.75rem;
+    color: #bbbbbb;
+    margin-bottom: 0.3rem;
+}
+
+.item-price {
+    color: #ffd700;
+    font-weight: bold;
+    margin-bottom: 0.3rem;
+}
+
+.item-stock {
+    font-size: 0.75rem;
+    color: #9e9e9e;
+    margin-bottom: 0.3rem;
+}
+
+.use-item-btn,
+.buy-item-btn,
+.sell-item-btn {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+    background-color: #4fc3f7;
+    color: #1a1a1a;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 0.2rem;
+}
+
+.use-item-btn:hover,
+.buy-item-btn:hover,
+.sell-item-btn:hover {
+    background-color: #29b6f6;
+    transform: translateY(-1px);
+}
+
+.use-item-btn:active,
+.buy-item-btn:active,
+.sell-item-btn:active {
+    transform: translateY(0);
+}
+
+/* Location Rest Options */
+.location-rest-options {
+    background-color: #1e3a5f;
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.location-rest-options h3 {
+    color: #81c784;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.rest-btn,
+.buy-house-btn {
+    display: block;
+    width: 100%;
+    padding: 0.8rem;
+    margin-bottom: 0.5rem;
+    background-color: #4fc3f7;
+    color: #1a1a1a;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s ease;
+}
+
+.rest-btn:hover,
+.buy-house-btn:hover {
+    background-color: #29b6f6;
+    transform: translateY(-1px);
+}
+
+.rest-btn:active,
+.buy-house-btn:active {
+    transform: translateY(0);
+}
+
+.buy-house-btn {
+    background-color: #ff9800;
+}
+
+.buy-house-btn:hover {
+    background-color: #f57c00;
+}
+
+/* Enhanced Market Display */
+.sell-items {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .player-stats {
+        padding: 0.5rem;
+    }
+    
+    .stat-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.3rem;
+    }
+    
+    .stat-label {
+        min-width: auto;
+        margin-bottom: 0.2rem;
+    }
+    
+    .inventory-item,
+    .market-item {
+        padding: 0.5rem;
+    }
+    
+    .item-icon {
+        font-size: 1.2rem;
+    }
+}
+
+/* Market Header Styles */
+.market-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 0.8rem;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 4px;
+}
+
+.market-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.market-info span {
+    font-size: 0.9rem;
+}
+
+.reputation-display {
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+    font-weight: bold;
+}
+
+.reputation-display.hostile {
+    background-color: #e57373;
+    color: #1a1a1a;
+}
+
+.reputation-display.untrusted {
+    background-color: #ff9800;
+    color: #1a1a1a;
+}
+
+.reputation-display.suspicious {
+    background-color: #ffc107;
+    color: #1a1a1a;
+}
+
+.reputation-display.neutral {
+    background-color: #9e9e9e;
+    color: #1a1a1a;
+}
+
+.reputation-display.friendly {
+    background-color: #81c784;
+    color: #1a1a1a;
+}
+
+.reputation-display.trusted {
+    background-color: #4fc3f7;
+    color: #1a1a1a;
+}
+
+.reputation-display.elite {
+    background-color: #9c27b0;
+    color: #ffffff;
+}
+
+.market-events {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    font-size: 0.8rem;
+    max-width: 300px;
+}
+
+.market-event {
+    padding: 0.3rem 0.5rem;
+    background-color: rgba(255, 152, 0, 0.2);
+    border: 1px solid #ff9800;
+    border-radius: 3px;
+    color: #ff9800;
+}
+
+/* Market Controls */
+.market-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 4px;
+}
+
+.market-controls button {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+}
+
+.market-controls select {
+    padding: 0.4rem;
+    background-color: #333;
+    color: #e0e0e0;
+    border: 1px solid #555;
+    border-radius: 4px;
+}
+
+/* Enhanced Market Item Styles */
+.market-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.8rem;
+    background-color: #2a2a2a;
+    border: 1px solid #555;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.market-item:hover {
+    background-color: #333;
+    border-color: #4fc3f7;
+    transform: translateY(-2px);
+}
+
+.market-item.special {
+    border-color: #9c27b0;
+    background-color: rgba(156, 39, 176, 0.1);
+}
+
+.market-item.special:hover {
+    border-color: #ba68c8;
+    background-color: rgba(186, 104, 200, 0.2);
+}
+
+.item-trend {
+    position: absolute;
+    top: 0.3rem;
+    right: 0.3rem;
+    font-size: 0.8rem;
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+}
+
+.item-trend.rising {
+    background-color: rgba(233, 30, 99, 0.2);
+    color: #e91e63;
+}
+
+.item-trend.falling {
+    background-color: rgba(76, 175, 80, 0.2);
+    color: #4caf50;
+}
+
+.item-trend.stable {
+    background-color: rgba(158, 158, 158, 0.2);
+    color: #9e9e9e;
+}
+
+.item-demand {
+    font-size: 0.75rem;
+    margin-top: 0.2rem;
+    padding: 0.2rem 0.3rem;
+    border-radius: 3px;
+    background-color: rgba(129, 199, 132, 0.1);
+    border: 1px solid rgba(129, 199, 132, 0.3);
+}
+
+.item-demand.high {
+    background-color: rgba(233, 30, 99, 0.2);
+    border-color: rgba(233, 30, 99, 0.5);
+    color: #e91e63;
+}
+
+.item-demand.low {
+    background-color: rgba(76, 175, 80, 0.2);
+    border-color: rgba(76, 175, 80, 0.5);
+    color: #4caf50;
+}
+
+/* Price Comparison Styles */
+.price-comparison {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.price-comparison-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 4px;
+}
+
+.price-comparison-item.best-price {
+    border-color: #4caf50;
+    background-color: rgba(76, 175, 80, 0.1);
+}
+
+.price-comparison-city {
+    font-weight: bold;
+    color: #4fc3f7;
+}
+
+.price-comparison-price {
+    font-weight: bold;
+    color: #ffd700;
+}
+
+.price-comparison-trend {
+    font-size: 0.8rem;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+}
+
+.price-comparison-stock {
+    font-size: 0.8rem;
+    color: #9e9e9e;
+}
+
+/* Market News Styles */
+.market-news {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 0.5rem;
+    background-color: #1e1e1e;
+    border: 1px solid #444;
+    border-radius: 4px;
+}
+
+.news-item {
+    padding: 0.8rem;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 4px;
+    border-left: 4px solid #4fc3f7;
+}
+
+.news-item.price-rise {
+    border-left-color: #e91e63;
+}
+
+.news-item.price-fall {
+    border-left-color: #4caf50;
+}
+
+.news-item.event {
+    border-left-color: #ff9800;
+}
+
+.news-time {
+    font-size: 0.8rem;
+    color: #9e9e9e;
+    margin-bottom: 0.3rem;
+}
+
+.news-content {
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+/* Transaction Preview */
+.transaction-preview {
+    margin-top: 1rem;
+    padding: 0.8rem;
+    background-color: #1e3a5f;
+    border: 1px solid #444;
+    border-radius: 4px;
+}
+
+.transaction-preview h4 {
+    color: #81c784;
+    margin-bottom: 0.5rem;
+}
+
+.transaction-details {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.3rem;
+    font-size: 0.9rem;
+}
+
+.transaction-total {
+    font-weight: bold;
+    color: #ffd700;
+    font-size: 1.1rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #444;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .market-header {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .market-controls {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .market-controls button,
+    .market-controls select {
+        width: 100%;
+    }
+    
+    .price-comparison-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.3rem;
+    }
+}
+
+/* Enhanced Inventory System Styles */
+.inventory-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #444;
+}
+
+.inventory-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-end;
+}
+
+.inventory-info {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.9rem;
+    color: #bbbbbb;
+}
+
+.inventory-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.inventory-actions button {
+    padding: 0.3rem 0.5rem;
+    font-size: 1rem;
+    background-color: #333;
+    border: 1px solid #555;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.inventory-actions button:hover {
+    background-color: #444;
+    border-color: #4fc3f7;
+}
+
+/* Quick Access Slots */
+.quick-access-container {
+    margin-bottom: 1rem;
+    padding: 0.8rem;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 4px;
+}
+
+.quick-access-container h3 {
+    color: #81c784;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+}
+
+.quick-access-slots {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.quick-access-slot {
+    width: 50px;
+    height: 50px;
+    background-color: #333;
+    border: 2px solid #555;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.quick-access-slot:hover {
+    border-color: #4fc3f7;
+    transform: translateY(-2px);
+}
+
+.quick-access-slot.active {
+    border-color: #81c784;
+    background-color: rgba(129, 199, 132, 0.1);
+}
+
+.quick-access-slot .item-icon {
+    font-size: 1.5rem;
+}
+
+.quick-access-slot .item-quantity {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    background-color: #4fc3f7;
+    color: #1a1a1a;
+    font-size: 0.7rem;
+    padding: 1px 3px;
+    border-radius: 3px;
+    font-weight: bold;
+}
+
+/* Inventory Options */
+.inventory-options {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 0.8rem;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 4px;
+}
+
+.filter-section, .sort-section {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.filter-section label, .sort-section label {
+    color: #bbbbbb;
+    font-size: 0.9rem;
+}
+
+.filter-section select, .sort-section select {
+    padding: 0.3rem;
+    background-color: #333;
+    color: #e0e0e0;
+    border: 1px solid #555;
+    border-radius: 4px;
+}
+
+#inventory-sort-order {
+    padding: 0.3rem 0.5rem;
+    background-color: #333;
+    border: 1px solid #555;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+/* Enhanced Inventory Grid */
+.inventory-grid-container {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+}
+
+.inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background-color: #1e1e1e;
+    border: 1px solid #444;
+    border-radius: 4px;
+}
+
+.inventory-item {
+    background-color: #2a2a2a;
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 0.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 80px;
+}
+
+.inventory-item:hover {
+    background-color: #333;
+    border-color: #4fc3f7;
+    transform: translateY(-2px);
+}
+
+.inventory-item.selected {
+    border-color: #81c784;
+    background-color: rgba(129, 199, 132, 0.1);
+}
+
+.inventory-item.dragging {
+    opacity: 0.5;
+    transform: scale(1.05);
+}
+
+.inventory-item .item-icon {
+    font-size: 1.2rem;
+    margin-bottom: 0.2rem;
+}
+
+.inventory-item .item-name {
+    font-size: 0.7rem;
+    color: #4fc3f7;
+    margin-bottom: 0.1rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+}
+
+.inventory-item .item-quantity {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background-color: #4fc3f7;
+    color: #1a1a1a;
+    font-size: 0.6rem;
+    padding: 1px 3px;
+    border-radius: 3px;
+    font-weight: bold;
+}
+
+.inventory-item .item-weight {
+    font-size: 0.6rem;
+    color: #9e9e9e;
+    position: absolute;
+    bottom: 2px;
+    left: 2px;
+}
+
+/* Rarity Indicators */
+.inventory-item.common {
+    border-color: #ffffff;
+}
+
+.inventory-item.uncommon {
+    border-color: #4fc3f7;
+    box-shadow: 0 0 5px rgba(79, 195, 247, 0.3);
+}
+
+.inventory-item.rare {
+    border-color: #9c27b0;
+    box-shadow: 0 0 5px rgba(156, 39, 176, 0.3);
+}
+
+.inventory-item.epic {
+    border-color: #ff9800;
+    box-shadow: 0 0 5px rgba(255, 152, 0, 0.3);
+}
+
+.inventory-item.legendary {
+    border-color: #ffd700;
+    box-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
+}
+
+/* Item Details Panel */
+.item-details-panel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    max-width: 90vw;
+    background-color: #1e1e1e;
+    border: 2px solid #4fc3f7;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    overflow: hidden;
+}
+
+.item-details-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background-color: #2a2a2a;
+    border-bottom: 1px solid #444;
+}
+
+.item-details-header h3 {
+    color: #4fc3f7;
+    margin: 0;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: #e0e0e0;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-btn:hover {
+    color: #e57373;
+}
+
+.item-details-content {
+    display: flex;
+    padding: 1rem;
+    gap: 1rem;
+}
+
+.item-icon-large {
+    font-size: 3rem;
+    flex-shrink: 0;
+}
+
+.item-info {
+    flex: 1;
+}
+
+.item-info p {
+    color: #bbbbbb;
+    margin-bottom: 1rem;
+    line-height: 1.4;
+}
+
+.item-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.item-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stat-label {
+    color: #9e9e9e;
+    font-size: 0.9rem;
+}
+
+.item-stat span:last-child {
+    color: #e0e0e0;
+    font-weight: bold;
+}
+
+.item-effects {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #444;
+}
+
+.item-effects h4 {
+    color: #81c784;
+    margin-bottom: 0.5rem;
+}
+
+.item-details-actions {
+    display: flex;
+    gap: 0.5rem;
+    padding: 1rem;
+    background-color: #2a2a2a;
+    border-top: 1px solid #444;
+}
+
+.action-btn {
+    flex: 1;
+    padding: 0.5rem;
+    background-color: #4fc3f7;
+    color: #1a1a1a;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+    background-color: #29b6f6;
+    transform: translateY(-1px);
+}
+
+.action-btn:disabled {
+    background-color: #555;
+    color: #999;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Trading Controls */
+.trading-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 0.8rem;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 4px;
+}
+
+.trade-mode-toggle {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.trade-mode-btn {
+    padding: 0.4rem 0.8rem;
+    background-color: #333;
+    color: #e0e0e0;
+    border: 1px solid #555;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.trade-mode-btn.active {
+    background-color: #4fc3f7;
+    color: #1a1a1a;
+    border-color: #4fc3f7;
+}
+
+.trade-summary {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.9rem;
+    color: #bbbbbb;
+}
+
+.trade-summary span {
+    font-weight: bold;
+    color: #ffd700;
+}
+
+/* Bulk Controls */
+.bulk-controls {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-top: 0.5rem;
+}
+
+.bulk-controls button {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+    background-color: #333;
+    color: #e0e0e0;
+    border: 1px solid #555;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.bulk-controls button:hover {
+    background-color: #444;
+    border-color: #4fc3f7;
+}
+
+/* Trade Preview */
+.trade-preview {
+    background-color: #1e3a5f;
+    border: 1px solid #444;
+    border-radius: 4px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.trade-preview h4 {
+    color: #81c784;
+    margin-bottom: 0.5rem;
+}
+
+#trade-preview-items {
+    max-height: 150px;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+}
+
+.trade-total-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.trade-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Trade History */
+.trade-history {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.trade-entry {
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 4px;
+    padding: 0.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.trade-entry.buy {
+    border-left: 4px solid #4caf50;
+}
+
+.trade-entry.sell {
+    border-left: 4px solid #ff9800;
+}
+
+.trade-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.trade-date {
+    color: #9e9e9e;
+    font-size: 0.8rem;
+}
+
+.trade-profit {
+    font-weight: bold;
+}
+
+.trade-profit.positive {
+    color: #4caf50;
+}
+
+.trade-profit.negative {
+    color: #f44336;
+}
+
+.trade-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.trade-item {
+    background-color: #333;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.8rem;
+}
+
+/* Route Planner */
+.route-planner {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.route-entry {
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 4px;
+    padding: 0.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.route-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.route-name {
+    color: #4fc3f7;
+    font-weight: bold;
+}
+
+.route-profit {
+    color: #ffd700;
+    font-weight: bold;
+}
+
+.route-stops {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.route-stop {
+    background-color: #333;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.8rem;
+}
+
+/* Price Alerts */
+.price-alerts {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.alert-entry {
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 4px;
+    padding: 0.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.alert-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.alert-item {
+    color: #4fc3f7;
+    font-weight: bold;
+}
+
+.alert-condition {
+    color: #81c784;
+    font-size: 0.8rem;
+}
+
+.alert-remove {
+    background: none;
+    border: none;
+    color: #e57373;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+/* Weight Capacity Bar */
+.weight-capacity-bar {
+    width: 100%;
+    height: 8px;
+    background-color: #333;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.weight-capacity-fill {
+    height: 100%;
+    transition: width 0.3s ease;
+    border-radius: 4px;
+}
+
+.weight-capacity-fill.safe {
+    background-color: #4caf50;
+}
+
+.weight-capacity-fill.warning {
+    background-color: #ff9800;
+}
+
+.weight-capacity-fill.danger {
+    background-color: #f44336;
+}
+
+/* Tooltips */
+.item-tooltip {
+    position: absolute;
+    background-color: #1e1e1e;
+    border: 1px solid #4fc3f7;
+    border-radius: 4px;
+    padding: 0.5rem;
+    z-index: 1000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    max-width: 200px;
+}
+
+.item-tooltip.visible {
+    opacity: 1;
+}
+
+.tooltip-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.3rem;
+    border-bottom: 1px solid #444;
+    padding-bottom: 0.3rem;
+}
+
+.tooltip-name {
+    color: #4fc3f7;
+    font-weight: bold;
+}
+
+.tooltip-rarity {
+    font-size: 0.8rem;
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+}
+
+.tooltip-content {
+    font-size: 0.8rem;
+    color: #bbbbbb;
+    line-height: 1.3;
+}
+
+/* Responsive Design for Enhanced Inventory */
+@media (max-width: 768px) {
+    .inventory-header {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: stretch;
+    }
+    
+    .inventory-controls {
+        align-items: stretch;
+    }
+    
+    .inventory-info {
+        justify-content: center;
+    }
+    
+    .inventory-actions {
+        justify-content: center;
+    }
+    
+    .inventory-options {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .inventory-grid {
+        grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    }
+    
+    .item-details-panel {
+        width: 95vw;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+    
+    .item-details-content {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .trading-controls {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .trade-summary {
+        justify-content: center;
+    }
+}
+
+/* Game Setup Panel Styles */
+#game-setup-panel {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.difficulty-selection {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.difficulty-option {
+    flex: 1;
+    position: relative;
+}
+
+.difficulty-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.difficulty-option label {
+    display: block;
+    padding: 1rem;
+    background-color: #2a2a2a;
+    border: 2px solid #444;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.difficulty-option label:hover {
+    border-color: #4fc3f7;
+    transform: translateY(-2px);
+}
+
+.difficulty-option input[type="radio"]:checked + label {
+    border-color: #4fc3f7;
+    background-color: rgba(79, 195, 247, 0.1);
+}
+
+.difficulty-option h3 {
+    margin: 0 0 0.5rem 0;
+    color: #4fc3f7;
+}
+
+.difficulty-option p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #bbbbbb;
+}
+
+/* Property & Employee Management Panel */
+.property-employee-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #444;
+}
+
+.financial-summary {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.9rem;
+}
+
+.financial-summary span {
+    padding: 0.3rem 0.6rem;
+    background-color: #2a2a2a;
+    border-radius: 4px;
+    border: 1px solid #444;
+}
+
+.financial-summary span:nth-child(1) {
+    color: #4caf50;
+}
+
+.financial-summary span:nth-child(2) {
+    color: #f44336;
+}
+
+.financial-summary span:nth-child(3) {
+    color: #ffd700;
+    font-weight: bold;
+}
+
+/* Properties Grid */
+.properties-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 0.5rem;
+    background-color: #1e1e1e;
+    border: 1px solid #444;
+    border-radius: 4px;
+}
+
+.property-card {
+    background-color: #2a2a2a;
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.property-card:hover {
+    background-color: #333;
+    border-color: #4fc3f7;
+    transform: translateY(-2px);
+}
+
+.property-card.needs-repair {
+    border-color: #f44336;
+    background-color: rgba(244, 67, 54, 0.1);
+}
+
+.property-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+
+.property-name {
+    font-weight: bold;
+    color: #4fc3f7;
+    margin-bottom: 0.3rem;
+    text-align: center;
+}
+
+.property-type {
+    font-size: 0.8rem;
+    color: #bbbbbb;
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.property-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #444;
+}
+
+.property-stat {
+    display: flex;
+    justify-content: space-between;
+}
+
+.property-stat .label {
+    color: #9e9e9e;
+}
+
+.property-stat .value {
+    color: #e0e0e0;
+    font-weight: bold;
+}
+
+.property-income {
+    color: #4caf50;
+}
+
+.property-condition {
+    color: #ff9800;
+}
+
+.property-condition.good {
+    color: #4caf50;
+}
+
+.property-condition.poor {
+    color: #f44336;
+}
+
+/* Employees Grid */
+.employees-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 0.5rem;
+    background-color: #1e1e1e;
+    border: 1px solid #444;
+    border-radius: 4px;
+}
+
+.employee-card {
+    background-color: #2a2a2a;
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.employee-card:hover {
+    background-color: #333;
+    border-color: #4fc3f7;
+    transform: translateY(-2px);
+}
+
+.employee-card.low-morale {
+    border-color: #f44336;
+    background-color: rgba(244, 67, 54, 0.1);
+}
+
+.employee-avatar {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+
+.employee-name {
+    font-weight: bold;
+    color: #4fc3f7;
+    margin-bottom: 0.3rem;
+    text-align: center;
+}
+
+.employee-type {
+    font-size: 0.8rem;
+    color: #bbbbbb;
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.employee-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #444;
+}
+
+.employee-stat {
+    display: flex;
+    justify-content: space-between;
+}
+
+.employee-stat .label {
+    color: #9e9e9e;
+}
+
+.employee-stat .value {
+    color: #e0e0e0;
+    font-weight: bold;
+}
+
+.employee-level {
+    color: #4fc3f7;
+}
+
+.employee-morale {
+    color: #ff9800;
+}
+
+.employee-morale.high {
+    color: #4caf50;
+}
+
+.employee-morale.low {
+    color: #f44336;
+}
+
+.employee-wage {
+    color: #ffd700;
+}
+
+/* Trade Routes Grid */
+.routes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 0.5rem;
+    background-color: #1e1e1e;
+    border: 1px solid #444;
+    border-radius: 4px;
+}
+
+.route-card {
+    background-color: #2a2a2a;
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.route-card:hover {
+    background-color: #333;
+    border-color: #4fc3f7;
+    transform: translateY(-2px);
+}
+
+.route-card.inactive {
+    opacity: 0.6;
+    border-color: #666;
+}
+
+.route-name {
+    font-weight: bold;
+    color: #4fc3f7;
+    margin-bottom: 0.3rem;
+}
+
+.route-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #444;
+}
+
+.route-stat {
+    display: flex;
+    justify-content: space-between;
+}
+
+.route-stat .label {
+    color: #9e9e9e;
+}
+
+.route-stat .value {
+    color: #e0e0e0;
+    font-weight: bold;
+}
+
+.route-profit {
+    color: #4caf50;
+}
+
+.route-profit.negative {
+    color: #f44336;
+}
+
+.route-status {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    font-size: 0.8rem;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+}
+
+.route-status.active {
+    background-color: rgba(76, 175, 80, 0.2);
+    color: #4caf50;
+    border: 1px solid rgba(76, 175, 80, 0.5);
+}
+
+.route-status.inactive {
+    background-color: rgba(158, 158, 158, 0.2);
+    color: #9e9e9e;
+    border: 1px solid rgba(158, 158, 158, 0.5);
+}
+
+/* Financial Overview */
+.financial-overview {
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 4px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.financial-overview h3 {
+    color: #81c784;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.financial-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.8rem;
+    background-color: #333;
+    border-radius: 4px;
+    border: 1px solid #555;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #bbbbbb;
+    margin-bottom: 0.3rem;
+}
+
+.stat-value {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #ffd700;
+}
+
+/* Transaction History */
+.financial-history {
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 4px;
+    padding: 1rem;
+}
+
+.financial-history h3 {
+    color: #81c784;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.transaction-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.transaction-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    margin-bottom: 0.3rem;
+    background-color: #333;
+    border-radius: 4px;
+    border: 1px solid #555;
+}
+
+.transaction-item.income {
+    border-left: 3px solid #4caf50;
+}
+
+.transaction-item.expense {
+    border-left: 3px solid #f44336;
+}
+
+.transaction-description {
+    flex: 1;
+    font-size: 0.9rem;
+    color: #e0e0e0;
+}
+
+.transaction-amount {
+    font-weight: bold;
+    margin-left: 1rem;
+}
+
+.transaction-amount.positive {
+    color: #4caf50;
+}
+
+.transaction-amount.negative {
+    color: #f44336;
+}
+
+.transaction-date {
+    font-size: 0.8rem;
+    color: #9e9e9e;
+    margin-left: 0.5rem;
+}
+
+/* Modal Styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: #1e1e1e;
+    border: 2px solid #4fc3f7;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    width: 600px;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background-color: #2a2a2a;
+    border-bottom: 1px solid #444;
+}
+
+.modal-header h3 {
+    color: #4fc3f7;
+    margin: 0;
+}
+
+.modal-body {
+    padding: 1rem;
+}
+
+.modal-footer {
+    display: flex;
+    gap: 0.5rem;
+    padding: 1rem;
+    background-color: #2a2a2a;
+    border-top: 1px solid #444;
+}
+
+.action-btn.danger {
+    background-color: #f44336;
+    color: #ffffff;
+}
+
+.action-btn.danger:hover {
+    background-color: #d32f2f;
+}
+
+/* Property Details */
+.property-info {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background-color: #333;
+    border-radius: 4px;
+}
+
+.property-icon {
+    font-size: 3rem;
+    flex-shrink: 0;
+}
+
+.property-stats {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+}
+
+.property-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.property-stat .label {
+    color: #9e9e9e;
+}
+
+.property-stat .value {
+    color: #e0e0e0;
+    font-weight: bold;
+}
+
+/* Property Upgrades */
+.property-upgrades {
+    margin-bottom: 1rem;
+}
+
+.property-upgrades h4,
+.property-employees h4 {
+    color: #81c784;
+    margin-bottom: 0.5rem;
+}
+
+.upgrades-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.upgrade-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background-color: #333;
+    border-radius: 4px;
+    border: 1px solid #555;
+}
+
+.upgrade-info {
+    flex: 1;
+}
+
+.upgrade-name {
+    font-weight: bold;
+    color: #4fc3f7;
+}
+
+.upgrade-description {
+    font-size: 0.8rem;
+    color: #bbbbbb;
+}
+
+.upgrade-cost {
+    color: #ffd700;
+    font-weight: bold;
+    margin-left: 1rem;
+}
+
+/* Property Employees */
+.employees-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.assigned-employee {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background-color: #333;
+    border-radius: 4px;
+    border: 1px solid #555;
+}
+
+.employee-info {
+    flex: 1;
+}
+
+.employee-name {
+    font-weight: bold;
+    color: #4fc3f7;
+}
+
+.employee-role {
+    font-size: 0.8rem;
+    color: #bbbbbb;
+}
+
+.employee-performance {
+    font-size: 0.8rem;
+    color: #81c784;
+}
+
+/* Employee Details */
+.employee-info {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background-color: #333;
+    border-radius: 4px;
+}
+
+.employee-avatar {
+    font-size: 3rem;
+    flex-shrink: 0;
+}
+
+.employee-stats {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+}
+
+.employee-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.employee-stat .label {
+    color: #9e9e9e;
+}
+
+.employee-stat .value {
+    color: #e0e0e0;
+    font-weight: bold;
+}
+
+/* Employee Skills */
+.employee-skills {
+    margin-bottom: 1rem;
+}
+
+.skills-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.skill-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background-color: #333;
+    border-radius: 4px;
+    border: 1px solid #555;
+}
+
+.skill-name {
+    color: #4fc3f7;
+    font-weight: bold;
+}
+
+.skill-level {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.skill-bar {
+    width: 80px;
+    height: 8px;
+    background-color: #222;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.skill-fill {
+    height: 100%;
+    background-color: #4fc3f7;
+    transition: width 0.3s ease;
+}
+
+.skill-value {
+    font-size: 0.8rem;
+    color: #e0e0e0;
+}
+
+/* Employee Assignment */
+.employee-assignment {
+    margin-bottom: 1rem;
+}
+
+.assignment-info {
+    padding: 0.5rem;
+    background-color: #333;
+    border-radius: 4px;
+    border: 1px solid #555;
+    margin-bottom: 0.5rem;
+    color: #e0e0e0;
+}
+
+.assignment-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.assignment-controls select {
+    flex: 1;
+    padding: 0.5rem;
+    background-color: #333;
+    color: #e0e0e0;
+    border: 1px solid #555;
+    border-radius: 4px;
+}
+
+/* Controls for Properties and Employees */
+.properties-controls,
+.employees-controls,
+.trade-routes-controls {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.properties-controls button,
+.employees-controls button,
+.trade-routes-controls button {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+}
+
+/* Responsive Design for Property & Employee Management */
+@media (max-width: 768px) {
+    .financial-summary {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .properties-grid,
+    .employees-grid,
+    .routes-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .property-info,
+    .employee-info {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    
+    .property-stats,
+    .employee-stats {
+        grid-template-columns: 1fr;
+        width: 100%;
+    }
+    
+    .modal-content {
+        width: 95vw;
+        max-height: 95vh;
+    }
+    
+    .properties-controls,
+    .employees-controls,
+    .trade-routes-controls {
+        flex-direction: column;
+    }
+    
+    .properties-controls button,
+    .employees-controls button,
+    .trade-routes-controls button {
+        width: 100%;
+    }
+}

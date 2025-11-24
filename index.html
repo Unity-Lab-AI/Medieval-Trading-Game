@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="game-container">
+        <header id="game-header">
+            <h1>Trading Game</h1>
+            <div id="player-info">
+                <div class="player-main-info">
+                    <span id="player-name">Player</span>
+                    <span id="player-gold">Gold: 100</span>
+                    <span id="game-time" class="time-display">Day 1, 08:00</span>
+                </div>
+                <div class="player-attributes">
+                    <span class="attribute-display" title="Strength">💪 <span id="player-strength">5</span></span>
+                    <span class="attribute-display" title="Intelligence">🧠 <span id="player-intelligence">5</span></span>
+                    <span class="attribute-display" title="Charisma">😊 <span id="player-charisma">5</span></span>
+                    <span class="attribute-display" title="Endurance">🏃 <span id="player-endurance">5</span></span>
+                    <span class="attribute-display" title="Luck">🍀 <span id="player-luck">5</span></span>
+                </div>
+            </div>
+        </header>
+
+        <main id="game-main">
+            <!-- Game World Area -->
+            <section id="game-world">
+                <canvas id="game-canvas" width="800" height="600"></canvas>
+            </section>
+
+            <!-- UI Panels Container -->
+            <div id="ui-panels">
+                <!-- Game Setup Panel -->
+                <section id="game-setup-panel" class="panel hidden">
+                    <h2>New Game Setup</h2>
+                    <form id="game-setup-form">
+                        <div class="form-group">
+                            <label for="character-name-input">Character Name:</label>
+                            <input type="text" id="character-name-input" required placeholder="Enter your character name">
+                        </div>
+                        
+                        <!-- Difficulty Selection -->
+                        <div class="form-group">
+                            <label>Select Difficulty:</label>
+                            <div class="difficulty-selection">
+                                <div class="difficulty-option" data-difficulty="easy">
+                                    <input type="radio" id="difficulty-easy" name="difficulty" value="easy">
+                                    <label for="difficulty-easy">
+                                        <h3>Easy</h3>
+                                        <p>20% better prices, more starting gold, easier progression</p>
+                                    </label>
+                                </div>
+                                <div class="difficulty-option" data-difficulty="normal">
+                                    <input type="radio" id="difficulty-normal" name="difficulty" value="normal" checked>
+                                    <label for="difficulty-normal">
+                                        <h3>Normal</h3>
+                                        <p>Standard gameplay experience</p>
+                                    </label>
+                                </div>
+                                <div class="difficulty-option" data-difficulty="hard">
+                                    <input type="radio" id="difficulty-hard" name="difficulty" value="hard">
+                                    <label for="difficulty-hard">
+                                        <h3>Hard</h3>
+                                        <p>20% worse prices, less starting gold, harder progression</p>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Character Visual Representation -->
+                        <div class="character-visual">
+                            <div class="character-avatar" id="character-avatar">
+                                <span class="avatar-icon">🧑</span>
+                            </div>
+                            <div class="character-preview">
+                                <h3 id="preview-name">Your Character</h3>
+                                <div class="starting-gold-display">
+                                    <span class="gold-label">Starting Gold:</span>
+                                    <span id="starting-gold-amount" class="gold-amount">100</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Perk Selection -->
+                        <div class="form-group">
+                            <label>Select Your Perks (Choose up to 2):</label>
+                            <div class="perk-selection-info">
+                                <p>Perks provide unique advantages and disadvantages that affect your gameplay.</p>
+                                <div class="perk-counter">
+                                    <span id="selected-perks-count">0</span> / 2 perks selected
+                                </div>
+                            </div>
+                            <div id="perks-container" class="perks-grid">
+                                <!-- Perks will be populated by JavaScript -->
+                            </div>
+                        </div>
+                        
+                        <!-- Character Attributes Display -->
+                        <div class="attributes-display">
+                            <h3>Character Attributes</h3>
+                            <div class="attributes-grid">
+                                <div class="attribute">
+                                    <span class="attribute-name">Strength</span>
+                                    <span class="attribute-value" id="attr-strength">5</span>
+                                </div>
+                                <div class="attribute">
+                                    <span class="attribute-name">Intelligence</span>
+                                    <span class="attribute-value" id="attr-intelligence">5</span>
+                                </div>
+                                <div class="attribute">
+                                    <span class="attribute-name">Charisma</span>
+                                    <span class="attribute-value" id="attr-charisma">5</span>
+                                </div>
+                                <div class="attribute">
+                                    <span class="attribute-name">Endurance</span>
+                                    <span class="attribute-value" id="attr-endurance">5</span>
+                                </div>
+                                <div class="attribute">
+                                    <span class="attribute-name">Luck</span>
+                                    <span class="attribute-value" id="attr-luck">5</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" id="randomize-character-btn" class="secondary">Randomize</button>
+                            <button type="submit" id="create-character-btn">Start Adventure</button>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- Market Panel -->
+                <section id="market-panel" class="panel hidden">
+                    <div class="market-header">
+                        <h2>Market</h2>
+                        <div class="market-info">
+                            <span id="market-location">Market</span>
+                            <span id="market-reputation" class="reputation-display">Reputation: Neutral</span>
+                        </div>
+                        <div class="market-events" id="market-events">
+                            <!-- Market events will be displayed here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Trading Controls -->
+                    <div class="trading-controls">
+                        <div class="trade-mode-toggle">
+                            <button id="single-trade-btn" class="trade-mode-btn active">Single</button>
+                            <button id="bulk-trade-btn" class="trade-mode-btn">Bulk</button>
+                        </div>
+                        <div class="trade-summary" id="trade-summary">
+                            <span id="trade-total">Total: 0 gold</span>
+                            <span id="trade-profit">Profit: 0 gold</span>
+                        </div>
+                    </div>
+                    
+                    <div class="tabs">
+                        <button class="tab-btn active" data-tab="buy">Buy</button>
+                        <button class="tab-btn" data-tab="sell">Sell</button>
+                        <button class="tab-btn" data-tab="compare">Compare</button>
+                        <button class="tab-btn" data-tab="history">History</button>
+                        <button class="tab-btn" data-tab="routes">Routes</button>
+                        <button class="tab-btn" data-tab="alerts">Alerts</button>
+                        <button class="tab-btn" data-tab="news">News</button>
+                    </div>
+                    
+                    <div id="market-content">
+                        <div id="buy-tab" class="tab-content active">
+                            <div class="market-controls">
+                                <button id="refresh-market-btn">Refresh Market</button>
+                                <select id="item-filter">
+                                    <option value="all">All Items</option>
+                                    <option value="consumables">Consumables</option>
+                                    <option value="resources">Resources</option>
+                                    <option value="tools">Tools</option>
+                                    <option value="luxury">Luxury</option>
+                                </select>
+                                <div class="bulk-controls hidden" id="bulk-buy-controls">
+                                    <button id="select-all-buy-btn">Select All</button>
+                                    <button id="clear-selection-buy-btn">Clear Selection</button>
+                                    <button id="buy-selected-btn">Buy Selected</button>
+                                </div>
+                            </div>
+                            <div id="buy-items" class="items-grid">
+                                <!-- Items will be populated by JavaScript -->
+                            </div>
+                            <div id="trade-preview" class="trade-preview hidden">
+                                <h4>Trade Preview</h4>
+                                <div id="trade-preview-items"></div>
+                                <div class="trade-total-info">
+                                    <span>Total Cost: <span id="preview-total-cost">0</span> gold</span>
+                                    <span>Total Weight: <span id="preview-total-weight">0</span> lbs</span>
+                                </div>
+                                <div class="trade-actions">
+                                    <button id="confirm-trade-btn">Confirm Trade</button>
+                                    <button id="cancel-trade-btn">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="sell-tab" class="tab-content">
+                            <div class="market-controls">
+                                <span id="sell-info">Sell your items for gold</span>
+                                <div class="bulk-controls hidden" id="bulk-sell-controls">
+                                    <button id="select-all-sell-btn">Select All</button>
+                                    <button id="clear-selection-sell-btn">Clear Selection</button>
+                                    <button id="sell-selected-btn">Sell Selected</button>
+                                </div>
+                            </div>
+                            <div id="sell-items" class="items-grid">
+                                <!-- Player items will be populated by JavaScript -->
+                            </div>
+                        </div>
+                        
+                        <div id="compare-tab" class="tab-content">
+                            <div class="market-controls">
+                                <select id="compare-item-select">
+                                    <option value="">Select an item to compare</option>
+                                </select>
+                                <button id="update-comparison-btn">Update Comparison</button>
+                                <button id="add-route-btn">Add to Route Planner</button>
+                            </div>
+                            <div id="price-comparison" class="price-comparison">
+                                <!-- Price comparison will be displayed here -->
+                            </div>
+                        </div>
+                        
+                        <div id="history-tab" class="tab-content">
+                            <div class="market-controls">
+                                <button id="clear-history-btn">Clear History</button>
+                                <button id="export-history-btn">Export History</button>
+                            </div>
+                            <div id="trade-history" class="trade-history">
+                                <!-- Trade history will be displayed here -->
+                            </div>
+                        </div>
+                        
+                        <div id="routes-tab" class="tab-content">
+                            <div class="market-controls">
+                                <button id="plan-route-btn">Plan New Route</button>
+                                <button id="clear-routes-btn">Clear Routes</button>
+                            </div>
+                            <div id="route-planner" class="route-planner">
+                                <!-- Route planning will be displayed here -->
+                            </div>
+                        </div>
+                        
+                        <div id="alerts-tab" class="tab-content">
+                            <div class="market-controls">
+                                <button id="add-alert-btn">Add Price Alert</button>
+                                <button id="clear-alerts-btn">Clear Alerts</button>
+                            </div>
+                            <div id="price-alerts" class="price-alerts">
+                                <!-- Price alerts will be displayed here -->
+                            </div>
+                        </div>
+                        
+                        <div id="news-tab" class="tab-content">
+                            <div class="market-controls">
+                                <button id="refresh-news-btn">Refresh News</button>
+                            </div>
+                            <div id="market-news" class="market-news">
+                                <!-- Market news will be displayed here -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="panel-footer">
+                        <button id="close-market-btn">Close</button>
+                    </div>
+                </section>
+
+                <!-- Inventory Panel -->
+                <section id="inventory-panel" class="panel hidden">
+                    <div class="inventory-header">
+                        <h2>Inventory</h2>
+                        <div class="inventory-controls">
+                            <div class="inventory-info">
+                                <span id="inventory-weight">Weight: 0/50 lbs</span>
+                                <span id="inventory-value">Value: 0 gold</span>
+                            </div>
+                            <div class="inventory-actions">
+                                <button id="sort-inventory-btn" title="Sort Inventory">🔤</button>
+                                <button id="filter-inventory-btn" title="Filter Items">🔍</button>
+                                <button id="inventory-settings-btn" title="Inventory Settings">⚙️</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Access Slots -->
+                    <div class="quick-access-container">
+                        <h3>Quick Access</h3>
+                        <div id="quick-access-slots" class="quick-access-slots">
+                            <!-- Quick access slots will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <!-- Inventory Filter and Sort Options -->
+                    <div id="inventory-options" class="inventory-options hidden">
+                        <div class="filter-section">
+                            <label for="inventory-category-filter">Category:</label>
+                            <select id="inventory-category-filter">
+                                <option value="all">All Items</option>
+                                <option value="consumables">Consumables</option>
+                                <option value="tools">Tools</option>
+                                <option value="weapons">Weapons</option>
+                                <option value="resources">Resources</option>
+                                <option value="luxury">Luxury</option>
+                            </select>
+                        </div>
+                        <div class="sort-section">
+                            <label for="inventory-sort-method">Sort By:</label>
+                            <select id="inventory-sort-method">
+                                <option value="name">Name</option>
+                                <option value="value">Value</option>
+                                <option value="weight">Weight</option>
+                                <option value="quantity">Quantity</option>
+                                <option value="category">Category</option>
+                                <option value="rarity">Rarity</option>
+                            </select>
+                            <button id="inventory-sort-order" title="Toggle Sort Order">⬇️</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Inventory Grid -->
+                    <div class="inventory-grid-container">
+                        <div id="inventory-items" class="inventory-grid">
+                            <!-- Inventory items will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <!-- Item Details Panel -->
+                    <div id="item-details-panel" class="item-details-panel hidden">
+                        <div class="item-details-header">
+                            <h3 id="detail-item-name">Item Name</h3>
+                            <button id="close-item-details" class="close-btn">×</button>
+                        </div>
+                        <div class="item-details-content">
+                            <div class="item-icon-large" id="detail-item-icon">📦</div>
+                            <div class="item-info">
+                                <p id="detail-item-description">Item description</p>
+                                <div class="item-stats">
+                                    <div class="item-stat">
+                                        <span class="stat-label">Value:</span>
+                                        <span id="detail-item-value">0 gold</span>
+                                    </div>
+                                    <div class="item-stat">
+                                        <span class="stat-label">Weight:</span>
+                                        <span id="detail-item-weight">0 lbs</span>
+                                    </div>
+                                    <div class="item-stat">
+                                        <span class="stat-label">Quantity:</span>
+                                        <span id="detail-item-quantity">0</span>
+                                    </div>
+                                    <div class="item-stat">
+                                        <span class="stat-label">Category:</span>
+                                        <span id="detail-item-category">None</span>
+                                    </div>
+                                    <div class="item-stat">
+                                        <span class="stat-label">Rarity:</span>
+                                        <span id="detail-item-rarity">Common</span>
+                                    </div>
+                                </div>
+                                <div id="detail-item-effects" class="item-effects hidden">
+                                    <h4>Effects:</h4>
+                                    <div id="detail-effects-list"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="item-details-actions">
+                            <button id="use-item-btn" class="action-btn">Use</button>
+                            <button id="equip-item-btn" class="action-btn">Equip</button>
+                            <button id="drop-item-btn" class="action-btn">Drop</button>
+                            <button id="examine-item-btn" class="action-btn">Examine</button>
+                            <button id="gift-item-btn" class="action-btn">Gift</button>
+                        </div>
+                    </div>
+                    
+                    <div class="panel-footer">
+                        <button id="close-inventory-btn">Close</button>
+                    </div>
+                </section>
+
+                <!-- Location Info Panel -->
+                <section id="location-panel" class="panel">
+                    <h2 id="location-name">Town Square</h2>
+                    <p id="location-description">You are in the town square.</p>
+                    <div id="location-actions">
+                        <button id="visit-market-btn">Visit Market</button>
+                        <button id="travel-btn">Travel</button>
+                        <button id="transportation-btn">Transportation</button>
+                    </div>
+                </section>
+
+                <!-- Travel Panel -->
+                <section id="travel-panel" class="panel hidden">
+                    <h2>Travel</h2>
+                    <div id="destinations" class="destinations-list">
+                        <!-- Destinations will be populated by JavaScript -->
+                    </div>
+                    <div class="panel-footer">
+                        <button id="close-travel-btn">Cancel</button>
+                    </div>
+                </section>
+
+                <!-- Transportation Panel -->
+                <section id="transportation-panel" class="panel hidden">
+                    <h2>Transportation</h2>
+                    <div class="transportation-info">
+                        <p>Current Transport: <span id="current-transport">Backpack</span></p>
+                        <p>Carry Capacity: <span id="carry-capacity">50 lbs</span></p>
+                        <p>Current Load: <span id="current-load">0 lbs</span></p>
+                    </div>
+                    <h3>Available Transportation</h3>
+                    <div id="transportation-options" class="items-grid">
+                        <!-- Transportation options will be populated by JavaScript -->
+                    </div>
+                    <div class="panel-footer">
+                        <button id="close-transportation-btn">Close</button>
+                    </div>
+                </section>
+
+                <!-- Property & Employee Management Panel -->
+                <section id="property-employee-panel" class="panel hidden">
+                    <div class="property-employee-header">
+                        <h2>Property & Employee Management</h2>
+                        <div class="financial-summary">
+                            <span id="property-income">Property Income: 0 gold/day</span>
+                            <span id="employee-costs">Employee Costs: 0 gold/week</span>
+                            <span id="net-profit">Net Profit: 0 gold/day</span>
+                        </div>
+                    </div>
+                    
+                    <div class="tabs">
+                        <button class="tab-btn active" data-tab="properties">Properties</button>
+                        <button class="tab-btn" data-tab="employees">Employees</button>
+                        <button class="tab-btn" data-tab="trade-routes">Trade Routes</button>
+                        <button class="tab-btn" data-tab="financial">Financial</button>
+                    </div>
+                    
+                    <div id="property-employee-content">
+                        <!-- Properties Tab -->
+                        <div id="properties-tab" class="tab-content active">
+                            <div class="properties-controls">
+                                <button id="buy-property-btn">Buy Property</button>
+                                <button id="property-upgrades-btn">Manage Upgrades</button>
+                                <button id="repair-all-btn">Repair All</button>
+                            </div>
+                            <div id="owned-properties" class="properties-grid">
+                                <!-- Owned properties will be populated by JavaScript -->
+                            </div>
+                        </div>
+                        
+                        <!-- Employees Tab -->
+                        <div id="employees-tab" class="tab-content">
+                            <div class="employees-controls">
+                                <button id="hire-employee-btn">Hire Employee</button>
+                                <button id="employee-training-btn">Training</button>
+                                <button id="pay-wages-btn">Pay Wages</button>
+                            </div>
+                            <div id="hired-employees" class="employees-grid">
+                                <!-- Hired employees will be populated by JavaScript -->
+                            </div>
+                        </div>
+                        
+                        <!-- Trade Routes Tab -->
+                        <div id="trade-routes-tab" class="tab-content">
+                            <div class="trade-routes-controls">
+                                <button id="create-route-btn">Create Route</button>
+                                <button id="optimize-routes-btn">Optimize Routes</button>
+                                <button id="route-history-btn">Route History</button>
+                            </div>
+                            <div id="active-routes" class="routes-grid">
+                                <!-- Active trade routes will be populated by JavaScript -->
+                            </div>
+                        </div>
+                        
+                        <!-- Financial Tab -->
+                        <div id="financial-tab" class="tab-content">
+                            <div class="financial-overview">
+                                <h3>Financial Overview</h3>
+                                <div class="financial-stats">
+                                    <div class="stat-item">
+                                        <span class="stat-label">Daily Income:</span>
+                                        <span id="daily-income" class="stat-value">0 gold</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">Weekly Expenses:</span>
+                                        <span id="weekly-expenses" class="stat-value">0 gold</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">Property Value:</span>
+                                        <span id="property-value" class="stat-value">0 gold</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">Total Assets:</span>
+                                        <span id="total-assets" class="stat-value">0 gold</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="financial-history">
+                                <h3>Transaction History</h3>
+                                <div id="transaction-history" class="transaction-list">
+                                    <!-- Transaction history will be populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="panel-footer">
+                        <button id="close-property-employee-btn">Close</button>
+                    </div>
+                </section>
+
+                <!-- Property Details Modal -->
+                <div id="property-details-modal" class="modal hidden">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 id="property-details-name">Property Name</h3>
+                            <button id="close-property-details" class="close-btn">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="property-info">
+                                <div class="property-icon" id="property-details-icon">🏠</div>
+                                <div class="property-stats">
+                                    <div class="property-stat">
+                                        <span class="stat-label">Type:</span>
+                                        <span id="property-details-type">House</span>
+                                    </div>
+                                    <div class="property-stat">
+                                        <span class="stat-label">Location:</span>
+                                        <span id="property-details-location">Town</span>
+                                    </div>
+                                    <div class="property-stat">
+                                        <span class="stat-label">Level:</span>
+                                        <span id="property-details-level">1</span>
+                                    </div>
+                                    <div class="property-stat">
+                                        <span class="stat-label">Condition:</span>
+                                        <span id="property-details-condition">100%</span>
+                                    </div>
+                                    <div class="property-stat">
+                                        <span class="stat-label">Income:</span>
+                                        <span id="property-details-income">10 gold/day</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="property-upgrades">
+                                <h4>Available Upgrades</h4>
+                                <div id="property-upgrades-list" class="upgrades-list">
+                                    <!-- Upgrades will be populated by JavaScript -->
+                                </div>
+                            </div>
+                            
+                            <div class="property-employees">
+                                <h4>Assigned Employees</h4>
+                                <div id="property-employees-list" class="employees-list">
+                                    <!-- Assigned employees will be populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button id="repair-property-btn" class="action-btn">Repair</button>
+                            <button id="upgrade-property-btn" class="action-btn">Upgrade</button>
+                            <button id="sell-property-btn" class="action-btn danger">Sell</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Employee Details Modal -->
+                <div id="employee-details-modal" class="modal hidden">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 id="employee-details-name">Employee Name</h3>
+                            <button id="close-employee-details" class="close-btn">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="employee-info">
+                                <div class="employee-avatar" id="employee-details-avatar">👤</div>
+                                <div class="employee-stats">
+                                    <div class="employee-stat">
+                                        <span class="stat-label">Type:</span>
+                                        <span id="employee-details-type">Merchant</span>
+                                    </div>
+                                    <div class="employee-stat">
+                                        <span class="stat-label">Level:</span>
+                                        <span id="employee-details-level">1</span>
+                                    </div>
+                                    <div class="employee-stat">
+                                        <span class="stat-label">Experience:</span>
+                                        <span id="employee-details-experience">0/100</span>
+                                    </div>
+                                    <div class="employee-stat">
+                                        <span class="stat-label">Morale:</span>
+                                        <span id="employee-details-morale">Normal</span>
+                                    </div>
+                                    <div class="employee-stat">
+                                        <span class="stat-label">Wage:</span>
+                                        <span id="employee-details-wage">5 gold/week</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="employee-skills">
+                                <h4>Skills</h4>
+                                <div id="employee-skills-list" class="skills-list">
+                                    <!-- Skills will be populated by JavaScript -->
+                                </div>
+                            </div>
+                            
+                            <div class="employee-assignment">
+                                <h4>Current Assignment</h4>
+                                <div id="employee-assignment-info" class="assignment-info">
+                                    <!-- Assignment info will be populated by JavaScript -->
+                                </div>
+                                <div class="assignment-controls">
+                                    <select id="assignment-property-select">
+                                        <option value="">Select Property</option>
+                                    </select>
+                                    <button id="assign-employee-btn">Assign</button>
+                                    <button id="unassign-employee-btn">Unassign</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button id="train-employee-btn" class="action-btn">Train</button>
+                            <button id="promote-employee-btn" class="action-btn">Promote</button>
+                            <button id="fire-employee-btn" class="action-btn danger">Fire</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Message Log -->
+                <section id="message-log">
+                    <h3>Messages</h3>
+                    <div id="messages">
+                        <p class="message">Welcome to the Trading Game!</p>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Game Controls -->
+        <footer id="game-controls">
+            <div class="control-group">
+                <button id="menu-btn">Menu</button>
+                <button id="inventory-btn">Inventory</button>
+                <button id="property-employee-btn">Properties</button>
+                <button id="transportation-quick-btn">Transport</button>
+                <button id="save-btn">Save</button>
+                <button id="load-btn">Load</button>
+            </div>
+            <div class="time-controls">
+                <button id="pause-btn" class="time-control-btn">⏸️ Pause</button>
+                <button id="normal-speed-btn" class="time-control-btn active">⏱️ Normal</button>
+                <button id="fast-speed-btn" class="time-control-btn">⏩ Fast</button>
+                <button id="very-fast-speed-btn" class="time-control-btn">⏭️ Very Fast</button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="screen">
+        <div class="loading-content">
+            <h2>Loading Trading Game...</h2>
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Menu -->
+    <div id="main-menu" class="screen">
+        <div class="menu-content">
+            <h1>Trading Game</h1>
+            <div class="menu-buttons">
+                <button id="new-game-btn">New Game</button>
+                <button id="load-game-btn" disabled>Load Game</button>
+                <button id="settings-btn">Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="property-system.js"></script>
+    <script src="employee-system.js"></script>
+    <script src="trade-route-system.js"></script>
+    <script src="property-employee-ui.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
