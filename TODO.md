@@ -65,10 +65,10 @@ Comprehensive feature roadmap for the trading game to reach 100% completion.
 - [x] Create a particle effects system for visual feedback (gold transactions, item pickups, level progression, combat, etc.)
 - [x] Implement screen shake for important events
 - [x] Add fade transitions between scenes
-- [ ] Create highlighting system for important elements
-- [ ] Implement weather effects (rain, snow, fog, sandstorm)
-- [ ] Add day/night cycle visual improvements with dynamic lighting
-- [ ] Create particle effects for resources
+- [x] Create highlighting system for important elements
+- [x] Implement weather effects (rain, snow, fog, sandstorm)
+- [x] Add day/night cycle visual improvements with dynamic lighting
+- [x] Create particle effects for resources
 
 ## Animation System
 - [ ] Implement character movement animations with different states (idle, walk, run, jump, attack, etc.)
@@ -106,6 +106,8 @@ Comprehensive feature roadmap for the trading game to reach 100% completion.
 - [ ] Implement performance optimization system that monitors FPS, memory usage, and effect counts
 - [ ] Add adaptive quality adjustment based on device capabilities
 - [ ] Create performance monitoring display and optimization controls
+- [ ] Ship cinematic set-pieces (travel departures, market reveals, boss events)
+- [ ] Add narrative questlines with branching outcomes and voiced narration stubs
 
 ## Key Features
 - [ ] Ensure all systems are performant and can be disabled for players who prefer minimal effects
