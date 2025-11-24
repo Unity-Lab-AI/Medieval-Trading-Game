@@ -23,6 +23,12 @@
                     <span class="attribute-display" title="Endurance">🏃 <span id="player-endurance">5</span></span>
                     <span class="attribute-display" title="Luck">🍀 <span id="player-luck">5</span></span>
                 </div>
+                <div class="quick-actions" aria-label="Quick actions">
+                    <button id="quick-save-btn" class="quick-action-btn" title="Quick Save (Ctrl+S)">💾 Quick Save</button>
+                    <button id="quick-load-btn" class="quick-action-btn" title="Quick Load (Ctrl+L)">📂 Quick Load</button>
+                    <button id="controls-help-btn" class="quick-action-btn" title="Show control help (Shift + /)">❔ Controls</button>
+                    <div id="status-banner" class="status-banner hidden" role="status" aria-live="polite">Saved</div>
+                </div>
             </div>
         </header>
 
@@ -796,6 +802,29 @@
                 <button id="very-fast-speed-btn" class="time-control-btn">⏭️ Very Fast</button>
             </div>
         </footer>
+    </div>
+
+    <div id="controls-help-overlay" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="controls-help-title">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="controls-help-title">Controls & Shortcuts</h2>
+                <button id="close-controls-help" class="close-btn" aria-label="Close controls help">×</button>
+            </div>
+            <div class="modal-body">
+                <p>Use these shortcuts for faster navigation:</p>
+                <ul>
+                    <li><strong>Ctrl + S</strong>: Quick Save</li>
+                    <li><strong>Ctrl + L</strong>: Quick Load (asks for confirmation during play)</li>
+                    <li><strong>I</strong>: Open Inventory</li>
+                    <li><strong>M</strong>: Open Market</li>
+                    <li><strong>T</strong>: Open Transportation</li>
+                    <li><strong>Escape</strong>: Toggle menu or return to game</li>
+                    <li><strong>1-7 (in Market)</strong>: Switch between market tabs</li>
+                    <li><strong>Shift + /</strong>: Toggle this help panel</li>
+                </ul>
+                <p>Use button tooltips to learn what each action does.</p>
+            </div>
+        </div>
     </div>
 
     <!-- Loading Screen -->
