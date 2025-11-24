@@ -43,6 +43,18 @@
             </div>
         </header>
 
+        <section id="world-status" aria-label="World status">
+            <div class="status-pill">
+                <span class="pill-label">Weather</span>
+                <span id="weather-label">Calm Skies</span>
+            </div>
+            <div class="status-pill">
+                <span class="pill-label">Cycle</span>
+                <span id="cycle-label">Dawn</span>
+            </div>
+            <div class="status-pill atmosphere" id="atmosphere-note">Atmosphere steady and safe.</div>
+        </section>
+
         <main id="game-main">
             <!-- Game World Area -->
             <section id="game-world">
@@ -1146,6 +1158,9 @@
         <div class="perf-row"><span>Memory</span><strong id="perf-memory">—</strong></div>
     </div>
 
+    <div id="atmosphere-layer" aria-hidden="true"></div>
+    <div id="environment-overlay" aria-hidden="true"></div>
+    <div id="highlight-layer" aria-hidden="true"></div>
     <div id="particle-layer" aria-hidden="true"></div>
 
     <div id="screen-fader" aria-hidden="true"></div>

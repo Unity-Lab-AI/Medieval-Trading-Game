@@ -657,7 +657,9 @@ const game = {
             if (this.currentLocation) {
                 CityEventSystem.checkRandomEvents(this.currentLocation.id);
             }
-            
+
+            EnvironmentSystem.update(TimeSystem.getTimeInfo());
+
             // Check price alerts
             if (typeof TradingSystem !== 'undefined') {
                 TradingSystem.checkPriceAlerts();
@@ -2207,6 +2209,12 @@ const elements = {
     performanceFrame: null,
     performanceMemory: null,
     screenFader: null,
+    atmosphereLayer: null,
+    environmentOverlay: null,
+    highlightLayer: null,
+    weatherLabel: null,
+    cycleLabel: null,
+    atmosphereNote: null,
 
     // Buttons
     newGameBtn: null,
@@ -2307,6 +2315,9 @@ const defaultPreferences = {
     fontScale: 100,
     reducedMotion: false,
     flashWarnings: false,
+    environmentQuality: 'high',
+    dynamicWeather: true,
+    highlightGuides: true,
     vfxQuality: 'high',
     particleDensity: 100,
     screenShake: 70,
@@ -2366,6 +2377,9 @@ const ParticleSystem = {
                 particle.remove();
             });
         }
+    },
+    spawnResource(origin) {
+        this.spawnBurst('resource', { count: 9, origin });
     }
 };
 
@@ -2403,6 +2417,171 @@ const VisualEffectsSystem = {
                 this.fader.classList.remove('active');
             });
         }, 140);
+    }
+};
+
+const EnvironmentSystem = {
+    overlay: null,
+    atmosphere: null,
+    highlightLayer: null,
+    weatherLabel: null,
+    cycleLabel: null,
+    atmosphereNote: null,
+    currentWeather: 'clear',
+    nextWeatherChange: 0,
+    highlightMap: new Map(),
+    init() {
+        this.overlay = elements.environmentOverlay;
+        this.atmosphere = elements.atmosphereLayer;
+        this.highlightLayer = elements.highlightLayer;
+        this.weatherLabel = elements.weatherLabel;
+        this.cycleLabel = elements.cycleLabel;
+        this.atmosphereNote = elements.atmosphereNote;
+
+        this.scheduleNextWeather();
+        this.applyLighting(TimeSystem.getTimeInfo());
+        this.applyWeather(this.currentWeather, { silent: true });
+    },
+    scheduleNextWeather() {
+        const variance = Math.round(Math.random() * 120);
+        this.nextWeatherChange = TimeSystem.getTotalMinutes() + 90 + variance;
+    },
+    rollWeather() {
+        const patterns = [
+            { id: 'clear', weight: 3, label: 'Clear Skies' },
+            { id: 'rain', weight: 2, label: 'Gentle Rain' },
+            { id: 'snow', weight: 1, label: 'Snowfall' },
+            { id: 'fog', weight: 1, label: 'Fog' },
+            { id: 'sandstorm', weight: 0.5, label: 'Sandstorm' }
+        ];
+
+        if (!userPreferences.dynamicWeather) {
+            return 'clear';
+        }
+
+        const totalWeight = patterns.reduce((sum, p) => sum + p.weight, 0);
+        const roll = Math.random() * totalWeight;
+        let accumulator = 0;
+        for (const pattern of patterns) {
+            accumulator += pattern.weight;
+            if (roll <= accumulator) return pattern.id;
+        }
+        return 'clear';
+    },
+    applyWeather(type, options = {}) {
+        this.currentWeather = type;
+        const label = {
+            clear: 'Clear Skies',
+            rain: 'Gentle Rain',
+            snow: 'Snowfall',
+            fog: 'Fog Rolling In',
+            sandstorm: 'Sandstorm'
+        }[type] || 'Calm Skies';
+
+        if (this.overlay) {
+            this.overlay.className = 'environment-overlay';
+            this.overlay.classList.add(type);
+            this.overlay.style.opacity = userPreferences.environmentQuality === 'low' ? 0.16 : '';
+        }
+
+        if (this.weatherLabel) {
+            this.weatherLabel.textContent = label;
+        }
+
+        if (!options.silent) {
+            addMessage(`Weather shifted to ${label}.`);
+            NotificationCenter.show(`Weather: ${label}`, 'info');
+        }
+
+        this.updateAtmosphereNote();
+    },
+    applyLighting(timeInfo) {
+        if (!timeInfo) return;
+
+        const { hour, minute } = timeInfo;
+        const progress = hour + minute / 60;
+        let cycle = 'Daylight';
+        if (progress < 6) cycle = 'Night';
+        else if (progress < 9) cycle = 'Dawn';
+        else if (progress < 17) cycle = 'Daylight';
+        else if (progress < 20) cycle = 'Golden Hour';
+        else cycle = 'Nightfall';
+
+        const dimming = cycle === 'Night' || cycle === 'Nightfall' ? 0.65 : cycle === 'Golden Hour' ? 0.45 : 0.3;
+        const saturation = userPreferences.environmentQuality === 'high' ? 1.1 : 0.95;
+
+        if (this.cycleLabel) {
+            this.cycleLabel.textContent = cycle;
+        }
+
+        if (this.atmosphere) {
+            this.atmosphere.style.opacity = 0.2 + (dimming / 2);
+            this.atmosphere.style.filter = `saturate(${saturation})`;
+        }
+
+        document.body.classList.toggle('night-cycle', cycle === 'Night' || cycle === 'Nightfall');
+        this.updateAtmosphereNote();
+    },
+    update(timeInfo) {
+        this.applyLighting(timeInfo);
+
+        if (userPreferences.dynamicWeather && TimeSystem.getTotalMinutes() >= this.nextWeatherChange) {
+            const nextWeather = this.rollWeather();
+            this.applyWeather(nextWeather);
+            this.scheduleNextWeather();
+        }
+
+        this.refreshHighlights();
+    },
+    nudgeElement(element, note = 'Interact here') {
+        if (!element || !userPreferences.highlightGuides) return;
+
+        this.highlightMap.set(element, Date.now() + 4200);
+        element.classList.add('pulse-highlight');
+        this.updateAtmosphereNote(note);
+        this.refreshHighlights();
+
+        setTimeout(() => this.clearHighlight(element), 4200);
+    },
+    clearHighlight(element) {
+        if (!element) return;
+        element.classList.remove('pulse-highlight');
+        this.highlightMap.delete(element);
+        this.refreshHighlights();
+    },
+    refreshHighlights() {
+        const now = Date.now();
+        for (const [element, expiry] of this.highlightMap.entries()) {
+            if (expiry <= now) {
+                element.classList.remove('pulse-highlight');
+                this.highlightMap.delete(element);
+            }
+        }
+
+        if (this.highlightLayer) {
+            this.highlightLayer.style.opacity = this.highlightMap.size ? 0.32 : 0;
+        }
+
+        if (!this.highlightMap.size) {
+            this.updateAtmosphereNote();
+        }
+    },
+    updateAtmosphereNote(custom) {
+        if (!this.atmosphereNote) return;
+        if (custom) {
+            this.atmosphereNote.textContent = custom;
+            return;
+        }
+
+        const weatherText = {
+            clear: 'Atmosphere steady and safe.',
+            rain: 'Rain boosts crop yields and slows caravans.',
+            snow: 'Snow cools tempers and travel speed.',
+            fog: 'Fog hides both threats and opportunities.',
+            sandstorm: 'Sandstorm reduces visibility and morale.'
+        }[this.currentWeather] || 'Atmosphere steady and safe.';
+
+        this.atmosphereNote.textContent = weatherText;
     }
 };
 
@@ -2635,6 +2814,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeElements();
     VisualEffectsSystem.init();
     ParticleSystem.init();
+    EnvironmentSystem.init();
     loadPreferencesFromStorage();
     PerformanceMonitor.init();
     setupEventListeners();
@@ -2687,6 +2867,12 @@ function initializeElements() {
     elements.performanceFrame = document.getElementById('perf-frame');
     elements.performanceMemory = document.getElementById('perf-memory');
     elements.screenFader = document.getElementById('screen-fader');
+    elements.atmosphereLayer = document.getElementById('atmosphere-layer');
+    elements.environmentOverlay = document.getElementById('environment-overlay');
+    elements.highlightLayer = document.getElementById('highlight-layer');
+    elements.weatherLabel = document.getElementById('weather-label');
+    elements.cycleLabel = document.getElementById('cycle-label');
+    elements.atmosphereNote = document.getElementById('atmosphere-note');
     
     // Buttons
     elements.newGameBtn = document.getElementById('new-game-btn');
@@ -3075,9 +3261,16 @@ function applyPreferences() {
     document.body.classList.toggle('colorblind-friendly', userPreferences.colorblind);
     document.body.classList.toggle('keyboard-nav-enabled', userPreferences.keyboardNav);
     document.body.classList.toggle('reduced-motion', userPreferences.reducedMotion);
+    document.body.classList.toggle('highlight-guides', userPreferences.highlightGuides);
     document.documentElement.style.setProperty('--font-size', `${userPreferences.fontScale}%`);
     document.documentElement.style.setProperty('--animation-scale', `${userPreferences.animationSpeed / 100}`);
     document.documentElement.style.setProperty('--shake-intensity', `${(userPreferences.screenShake / 100) * 8}px`);
+    if (elements.environmentOverlay) {
+        elements.environmentOverlay.style.opacity = userPreferences.environmentQuality === 'low' ? 0.16 : '';
+    }
+    if (EnvironmentSystem.overlay && !userPreferences.dynamicWeather) {
+        EnvironmentSystem.applyWeather('clear', { silent: true });
+    }
     applyAudioPreferences();
     PerformanceMonitor.setEnabled(userPreferences.performanceOverlay);
     updateFontSizeLabel();
@@ -4097,6 +4290,11 @@ function updateNavigationPanel() {
         button.textContent = destination.name;
         elements.navigationConnections.appendChild(button);
     });
+
+    const firstConnection = elements.navigationConnections.querySelector('.nav-connection');
+    if (firstConnection) {
+        EnvironmentSystem.nudgeElement(firstConnection, 'Plot a premium trade route.');
+    }
 }
 
 // Market Functions
