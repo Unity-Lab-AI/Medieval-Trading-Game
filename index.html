@@ -1123,6 +1123,14 @@
                         <input type="checkbox" id="flash-warning-toggle">
                         <span>Soften flashes and screen shake</span>
                     </label>
+                    <label class="toggle">
+                        <input type="checkbox" id="cinematic-toggle" checked>
+                        <span>Enable cinematic sweeps for key moments</span>
+                    </label>
+                    <label class="toggle">
+                        <input type="checkbox" id="minimal-mode-toggle">
+                        <span>Minimal effects mode (performance & comfort)</span>
+                    </label>
                 </section>
 
                 <section class="settings-section settings-tab-content" id="settings-controls" role="tabpanel">
@@ -1166,6 +1174,10 @@
                             <input type="text" class="control-binding-input" data-action="redoAction" aria-label="Redo key" readonly>
                         </label>
                     </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="touch-mode-toggle">
+                        <span>Touch-friendly layout & larger hit targets</span>
+                    </label>
                     <div class="control-binding-actions">
                         <button id="reset-bindings-btn" class="secondary">Reset Bindings</button>
                         <span id="binding-hint" class="setting-hint" aria-live="polite">Select a binding to change it.</span>
@@ -1192,6 +1204,20 @@
     <div id="environment-overlay" aria-hidden="true"></div>
     <div id="highlight-layer" aria-hidden="true"></div>
     <div id="particle-layer" aria-hidden="true"></div>
+
+    <div id="cinematic-overlay" class="cinematic-overlay hidden" role="dialog" aria-live="polite" aria-label="Cinematic sequence">
+        <div class="cinematic-frame">
+            <div class="cinematic-pan"></div>
+            <div class="cinematic-content">
+                <div class="cinematic-title">Epic Moment</div>
+                <div class="cinematic-lines" id="cinematic-lines"></div>
+                <div class="cinematic-progress">
+                    <div id="cinematic-progress-fill"></div>
+                </div>
+            </div>
+            <button id="skip-cinematic-btn" class="close-btn" aria-label="Skip cinematic">Skip</button>
+        </div>
+    </div>
 
     <div id="screen-fader" aria-hidden="true"></div>
 

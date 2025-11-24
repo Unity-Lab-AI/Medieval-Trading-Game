@@ -106,22 +106,22 @@ Comprehensive feature roadmap for the trading game to reach 100% completion.
 - [x] Implement performance optimization system that monitors FPS, memory usage, and effect counts
 - [x] Add adaptive quality adjustment based on device capabilities
 - [x] Create performance monitoring display and optimization controls
-- [ ] Ship cinematic set-pieces (travel departures, market reveals, boss events)
-- [ ] Add narrative questlines with branching outcomes and voiced narration stubs
+- [x] Ship cinematic set-pieces (travel departures, market reveals, boss events)
+- [x] Add narrative questlines with branching outcomes and voiced narration stubs
 
 ## Key Features
-- [ ] Ensure all systems are performant and can be disabled for players who prefer minimal effects
-- [ ] Implement comprehensive settings persistence using localStorage
+- [x] Ensure all systems are performant and can be disabled for players who prefer minimal effects
+- [x] Implement comprehensive settings persistence using localStorage
 - [ ] Maintain an event-driven architecture for loose coupling between systems
 - [ ] Add accessibility features including reduced motion, high contrast, and screen reader support
-- [ ] Optimize for mobile-friendly interactions and touch support
+- [x] Optimize for mobile-friendly interactions and touch support
 - [ ] Ensure cross-browser compatibility with fallbacks for older browsers
 - [ ] Deliver an immersive, engaging experience that enhances gameplay without being distracting, with full control over all audio and visual aspects
 - [ ] Optimize all effects for performance and include options to disable them for players who prefer minimal visuals/sounds
 
 ## AAA Narrative & Cinematic Polish
-- [ ] Add character-driven quest arcs with voiced narration and branching consequences
-- [ ] Script cinematic camera sweeps for major milestones (departures, arrivals, boss introductions)
+- [x] Add character-driven quest arcs with voiced narration and branching consequences
+- [x] Script cinematic camera sweeps for major milestones (departures, arrivals, boss introductions)
 - [ ] Introduce prestige collectibles and legendary gear with bespoke lore entries
 - [ ] Layer dynamic soundtrack stems that react to travel danger, market volatility, and combat stakes
 

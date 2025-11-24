@@ -989,8 +989,15 @@ const TravelSystem = {
         this.playerPosition.travelStartTime = TimeSystem.getTotalMinutes();
         this.playerPosition.travelDuration = travelInfo.timeHours * 60; // Convert to minutes
         this.playerPosition.path = this.findPath(currentLoc, destination);
-        
+
         addMessage(`Starting travel to ${destination.name}... Estimated time: ${travelInfo.timeDisplay}`);
+
+        NarrativeSystem?.recordEvent('travelStart', {
+            from: currentLoc.name,
+            to: destination.name,
+            safety: travelInfo.safety,
+            transport: travelInfo.transport
+        });
 
         if (window.AnimationSystem) {
             AnimationSystem.setState('travel', { destination: destination.name, context: travelInfo.transport });
@@ -1075,6 +1082,12 @@ const TravelSystem = {
         };
 
         addMessage(`Arrived at ${destination.name}!`);
+
+        NarrativeSystem?.recordEvent('arrival', {
+            location: destination.name,
+            type: destination.type,
+            cargo: this.travelHistory[this.travelHistory.length - 1]?.cargo || 'secured freight'
+        });
 
         if (window.AnimationSystem) {
             AnimationSystem.registerBeat(0.35);

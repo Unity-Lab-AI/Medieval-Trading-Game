@@ -2230,6 +2230,9 @@ const elements = {
     atmosphereLayer: null,
     environmentOverlay: null,
     highlightLayer: null,
+    cinematicOverlay: null,
+    cinematicLines: null,
+    cinematicProgressFill: null,
     weatherLabel: null,
     seasonLabel: null,
     cycleLabel: null,
@@ -2260,6 +2263,7 @@ const elements = {
     quickSaveBtn: null,
     quickLoadBtn: null,
     controlsHelpBtn: null,
+    skipCinematicBtn: null,
     closeControlsHelpBtn: null,
     onboardingBtn: null,
     onboardingModal: null,
@@ -2290,6 +2294,9 @@ const elements = {
     musicMuteToggle: null,
     sfxMuteToggle: null,
     ambientToggle: null,
+    cinematicToggle: null,
+    minimalModeToggle: null,
+    touchModeToggle: null,
     environmentQualitySelect: null,
     autoQualityToggle: null,
     statusBanner: null,
@@ -2319,6 +2326,7 @@ let loadingProgressTimer = null;
 
 const SETTINGS_STORAGE_KEY = 'tradingGamePreferences';
 const ONBOARDING_STORAGE_KEY = 'tradingGameOnboardingComplete';
+const NARRATIVE_STORAGE_KEY = 'tradingGameNarrative';
 
 const defaultControlBindings = {
     openInventory: 'I',
@@ -2340,6 +2348,9 @@ const defaultPreferences = {
     fontScale: 100,
     reducedMotion: false,
     flashWarnings: false,
+    cinematicMode: true,
+    minimalMode: false,
+    touchMode: false,
     environmentQuality: 'high',
     autoQuality: true,
     dynamicWeather: true,
@@ -2359,11 +2370,13 @@ const defaultPreferences = {
         sfxMuted: false,
         ambientEnabled: true
     },
-    controlBindings: { ...defaultControlBindings }
+    controlBindings: { ...defaultControlBindings },
+    lastImmersive: null
 };
 
 let userPreferences = { ...defaultPreferences };
 let onboardingStepIndex = 0;
+let preferenceSaveTimer = null;
 
 function deepClone(data) {
     if (typeof structuredClone === 'function') {
@@ -3089,6 +3102,215 @@ const NotificationCenter = {
     }
 };
 
+const CinematicDirector = {
+    overlay: null,
+    lines: null,
+    progressFill: null,
+    skipButton: null,
+    active: false,
+    progressTimer: null,
+    recordedMoments: new Set(),
+    sequences: {
+        departure: {
+            title: 'Departure',
+            tone: 360,
+            duration: 4800,
+            lines: ({ from, to, escort, weather }) => [
+                `Wagons break from ${from || 'camp'}, lanterns flickering in the ${weather || 'dawn'} haze.`,
+                `${escort || 'Guild outriders'} fan out, mapping safe lanes toward ${to || 'the frontier'}.`,
+                'Supplies are checked, contracts sealed, and every wheel squeaks with intent.'
+            ]
+        },
+        arrival: {
+            title: 'Arrival',
+            tone: 520,
+            duration: 4200,
+            lines: ({ location, welcome, cargo }) => [
+                `${location || 'The new city'} unveils itself with banners and shouted greetings.`,
+                `${welcome || 'Harbor bells'} answer the caravan horns as gates swing wide.`,
+                `Tally clerks swarm to audit ${cargo || 'stacked crates'} while locals peer at the newcomers.`
+            ]
+        },
+        market: {
+            title: 'Market Reveal',
+            tone: 440,
+            duration: 3800,
+            lines: ({ location, reputation }) => [
+                `${location || 'The grand bazaar'} breathes in incense, steel, and murmured deals.`,
+                `Patrons glance at your sigil${reputation ? `—${reputation}` : ''}, weighing coin versus curiosity.`,
+                'Stalls ignite with color as traders pitch secrets of distant roads.'
+            ]
+        },
+        bossEvent: {
+            title: 'Nemesis Approaches',
+            tone: 220,
+            duration: 5200,
+            lines: ({ name, threat }) => [
+                `${name || 'The Guildmaster'} steps from the shadow of a standard, voice low.`,
+                `${threat || 'A silent escort draws steel, promising negotiation or ruin.'}`,
+                'Your caravan steadies—the next choice defines its legend.'
+            ]
+        }
+    },
+
+    init() {
+        this.overlay = elements.cinematicOverlay;
+        this.lines = elements.cinematicLines;
+        this.progressFill = elements.cinematicProgressFill;
+        this.skipButton = elements.skipCinematicBtn;
+
+        if (this.skipButton) {
+            this.skipButton.addEventListener('click', () => this.finishSequence('Skipped'));
+        }
+    },
+
+    playSequence(key, context = {}) {
+        if (!userPreferences.cinematicMode || userPreferences.minimalMode) return;
+        if (!this.overlay || !this.lines || !this.progressFill) return;
+
+        const sequence = this.sequences[key];
+        if (!sequence) return;
+
+        this.stop();
+        this.active = true;
+        this.overlay.classList.remove('hidden');
+
+        const titleEl = this.overlay.querySelector('.cinematic-title');
+        if (titleEl) {
+            titleEl.textContent = sequence.title;
+        }
+
+        this.lines.innerHTML = '';
+        const lines = sequence.lines(context);
+        lines.forEach((line, index) => {
+            const lineEl = document.createElement('div');
+            lineEl.className = 'line';
+            lineEl.style.animationDelay = `${index * 140}ms`;
+            lineEl.textContent = line;
+            this.lines.appendChild(lineEl);
+        });
+
+        if (AudioSystem?.initialized) {
+            AudioSystem.playTone({
+                frequency: sequence.tone,
+                duration: 0.6,
+                type: 'sine',
+                destination: AudioSystem.musicGain,
+                gain: 0.85
+            });
+        }
+
+        const duration = sequence.duration || 4200;
+        let elapsed = 0;
+        this.progressFill.style.width = '0%';
+        this.progressTimer = setInterval(() => {
+            elapsed += 120;
+            this.progressFill.style.width = `${Math.min(100, (elapsed / duration) * 100)}%`;
+            if (elapsed >= duration) {
+                this.finishSequence();
+            }
+        }, 120);
+
+        if (context.milestoneId) {
+            this.recordedMoments.add(context.milestoneId);
+        }
+    },
+
+    finishSequence(reason = 'Complete') {
+        this.stop();
+        if (this.overlay) {
+            this.overlay.classList.add('hidden');
+        }
+        showStatusBanner(`Cinematic ${reason.toLowerCase()}`);
+    },
+
+    stop() {
+        if (this.progressTimer) {
+            clearInterval(this.progressTimer);
+            this.progressTimer = null;
+        }
+        this.active = false;
+        if (this.progressFill) {
+            this.progressFill.style.width = '0%';
+        }
+    }
+};
+
+const NarrativeSystem = {
+    arcs: [],
+    progress: {},
+
+    init() {
+        this.arcs = [
+            {
+                id: 'guild_rising',
+                title: 'Guild Rising',
+                narrator: 'Archive Master Lysa',
+                milestones: [
+                    { id: 'first_departure', trigger: 'travelStart', description: 'Leave the capital with purpose.', cinematic: 'departure' },
+                    { id: 'first_arrival', trigger: 'arrival', description: 'Arrive safely with your manifest intact.', cinematic: 'arrival' },
+                    { id: 'market_reveal', trigger: 'marketEnter', description: 'Break into a bustling market and claim space.', cinematic: 'market' }
+                ]
+            },
+            {
+                id: 'shadow_cinder',
+                title: 'Caravan of Cinders',
+                narrator: 'The Whispered Ledger',
+                milestones: [
+                    { id: 'dangerous_route', trigger: 'travelStart', description: 'Choose a risky route at dusk.', cinematic: 'bossEvent' },
+                    { id: 'boss_standoff', trigger: 'arrival', description: 'Face down a rival envoy demanding tribute.', cinematic: 'bossEvent' }
+                ]
+            }
+        ];
+
+        try {
+            const stored = localStorage.getItem(NARRATIVE_STORAGE_KEY);
+            if (stored) {
+                this.progress = JSON.parse(stored);
+            }
+        } catch (error) {
+            console.warn('Failed to load narrative state', error);
+            this.progress = {};
+        }
+    },
+
+    save() {
+        try {
+            localStorage.setItem(NARRATIVE_STORAGE_KEY, JSON.stringify(this.progress));
+        } catch (error) {
+            console.warn('Failed to save narrative state', error);
+        }
+    },
+
+    recordEvent(trigger, context = {}) {
+        this.arcs.forEach((arc) => {
+            arc.milestones
+                .filter(milestone => milestone.trigger === trigger)
+                .forEach((milestone) => {
+                    const progressKey = `${arc.id}:${milestone.id}`;
+                    if (this.progress[progressKey]) return;
+
+                    this.progress[progressKey] = {
+                        completedAt: Date.now(),
+                        context
+                    };
+                    this.save();
+
+                    const narration = `${arc.narrator}: ${milestone.description}`;
+                    addMessage(narration, 'info');
+                    NotificationCenter.show(`${arc.title}: ${milestone.description}`, 'info');
+
+                    if (milestone.cinematic) {
+                        CinematicDirector.playSequence(milestone.cinematic, {
+                            ...context,
+                            milestoneId: progressKey
+                        });
+                    }
+                });
+        });
+    }
+};
+
 // Initialize the game when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     initializeElements();
@@ -3098,6 +3320,8 @@ document.addEventListener('DOMContentLoaded', function() {
     AnimationSystem.init();
     AdaptiveQualitySystem.init();
     loadPreferencesFromStorage();
+    CinematicDirector.init();
+    NarrativeSystem.init();
     PerformanceMonitor.init();
     ControllerSupport.init();
     setupEventListeners();
@@ -3162,6 +3386,9 @@ function initializeElements() {
     elements.animationMomentum = document.getElementById('animation-momentum');
     elements.qualityLabel = document.getElementById('quality-label');
     elements.controllerStatus = document.getElementById('controller-status');
+    elements.cinematicOverlay = document.getElementById('cinematic-overlay');
+    elements.cinematicLines = document.getElementById('cinematic-lines');
+    elements.cinematicProgressFill = document.getElementById('cinematic-progress-fill');
     
     // Buttons
     elements.newGameBtn = document.getElementById('new-game-btn');
@@ -3186,6 +3413,7 @@ function initializeElements() {
     elements.undoBtn = document.getElementById('undo-btn');
     elements.redoBtn = document.getElementById('redo-btn');
     elements.controlsHelpBtn = document.getElementById('controls-help-btn');
+    elements.skipCinematicBtn = document.getElementById('skip-cinematic-btn');
     elements.closeControlsHelpBtn = document.getElementById('close-controls-help');
     elements.onboardingBtn = document.getElementById('onboarding-btn');
     elements.onboardingModal = document.getElementById('onboarding-modal');
@@ -3216,6 +3444,9 @@ function initializeElements() {
     elements.musicMuteToggle = document.getElementById('music-mute-toggle');
     elements.sfxMuteToggle = document.getElementById('sfx-mute-toggle');
     elements.ambientToggle = document.getElementById('ambient-toggle');
+    elements.cinematicToggle = document.getElementById('cinematic-toggle');
+    elements.minimalModeToggle = document.getElementById('minimal-mode-toggle');
+    elements.touchModeToggle = document.getElementById('touch-mode-toggle');
     elements.reducedMotionToggle = document.getElementById('reduced-motion-toggle');
     elements.flashWarningToggle = document.getElementById('flash-warning-toggle');
     elements.vfxQualitySelect = document.getElementById('vfx-quality-select');
@@ -3356,6 +3587,25 @@ function setupEventListeners() {
             applyPreferences();
         });
     }
+    if (elements.cinematicToggle) {
+        elements.cinematicToggle.addEventListener('change', (event) => {
+            userPreferences.cinematicMode = event.target.checked;
+            applyPreferences();
+        });
+    }
+    if (elements.minimalModeToggle) {
+        elements.minimalModeToggle.addEventListener('change', (event) => {
+            userPreferences.minimalMode = event.target.checked;
+            applyPreferences();
+            syncSettingsUI();
+        });
+    }
+    if (elements.touchModeToggle) {
+        elements.touchModeToggle.addEventListener('change', (event) => {
+            userPreferences.touchMode = event.target.checked;
+            applyPreferences();
+        });
+    }
     if (elements.fontSizeRange) {
         elements.fontSizeRange.addEventListener('input', (event) => {
             userPreferences.fontScale = parseInt(event.target.value, 10);
@@ -3374,6 +3624,7 @@ function setupEventListeners() {
         elements.particleDensityRange.addEventListener('input', (event) => {
             userPreferences.particleDensity = parseInt(event.target.value, 10);
             updateVisualLabels();
+            queuePreferenceSave();
         });
     }
     if (elements.screenShakeRange) {
@@ -3532,6 +3783,7 @@ function loadPreferencesFromStorage() {
             userPreferences = { ...defaultPreferences, ...JSON.parse(stored) };
             userPreferences.controlBindings = { ...defaultControlBindings, ...(userPreferences.controlBindings || {}) };
             userPreferences.audio = { ...defaultPreferences.audio, ...(userPreferences.audio || {}) };
+            userPreferences.lastImmersive = userPreferences.lastImmersive || null;
         }
     } catch (error) {
         console.warn('Unable to load preferences', error);
@@ -3559,12 +3811,21 @@ function savePreferences() {
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(userPreferences));
 }
 
+function queuePreferenceSave() {
+    clearTimeout(preferenceSaveTimer);
+    preferenceSaveTimer = setTimeout(savePreferences, 250);
+}
+
 function applyPreferences() {
+    applyMinimalPreset(userPreferences.minimalMode);
     document.body.classList.toggle('high-contrast', userPreferences.highContrast);
     document.body.classList.toggle('colorblind-friendly', userPreferences.colorblind);
     document.body.classList.toggle('keyboard-nav-enabled', userPreferences.keyboardNav);
     document.body.classList.toggle('reduced-motion', userPreferences.reducedMotion);
     document.body.classList.toggle('highlight-guides', userPreferences.highlightGuides);
+    document.body.classList.toggle('minimal-mode', userPreferences.minimalMode);
+    document.body.classList.toggle('touch-friendly', userPreferences.touchMode);
+    document.body.classList.toggle('cinematics-disabled', !userPreferences.cinematicMode);
     document.documentElement.style.setProperty('--font-size', `${userPreferences.fontScale}%`);
     document.documentElement.style.setProperty('--animation-scale', `${userPreferences.animationSpeed / 100}`);
     document.documentElement.style.setProperty('--shake-intensity', `${(userPreferences.screenShake / 100) * 8}px`);
@@ -3589,6 +3850,50 @@ function applyPreferences() {
     applyAudioPreferences();
     PerformanceMonitor.setEnabled(userPreferences.performanceOverlay);
     updateFontSizeLabel();
+    queuePreferenceSave();
+}
+
+function applyMinimalPreset(enabled) {
+    if (enabled) {
+        if (!userPreferences.lastImmersive) {
+            userPreferences.lastImmersive = {
+                particleDensity: userPreferences.particleDensity,
+                screenShake: userPreferences.screenShake,
+                animationSpeed: userPreferences.animationSpeed,
+                environmentQuality: userPreferences.environmentQuality,
+                vfxQuality: userPreferences.vfxQuality,
+                autoQuality: userPreferences.autoQuality,
+                reducedMotion: userPreferences.reducedMotion,
+                flashWarnings: userPreferences.flashWarnings,
+                touchMode: userPreferences.touchMode,
+                audio: { ambientEnabled: userPreferences.audio.ambientEnabled }
+            };
+        }
+
+        userPreferences.particleDensity = Math.min(userPreferences.particleDensity, 60);
+        userPreferences.screenShake = 0;
+        userPreferences.animationSpeed = Math.min(userPreferences.animationSpeed, 95);
+        userPreferences.environmentQuality = 'medium';
+        userPreferences.vfxQuality = 'low';
+        userPreferences.autoQuality = true;
+        userPreferences.reducedMotion = true;
+        userPreferences.flashWarnings = true;
+        userPreferences.audio.ambientEnabled = false;
+        userPreferences.touchMode = true;
+    } else if (userPreferences.lastImmersive) {
+        const snapshot = userPreferences.lastImmersive;
+        userPreferences.particleDensity = snapshot.particleDensity;
+        userPreferences.screenShake = snapshot.screenShake;
+        userPreferences.animationSpeed = snapshot.animationSpeed;
+        userPreferences.environmentQuality = snapshot.environmentQuality;
+        userPreferences.vfxQuality = snapshot.vfxQuality;
+        userPreferences.autoQuality = snapshot.autoQuality;
+        userPreferences.reducedMotion = snapshot.reducedMotion;
+        userPreferences.flashWarnings = snapshot.flashWarnings;
+        userPreferences.touchMode = snapshot.touchMode;
+        userPreferences.audio.ambientEnabled = snapshot.audio?.ambientEnabled ?? userPreferences.audio.ambientEnabled;
+        userPreferences.lastImmersive = null;
+    }
 }
 
 function setupControlBindingListeners() {
@@ -3622,6 +3927,15 @@ function syncSettingsUI() {
     }
     if (elements.flashWarningToggle) {
         elements.flashWarningToggle.checked = userPreferences.flashWarnings;
+    }
+    if (elements.cinematicToggle) {
+        elements.cinematicToggle.checked = userPreferences.cinematicMode;
+    }
+    if (elements.minimalModeToggle) {
+        elements.minimalModeToggle.checked = userPreferences.minimalMode;
+    }
+    if (elements.touchModeToggle) {
+        elements.touchModeToggle.checked = userPreferences.touchMode;
     }
     if (elements.fontSizeRange) {
         elements.fontSizeRange.value = userPreferences.fontScale;
@@ -3687,6 +4001,7 @@ function applyAudioPreferences() {
     });
 
     syncAudioUI();
+    queuePreferenceSave();
 }
 
 function syncAudioUI() {
@@ -4628,6 +4943,10 @@ function openMarket() {
     populateItemFilter();
     populateComparisonSelect();
     updateMarketNews();
+    NarrativeSystem.recordEvent('marketEnter', {
+        location: game.currentLocation?.name,
+        reputation: game.currentLocation?.reputation || 'Newcomer'
+    });
     StatsSystem.recordAction('marketOpened');
     AnimationSystem.setState('trade', { reason: 'Market haggling' });
 }
