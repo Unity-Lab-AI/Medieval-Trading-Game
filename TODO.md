@@ -54,8 +54,14 @@ Comprehensive feature roadmap for the trading game to reach 100% completion.
 - [ ] Implement notification sounds for important events
 - [ ] Add comprehensive volume controls for master, music, and SFX with mute toggle options
 
+## Verification & Maintenance
+- [ ] Re-validate completed control schemes (shortcuts, customization, tutorials) against current UI implementations
+- [ ] Confirm responsive layout, visual hierarchy, and styling parity across breakpoints and panels
+- [ ] Audit accessibility features (keyboard navigation, screen reader labels, color contrast toggles) to ensure they remain effective
+- [ ] Spot-check onboarding, tooltips, confirmations, and notifications to verify they still trigger at appropriate times
+- [ ] Document any regressions discovered during verification and schedule fixes in relevant sections
+
 ## Visual Effects System
-- [ ] Create a particle effects system for visual feedback (gold transactions, item pickups, level progression, combat, etc.)
 - [x] Create a particle effects system for visual feedback (gold transactions, item pickups, level progression, combat, etc.)
 - [ ] Implement screen shake for important events
 - [ ] Add fade transitions between scenes
