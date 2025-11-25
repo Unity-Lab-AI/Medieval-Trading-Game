@@ -14,6 +14,41 @@ const GameState = {
     TRANSPORTATION: 'transportation'
 };
 
+// Lightweight event bus to keep systems loosely coupled
+const EventBus = {
+    listeners: {},
+
+    on(event, handler) {
+        if (!this.listeners[event]) {
+            this.listeners[event] = new Set();
+        }
+        this.listeners[event].add(handler);
+    },
+
+    off(event, handler) {
+        this.listeners[event]?.delete(handler);
+    },
+
+    once(event, handler) {
+        const wrapper = (payload) => {
+            handler(payload);
+            this.off(event, wrapper);
+        };
+        this.on(event, wrapper);
+    },
+
+    emit(event, payload) {
+        if (!this.listeners[event]) return;
+        this.listeners[event].forEach(listener => {
+            try {
+                listener(payload);
+            } catch (error) {
+                console.error(`[EventBus] Error in listener for ${event}:`, error);
+            }
+        });
+    }
+};
+
 // Time Management System
 const TimeSystem = {
     // Time constants
@@ -180,11 +215,17 @@ const TimeSystem = {
     
     // Get time in total minutes for calculations
     getTotalMinutes() {
-        return this.currentTime.minute +
-               (this.currentTime.hour * this.MINUTES_PER_HOUR) +
-               (this.currentTime.day * this.HOURS_PER_DAY * this.MINUTES_PER_HOUR) +
-               (this.currentTime.month * this.DAYS_PER_MONTH * this.HOURS_PER_DAY * this.MINUTES_PER_HOUR) +
-               (this.currentTime.year * this.MONTHS_PER_YEAR * this.DAYS_PER_MONTH * this.HOURS_PER_DAY * this.MINUTES_PER_HOUR);
+        return this.totalMinutesFor(this.currentTime);
+    },
+
+    // Convert a time snapshot to total minutes for easy comparisons
+    totalMinutesFor(time) {
+        if (!time) return 0;
+        return time.minute +
+               (time.hour * this.MINUTES_PER_HOUR) +
+               (time.day * this.HOURS_PER_DAY * this.MINUTES_PER_HOUR) +
+               (time.month * this.DAYS_PER_MONTH * this.HOURS_PER_DAY * this.MINUTES_PER_HOUR) +
+               (time.year * this.MONTHS_PER_YEAR * this.DAYS_PER_MONTH * this.HOURS_PER_DAY * this.MINUTES_PER_HOUR);
     }
 };
 
@@ -633,23 +674,37 @@ const game = {
     // Update game state
     update(deltaTime) {
         if (this.state !== GameState.PLAYING) return;
-        
+
         // Update time system
+        const previousTime = { ...TimeSystem.currentTime };
         const timeAdvanced = TimeSystem.update(deltaTime);
-        
+
         // Update event system if time advanced
         if (timeAdvanced) {
+            const timeInfo = TimeSystem.getTimeInfo();
+            const totalMinutes = TimeSystem.getTotalMinutes();
+            const previousTotal = TimeSystem.totalMinutesFor(previousTime);
+            const deltaMinutes = Math.max(1, totalMinutes - previousTotal);
+
+            EventBus.emit('time:minute', { time: timeInfo, previous: previousTime, deltaMinutes });
+            if (timeInfo.hour !== previousTime.hour) {
+                EventBus.emit('time:hour', { time: timeInfo, previous: previousTime });
+            }
+            if (timeInfo.day !== previousTime.day) {
+                EventBus.emit('time:day', { time: timeInfo, previous: previousTime });
+            }
+            if (timeInfo.week !== previousTime.week) {
+                EventBus.emit('time:week', { time: timeInfo, previous: previousTime });
+            }
+
             EventSystem.update();
             this.updateMarketPrices();
             this.checkScheduledEvents();
-            
+
             // Update new systems
             CityEventSystem.updateEvents();
             DynamicMarketSystem.updateMarketPrices();
-            PropertySystem.processDailyIncome();
-            EmployeeSystem.processWeeklyWages();
-            TradeRouteSystem.processDailyRoutes();
-            
+
             // Update travel system
             if (typeof TravelSystem !== 'undefined') {
                 TravelSystem.update();
@@ -4639,7 +4694,7 @@ function randomizeCharacter() {
 
 function createCharacter(event) {
     event.preventDefault();
-    
+
     const name = elements.characterNameInput.value.trim();
     const characterClass = elements.characterClass.value;
     
@@ -4648,6 +4703,8 @@ function createCharacter(event) {
         return;
     }
     
+    const stopLoading = startLoadingProgress('Forging your legend...', 12) || (() => {});
+
     // Initialize player with stats
     game.player = {
         name: name,
@@ -4705,6 +4762,8 @@ function createCharacter(event) {
     addMessage('You start with some basic supplies for your journey.');
 
     UndoRedoManager.record('Game start');
+
+    setTimeout(() => stopLoading('World ready. Begin your journey!'), 300);
 }
 
 function initializeGameWorld() {

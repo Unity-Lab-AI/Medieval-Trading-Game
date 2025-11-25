@@ -10,23 +10,7 @@ const TradeRouteSystem = {
         }
         
         // Setup route processing
-        this.setupRouteProcessing();
-    },
-    
-    // Setup regular route processing
-    setupRouteProcessing() {
-        // Process routes every game day
-        const originalUpdate = game.update.bind(game);
-        game.update = function(deltaTime) {
-            const result = originalUpdate(deltaTime);
-            
-            // Check if a day has passed
-            if (TimeSystem.currentTime.hour === 0 && TimeSystem.currentTime.minute === 0) {
-                TradeRouteSystem.processDailyRoutes();
-            }
-            
-            return result;
-        };
+        EventBus.on('time:day', () => this.processDailyRoutes());
     },
     
     // Create a new trade route

@@ -85,7 +85,7 @@ const PropertySystem = {
             basePrice: 3500,
             baseIncome: 18,
             maintenanceCost: 10,
-            production: {},
+            production: { tools: 4, cloth: 6, luxury_goods: 1 },
             workerSlots: 2,
             icon: '🔨'
         }
@@ -139,41 +139,9 @@ const PropertySystem = {
             game.player.propertyExpenses = 0;
         }
         
-        // Setup property income processing
-        this.setupIncomeProcessing();
-        
-        // Setup work queue processing
-        this.setupWorkQueueProcessing();
-    },
-    
-    // Setup regular income processing
-    setupIncomeProcessing() {
-        // Process income every game day
-        const originalUpdate = game.update.bind(game);
-        game.update = function(deltaTime) {
-            const result = originalUpdate(deltaTime);
-            
-            // Check if a day has passed
-            if (TimeSystem.currentTime.hour === 0 && TimeSystem.currentTime.minute === 0) {
-                PropertySystem.processDailyIncome();
-            }
-            
-            return result;
-        };
-    },
-    
-    // Setup work queue processing
-    setupWorkQueueProcessing() {
-        // Process work queues every game minute
-        const originalUpdate = game.update.bind(game);
-        game.update = function(deltaTime) {
-            const result = originalUpdate(deltaTime);
-            
-            // Process work queues
-            PropertySystem.processWorkQueues();
-            
-            return result;
-        };
+        // Subscribe to time events for income and work queues
+        EventBus.on('time:day', () => this.processDailyIncome());
+        EventBus.on('time:minute', () => this.processWorkQueues());
     },
     
     // Get available properties in current location

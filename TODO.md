@@ -76,7 +76,7 @@ Comprehensive feature roadmap for the trading game to reach 100% completion.
 - [x] Create building/property animations for construction, upgrades, and active states
 - [x] Implement travel animations with smooth transitions
 - [x] Add market stall animations for trading activities
-- [ ] Create loading animations with progress indicators
+- [x] Create loading animations with progress indicators
 
 ## UI Polish System
 - [x] Create smooth UI panel transitions with fade effects
@@ -112,7 +112,7 @@ Comprehensive feature roadmap for the trading game to reach 100% completion.
 ## Key Features
 - [x] Ensure all systems are performant and can be disabled for players who prefer minimal effects
 - [x] Implement comprehensive settings persistence using localStorage
-- [ ] Maintain an event-driven architecture for loose coupling between systems
+- [x] Maintain an event-driven architecture for loose coupling between systems
 - [ ] Add accessibility features including reduced motion, high contrast, and screen reader support
 - [x] Optimize for mobile-friendly interactions and touch support
 - [ ] Ensure cross-browser compatibility with fallbacks for older browsers

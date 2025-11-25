@@ -89,26 +89,7 @@ const EmployeeSystem = {
         }
         
         // Setup wage processing
-        this.setupWageProcessing();
-    },
-    
-    // Setup regular wage processing
-    setupWageProcessing() {
-        // Process wages every week
-        let lastWageDay = -1;
-        
-        const originalUpdate = game.update.bind(game);
-        game.update = function(deltaTime) {
-            const result = originalUpdate(deltaTime);
-            
-            // Check if a week has passed (every 7 days)
-            if (TimeSystem.currentTime.day % 7 === 0 && TimeSystem.currentTime.day !== lastWageDay) {
-                lastWageDay = TimeSystem.currentTime.day;
-                EmployeeSystem.processWeeklyWages();
-            }
-            
-            return result;
-        };
+        EventBus.on('time:week', () => this.processWeeklyWages());
     },
     
     // Get available employees in current location
