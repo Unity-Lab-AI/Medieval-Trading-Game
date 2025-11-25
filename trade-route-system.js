@@ -109,9 +109,9 @@ const TradeRouteSystem = {
         const item = ItemDatabase.getItem(route.itemId);
         if (!item) return;
         
-        // Check if it's time to trade (once per day)
+        // Check if it's time to trade (once per in-game day)
         const currentTime = TimeSystem.getTotalMinutes();
-        if (currentTime - route.lastTradeTime < TimeSystem.DAYS_PER_DAY * TimeSystem.MINUTES_PER_HOUR) {
+        if (currentTime - route.lastTradeTime < TimeSystem.MINUTES_PER_DAY) {
             return;
         }
         

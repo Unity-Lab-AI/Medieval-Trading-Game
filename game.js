@@ -19,6 +19,7 @@ const TimeSystem = {
     // Time constants
     MINUTES_PER_HOUR: 60,
     HOURS_PER_DAY: 24,
+    MINUTES_PER_DAY: 1440,
     DAYS_PER_WEEK: 7,
     DAYS_PER_MONTH: 30,
     MONTHS_PER_YEAR: 12,
@@ -647,7 +648,7 @@ const game = {
             DynamicMarketSystem.updateMarketPrices();
             PropertySystem.processDailyIncome();
             EmployeeSystem.processWeeklyWages();
-            TradeRouteSystem.processDailyTrade();
+            TradeRouteSystem.processDailyRoutes();
             
             // Update travel system
             if (typeof TravelSystem !== 'undefined') {
