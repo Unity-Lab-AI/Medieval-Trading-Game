@@ -250,12 +250,19 @@ const TimeSystem = {
     // 🕰️ TIME FORMATTING & INFO - Making time pretty for the UI
     // ═══════════════════════════════════════════════════════════════
 
-    // 🖤 Get formatted time string: "April 1, 1111 - 08:00"
+    // 🖤 Convert 24-hour to 12-hour AM/PM format
+    formatTimeAMPM(hour, minute) {
+        const period = hour >= 12 ? 'PM' : 'AM';
+        const hour12 = hour % 12 || 12; // Convert 0 to 12 for midnight
+        const minuteStr = minute.toString().padStart(2, '0');
+        return `${hour12}:${minuteStr} ${period}`;
+    },
+
+    // 🖤 Get formatted time string: "April 1, 1111 - 8:00 AM"
     getFormattedTime() {
-        const hourStr = this.currentTime.hour.toString().padStart(2, '0');
-        const minuteStr = this.currentTime.minute.toString().padStart(2, '0');
+        const timeStr = this.formatTimeAMPM(this.currentTime.hour, this.currentTime.minute);
         const monthName = this.getMonthName(this.currentTime.month);
-        return `${monthName} ${this.currentTime.day}, ${this.currentTime.year} - ${hourStr}:${minuteStr}`;
+        return `${monthName} ${this.currentTime.day}, ${this.currentTime.year} - ${timeStr}`;
     },
 
     // 🦇 Get short formatted date: "Apr 1, 1111"
@@ -264,11 +271,9 @@ const TimeSystem = {
         return `${monthName} ${this.currentTime.day}, ${this.currentTime.year}`;
     },
 
-    // 💀 Get just the time: "08:00"
+    // 💀 Get just the time in AM/PM format: "8:00 AM"
     getFormattedClock() {
-        const hourStr = this.currentTime.hour.toString().padStart(2, '0');
-        const minuteStr = this.currentTime.minute.toString().padStart(2, '0');
-        return `${hourStr}:${minuteStr}`;
+        return this.formatTimeAMPM(this.currentTime.hour, this.currentTime.minute);
     },
 
     // 📊 getTimeInfo - all the time data your dark heart desires

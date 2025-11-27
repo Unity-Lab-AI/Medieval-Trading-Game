@@ -348,7 +348,11 @@ const DayNightCycle = {
         if (indicator) {
             const hour = this.getCurrentHour();
             const minute = typeof TimeSystem !== 'undefined' ? (TimeSystem.currentTime?.minute || 0) : 0;
-            const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+
+            // Use AM/PM format
+            const timeStr = typeof TimeSystem !== 'undefined' && TimeSystem.formatTimeAMPM
+                ? TimeSystem.formatTimeAMPM(hour, minute)
+                : this.formatTimeAMPM(hour, minute);
 
             const iconEl = indicator.querySelector('.phase-icon');
             const timeEl = indicator.querySelector('.phase-time');
@@ -361,6 +365,14 @@ const DayNightCycle = {
         if (gameContainer) {
             gameContainer.style.filter = `brightness(${0.7 + phase.brightness * 0.3})`;
         }
+    },
+
+    // Fallback AM/PM formatter if TimeSystem not available
+    formatTimeAMPM(hour, minute) {
+        const period = hour >= 12 ? 'PM' : 'AM';
+        const hour12 = hour % 12 || 12;
+        const minuteStr = minute.toString().padStart(2, '0');
+        return `${hour12}:${minuteStr} ${period}`;
     },
 
     showStars() {

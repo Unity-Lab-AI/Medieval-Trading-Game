@@ -1592,11 +1592,14 @@ const TimeSystem = {
         return this.isPaused;
     },
 
-    // 🕰️ getFormattedTime - making time pretty for the UI
+    // 🕰️ getFormattedTime - making time pretty for the UI (AM/PM format)
     getFormattedTime() {
-        const hourStr = this.currentTime.hour.toString().padStart(2, '0');
-        const minuteStr = this.currentTime.minute.toString().padStart(2, '0');
-        return `Day ${this.currentTime.day}, ${hourStr}:${minuteStr}`;
+        const hour = this.currentTime.hour;
+        const minute = this.currentTime.minute;
+        const period = hour >= 12 ? 'PM' : 'AM';
+        const hour12 = hour % 12 || 12;
+        const minuteStr = minute.toString().padStart(2, '0');
+        return `Day ${this.currentTime.day}, ${hour12}:${minuteStr} ${period}`;
     },
 
     // 📊 getTimeInfo - all the time data your dark heart desires

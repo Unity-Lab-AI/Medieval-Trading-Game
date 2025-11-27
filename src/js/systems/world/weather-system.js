@@ -520,7 +520,7 @@ const WeatherSystem = {
             timeIndicator.className = 'top-bar-indicator';
             timeIndicator.innerHTML = `
                 <span class="indicator-icon phase-icon">☀️</span>
-                <span class="indicator-text phase-time">08:00</span>
+                <span class="indicator-text phase-time">8:00 AM</span>
             `;
             topBarWidgets.appendChild(timeIndicator);
 

@@ -398,13 +398,20 @@ const NPCScheduleSystem = {
         }
     },
 
+    // Convert hour to AM/PM format
+    formatHourAMPM(hour) {
+        const period = hour >= 12 ? 'PM' : 'AM';
+        const hour12 = hour % 12 || 12;
+        return `${hour12}:00 ${period}`;
+    },
+
     // Get schedule preview for an NPC
     getSchedulePreview(npcId) {
         const npcData = this.npcSchedules.get(npcId);
         if (!npcData) return null;
 
         return npcData.schedule.activities.map(slot => ({
-            time: `${slot.start.toString().padStart(2, '0')}:00 - ${slot.end.toString().padStart(2, '0')}:00`,
+            time: `${this.formatHourAMPM(slot.start)} - ${this.formatHourAMPM(slot.end)}`,
             activity: slot.activity.charAt(0).toUpperCase() + slot.activity.slice(1),
             location: slot.location,
             available: slot.available
