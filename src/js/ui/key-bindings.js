@@ -573,6 +573,30 @@ const KeyBindings = {
         `;
     },
 
+    // 🏪 Open market panel
+    openMarket() {
+        if (typeof openMarket === 'function') openMarket();
+        else console.warn('openMarket function not found');
+    },
+
+    // 🗺️ Open travel panel
+    openTravel() {
+        if (typeof openTravel === 'function') openTravel();
+        else console.warn('openTravel function not found');
+    },
+
+    // 🚗 Open transportation panel
+    openTransportation() {
+        if (typeof openTravel === 'function') openTravel(); // Transport uses travel panel
+        else console.warn('openTravel function not found');
+    },
+
+    // 🎒 Open inventory panel
+    openInventory() {
+        if (typeof openInventory === 'function') openInventory();
+        else console.warn('openInventory function not found');
+    },
+
     // 💰 Open financial sheet 🦇
     openFinancialSheet() {
         this.createFinancialSheetOverlay();
