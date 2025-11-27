@@ -2208,11 +2208,11 @@ body:has(#game-setup-panel:not(.hidden)) #overlay-container {
     color: #4fc3f7;
 }
 
-/* Message Log - RIGHT side, bottom aligned with action bar */
+/* Message Log - positioned left of player info panel, bottom */
 #message-log {
     position: fixed;
     bottom: 10px;
-    right: 10px;
+    right: 220px; /* 200px side-panel + 10px gap + 10px side-panel margin */
     width: 320px;
     max-width: 35vw;
     background: rgba(30, 30, 30, 0.95);
