@@ -9,8 +9,8 @@ const DraggablePanels = {
     dragState: null,
     STORAGE_KEY: 'trader-claude-panel-positions',
     eventsSetup: false,
-    // Panels that should NOT have a close button (always visible)
-    noCloseButtonPanels: ['location-panel', 'side-panel', 'message-log'],
+    // Panels that should NOT have a close button from drag handle (they have their own)
+    noCloseButtonPanels: ['location-panel', 'side-panel', 'message-log', 'people-panel'],
 
     init() {
         console.log('🖤 DraggablePanels: Initializing...');
