@@ -2230,6 +2230,61 @@ body:has(#game-setup-panel:not(.hidden)) #overlay-container {
     border-top: 1px solid #444;
 }
 
+/* ═══════════════════════════════════════════════════════════
+   🖤 UNIFIED CLOSE BUTTON SYSTEM
+   - Red X button: top-right corner (.panel-close-x)
+   - Blue Close button: bottom-right in footer (.panel-close-btn-footer)
+   ═══════════════════════════════════════════════════════════ */
+
+/* 🔴 Red X Close Button - Top Right Corner */
+.panel-close-x {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: linear-gradient(135deg, rgba(244, 67, 54, 0.9) 0%, rgba(220, 53, 69, 0.9) 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+    line-height: 1;
+}
+
+.panel-close-x:hover {
+    background: linear-gradient(135deg, rgba(220, 53, 69, 1) 0%, rgba(200, 40, 50, 1) 100%);
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4);
+}
+
+/* 🔵 Blue Close Button - Bottom Right in Footer */
+.panel-close-btn-footer {
+    padding: 0.6rem 1.5rem;
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(52, 152, 219, 0.3);
+}
+
+.panel-close-btn-footer:hover {
+    background: linear-gradient(135deg, #2980b9 0%, #1a5276 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+}
+
 /* Buttons */
 button {
     padding: 0.6rem 1.2rem;

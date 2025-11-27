@@ -34,9 +34,9 @@ const PeoplePanel = {
         panel.id = this.panelId;
         panel.className = 'panel overlay-panel hidden';
         panel.innerHTML = `
+            <button class="panel-close-x" data-close-overlay="${this.panelId}" title="Close">×</button>
             <div class="panel-header">
                 <h2>👥 People Here</h2>
-                <button class="close-panel-btn" data-close-overlay="${this.panelId}" title="Close">✕</button>
             </div>
             <div class="panel-content">
                 <p class="location-context" id="people-location-context">Loading...</p>
@@ -49,7 +49,7 @@ const PeoplePanel = {
                 </div>
             </div>
             <div class="panel-footer">
-                <button class="close-people-btn" onclick="PeoplePanel.close()">Close</button>
+                <button class="panel-close-btn-footer" onclick="PeoplePanel.close()">Close</button>
             </div>
         `;
 

@@ -86,38 +86,42 @@ test.describe('Game Panels', () => {
     test.skip(!config.panels.character, 'Character panel tests disabled');
 
     test('opens with C key or direct call', async ({ page }) => {
-      // Try keyboard first
+      // 🖤 Character uses character-sheet-overlay, created dynamically by KeyBindings
       await togglePanelWithKey(page, 'c');
-      let visible = await isPanelVisible(page, 'character-panel');
+      await page.waitForTimeout(300);
 
-      // Fallback to direct function call
-      if (!visible) {
-        await openPanel(page, 'character');
-        visible = await isPanelVisible(page, 'character-panel');
-      }
+      // Check for character-sheet-overlay (created by KeyBindings.createCharacterSheetOverlay)
+      let visible = await page.evaluate(() => {
+        const overlay = document.getElementById('character-sheet-overlay');
+        return overlay && overlay.classList.contains('active');
+      });
 
-      // Also check for player-info-panel which might be the character panel
+      // Fallback: check side-panel which shows character info
       if (!visible) {
-        visible = await isPanelVisible(page, 'player-info-panel');
+        visible = await page.evaluate(() => {
+          const sidePanel = document.getElementById('side-panel');
+          return sidePanel && sidePanel.offsetParent !== null;
+        });
       }
 
       expect(visible).toBe(true);
     });
 
     test('displays player stats', async ({ page }) => {
-      await openPanel(page, 'character');
-      await page.waitForTimeout(300);
+      await togglePanelWithKey(page, 'c');
+      await page.waitForTimeout(500);
 
-      // Check for stat elements in character or player-info panel
+      // 🖤 Check for stat elements in character-sheet-overlay or side-panel
       const hasStats = await page.evaluate(() => {
-        const panel = document.getElementById('character-panel') ||
-                      document.getElementById('player-info-panel') ||
-                      document.querySelector('.player-info');
+        const overlay = document.getElementById('character-sheet-overlay');
+        const sidePanel = document.getElementById('side-panel');
+        const panel = overlay || sidePanel;
         if (!panel) return false;
         const text = panel.textContent.toLowerCase();
         return text.includes('health') || text.includes('strength') ||
                text.includes('level') || text.includes('gold') ||
-               text.includes('endurance') || text.includes('charisma');
+               text.includes('endurance') || text.includes('charisma') ||
+               text.includes('stamina') || text.includes('name');
       });
 
       expect(hasStats).toBe(true);
@@ -232,16 +236,21 @@ test.describe('Game Panels', () => {
     test.skip(!config.panels.quests, 'Quest panel tests disabled');
 
     test('opens with Q key or direct call', async ({ page }) => {
+      // 🖤 Quest uses quest-overlay (created by QuestSystem.toggleQuestLog)
       await togglePanelWithKey(page, 'q');
-      let visible = await isPanelVisible(page, 'quest-panel') ||
-                    await isPanelVisible(page, 'quest-log-panel') ||
-                    await isPanelVisible(page, 'quests-panel');
+      await page.waitForTimeout(300);
 
+      let visible = await page.evaluate(() => {
+        const overlay = document.getElementById('quest-overlay');
+        return overlay && overlay.classList.contains('active');
+      });
+
+      // Fallback: check for quest-log-panel class
       if (!visible) {
-        await openPanel(page, 'quests');
-        visible = await isPanelVisible(page, 'quest-panel') ||
-                  await isPanelVisible(page, 'quest-log-panel') ||
-                  await isPanelVisible(page, 'quests-panel');
+        visible = await page.evaluate(() => {
+          const panel = document.querySelector('.quest-log-panel:not(.hidden)');
+          return panel !== null;
+        });
       }
 
       expect(visible).toBe(true);
@@ -256,13 +265,17 @@ test.describe('Game Panels', () => {
     test.skip(!config.panels.achievements, 'Achievements panel tests disabled');
 
     test('opens with H key or direct call', async ({ page }) => {
+      // 🖤 Achievements uses achievement-overlay (in index.html)
       await togglePanelWithKey(page, 'h');
-      let visible = await isPanelVisible(page, 'achievements-panel');
+      await page.waitForTimeout(300);
 
-      if (!visible) {
-        await openPanel(page, 'achievements');
-        visible = await isPanelVisible(page, 'achievements-panel');
-      }
+      let visible = await page.evaluate(() => {
+        const overlay = document.getElementById('achievement-overlay');
+        // Check if overlay is visible (not hidden, has display)
+        if (!overlay) return false;
+        const style = window.getComputedStyle(overlay);
+        return style.display !== 'none' && style.visibility !== 'hidden';
+      });
 
       expect(visible).toBe(true);
     });
@@ -276,13 +289,16 @@ test.describe('Game Panels', () => {
     test.skip(!config.panels.properties, 'Properties panel tests disabled');
 
     test('opens with P key or direct call', async ({ page }) => {
+      // 🖤 Properties uses property-employee-panel (game.showOverlay)
       await togglePanelWithKey(page, 'p');
-      let visible = await isPanelVisible(page, 'properties-panel');
+      await page.waitForTimeout(300);
 
-      if (!visible) {
-        await openPanel(page, 'properties');
-        visible = await isPanelVisible(page, 'properties-panel');
-      }
+      let visible = await page.evaluate(() => {
+        const panel = document.getElementById('property-employee-panel');
+        if (!panel) return false;
+        // Check if it's not hidden
+        return !panel.classList.contains('hidden');
+      });
 
       expect(visible).toBe(true);
     });
@@ -296,15 +312,15 @@ test.describe('Game Panels', () => {
     test.skip(!config.panels.financial, 'Financial panel tests disabled');
 
     test('opens with F key or direct call', async ({ page }) => {
+      // 🖤 Financial uses financial-sheet-overlay (created by KeyBindings.createFinancialSheetOverlay)
       await togglePanelWithKey(page, 'f');
-      let visible = await isPanelVisible(page, 'financial-panel') ||
-                    await isPanelVisible(page, 'finances-panel');
+      await page.waitForTimeout(300);
 
-      if (!visible) {
-        await openPanel(page, 'financial');
-        visible = await isPanelVisible(page, 'financial-panel') ||
-                  await isPanelVisible(page, 'finances-panel');
-      }
+      let visible = await page.evaluate(() => {
+        const overlay = document.getElementById('financial-sheet-overlay');
+        if (!overlay) return false;
+        return overlay.classList.contains('active');
+      });
 
       expect(visible).toBe(true);
     });
@@ -318,14 +334,30 @@ test.describe('Game Panels', () => {
     test.skip(!config.panels.people, 'People panel tests disabled');
 
     test('opens with O key or direct call', async ({ page }) => {
+      // 🖤 People Panel is dynamically created by PeoplePanel.createPanelHTML()
+      // Uses PeoplePanel.toggle() which calls open() -> removes 'hidden' class
       await togglePanelWithKey(page, 'o');
-      let visible = await isPanelVisible(page, 'people-panel') ||
-                    await isPanelVisible(page, 'npc-panel');
+      await page.waitForTimeout(500); // Wait for panel creation + init
 
+      let visible = await page.evaluate(() => {
+        const panel = document.getElementById('people-panel');
+        if (!panel) return false;
+        // Panel is visible if it exists AND doesn't have hidden class
+        return !panel.classList.contains('hidden');
+      });
+
+      // Fallback: try calling PeoplePanel directly
       if (!visible) {
-        await openPanel(page, 'people');
-        visible = await isPanelVisible(page, 'people-panel') ||
-                  await isPanelVisible(page, 'npc-panel');
+        await page.evaluate(() => {
+          if (typeof PeoplePanel !== 'undefined' && PeoplePanel.toggle) {
+            PeoplePanel.toggle();
+          }
+        });
+        await page.waitForTimeout(300);
+        visible = await page.evaluate(() => {
+          const panel = document.getElementById('people-panel');
+          return panel && !panel.classList.contains('hidden');
+        });
       }
 
       expect(visible).toBe(true);

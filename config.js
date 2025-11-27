@@ -929,6 +929,54 @@ const GameConfig = {
     },
 
     // ═══════════════════════════════════════════════════════════════
+    // 🧪 CI/CD TEST CONFIGURATION - the puppet master of deployments
+    // ═══════════════════════════════════════════════════════════════
+    // GitHub Actions reads this to determine which tests to run
+    // set runAllTests to true to override individual settings
+    // toggle individual suites to skip tests that are already passing
+    // the workflow is your servant - config.js is your dark lord
+    cicd: {
+        // 🔥 MASTER OVERRIDE - set true to run ALL tests regardless of individual settings
+        runAllTests: false,
+
+        // 🧪 Individual test suite toggles
+        // true = run this test suite on deploy
+        // false = skip this test suite (it passed locally, save CI minutes)
+        testSuites: {
+            newGame: true,           // 🎮 new-game.spec.js - New Game Flow
+            debugCommands: true,     // 🐛 debug-commands.spec.js - Debug Commands
+            debug: true,             // 🔍 debug.spec.js - Console Error Check
+            panels: true,            // 📋 panels.spec.js - Panel Tests
+            features: true,          // 🎯 features.spec.js - Feature Tests
+            settings: true,          // ⚙️ settings.spec.js - Settings Tests
+            uiElements: true,        // 🖥️ ui-elements.spec.js - UI Element Tests
+            comprehensiveUi: true    // 🎨 comprehensive-ui.spec.js - Comprehensive UI
+        },
+
+        // 📊 Test suite metadata (for workflow generation)
+        suiteInfo: {
+            newGame: { file: 'new-game.spec.js', emoji: '🎮', name: 'New Game Flow' },
+            debugCommands: { file: 'debug-commands.spec.js', emoji: '🐛', name: 'Debug Commands' },
+            debug: { file: 'debug.spec.js', emoji: '🔍', name: 'Console Errors' },
+            panels: { file: 'panels.spec.js', emoji: '📋', name: 'Panel Tests' },
+            features: { file: 'features.spec.js', emoji: '🎯', name: 'Feature Tests' },
+            settings: { file: 'settings.spec.js', emoji: '⚙️', name: 'Settings Tests' },
+            uiElements: { file: 'ui-elements.spec.js', emoji: '🖥️', name: 'UI Elements' },
+            comprehensiveUi: { file: 'comprehensive-ui.spec.js', emoji: '🎨', name: 'Comprehensive UI' }
+        },
+
+        // 🖤 Last local test results - updated by Unity when tests pass
+        // GitHub can use this to show what passed locally before deploy
+        lastLocalRun: {
+            date: '2025-11-27',
+            passed: 127,
+            failed: 0,
+            skipped: 31,
+            duration: '1.1m'
+        }
+    },
+
+    // ═══════════════════════════════════════════════════════════════
     // 🛠️ HELPER METHODS - dark utilities for darker purposes
     // ═══════════════════════════════════════════════════════════════
 

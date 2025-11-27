@@ -114,35 +114,10 @@
             </div>
         </div>
 
-        <!-- ✨ Perk Selection Modal - choose your character's baggage -->
-        <div id="perk-selection-modal" class="overlay">
-            <div class="overlay-content perk-modal-content">
-                <div class="perk-modal-header">
-                    <h2>⚡ Choose Your Perks</h2>
-                    <button class="overlay-close" onclick="closePerkModal()">×</button>
-                </div>
-                <div class="perk-modal-body">
-                    <div class="perk-modal-info">
-                        <p>Select up to 2 perks that will shape your character's journey. Each perk provides unique bonuses and penalties.</p>
-                        <div class="perk-selection-counter">
-                            <span class="counter-label">Selected:</span>
-                            <span class="counter-value"><span id="modal-selected-count">0</span> / 2</span>
-                        </div>
-                    </div>
-                    <div id="perks-container" class="perks-modal-grid">
-                        <!-- Perks will be populated by JavaScript -->
-                    </div>
-                </div>
-                <div class="perk-modal-footer">
-                    <button type="button" class="btn-secondary" onclick="closePerkModal()">Cancel</button>
-                    <button type="button" id="confirm-perk-btn" class="btn-primary" onclick="confirmPerkSelection()">Confirm Selection</button>
-                </div>
-            </div>
-        </div>
-
         <!-- 🏆 Achievement Panel - flex your accomplishments -->
         <div id="achievement-overlay" class="achievement-overlay" onclick="if(event.target === this) closeAchievementPanel()">
             <div class="achievement-panel" onclick="event.stopPropagation()">
+                <button class="panel-close-x" onclick="closeAchievementPanel(); event.stopPropagation();" title="Close">×</button>
                 <div class="achievement-panel-header">
                     <div>
                         <h2 class="achievement-panel-title">🏆 Achievements</h2>
@@ -153,7 +128,6 @@
                             </div>
                         </div>
                     </div>
-                    <button class="close-achievement-panel" onclick="closeAchievementPanel(); event.stopPropagation();">✕ Close</button>
                 </div>
 
                 <div class="achievement-categories">
@@ -170,6 +144,10 @@
 
                 <div id="achievement-grid" class="achievement-grid">
                     <!-- Achievements will be populated by JavaScript -->
+                </div>
+
+                <div class="panel-footer">
+                    <button class="panel-close-btn-footer" onclick="closeAchievementPanel(); event.stopPropagation();">Close</button>
                 </div>
             </div>
         </div>
@@ -195,6 +173,32 @@
                     <button class="game-over-btn" onclick="closeGameOverToMenu()">🏠 Main Menu</button>
                     <button class="game-over-btn" onclick="showLeaderboardFromGameOver()">🏆 View Leaderboard</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✨ Perk Selection Modal - OUTSIDE overlay-container so it works during game setup -->
+    <div id="perk-selection-modal" class="overlay">
+        <div class="overlay-content perk-modal-content">
+            <div class="perk-modal-header">
+                <h2>⚡ Choose Your Perks</h2>
+                <button class="overlay-close" onclick="closePerkModal()">×</button>
+            </div>
+            <div class="perk-modal-body">
+                <div class="perk-modal-info">
+                    <p>Select up to 2 perks that will shape your character's journey. Each perk provides unique bonuses and penalties.</p>
+                    <div class="perk-selection-counter">
+                        <span class="counter-label">Selected:</span>
+                        <span class="counter-value"><span id="modal-selected-count">0</span> / 2</span>
+                    </div>
+                </div>
+                <div id="perks-container" class="perks-modal-grid">
+                    <!-- Perks will be populated by JavaScript -->
+                </div>
+            </div>
+            <div class="perk-modal-footer">
+                <button type="button" class="btn-secondary" onclick="closePerkModal()">Cancel</button>
+                <button type="button" id="confirm-perk-btn" class="btn-primary" onclick="confirmPerkSelection()">Confirm Selection</button>
             </div>
         </div>
     </div>
@@ -456,6 +460,7 @@
 
                 <!-- 🏪 Market Panel - medieval stock exchange but make it goth -->
                 <section id="market-panel" class="panel hidden">
+                    <button class="panel-close-x" data-close-overlay="market-panel" title="Close">×</button>
                     <div class="market-header">
                         <h2>Market</h2>
                         <div class="market-info">
@@ -629,12 +634,13 @@
                     </div>
                     
                     <div class="panel-footer">
-                        <button id="close-market-btn" data-close-overlay="market-panel">Close</button>
+                        <button id="close-market-btn" class="panel-close-btn-footer" data-close-overlay="market-panel">Close</button>
                     </div>
                 </section>
 
                 <!-- 🎒 Inventory Panel - all your worldly possessions -->
                 <section id="inventory-panel" class="panel hidden">
+                    <button class="panel-close-x" data-close-overlay="inventory-panel" title="Close">×</button>
                     <div class="inventory-header">
                         <h2>Inventory</h2>
                         <div class="inventory-controls">
@@ -740,7 +746,7 @@
                     </div>
                     
                     <div class="panel-footer">
-                        <button id="close-inventory-btn" data-close-overlay="inventory-panel">Close</button>
+                        <button id="close-inventory-btn" class="panel-close-btn-footer" data-close-overlay="inventory-panel">Close</button>
                     </div>
                 </section>
 
@@ -748,6 +754,7 @@
 
                 <!-- 🗺️ Enhanced Travel Panel - journey into the unknown -->
                 <section id="travel-panel" class="panel hidden">
+                    <button class="panel-close-x" data-close-overlay="travel-panel" title="Close">×</button>
                     <div class="travel-header">
                         <h2>Travel & Exploration</h2>
                         <div class="travel-tabs">
@@ -864,12 +871,13 @@
                     </div>
 
                     <div class="panel-footer">
-                        <button id="close-travel-btn" data-close-overlay="travel-panel">Close</button>
+                        <button id="close-travel-btn" class="panel-close-btn-footer" data-close-overlay="travel-panel">Close</button>
                     </div>
                 </section>
 
                 <!-- 🐴 Transportation Panel - upgrade from walking sadly -->
                 <section id="transportation-panel" class="panel hidden">
+                    <button class="panel-close-x" data-close-overlay="transportation-panel" title="Close">×</button>
                     <h2>Transportation</h2>
                     <div class="transportation-info">
                         <p>Current Transport: <span id="current-transport">Backpack</span></p>
@@ -881,12 +889,13 @@
                         <!-- Transportation options will be populated by JavaScript -->
                     </div>
                     <div class="panel-footer">
-                        <button id="close-transportation-btn" data-close-overlay="transportation-panel">Close</button>
+                        <button id="close-transportation-btn" class="panel-close-btn-footer" data-close-overlay="transportation-panel">Close</button>
                     </div>
                 </section>
 
                 <!-- 🏰 Property & Employee Management - your medieval empire -->
                 <section id="property-employee-panel" class="panel hidden">
+                    <button class="panel-close-x" data-close-overlay="property-employee-panel" title="Close">×</button>
                     <div class="property-employee-header">
                         <h2>Property & Employee Management</h2>
                         <div class="financial-summary">
@@ -973,7 +982,7 @@
                     </div>
                     
                     <div class="panel-footer">
-                        <button id="close-property-employee-btn" data-close-overlay="property-employee-panel">Close</button>
+                        <button id="close-property-employee-btn" class="panel-close-btn-footer" data-close-overlay="property-employee-panel">Close</button>
                     </div>
                 </section>
 
@@ -1101,7 +1110,7 @@
         </div>
 
         <!-- 🖤 Location Panel - FIXED bottom-left, outside ui-panels -->
-        <section id="location-panel">
+        <section id="location-panel" class="panel">
             <h2 id="location-name">Town Square</h2>
             <p id="location-description">You are in the town square.</p>
             <div id="location-actions">
@@ -1178,16 +1187,16 @@
     <!-- 🏆 Leaderboard Panel - Hall of Champions overlay (MUST be outside overlay-container for z-index to work above main-menu) -->
     <div id="leaderboard-overlay" class="leaderboard-overlay hidden" onclick="if(event.target === this) { if(typeof SaveUISystem !== 'undefined') SaveUISystem.closeHallOfChampions(); else closeLeaderboardPanel(); }">
         <div class="leaderboard-panel" onclick="event.stopPropagation()">
+            <button class="panel-close-x" onclick="if(typeof SaveUISystem !== 'undefined') SaveUISystem.closeHallOfChampions(); else closeLeaderboardPanel(); event.stopPropagation();" title="Close">×</button>
             <div class="leaderboard-panel-header">
                 <h2>🏆 Hall of Champions</h2>
                 <p class="leaderboard-subtitle">top 100 merchants of all time</p>
-                <button class="close-leaderboard-panel" onclick="if(typeof SaveUISystem !== 'undefined') SaveUISystem.closeHallOfChampions(); else closeLeaderboardPanel();" title="Close">✕</button>
             </div>
             <div id="leaderboard-panel-content" class="leaderboard-panel-content">
                 <!-- Populated by JavaScript -->
             </div>
-            <div class="leaderboard-panel-footer">
-                <button class="close-champions-btn" onclick="if(typeof SaveUISystem !== 'undefined') SaveUISystem.closeHallOfChampions(); else closeLeaderboardPanel();">Close</button>
+            <div class="panel-footer">
+                <button class="panel-close-btn-footer" onclick="if(typeof SaveUISystem !== 'undefined') SaveUISystem.closeHallOfChampions(); else closeLeaderboardPanel();">Close</button>
             </div>
         </div>
     </div>

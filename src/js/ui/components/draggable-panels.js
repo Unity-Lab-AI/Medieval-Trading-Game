@@ -9,6 +9,8 @@ const DraggablePanels = {
     dragState: null,
     STORAGE_KEY: 'trader-claude-panel-positions',
     eventsSetup: false,
+    // Panels that should NOT have a close button (always visible)
+    noCloseButtonPanels: ['location-panel', 'side-panel', 'message-log'],
 
     init() {
         console.log('🖤 DraggablePanels: Initializing...');
@@ -136,13 +138,16 @@ const DraggablePanels = {
             title = headerH2?.textContent || h2?.textContent || h3?.textContent || 'Panel';
         }
 
+        // Check if this panel should have a close button
+        const showCloseButton = !this.noCloseButtonPanels.includes(element.id);
+
         // Create drag handle
         const dragHandle = document.createElement('div');
         dragHandle.className = 'drag-handle';
         dragHandle.innerHTML = `
             <span class="drag-grip" style="opacity:0.5;font-size:14px;">⋮⋮</span>
             <span class="drag-title" style="flex:1;font-weight:500;font-size:14px;">${title}</span>
-            <button class="drag-close" title="Close" style="
+            ${showCloseButton ? `<button class="drag-close" title="Close" style="
                 background:rgba(244,67,54,0.8);
                 border:none;
                 border-radius:50%;
@@ -154,7 +159,7 @@ const DraggablePanels = {
                 display:flex;
                 align-items:center;
                 justify-content:center;
-            ">×</button>
+            ">×</button>` : ''}
         `;
 
         dragHandle.style.cssText = `
@@ -174,10 +179,12 @@ const DraggablePanels = {
 
         // Close button - only hide with class, not display:none
         const closeBtn = dragHandle.querySelector('.drag-close');
-        closeBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            element.classList.add('hidden');
-        });
+        if (closeBtn) {
+            closeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                element.classList.add('hidden');
+            });
+        }
 
         // Drag events on handle only
         dragHandle.addEventListener('mousedown', (e) => {

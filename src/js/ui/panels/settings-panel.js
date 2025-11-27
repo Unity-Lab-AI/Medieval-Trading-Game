@@ -92,7 +92,7 @@ const SettingsPanel = {
                 <div class="settings-panel-container">
                     <div class="settings-panel-header">
                         <h2>Game Settings</h2>
-                        <button class="settings-close-btn" aria-label="Close settings">&times;</button>
+                        <button class="panel-close-x settings-close-btn" aria-label="Close settings">×</button>
                     </div>
                     
                     <div class="settings-tabs-wrapper">
@@ -633,7 +633,7 @@ const SettingsPanel = {
                     <div class="settings-panel-footer">
                         <button class="settings-btn settings-apply-btn">Apply</button>
                         <button class="settings-btn settings-reset-btn">Reset to Defaults</button>
-                        <button class="settings-btn settings-cancel-btn">Cancel</button>
+                        <button class="panel-close-btn-footer settings-cancel-btn">Close</button>
                         <button class="settings-btn settings-main-menu-btn" style="background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);">🏠 Main Menu</button>
                         <button class="settings-btn settings-clear-all-btn" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); margin-left: auto;">🗑️ Clear All Data</button>
                     </div>
