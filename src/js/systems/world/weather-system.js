@@ -501,7 +501,29 @@ const WeatherSystem = {
         particles.className = 'weather-particles';
         overlay.appendChild(particles);
 
-        // Weather indicator is now in top-bar, no need to create separate element
+        // Create date indicator in top-bar
+        const topBarWidgets = document.getElementById('top-bar-widgets');
+        if (topBarWidgets) {
+            // Date indicator
+            const dateIndicator = document.createElement('div');
+            dateIndicator.id = 'date-indicator';
+            dateIndicator.className = 'top-bar-indicator';
+            dateIndicator.innerHTML = `
+                <span class="indicator-icon">📅</span>
+                <span class="indicator-text" id="date-text">April 1, 1111</span>
+            `;
+            topBarWidgets.appendChild(dateIndicator);
+
+            // Weather indicator
+            const weatherIndicator = document.createElement('div');
+            weatherIndicator.id = 'weather-indicator';
+            weatherIndicator.className = 'top-bar-indicator';
+            weatherIndicator.innerHTML = `
+                <span class="indicator-icon weather-icon">☀️</span>
+                <span class="indicator-text weather-name">Clear Skies</span>
+            `;
+            topBarWidgets.appendChild(weatherIndicator);
+        }
     },
 
     updateVisuals() {
@@ -527,12 +549,13 @@ const WeatherSystem = {
             overlay.style.opacity = this.currentIntensity;
         }
 
-        // Update top-bar weather widget
-        if (weatherIcon) {
-            weatherIcon.textContent = weather.icon;
-        }
-        if (weatherDisplay) {
-            weatherDisplay.textContent = weather.name;
+        // Update top-bar weather indicator
+        const indicator = document.getElementById('weather-indicator');
+        if (indicator) {
+            const iconEl = indicator.querySelector('.weather-icon');
+            const nameEl = indicator.querySelector('.weather-name');
+            if (iconEl) iconEl.textContent = weather.icon;
+            if (nameEl) nameEl.textContent = weather.name;
         }
 
         // Handle particles
@@ -666,7 +689,7 @@ const WeatherSystem = {
                 background: rgba(255, 255, 255, 0.8) !important;
                 transition: none !important;
             }
-            /* Weather indicator is now in top-bar widget - see styles.css */
+            /* Weather/date indicators styled in top-bar via styles.css */
 
             /* Weather-specific overlay styles */
             .weather-fog {

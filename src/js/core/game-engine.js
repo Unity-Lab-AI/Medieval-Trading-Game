@@ -206,10 +206,10 @@ const GameEngine = {
             yearDisplay.textContent = `Year ${timeInfo.year}`;
         }
 
-        // Update top-bar date widget with full month name
-        const dateDisplay = document.getElementById('date-display');
-        if (dateDisplay) {
-            dateDisplay.textContent = `${timeInfo.monthName} ${timeInfo.day}, ${timeInfo.year}`;
+        // Update top-bar date indicator with full month name
+        const dateText = document.getElementById('date-text');
+        if (dateText) {
+            dateText.textContent = `${timeInfo.monthName} ${timeInfo.day}, ${timeInfo.year}`;
         }
 
         // Update speed indicator
