@@ -658,20 +658,24 @@ const DebugCommandSystem = {
 
         // clearleaderboard - Reset the Hall of Champions to empty
         this.registerCommand('clearleaderboard', 'Clear all entries from the Hall of Champions', async () => {
-            console.log('🏆 Clearing Hall of Champions...');
+            console.log('🏆 === CLEARLEADERBOARD COMMAND STARTED ===');
 
             // Check both global and window scope
-            const resetFn = window.resetLeaderboard || (typeof resetLeaderboard === 'function' ? resetLeaderboard : null);
+            const resetFn = window.resetLeaderboard;
 
-            if (resetFn) {
-                console.log('🏆 Found resetLeaderboard function, calling it...');
+            console.log('🏆 window.resetLeaderboard type:', typeof window.resetLeaderboard);
+            console.log('🏆 GlobalLeaderboardSystem exists:', typeof GlobalLeaderboardSystem !== 'undefined');
+
+            if (typeof resetFn === 'function') {
+                console.log('🏆 Calling window.resetLeaderboard()...');
                 try {
                     const result = await resetFn();
+                    console.log('🏆 resetLeaderboard returned:', result);
                     if (result) {
                         console.log('✅ Hall of Champions has been cleared!');
                         return '🏆 Leaderboard cleared! The Hall of Champions is now empty.';
                     } else {
-                        console.error('❌ Failed to clear leaderboard - function returned false');
+                        console.error('❌ Failed to clear leaderboard - function returned false/undefined');
                         return '❌ Failed to clear leaderboard. Check console for details.';
                     }
                 } catch (error) {
@@ -679,9 +683,41 @@ const DebugCommandSystem = {
                     return '❌ Error: ' + error.message;
                 }
             } else {
-                console.error('❌ resetLeaderboard function not found on window or global scope');
-                console.log('Available on window:', typeof window.resetLeaderboard);
-                return '❌ resetLeaderboard function not found';
+                console.error('❌ window.resetLeaderboard is not a function:', typeof window.resetLeaderboard);
+                // Try direct API call as fallback
+                console.log('🏆 Attempting direct API clear...');
+                try {
+                    const binId = GlobalLeaderboardSystem?.config?.BIN_ID || GameConfig?.leaderboard?.jsonbin?.binId;
+                    const apiKey = GlobalLeaderboardSystem?.config?.API_KEY || GameConfig?.leaderboard?.jsonbin?.apiKey;
+
+                    if (binId && apiKey) {
+                        const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Master-Key': apiKey
+                            },
+                            body: JSON.stringify({ leaderboard: [] })
+                        });
+
+                        if (response.ok) {
+                            GlobalLeaderboardSystem.leaderboard = [];
+                            GlobalLeaderboardSystem.lastFetch = null;
+                            localStorage.removeItem('global_leaderboard_cache');
+                            GlobalLeaderboardSystem.renderLeaderboard();
+                            console.log('✅ Direct API clear successful!');
+                            return '🏆 Leaderboard cleared via direct API!';
+                        } else {
+                            console.error('❌ API error:', response.status);
+                            return '❌ API error: ' + response.status;
+                        }
+                    } else {
+                        return '❌ No API credentials found';
+                    }
+                } catch (e) {
+                    console.error('❌ Direct API error:', e);
+                    return '❌ Error: ' + e.message;
+                }
             }
         });
 
