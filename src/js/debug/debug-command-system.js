@@ -184,8 +184,8 @@ const DebugCommandSystem = {
         return true;
     },
 
-    // Execute a command string
-    execute(commandText) {
+    // Execute a command string (supports async commands)
+    async execute(commandText) {
         console.log(`🎮 > ${commandText}`);
 
         // Check if debug is locked out
@@ -210,7 +210,8 @@ const DebugCommandSystem = {
         const command = this.commands[commandName];
         if (command) {
             try {
-                const result = command.handler(args);
+                // Await the result in case it's an async command
+                const result = await command.handler(args);
                 if (result !== undefined) {
                     console.log(`🎮 Result: ${result}`);
                 }
@@ -659,19 +660,28 @@ const DebugCommandSystem = {
         this.registerCommand('clearleaderboard', 'Clear all entries from the Hall of Champions', async () => {
             console.log('🏆 Clearing Hall of Champions...');
 
-            if (typeof resetLeaderboard === 'function') {
-                const result = await resetLeaderboard();
-                if (result) {
-                    console.log('✅ Hall of Champions has been cleared!');
-                    console.log('🏆 The leaderboard is now empty and ready for new entries.');
-                    return 'Leaderboard cleared!';
-                } else {
-                    console.error('❌ Failed to clear leaderboard');
-                    return 'Failed to clear';
+            // Check both global and window scope
+            const resetFn = window.resetLeaderboard || (typeof resetLeaderboard === 'function' ? resetLeaderboard : null);
+
+            if (resetFn) {
+                console.log('🏆 Found resetLeaderboard function, calling it...');
+                try {
+                    const result = await resetFn();
+                    if (result) {
+                        console.log('✅ Hall of Champions has been cleared!');
+                        return '🏆 Leaderboard cleared! The Hall of Champions is now empty.';
+                    } else {
+                        console.error('❌ Failed to clear leaderboard - function returned false');
+                        return '❌ Failed to clear leaderboard. Check console for details.';
+                    }
+                } catch (error) {
+                    console.error('❌ Error clearing leaderboard:', error);
+                    return '❌ Error: ' + error.message;
                 }
             } else {
-                console.error('❌ resetLeaderboard function not found');
-                return 'Function not found';
+                console.error('❌ resetLeaderboard function not found on window or global scope');
+                console.log('Available on window:', typeof window.resetLeaderboard);
+                return '❌ resetLeaderboard function not found';
             }
         });
 
