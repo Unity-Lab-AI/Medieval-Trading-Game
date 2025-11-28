@@ -959,13 +959,24 @@ window.testJSONBin = async function() {
 
 // 🧹 Reset/Clear leaderboard - run from console: resetLeaderboard()
 window.resetLeaderboard = async function() {
-    // 🔐 SECURE: Get credentials from config (which loads from env/localStorage)
-    const binId = GameConfig?.leaderboard?.jsonbin?.binId || localStorage.getItem('jsonbin_id');
-    const apiKey = GameConfig?.leaderboard?.jsonbin?.apiKey || localStorage.getItem('jsonbin_key');
+    // 🔐 Use GlobalLeaderboardSystem config as single source of truth
+    const binId = GlobalLeaderboardSystem?.config?.BIN_ID ||
+                  GameConfig?.leaderboard?.jsonbin?.binId ||
+                  localStorage.getItem('jsonbin_id');
+    const apiKey = GlobalLeaderboardSystem?.config?.API_KEY ||
+                   GameConfig?.leaderboard?.jsonbin?.apiKey ||
+                   localStorage.getItem('jsonbin_key');
+
+    console.log('🧹 Reset leaderboard debug:');
+    console.log('  BIN_ID from GlobalLeaderboardSystem:', GlobalLeaderboardSystem?.config?.BIN_ID);
+    console.log('  BIN_ID from GameConfig:', GameConfig?.leaderboard?.jsonbin?.binId);
+    console.log('  Using BIN_ID:', binId);
+    console.log('  API_KEY present:', !!apiKey);
 
     if (!binId || !apiKey) {
-        console.error('❌ JSONBin credentials not configured. Set them in Settings > Leaderboard.');
-        return;
+        console.error('❌ JSONBin credentials not configured.');
+        console.error('  Check GameConfig.leaderboard.jsonbin in config.js');
+        return false;
     }
 
     console.log('🧹 Resetting leaderboard to empty state...');
