@@ -6,7 +6,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 const LoadingManager = {
-    // 📊 Systems to track - order matters for status messages
+    // 📊 Systems to track - order matters for progress bar
     systems: [
         { name: 'GameConfig', check: () => typeof GameConfig !== 'undefined', label: 'Loading configuration...' },
         { name: 'GameWorld', check: () => typeof GameWorld !== 'undefined', label: 'Generating world...' },
@@ -19,24 +19,21 @@ const LoadingManager = {
         { name: 'GameReady', check: () => typeof startNewGame === 'function' || typeof window.startNewGame === 'function', label: 'Finalizing...' }
     ],
 
-    // 🎯 Timing configuration
-    expectedLoadTime: 10000,  // 🖤 Expected 10 seconds to load
-    maxWaitTime: 20000,       // 🖤 Max 20 seconds before force-completing
-
     // 📊 State
-    progress: 0,
-    displayProgress: 0,      // 🖤 Smooth visual progress (time-based)
+    progress: 0,              // 🖤 Actual system progress (0-100)
+    displayProgress: 0,       // 🖤 Smooth visual progress (animated)
     isComplete: false,
-    isSystemsReady: false,
     checkInterval: null,
     animationFrame: null,
     startTime: 0,
+    maxWaitTime: 20000,       // 🖤 Max 20 seconds before force-completing
 
     // 🚀 Start monitoring loading progress
     init() {
         console.log('🖤 LoadingManager: Starting to watch the void fill up...');
         this.startTime = Date.now();
         this.displayProgress = 0;
+        this.progress = 0;
         this.updateUI(0, 'Summoning medieval times...');
 
         // 🖤 Check systems every 100ms
@@ -46,30 +43,21 @@ const LoadingManager = {
         this.animateProgress();
     },
 
-    // 🎨 Smooth progress bar animation based on time
+    // 🎨 Smooth progress bar animation - interpolates to actual progress
     animateProgress() {
         if (this.isComplete) return;
 
-        const elapsed = Date.now() - this.startTime;
+        // 🖤 Smoothly interpolate display progress toward actual progress
+        // Faster lerp when catching up, slower when close
+        const diff = Math.abs(this.progress - this.displayProgress);
+        const lerpSpeed = diff > 20 ? 0.12 : diff > 10 ? 0.08 : 0.05;
 
-        // 🖤 Calculate target progress based on time
-        // Goes from 0% to 90% over expectedLoadTime, leaving room for final 10%
-        let targetProgress;
+        this.displayProgress += (this.progress - this.displayProgress) * lerpSpeed;
 
-        if (this.isSystemsReady) {
-            // 🎯 Systems ready - smoothly complete to 100%
-            targetProgress = 100;
-        } else {
-            // 🕐 Time-based progress: 0% to 90% over expectedLoadTime
-            const timeRatio = Math.min(elapsed / this.expectedLoadTime, 1);
-            // Use easeOutQuad for smooth deceleration near 90%
-            const easedRatio = 1 - Math.pow(1 - timeRatio, 2);
-            targetProgress = Math.min(easedRatio * 90, 90);
+        // 🖤 Ensure we reach 100% exactly when complete
+        if (this.progress >= 100 && this.displayProgress > 99) {
+            this.displayProgress = 100;
         }
-
-        // 🖤 Smoothly interpolate display progress (lerp)
-        const lerpSpeed = this.isSystemsReady ? 0.15 : 0.08;
-        this.displayProgress += (targetProgress - this.displayProgress) * lerpSpeed;
 
         // 🖤 Update UI with smooth progress
         this.updateUISmooth(Math.round(this.displayProgress));
@@ -78,7 +66,7 @@ const LoadingManager = {
         this.animationFrame = requestAnimationFrame(() => this.animateProgress());
     },
 
-    // 📊 Check if all systems are loaded
+    // 📊 Check how many systems are loaded
     checkSystems() {
         let loaded = 0;
         let currentLabel = 'Loading...';
@@ -89,21 +77,21 @@ const LoadingManager = {
                 loaded++;
             } else {
                 currentLabel = sys.label;
-                break;
+                break; // 🖤 stop at first unloaded system
             }
         }
 
+        // 🖤 Calculate actual progress
         this.progress = Math.round((loaded / this.systems.length) * 100);
 
-        // 🖤 Update status text based on which system is loading
+        // 🖤 Update status text
         const statusEl = document.getElementById('loading-status');
         if (statusEl) statusEl.textContent = currentLabel;
 
         // 💀 All systems loaded?
-        if (loaded === this.systems.length && !this.isSystemsReady) {
-            console.log('🖤 LoadingManager: All systems ready! Completing load...');
-            this.isSystemsReady = true;
-            // 🖤 Don't complete immediately - let animation reach 100%
+        if (loaded === this.systems.length && !this.isComplete) {
+            this.progress = 100;
+            // 🖤 Small delay to show 100% before completing
             setTimeout(() => this.complete(), 800);
         }
 
@@ -111,7 +99,7 @@ const LoadingManager = {
         const elapsed = Date.now() - this.startTime;
         if (elapsed > this.maxWaitTime && !this.isComplete) {
             console.warn(`🖤 LoadingManager: Timeout after ${elapsed}ms. Force-completing...`);
-            this.isSystemsReady = true;
+            this.progress = 100;
             setTimeout(() => this.complete(), 500);
         }
     },
@@ -125,11 +113,11 @@ const LoadingManager = {
 
         // 🖤 Fun loading messages based on progress
         if (titleEl) {
-            if (progress < 20) titleEl.textContent = 'Awakening the void...';
-            else if (progress < 40) titleEl.textContent = 'Summoning merchants...';
-            else if (progress < 60) titleEl.textContent = 'Forging trade routes...';
-            else if (progress < 80) titleEl.textContent = 'Polishing gold coins...';
-            else if (progress < 95) titleEl.textContent = 'Almost there...';
+            if (progress < 15) titleEl.textContent = 'Awakening the void...';
+            else if (progress < 30) titleEl.textContent = 'Summoning merchants...';
+            else if (progress < 50) titleEl.textContent = 'Forging trade routes...';
+            else if (progress < 70) titleEl.textContent = 'Polishing gold coins...';
+            else if (progress < 90) titleEl.textContent = 'Almost there...';
             else titleEl.textContent = 'Ready to trade!';
         }
     },
@@ -188,9 +176,8 @@ const LoadingManager = {
     // 🔧 Debug helper - check what's missing
     debugStatus() {
         console.log('🖤 LoadingManager Debug:');
-        console.log(`  Elapsed: ${Date.now() - this.startTime}ms`);
+        console.log(`  Actual Progress: ${this.progress}%`);
         console.log(`  Display Progress: ${this.displayProgress}%`);
-        console.log(`  Systems Ready: ${this.isSystemsReady}`);
         this.systems.forEach(sys => {
             console.log(`  ${sys.name}: ${sys.check() ? '✅' : '❌'}`);
         });
