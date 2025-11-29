@@ -23,6 +23,14 @@ setTimeout(() => {
 // 🖤 NOTE: DebugSystem is defined in debug-system.js (loaded before this file)
 // Removed duplicate declaration to prevent "Identifier already declared" error
 
+// 🖤 Escape HTML to prevent XSS attacks - dark magic for security
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>"']/g, char => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[char]);
+}
+
 // 🖤 Debug-only logging helper - only logs warnings in debug mode, silent in production
 // Note: Using gameDebugWarn to avoid conflict with button-fix.js debugWarn
 const gameDebugWarn = (msg) => {
@@ -5392,10 +5400,11 @@ function hideGameUIForSetup() {
     const gameLayout = document.getElementById('game-layout');
     if (gameLayout) gameLayout.classList.add('hidden');
 
-    // Make game-container take full screen with dark background for setup
+    // Make game-container take full screen for setup
+    // 🌦️ Use TRANSPARENT background so menu weather shows through!
     const gameContainer = document.getElementById('game-container');
     if (gameContainer) {
-        gameContainer.style.background = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f1a 100%)';
+        gameContainer.style.background = 'transparent'; // Let weather show through
         gameContainer.style.display = 'flex';
         gameContainer.style.justifyContent = 'center';
         gameContainer.style.alignItems = 'center';
@@ -5927,11 +5936,16 @@ function displaySelectedPerks() {
 
         const perkTag = document.createElement('div');
         perkTag.className = 'selected-perk-tag';
+        // 🖤 XSS fix: use data attribute instead of inline onclick
         perkTag.innerHTML = `
             <span class="perk-tag-icon">${perk.icon}</span>
             <span class="perk-tag-name">${perk.name}</span>
-            <button class="perk-tag-remove" onclick="removePerk('${perkId}')" title="Remove perk">×</button>
+            <button class="perk-tag-remove" data-perk-id="${escapeHtml(perkId)}" title="Remove perk">×</button>
         `;
+        // 💀 Attach event listener safely
+        perkTag.querySelector('.perk-tag-remove').onclick = function() {
+            removePerk(this.dataset.perkId);
+        };
         container.appendChild(perkTag);
     });
 }
@@ -6692,7 +6706,8 @@ function createCharacter(event) {
     // Update UI
     updatePlayerInfo();
     updatePlayerStats();
-    
+    updateInventoryDisplay(); // 🎒 Make sure inventory shows our starting items!
+
     // Hide setup panel and reveal full game UI
     hidePanel('game-setup-panel');
     showGameUI();  // Reveal all game UI elements that were hidden during setup
@@ -7274,10 +7289,14 @@ function updateLocationPanel() {
                 <div class="region-option">
                     <strong>${region.name}</strong> - ${region.description}
                     <span class="region-cost">💰 ${region.goldRequirement} gold</span>
-                    <button class="unlock-btn" onclick="unlockRegion('${region.id}')">Unlock</button>
+                    <button class="unlock-btn" data-region-id="${escapeHtml(region.id)}">Unlock</button>
                 </div>
             `).join('')}
         `;
+        // 🖤 XSS fix: attach event listeners safely
+        unlockElement.querySelectorAll('.unlock-btn[data-region-id]').forEach(btn => {
+            btn.onclick = () => unlockRegion(btn.dataset.regionId);
+        });
     }
 
     // 🏚️ Add exploration button for dungeons, caves, ruins, etc.
@@ -7580,15 +7599,19 @@ function populateMarketItems() {
         itemElement.className = `market-item ${item.rarity} ${TradingSystem.selectedTradeItems.has(itemId) ? 'selected' : ''}`;
         itemElement.dataset.itemId = itemId;
         
+        // 🖤 XSS fix: use data attribute instead of inline onclick
         itemElement.innerHTML = `
             <div class="item-icon">${item.icon}</div>
             <div class="item-name">${item.name}</div>
             <div class="item-quantity">×${quantity}</div>
             <div class="item-price">${sellPrice} gold</div>
             <div class="item-weight">${ItemDatabase.calculateWeight(itemId, quantity).toFixed(1)} lbs</div>
-            <button class="sell-item-btn" onclick="sellItem('${itemId}')">Sell</button>
+            <button class="sell-item-btn" data-item-id="${escapeHtml(itemId)}">Sell</button>
         `;
-        
+        // 💀 Attach sell button event listener safely
+        const sellBtn = itemElement.querySelector('.sell-item-btn');
+        if (sellBtn) sellBtn.onclick = () => sellItem(sellBtn.dataset.itemId);
+
         // Add event listeners for bulk selection
         if (TradingSystem.tradeMode === 'bulk') {
             EventManager.addEventListener(itemElement, 'click', (e) => {
@@ -8312,14 +8335,18 @@ function updateInventoryDisplay() {
             
             const itemElement = document.createElement('div');
             itemElement.className = 'inventory-item';
+            // 🖤 XSS fix: use data attribute instead of inline onclick
             itemElement.innerHTML = `
                 <div class="item-icon">${item.icon}</div>
                 <div class="item-name">${item.name}</div>
                 <div class="item-quantity">×${quantity}</div>
                 <div class="item-weight">${ItemDatabase.calculateWeight(itemId, quantity).toFixed(1)} lbs</div>
-                ${item.consumable ? `<button class="use-item-btn" onclick="useItem('${itemId}')">Use</button>` : ''}
+                ${item.consumable ? `<button class="use-item-btn" data-item-id="${escapeHtml(itemId)}">Use</button>` : ''}
             `;
-            
+            // 💀 Attach use button event listener safely
+            const useBtn = itemElement.querySelector('.use-item-btn');
+            if (useBtn) useBtn.onclick = () => useItem(useBtn.dataset.itemId);
+
             inventoryContainer.appendChild(itemElement);
         }
     }
@@ -8385,6 +8412,7 @@ function updateMarketDisplay() {
         itemElement.className = `market-item ${item.rarity} ${isSpecial ? 'special' : ''} ${TradingSystem.selectedTradeItems.has(itemId) ? 'selected' : ''}`;
         itemElement.dataset.itemId = itemId;
         
+        // 🖤 XSS fix: use data attribute instead of inline onclick
         itemElement.innerHTML = `
             ${trend !== 'stable' ? `<div class="item-trend ${trendClass}">${trendIcon}</div>` : ''}
             <div class="item-icon">${item.icon}</div>
@@ -8393,9 +8421,12 @@ function updateMarketDisplay() {
             <div class="item-stock">Stock: ${marketData.stock}</div>
             <div class="item-weight">${item.weight} lbs</div>
             ${demandText ? `<div class="item-demand ${demandClass}">${demandText}</div>` : ''}
-            <button class="buy-item-btn" onclick="buyItem('${itemId}')">Buy</button>
+            <button class="buy-item-btn" data-item-id="${escapeHtml(itemId)}">Buy</button>
         `;
-        
+        // 💀 Attach buy button event listener safely
+        const buyBtn = itemElement.querySelector('.buy-item-btn');
+        if (buyBtn) buyBtn.onclick = () => buyItem(buyBtn.dataset.itemId);
+
         // Add event listeners for bulk selection
         if (TradingSystem.tradeMode === 'bulk') {
             EventManager.addEventListener(itemElement, 'click', (e) => {
@@ -9527,6 +9558,7 @@ game.showLocationDetails = function(location) {
     const detailsPanel = document.getElementById('overlay-location-details');
     if (!detailsPanel) return;
     
+    // 🖤 XSS fix: use data attribute instead of inline onclick
     detailsPanel.innerHTML = `
         <h3>${location.name}</h3>
         <div class="location-type">${location.type}</div>
@@ -9540,9 +9572,12 @@ game.showLocationDetails = function(location) {
             <p><strong>Travel Cost:</strong> ${GameWorld.calculateTravelCost(game.currentLocation.id, location.id)} gold</p>
             <p><strong>Travel Time:</strong> ${GameWorld.calculateTravelTime(game.currentLocation.id, location.id)} minutes</p>
         </div>
-        <button class="travel-btn" onclick="game.travelToLocation('${location.id}')">Travel Here</button>
+        <button class="travel-btn" data-location-id="${escapeHtml(location.id)}">Travel Here</button>
     `;
-    
+    // 💀 Attach travel button event listener safely
+    const travelBtn = detailsPanel.querySelector('.travel-btn');
+    if (travelBtn) travelBtn.onclick = () => game.travelToLocation(travelBtn.dataset.locationId);
+
     detailsPanel.classList.remove('hidden');
 };
 

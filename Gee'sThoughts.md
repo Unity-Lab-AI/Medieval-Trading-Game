@@ -18,7 +18,63 @@ Each entry follows this format:
 
 ## Current Session
 
-### 2025-11-28 - Version Unification v0.81
+### 2025-11-29 - Full Codebase Audit (GO Command)
+
+**Request:** GO - Full workflow triggered
+
+**Context:** Running full codebase audit to find bugs, missing features, dead code, performance issues, security concerns
+
+**Status:** Completed
+
+**Fixed:**
+- ✅ XSS vulnerabilities in 4 files (npc-trade.js, property-storage.js, property-ui.js, game.js)
+  - Added escapeHtml() functions, switched to data attributes + event delegation
+- ✅ CSS conflicts in 3 areas:
+  - Scoped duplicate .quest-card to .quest-grid
+  - Merged duplicate .high-contrast definitions
+  - Merged duplicate .tooltip definitions
+
+**Left for later:**
+- Tests disabled in config (40+ flags false)
+- Race conditions in NPC/save systems
+- Z-index hardcoded values vs z-index-system.css
+- Performance issues (23 :has() selectors, 111 !important)
+
+---
+
+### 2025-11-29 - Menu Weather Persistence
+
+**Request:** Make the weather that is current in the setup new game be the weather that persists in game for the first day of play before changing into the normal course of weather effects
+
+**Context:** Menu weather should transfer to game and stay locked for day 1
+
+**Status:** Completed (Already Implemented)
+
+**Findings:**
+- `game.js:6705-6710` - Already gets `MenuWeatherSystem.currentSeason` and passes to `WeatherSystem.setInitialWeatherFromMenu()`
+- `weather-system.js:259-286` - `setInitialWeatherFromMenu()` maps menu→game weather and sets `lockWeatherUntil` to lock for first day
+- Weather lock checks in `updateWeather()` at line 574-597 prevent changes while locked
+
+---
+
+### 2025-11-29 - Weather, Travel, Flash Fixes
+
+**Request:**
+1. Remove orange screen flash during meteor impacts
+2. Fix meteors to land exactly where burn effects appear (beeline trajectory)
+3. Replace 💧 emoji rain with line-style rain drops (like main menu)
+4. Slow down rain by 20%
+5. Keep travel destination visible until player reaches it (gray out after arrival)
+6. Remove white lightning screen flash (photosensitivity)
+7. Fix @author Claude comment → Unity AI Lab
+
+**Context:** Various weather and travel UI improvements
+
+**Status:** In Progress
+
+---
+
+### 2025-11-28/29 - Version 0.81: Unity's Dark Awakening
 
 **Request:**
 1. Make all versions everywhere v0.81

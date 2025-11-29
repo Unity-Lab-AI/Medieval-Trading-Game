@@ -45,24 +45,27 @@
     top: 6px;
 }
 
-/* Enhanced tooltips */
+/* 🖤 Enhanced tooltips - unified definition (merged from duplicate at line 893) */
 .tooltip {
     position: absolute;
-    background: rgba(0, 0, 0, 0.9);
-    color: white;
+    background: var(--bg-primary, rgba(0, 0, 0, 0.9));
+    border: 1px solid var(--border, #333);
+    color: var(--text-primary, white);
     padding: 8px 12px;
-    border-radius: 4px;
+    border-radius: 6px;
     font-size: 14px;
     z-index: 10000;
     pointer-events: none;
     opacity: 0;
-    transition: opacity 0.2s ease;
+    transform: translateY(-5px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
     max-width: 200px;
     word-wrap: break-word;
 }
 
 .tooltip.visible {
     opacity: 1;
+    transform: translateY(0);
 }
 
 /* Enhanced notifications */
@@ -158,10 +161,21 @@ input:focus, textarea:focus, select:focus {
     outline: none;
 }
 
-/* High contrast mode */
+/* 🖤 High contrast mode - unified (direct styles + CSS variables) */
 .high-contrast {
     background: #000000 !important;
     color: #ffffff !important;
+    /* CSS variables for components that use them */
+    --bg-primary: #000000;
+    --bg-secondary: #1a1a1a;
+    --bg-tertiary: #333333;
+    --text-primary: #ffffff;
+    --text-secondary: #cccccc;
+    --accent: #ffff00;
+    --success: #00ff00;
+    --warning: #ff9900;
+    --error: #ff0000;
+    --border: #ffffff;
 }
 
 .high-contrast .btn, .high-contrast button {
@@ -271,19 +285,7 @@ input:focus, textarea:focus, select:focus {
     font-size: 20px;
 }
 
-/* High contrast mode */
-.high-contrast {
-    --bg-primary: #000000;
-    --bg-secondary: #1a1a1a;
-    --bg-tertiary: #333333;
-    --text-primary: #ffffff;
-    --text-secondary: #cccccc;
-    --accent: #ffff00;
-    --success: #00ff00;
-    --warning: #ff9900;
-    --error: #ff0000;
-    --border: #ffffff;
-}
+/* 🖤 High contrast mode CSS variables - REMOVED (merged into main .high-contrast block at line 162) */
 
 /* Colorblind modes */
 .colorblind-protanopia {
@@ -891,25 +893,7 @@ input:focus, textarea:focus, select:focus {
     z-index: 2000;
 }
 
-.tooltip {
-    position: absolute;
-    background: var(--bg-primary, #1a1a1a);
-    border: 1px solid var(--border, #333);
-    border-radius: 6px;
-    padding: 8px 12px;
-    color: var(--text-primary, #fff);
-    font-size: 12px;
-    white-space: nowrap;
-    opacity: 0;
-    transform: translateY(-5px);
-    transition: opacity 0.2s ease, transform 0.2s ease;
-    z-index: 2000;
-}
-
-.tooltip.visible {
-    opacity: 1;
-    transform: translateY(0);
-}
+/* 🖤 .tooltip - REMOVED (merged into main .tooltip block at line 49) */
 
 /* Particle effects */
 #particle-container {

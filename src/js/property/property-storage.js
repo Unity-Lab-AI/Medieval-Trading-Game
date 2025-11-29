@@ -5,6 +5,14 @@
 // File Version: GameConfig.version.file | Made by Unity AI Lab
 
 const PropertyStorage = {
+    // 🖤 Escape HTML to prevent XSS attacks - dark magic for security
+    escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/[&<>"']/g, char => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        })[char]);
+    },
+
     // 🏠 Initialize storage for a property ⚰️
     initialize(propertyId) {
         const property = PropertySystem.getProperty(propertyId);
@@ -327,14 +335,21 @@ const PropertyStorage = {
                 }
             }
 
+            // 🖤 Using data attributes to prevent XSS - no inline onclick
+            const safePropertyId = this.escapeHtml(propertyId);
+            const safeItemId = this.escapeHtml(itemId);
             itemElement.innerHTML = `
                 <div class="storage-item-icon">${itemIcon}</div>
                 <div class="storage-item-name">${itemName}</div>
                 <div class="storage-item-quantity">×${quantity}</div>
-                <button class="storage-item-btn" onclick="PropertyStorage.transferToPlayer('${propertyId}', '${itemId}', 1)">Take 1</button>
-                <button class="storage-item-btn" onclick="PropertyStorage.transferToPlayer('${propertyId}', '${itemId}', ${Math.min(10, quantity)})">Take 10</button>
-                <button class="storage-item-btn" onclick="PropertyStorage.transferToPlayer('${propertyId}', '${itemId}', ${quantity})">Take All</button>
+                <button class="storage-item-btn" data-action="take" data-property="${safePropertyId}" data-item="${safeItemId}" data-qty="1">Take 1</button>
+                <button class="storage-item-btn" data-action="take" data-property="${safePropertyId}" data-item="${safeItemId}" data-qty="${Math.min(10, quantity)}">Take 10</button>
+                <button class="storage-item-btn" data-action="take" data-property="${safePropertyId}" data-item="${safeItemId}" data-qty="${quantity}">Take All</button>
             `;
+            // 💀 Attach event listeners safely
+            itemElement.querySelectorAll('.storage-item-btn[data-action="take"]').forEach(btn => {
+                btn.onclick = () => this.transferToPlayer(btn.dataset.property, btn.dataset.item, parseInt(btn.dataset.qty));
+            });
 
             storageContainer.appendChild(itemElement);
         }
@@ -410,14 +425,21 @@ const PropertyStorage = {
 
             const itemElement = document.createElement('div');
             itemElement.className = 'transfer-item';
+            // 🖤 Using data attributes to prevent XSS - no inline onclick
+            const safePropertyId = this.escapeHtml(propertyId);
+            const safeItemId = this.escapeHtml(itemId);
             itemElement.innerHTML = `
                 <div class="transfer-item-icon">${itemIcon}</div>
                 <div class="transfer-item-name">${itemName}</div>
                 <div class="transfer-item-quantity">×${quantity}</div>
-                <button class="transfer-btn" onclick="PropertyStorage.transferFromPlayer('${propertyId}', '${itemId}', 1)">Store 1</button>
-                <button class="transfer-btn" onclick="PropertyStorage.transferFromPlayer('${propertyId}', '${itemId}', ${Math.min(10, quantity)})">Store 10</button>
-                <button class="transfer-btn" onclick="PropertyStorage.transferFromPlayer('${propertyId}', '${itemId}', ${quantity})">Store All</button>
+                <button class="transfer-btn" data-action="store" data-property="${safePropertyId}" data-item="${safeItemId}" data-qty="1">Store 1</button>
+                <button class="transfer-btn" data-action="store" data-property="${safePropertyId}" data-item="${safeItemId}" data-qty="${Math.min(10, quantity)}">Store 10</button>
+                <button class="transfer-btn" data-action="store" data-property="${safePropertyId}" data-item="${safeItemId}" data-qty="${quantity}">Store All</button>
             `;
+            // 🦇 Attach event listeners safely
+            itemElement.querySelectorAll('.transfer-btn[data-action="store"]').forEach(btn => {
+                btn.onclick = () => this.transferFromPlayer(btn.dataset.property, btn.dataset.item, parseInt(btn.dataset.qty));
+            });
 
             container.appendChild(itemElement);
         }
@@ -486,14 +508,22 @@ const PropertyStorage = {
 
             const itemElement = document.createElement('div');
             itemElement.className = 'transfer-item';
+            // 🖤 Using data attributes to prevent XSS - no inline onclick
+            const safeFromId = this.escapeHtml(fromPropertyId);
+            const safeToId = this.escapeHtml(toPropertyId);
+            const safeItemId = this.escapeHtml(itemId);
             itemElement.innerHTML = `
                 <div class="transfer-item-icon">${itemIcon}</div>
                 <div class="transfer-item-name">${itemName}</div>
                 <div class="transfer-item-quantity">×${quantity}</div>
-                <button class="transfer-btn" onclick="PropertyStorage.transferBetweenProperties('${fromPropertyId}', '${toPropertyId}', '${itemId}', 1)">Transfer 1</button>
-                <button class="transfer-btn" onclick="PropertyStorage.transferBetweenProperties('${fromPropertyId}', '${toPropertyId}', '${itemId}', ${Math.min(10, quantity)})">Transfer 10</button>
-                <button class="transfer-btn" onclick="PropertyStorage.transferBetweenProperties('${fromPropertyId}', '${toPropertyId}', '${itemId}', ${quantity})">Transfer All</button>
+                <button class="transfer-btn" data-action="transfer" data-from="${safeFromId}" data-to="${safeToId}" data-item="${safeItemId}" data-qty="1">Transfer 1</button>
+                <button class="transfer-btn" data-action="transfer" data-from="${safeFromId}" data-to="${safeToId}" data-item="${safeItemId}" data-qty="${Math.min(10, quantity)}">Transfer 10</button>
+                <button class="transfer-btn" data-action="transfer" data-from="${safeFromId}" data-to="${safeToId}" data-item="${safeItemId}" data-qty="${quantity}">Transfer All</button>
             `;
+            // ⚰️ Attach event listeners safely
+            itemElement.querySelectorAll('.transfer-btn[data-action="transfer"]').forEach(btn => {
+                btn.onclick = () => this.transferBetweenProperties(btn.dataset.from, btn.dataset.to, btn.dataset.item, parseInt(btn.dataset.qty));
+            });
 
             container.appendChild(itemElement);
         }

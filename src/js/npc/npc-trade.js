@@ -743,24 +743,41 @@ const NPCTradeWindow = {
 
     updateOfferDisplay() {
         // 👤 What are you putting on the table? Show your offer 🎁
+        // 🖤 Using data attributes instead of inline onclick to prevent XSS
         const playerOfferEl = document.getElementById('player-offer-items');
         if (playerOfferEl) {
             playerOfferEl.innerHTML = Object.entries(this.playerOffer.items).map(([itemId, qty]) => `
-                <div class="offer-item" onclick="NPCTradeWindow.removeFromOffer('${itemId}', 'player')">
+                <div class="offer-item" data-item-id="${this.escapeHtml(itemId)}" data-offer-type="player">
                     ${this.getItemIcon(itemId)} ${this.formatItemName(itemId)} x${qty}
                 </div>
             `).join('') || '<span class="empty">Nothing</span>';
+            // 💀 Attach event listeners safely
+            playerOfferEl.querySelectorAll('.offer-item[data-item-id]').forEach(el => {
+                el.onclick = () => this.removeFromOffer(el.dataset.itemId, el.dataset.offerType);
+            });
         }
 
         // 🧑‍💼 What are they willing to give? Display their counter-offer 💼
         const npcOfferEl = document.getElementById('npc-offer-items');
         if (npcOfferEl) {
             npcOfferEl.innerHTML = Object.entries(this.npcOffer.items).map(([itemId, qty]) => `
-                <div class="offer-item" onclick="NPCTradeWindow.removeFromOffer('${itemId}', 'npc')">
+                <div class="offer-item" data-item-id="${this.escapeHtml(itemId)}" data-offer-type="npc">
                     ${this.getItemIcon(itemId)} ${this.formatItemName(itemId)} x${qty}
                 </div>
             `).join('') || '<span class="empty">Nothing</span>';
+            // 🦇 Attach event listeners safely
+            npcOfferEl.querySelectorAll('.offer-item[data-item-id]').forEach(el => {
+                el.onclick = () => this.removeFromOffer(el.dataset.itemId, el.dataset.offerType);
+            });
         }
+    },
+
+    // 🖤 Escape HTML to prevent XSS attacks - dark magic for security
+    escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/[&<>"']/g, char => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        })[char]);
     },
 
     updateTradeValue() {

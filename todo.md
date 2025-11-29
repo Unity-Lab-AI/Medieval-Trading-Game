@@ -1,19 +1,85 @@
 # MEDIEVAL TRADING GAME - TODO LIST
 ## The Eternal Checklist of Doom 🖤
 
-**Last Updated:** 2025-11-28
-**Version:** 0.7
+**Last Updated:** 2025-11-29
+**Version:** 0.81 - Unity's Dark Awakening 🖤💀🦇
 **Verification Status:** 150/150 items from addtodo.md COMPLETE (100%)
 
 ---
 
 ## CURRENT SESSION
 
-**Started:** 2025-11-28
+**Started:** 2025-11-29
 **Status:** ✅ Active
-**Version:** 0.7
+**Version:** 0.81
 
-### Session Updates (Latest) - 2025-11-28 (GO Workflow Run #4)
+### Session Updates - 2025-11-29 (GO Command Full Audit)
+
+#### 🔴 CRITICAL - Security (XSS Vulnerabilities) ✅ FIXED
+- [x] **npc-trade.js:748-762** - XSS via itemId in onclick handlers
+  - Fixed: Added escapeHtml(), switched to data attributes + event delegation
+- [x] **property-storage.js:334-336, 417-419, 493-495** - XSS via propertyId/itemId
+  - Fixed: Added escapeHtml(), switched to data attributes
+- [x] **property-ui.js:70-73, 105-108, 165, 416, 562, 642** - XSS in onclick handlers
+  - Fixed: Added escapeHtml(), centralized event delegation via _attachModalEventListeners()
+- [x] **game.js:5934, 7279, 7591, 8338, 8415, 9575** - Multiple XSS in onclick
+  - Fixed: Added global escapeHtml(), all buttons use data attributes
+
+#### 🔴 CRITICAL - Tests Disabled (LEFT FOR LATER)
+- [ ] **test-config.js:15-144** - ALL 40+ test flags are `false` - no tests run in CI/CD
+- [ ] **Multiple spec files** - 31 test.skip() calls prevent execution
+
+#### 🟠 HIGH - Bugs & Race Conditions (LEFT FOR LATER)
+- [ ] **npc-trade.js:281-302** - Null reference on portrait.querySelector
+- [ ] **npc-trade.js:291** - Chained querySelector without null check
+- [ ] **npc-chat-ui.js:736-810** - Race condition with isWaitingForResponse flag
+- [ ] **save-manager.js:107-114** - isAutoSaving flag without Promise queue
+- [ ] **npc-dialogue.js:705-731** - Unhandled fetch error propagation
+
+#### 🟠 HIGH - CSS Conflicts ✅ FIXED
+- [x] **npc-systems.css:655 vs 1300** - Duplicate `.quest-card` with conflicting styles
+  - Fixed: Scoped second block to `.quest-grid .quest-card`
+- [ ] **z-index conflicts** - 12+ hardcoded values conflict with z-index-system.css
+- [x] **ui-enhancements.css:162 vs 275** - Duplicate `.high-contrast` definitions
+  - Fixed: Merged CSS variables into first block, removed duplicate
+- [x] **ui-enhancements.css:49 vs 894** - Duplicate `.tooltip` definitions
+  - Fixed: Merged styles into first block, removed duplicate
+
+#### 🟡 MEDIUM - Performance
+- [ ] **z-index-system.css:108-157** - 23 `:has()` selectors cause layout thrashing
+- [ ] **All CSS files** - 111 `!important` flags indicate cascade problems
+- [ ] **Multiple files** - 13 `backdrop-filter: blur()` instances hurt mobile perf
+- [ ] **environmental-effects-system.js:300-311** - Event listeners without removal
+- [ ] **game.js:537, 784, 1039** - Event listeners on dynamic elements without cleanup
+
+#### 🟡 MEDIUM - Missing Responsive Styles
+- [ ] **styles.css:1514** - `.panel { min-width: 400px }` no mobile breakpoint
+- [ ] **npc-systems.css:867** - `.quest-tracker` fixed at 350px top, not responsive
+- [ ] **All CSS files** - Missing breakpoints for < 480px devices
+
+#### 🟢 LOW - Dead Code
+- [ ] **game.js:1331-1399** - Debug helpers exposed globally (GameLogger, testDifficulty, etc.)
+- [ ] **game.js:4962-4996** - Polling functions may never be called
+- [ ] **test-helpers.js:143-150** - `getDebugOutput()` never used
+- [ ] **test-helpers.js:165-173** - `togglePanelWithKey()` unreliable
+- [ ] **debug.spec.js:1-46** - Orphaned test file, does nothing
+
+---
+
+### Session Updates (Latest) - 2025-11-29 (v0.81 Release)
+- [x] **New Season Background Images** - Updated all 5 seasonal/dungeon backdrops
+  - Renamed old images to *-v7.9.png (archived)
+  - New v0.81 images: world-map-spring.png, world-map-summer.png, world-map-autumn.png, world-map-winter.png, world-map-dungeon.png
+- [x] **Weather System Fixes**
+  - Fixed menu weather not showing during new game setup (transparent background on game-container)
+  - Fixed game weather overlay ID conflict (renamed to `game-weather-overlay` to avoid VisualEffectsSystem conflict)
+  - Updated CSS z-index rules for new overlay ID
+- [x] **Documentation Updates**
+  - Updated masterplan.md to v0.81
+  - Updated todo.md to v0.81
+  - All version references updated
+
+### Previous Session - 2025-11-28 (GO Workflow Run #4)
 - [x] **Fixed debug button visibility on start menu**
   - Debug button was hidden behind main-menu (z-index 3001 vs 949)
   - Raised debug button z-index to 9999 (index.html:1226)

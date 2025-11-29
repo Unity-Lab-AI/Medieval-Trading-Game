@@ -864,7 +864,7 @@
    ═══════════════════════════════════════════════════════════════ */
 .quest-tracker {
     position: fixed;
-    top: auto;
+    top: 350px; /* 🖤 Default: below side-panel (JS will adjust dynamically) */
     bottom: auto;
     right: 160px; /* 🖤 Same column as player info (side-panel) */
     width: 200px; /* 🖤 Match side-panel width */
@@ -1296,8 +1296,8 @@
     background: rgba(255,255,255,0.5);
 }
 
-/* Quest Card Base */
-.quest-card {
+/* 🖤 Quest Card Grid Style - for quest-grid view (different from quest-log-panel cards) */
+.quest-grid .quest-card {
     background: rgba(255, 255, 255, 0.05);
     border: 2px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
@@ -1310,62 +1310,65 @@
     max-height: 350px;
     display: flex;
     flex-direction: column;
+    /* 🖤 Override quest-log-panel .quest-card styles */
+    margin-bottom: 0;
+    border-left: none;
 }
 
-.quest-card::-webkit-scrollbar {
+.quest-grid .quest-card::-webkit-scrollbar {
     width: 6px;
 }
 
-.quest-card::-webkit-scrollbar-track {
+.quest-grid .quest-card::-webkit-scrollbar-track {
     background: rgba(0,0,0,0.2);
     border-radius: 3px;
 }
 
-.quest-card::-webkit-scrollbar-thumb {
+.quest-grid .quest-card::-webkit-scrollbar-thumb {
     background: rgba(255,255,255,0.3);
     border-radius: 3px;
 }
 
-.quest-card::-webkit-scrollbar-thumb:hover {
+.quest-grid .quest-card::-webkit-scrollbar-thumb:hover {
     background: rgba(255,255,255,0.5);
 }
 
-.quest-card:hover {
+.quest-grid .quest-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
-/* Quest Card States */
-.quest-card.active {
+/* 🖤 Quest Card States - for quest-grid view only */
+.quest-grid .quest-card.active {
     background: rgba(233, 69, 96, 0.15);
     border-color: rgba(233, 69, 96, 0.5);
 }
 
-.quest-card.completed {
+.quest-grid .quest-card.completed {
     background: rgba(76, 175, 80, 0.1);
     border-color: rgba(76, 175, 80, 0.3);
 }
 
-.quest-card.failed {
+.quest-grid .quest-card.failed {
     background: rgba(244, 67, 54, 0.1);
     border-color: rgba(244, 67, 54, 0.3);
 }
 
-.quest-card.available {
+.quest-grid .quest-card.available {
     background: rgba(255, 215, 0, 0.1);
     border-color: rgba(255, 215, 0, 0.3);
 }
 
-.quest-card.undiscovered {
+.quest-grid .quest-card.undiscovered {
     opacity: 0.5;
     filter: grayscale(60%);
 }
 
-.quest-card.main-quest {
+.quest-grid .quest-card.main-quest {
     border-color: rgba(255, 215, 0, 0.5);
 }
 
-.quest-card.main-quest::before {
+.quest-grid .quest-card.main-quest::before {
     content: '';
     position: absolute;
     top: 0;
@@ -1375,8 +1378,8 @@
     background: linear-gradient(90deg, #ffd700, #ffeb3b);
 }
 
-/* Quest Card Elements */
-.quest-card-icon {
+/* 🖤 Quest Card Elements - for quest-grid view */
+.quest-grid .quest-card-icon {
     font-size: 1.5rem;
     margin-bottom: 0.5rem;
     display: block;
@@ -1384,7 +1387,7 @@
     flex-shrink: 0;
 }
 
-.quest-card.undiscovered .quest-card-icon {
+.quest-grid .quest-card.undiscovered .quest-card-icon {
     filter: grayscale(100%);
 }
 

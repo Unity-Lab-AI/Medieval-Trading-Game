@@ -5,6 +5,14 @@
 // File Version: GameConfig.version.file | Made by Unity AI Lab
 
 const PropertyUI = {
+    // 🖤 Escape HTML to prevent XSS attacks - dark magic for security
+    escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/[&<>"']/g, char => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        })[char]);
+    },
+
     // 🔄 Update property display 🦇
     updatePropertyDisplay() {
         const container = document.getElementById('properties-list');
@@ -67,12 +75,25 @@ const PropertyUI = {
                 </div>
             </div>
             <div class="property-actions">
-                <button class="property-action-btn" onclick="PropertyUI.showPropertyDetails('${property.id}')">Details</button>
-                <button class="property-action-btn" onclick="PropertyUI.showUpgradeInterface('${property.id}')">Upgrades</button>
-                <button class="property-action-btn" onclick="PropertyUpgrades.repair('${property.id}')">Repair</button>
-                <button class="property-action-btn" onclick="PropertyUI.showStorageManagement('${property.id}')">Storage</button>
+                <button class="property-action-btn" data-action="details" data-property="${this.escapeHtml(property.id)}">Details</button>
+                <button class="property-action-btn" data-action="upgrades" data-property="${this.escapeHtml(property.id)}">Upgrades</button>
+                <button class="property-action-btn" data-action="repair" data-property="${this.escapeHtml(property.id)}">Repair</button>
+                <button class="property-action-btn" data-action="storage" data-property="${this.escapeHtml(property.id)}">Storage</button>
             </div>
         `;
+
+        // 🖤 Attach event listeners safely - no inline onclick XSS risk
+        element.querySelectorAll('.property-action-btn[data-action]').forEach(btn => {
+            btn.onclick = () => {
+                const propId = btn.dataset.property;
+                switch(btn.dataset.action) {
+                    case 'details': this.showPropertyDetails(propId); break;
+                    case 'upgrades': this.showUpgradeInterface(propId); break;
+                    case 'repair': PropertyUpgrades.repair(propId); break;
+                    case 'storage': this.showStorageManagement(propId); break;
+                }
+            };
+        });
 
         return element;
     },
@@ -91,21 +112,23 @@ const PropertyUI = {
 
         const workQueue = PropertySystem.getWorkQueue(propertyId);
 
+        // 🖤 Escape propertyId to prevent XSS
+        const safePropertyId = this.escapeHtml(propertyId);
         const detailsHtml = `
-            <div class="property-details-modal">
+            <div class="property-details-modal" data-property-id="${safePropertyId}">
                 <div class="modal-header">
                     <h2>${propertyType.icon} ${propertyType.name}</h2>
-                    <button class="close-btn" onclick="PropertyUI.closePropertyDetails()">✕</button>
+                    <button class="close-btn" data-action="close">✕</button>
                 </div>
                 <div class="modal-content">
                     <div class="property-details">
                         <div class="property-details-header">
                             <h3>${propertyType.icon} ${propertyType.name} Details</h3>
                             <div class="mini-actions">
-                                <button class="mini-action-btn" onclick="PropertyUI.showUpgradeInterface('${propertyId}')" title="Upgrades">🔧</button>
-                                <button class="mini-action-btn" onclick="PropertyUpgrades.repair('${propertyId}')" title="Repair">🔨</button>
-                                <button class="mini-action-btn" onclick="PropertyUpgrades.upgradeLevel('${propertyId}')" title="Level Up">⬆️</button>
-                                <button class="mini-action-btn" onclick="PropertyUI.showStorageManagement('${propertyId}')" title="Storage">📦</button>
+                                <button class="mini-action-btn" data-action="upgrades" title="Upgrades">🔧</button>
+                                <button class="mini-action-btn" data-action="repair" title="Repair">🔨</button>
+                                <button class="mini-action-btn" data-action="level-up" title="Level Up">⬆️</button>
+                                <button class="mini-action-btn" data-action="storage" title="Storage">📦</button>
                             </div>
                         </div>
                         <div class="property-info">
@@ -162,7 +185,7 @@ const PropertyUI = {
                                                 </div>
                                                 <span class="progress-text">${Math.round((work.progress / work.quantity) * 100)}%</span>
                                             </div>
-                                            <button class="cancel-work-btn" onclick="PropertySystem.cancelWorkItem('${propertyId}', '${work.id}')" title="Cancel">✕</button>
+                                            <button class="cancel-work-btn" data-action="cancel-work" data-work-id="${this.escapeHtml(work.id)}" title="Cancel">✕</button>
                                         </div>
                                     `).join('')}
                                 </div>` :
@@ -190,9 +213,9 @@ const PropertyUI = {
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="primary-btn" onclick="PropertyUI.showUpgradeInterface('${propertyId}')">Manage Upgrades</button>
-                    <button class="secondary-btn" onclick="PropertyUI.showStorageManagement('${propertyId}')">Manage Storage</button>
-                    <button class="secondary-btn" onclick="PropertyUI.closePropertyDetails()">Close</button>
+                    <button class="primary-btn" data-action="upgrades">Manage Upgrades</button>
+                    <button class="secondary-btn" data-action="storage">Manage Storage</button>
+                    <button class="secondary-btn" data-action="close">Close</button>
                 </div>
             </div>
         `;
@@ -255,18 +278,29 @@ const PropertyUI = {
                     <p><strong>Storage Capacity:</strong> ${PropertyStorage.getUsed(propertyId)}/${PropertyStorage.getCapacity(propertyId)} lbs</p>
                 </div>
                 <div class="storage-tabs">
-                    <button class="storage-tab active" onclick="PropertyStorage.switchTab('${propertyId}', 'stored')">Stored Items</button>
-                    <button class="storage-tab" onclick="PropertyStorage.switchTab('${propertyId}', 'transfer')">Transfer Items</button>
+                    <button class="storage-tab active" data-action="tab-stored" data-property="${this.escapeHtml(propertyId)}">Stored Items</button>
+                    <button class="storage-tab" data-action="tab-transfer" data-property="${this.escapeHtml(propertyId)}">Transfer Items</button>
                 </div>
                 <div class="storage-content">
-                    <div id="property-storage-${propertyId}" class="storage-items"></div>
-                    <div id="property-transfer-${propertyId}" class="storage-transfer hidden"></div>
+                    <div id="property-storage-${this.escapeHtml(propertyId)}" class="storage-items"></div>
+                    <div id="property-transfer-${this.escapeHtml(propertyId)}" class="storage-transfer hidden"></div>
                 </div>
-                <div id="property-storage-info-${propertyId}" class="storage-info"></div>
+                <div id="property-storage-info-${this.escapeHtml(propertyId)}" class="storage-info"></div>
             </div>
         `;
 
         addMessage(`Managing storage for ${propertyType.name} in ${location ? location.name : 'Unknown'}`);
+
+        // 🖤 Attach tab event listeners after content is in DOM
+        setTimeout(() => {
+            document.querySelectorAll('.storage-tab[data-action]').forEach(btn => {
+                btn.onclick = () => {
+                    const propId = btn.dataset.property;
+                    const tab = btn.dataset.action === 'tab-stored' ? 'stored' : 'transfer';
+                    PropertyStorage.switchTab(propId, tab);
+                };
+            });
+        }, 0);
 
         PropertyStorage.updateDisplay(propertyId);
         PropertyStorage.updateTransferDisplay(propertyId);
@@ -309,11 +343,13 @@ const PropertyUI = {
         const roiDays = projectedIncome > 0 ? Math.round(calculatedPrice / projectedIncome) : Infinity;
         const requirements = PropertyPurchase.getRequirements(propertyId);
 
+        // 🖤 Escape propertyId to prevent XSS
+        const safePropertyId = this.escapeHtml(propertyId);
         const detailsHtml = `
-            <div class="property-details-modal">
+            <div class="property-details-modal" data-property-id="${safePropertyId}">
                 <div class="modal-header">
                     <h2>${propertyType.icon} ${propertyType.name}</h2>
-                    <button class="close-btn" onclick="PropertyUI.closePropertyDetails()">✕</button>
+                    <button class="close-btn" data-action="close">✕</button>
                 </div>
                 <div class="modal-content">
                     <div class="property-overview">
@@ -413,16 +449,25 @@ const PropertyUI = {
                 </div>
                 <div class="modal-footer">
                     <button class="purchase-btn ${PropertyPurchase.canAfford(propertyId) && requirements.every(req => req.met) ? 'enabled' : 'disabled'}"
-                            onclick="PropertyPurchase.purchase('${propertyId}')"
+                            data-action="purchase-property"
                             ${!PropertyPurchase.canAfford(propertyId) || !requirements.every(req => req.met) ? 'disabled' : ''}>
                         Purchase for ${calculatedPrice} gold
                     </button>
-                    <button class="cancel-btn" onclick="PropertyUI.closePropertyDetails()">Cancel</button>
+                    <button class="cancel-btn" data-action="close">Cancel</button>
                 </div>
             </div>
         `;
 
         this.showModal(detailsHtml);
+
+        // 🖤 Add purchase-property handler to the modal event listeners
+        const modal = document.querySelector('.property-details-modal');
+        if (modal) {
+            const purchaseBtn = modal.querySelector('[data-action="purchase-property"]');
+            if (purchaseBtn) {
+                purchaseBtn.onclick = () => PropertyPurchase.purchase(propertyId);
+            }
+        }
     },
 
     // 🎯 Helper - get item icon 🦇
@@ -460,7 +505,9 @@ const PropertyUI = {
     // 📦 Show modal helper 🌙
     showModal(html) {
         if (typeof ModalSystem !== 'undefined' && ModalSystem.showModal) {
-            return ModalSystem.showModal(html, 'property-modal-container');
+            const result = ModalSystem.showModal(html, 'property-modal-container');
+            this._attachModalEventListeners();
+            return result;
         }
 
         let modalContainer = document.getElementById('property-modal-container');
@@ -473,6 +520,29 @@ const PropertyUI = {
 
         modalContainer.innerHTML = html;
         modalContainer.style.display = 'flex';
+        this._attachModalEventListeners();
+    },
+
+    // 🖤 Attach event listeners to modal buttons - XSS-safe event delegation
+    _attachModalEventListeners() {
+        const modal = document.querySelector('.property-details-modal, .property-upgrade-modal, .storage-management-modal');
+        if (!modal) return;
+
+        const propertyId = modal.dataset.propertyId;
+
+        modal.querySelectorAll('[data-action]').forEach(btn => {
+            btn.onclick = () => {
+                switch(btn.dataset.action) {
+                    case 'close': this.closePropertyDetails(); break;
+                    case 'upgrades': this.showUpgradeInterface(propertyId); break;
+                    case 'storage': this.showStorageManagement(propertyId); break;
+                    case 'repair': PropertyUpgrades.repair(propertyId); break;
+                    case 'level-up': PropertyUpgrades.upgradeLevel(propertyId); break;
+                    case 'cancel-work': PropertySystem.cancelWorkItem(propertyId, btn.dataset.workId); break;
+                    case 'upgrade': PropertyUpgrades.upgrade(propertyId, btn.dataset.upgradeId); break;
+                }
+            };
+        });
     },
 
     // ❌ Close property details 🔮
@@ -559,7 +629,7 @@ const PropertyUI = {
             </div>
             <div class="upgrade-actions">
                 <button class="upgrade-btn ${upgrade.affordability && upgrade.requirementsMet ? 'enabled' : 'disabled'}"
-                        onclick="PropertyUpgrades.upgrade('${propertyId}', '${upgrade.id}')"
+                        data-action="upgrade" data-upgrade-id="${this.escapeHtml(upgrade.id)}"
                         ${!upgrade.affordability || !upgrade.requirementsMet ? 'disabled' : ''}>
                     ${upgrade.affordability && upgrade.requirementsMet ? 'Purchase Upgrade' : 'Cannot Purchase'}
                 </button>
@@ -639,15 +709,26 @@ const PropertyUI = {
             </div>
             <div class="property-card-actions">
                 <button class="purchase-btn ${property.affordability && requirementsMet ? 'enabled' : 'disabled'}"
-                        onclick="PropertyPurchase.purchase('${property.id}')"
+                        data-action="purchase" data-property="${this.escapeHtml(property.id)}"
                         ${!property.affordability || !requirementsMet ? 'disabled' : ''}>
                     ${property.affordability && requirementsMet ? 'Purchase' : 'Cannot Purchase'}
                 </button>
-                <button class="details-btn" onclick="PropertyUI.showPropertyPurchaseDetails('${property.id}')">
+                <button class="details-btn" data-action="view-details" data-property="${this.escapeHtml(property.id)}">
                     View Details
                 </button>
             </div>
         `;
+
+        // 🖤 Attach event listeners safely - no inline onclick
+        card.querySelectorAll('[data-action]').forEach(btn => {
+            btn.onclick = () => {
+                const propId = btn.dataset.property;
+                switch(btn.dataset.action) {
+                    case 'purchase': PropertyPurchase.purchase(propId); break;
+                    case 'view-details': this.showPropertyPurchaseDetails(propId); break;
+                }
+            };
+        });
 
         return card;
     }
