@@ -475,7 +475,7 @@ const KeyBindings = {
             localStorage.setItem(this.storageKey, JSON.stringify(this.current));
             console.log('⌨️ Key bindings saved to localStorage');
         } catch (e) {
-            console.error('⌨️ Failed to save key bindings:', e);
+            console.warn('⌨️ Failed to save key bindings - using defaults');
         }
     },
 
@@ -2487,8 +2487,8 @@ const game = {
             try {
                 localStorage.setItem('tradingGameAutoSave', JSON.stringify(saveData));
             } catch (error) {
-                console.error('Failed to save game data:', error);
-                addMessage('Failed to auto-save game!', 'error');
+                console.warn('Failed to auto-save game data');
+                addMessage('Auto-save failed - will retry', 'warning');
             }
             console.log('Game auto-saved');
         }
@@ -3371,7 +3371,7 @@ const GameWorld = {
         try {
             this.setupMarketPrices();
         } catch (error) {
-            console.error('❌ setupMarketPrices failed:', error.message);
+            console.warn('❌ setupMarketPrices failed:', error.message);
         }
 
         // Initialize new systems (wrap each in try-catch)
@@ -3381,7 +3381,7 @@ const GameWorld = {
                 console.log('✅ CityReputationSystem initialized');
             }
         } catch (error) {
-            console.error('❌ CityReputationSystem.init failed:', error.message);
+            console.warn('❌ CityReputationSystem.init failed:', error.message);
         }
 
         try {
@@ -3390,7 +3390,7 @@ const GameWorld = {
                 console.log('✅ CityEventSystem initialized');
             }
         } catch (error) {
-            console.error('❌ CityEventSystem.init failed:', error.message);
+            console.warn('❌ CityEventSystem.init failed:', error.message);
         }
 
         try {
@@ -3399,7 +3399,7 @@ const GameWorld = {
                 console.log('✅ MarketPriceHistory initialized');
             }
         } catch (error) {
-            console.error('❌ MarketPriceHistory.init failed:', error.message);
+            console.warn('❌ MarketPriceHistory.init failed:', error.message);
         }
 
         try {
@@ -3408,7 +3408,7 @@ const GameWorld = {
                 console.log('✅ DynamicMarketSystem initialized');
             }
         } catch (error) {
-            console.error('❌ DynamicMarketSystem.init failed:', error.message);
+            console.warn('❌ DynamicMarketSystem.init failed:', error.message);
         }
 
         console.log('✅ GameWorld initialization complete');
@@ -3423,10 +3423,8 @@ const GameWorld = {
             }
             console.log('✅ ItemDatabase is available, setting up market prices...');
         } catch (error) {
-            console.error('❌ ItemDatabase is not loaded! Skipping market setup.');
-            console.error('Error:', error.message);
-            console.error('This means item-database.js did not load properly.');
-            console.error('Market prices will not be available.');
+            // 🦇 ItemDatabase not loaded - market will use fallback pricing
+            console.warn('❌ ItemDatabase not loaded - using fallback market pricing');
             // Set empty market prices to prevent further errors
             Object.values(this.locations).forEach(location => {
                 location.marketPrices = {};
@@ -4143,9 +4141,17 @@ const perks = {
         description: "You spent years in the forest, felling trees with axe and saw.",
         startingLocation: 'darkwood_village', // Start at the logging village
         startingItems: {
-            timber: 5,
+            // 🪓 Tools of the trade
+            axe: 1,
+            // 🧥 Rugged work clothes
+            simple_clothes: 1,
+            leather_boots: 1,
+            // 📦 Resources from the forest
+            timber: 3,
             rope: 2,
-            bread: 2
+            // 🍞 Basic provisions
+            bread: 2,
+            water: 1
         },
         effects: {
             carryBonus: 0.3, // +30% carry capacity
@@ -4164,9 +4170,17 @@ const perks = {
         description: "You served in the king's army until the regiment was disbanded.",
         startingLocation: 'royal_capital', // Start near capital
         startingItems: {
+            // ⚔️ Military gear you kept
             iron_sword: 1,
-            military_rations: 3,
-            bandages: 2
+            leather_armor: 1,
+            helmet: 1,
+            // 🧥 Worn uniform
+            simple_clothes: 1,
+            leather_boots: 1,
+            // 🍖 Army provisions
+            military_rations: 2,
+            bandages: 2,
+            water: 1
         },
         effects: {
             combatBonus: 0.4, // +40% combat effectiveness
@@ -4186,9 +4200,17 @@ const perks = {
         description: "Once a noble, you lost your lands but retained your wealth and connections.",
         startingLocation: 'royal_capital', // Start at capital
         startingItems: {
+            // 👑 Remnants of nobility
             silk_garments: 1,
             jewelry: 1,
-            fine_wine: 2
+            // 🗡️ A noble's sidearm
+            dagger: 1,
+            // 🧥 Fine traveling attire
+            leather_boots: 1,
+            // 🍷 Luxuries you couldn't part with
+            fine_wine: 2,
+            cheese: 2,
+            bread: 1
         },
         effects: {
             goldBonus: 0.5, // +50% starting gold
@@ -4208,9 +4230,17 @@ const perks = {
         description: "You come from humble beginnings, knowing the value of hard work and every coin.",
         startingLocation: 'greendale', // Start at village
         startingItems: {
-            wheat: 5,
-            vegetables: 3,
-            bread: 3
+            // 🌾 Farm tools you brought
+            scythe: 1,
+            // 🧥 Simple farmer's clothes
+            simple_clothes: 1,
+            leather_boots: 1,
+            // 📦 Harvest from your farm
+            wheat: 3,
+            vegetables: 2,
+            // 🍞 Basic provisions
+            bread: 3,
+            water: 2
         },
         effects: {
             frugalBonus: 0.3, // +30% effectiveness of cost-saving measures
@@ -4230,8 +4260,16 @@ const perks = {
         description: "You were sworn to service, trained in combat and honor.",
         startingLocation: 'royal_capital', // Start at capital
         startingItems: {
+            // ⚔️ Knight's armaments
             steel_sword: 1,
-            shield: 1
+            shield: 1,
+            // 🛡️ Full armor set
+            chainmail: 1,
+            helmet: 1,
+            leather_boots: 1,
+            // 🍖 Travel provisions
+            military_rations: 2,
+            water: 1
         },
         effects: {
             combatBonus: 0.6, // +60% combat effectiveness
@@ -4251,8 +4289,17 @@ const perks = {
         description: "You learned trade from a master merchant in the bustling markets.",
         startingLocation: 'jade_harbor', // Start at the trading port
         startingItems: {
-            trade_goods: 5,
-            merchant_ledger: 1
+            // 📊 Tools of trade
+            merchant_ledger: 1,
+            // 🧥 Respectable merchant attire
+            simple_clothes: 1,
+            leather_boots: 1,
+            // 📦 Sample trade goods
+            trade_goods: 3,
+            spices: 2,
+            // 🍞 Provisions
+            bread: 2,
+            water: 1
         },
         effects: {
             negotiationBonus: 0.25, // +25% negotiation effectiveness
@@ -4272,9 +4319,17 @@ const perks = {
         description: "You traveled the land singing tales, learning many secrets.",
         startingLocation: 'silk_road_inn', // Start at the famous waystation
         startingItems: {
+            // 🎵 Your beloved instrument
             lute: 1,
+            // 🧥 Colorful performer's garb
+            simple_clothes: 1,
+            leather_boots: 1,
+            // 🗡️ Protection for the road
+            dagger: 1,
+            // 🍷 Provisions for the journey
             wine: 2,
-            bread: 2
+            bread: 2,
+            cheese: 1
         },
         effects: {
             charismaBonus: 3, // +3 charisma
@@ -4294,9 +4349,18 @@ const perks = {
         description: "You've lived a long life and gained wisdom through experience.",
         startingLocation: 'vineyard_village', // Start at peaceful village
         startingItems: {
-            herbs: 5,
+            // 🧙 Elder's accessories
             walking_staff: 1,
-            tea: 3
+            // 🧥 Comfortable elder's robes
+            simple_clothes: 1,
+            leather_boots: 1,
+            // 🌿 Medicinal knowledge
+            herbs: 3,
+            bandages: 2,
+            // ☕ Comforts of home
+            tea: 2,
+            bread: 2,
+            honey: 1
         },
         effects: {
             intelligenceBonus: 3, // +3 intelligence
@@ -4317,9 +4381,19 @@ const perks = {
         description: "You served in the sacred temples, learning ancient knowledge.",
         startingLocation: 'royal_capital', // Start at capital (has temples)
         startingItems: {
+            // ⛪ Sacred items
             holy_symbol: 1,
-            incense: 3,
-            holy_water: 2
+            incense: 2,
+            holy_water: 2,
+            // 🧥 Temple robes
+            simple_clothes: 1,
+            leather_boots: 1,
+            // 🌿 Healing supplies
+            herbs: 2,
+            bandages: 1,
+            // 🍞 Simple provisions
+            bread: 2,
+            water: 1
         },
         effects: {
             intelligenceBonus: 2, // +2 intelligence
@@ -4944,7 +5018,7 @@ function setupEventListeners() {
                         try {
                             saveData = JSON.parse(saveDataString);
                         } catch (error) {
-                            console.error('Failed to parse save data:', error);
+                            // 🦇 Corrupt save slot - skip it silently
                             continue;
                         }
                         if (saveData && saveData.player) {
@@ -4959,7 +5033,7 @@ function setupEventListeners() {
             }
             return saves.sort((a, b) => new Date(b.date) - new Date(a.date));
         } catch (error) {
-            console.error('Error loading saved games:', error);
+            // 🦇 Failed to enumerate saves - return empty list
             return [];
         }
     };
@@ -5245,7 +5319,8 @@ function setupDifficultyListeners() {
             try {
                 onDifficultyChange();
             } catch (error) {
-                console.error('❌ ERROR:', error);
+                // 🦇 Difficulty change handler failed - UI still works
+                console.warn('Difficulty change handler error');
             }
         }
     });
@@ -5259,7 +5334,7 @@ function setupDifficultyListeners() {
             try {
                 onDifficultyChange();
             } catch (error) {
-                console.error('❌ ERROR:', error);
+                // 🦇 Silently handle - radio still works
             }
         });
 
@@ -5268,7 +5343,7 @@ function setupDifficultyListeners() {
             try {
                 onDifficultyChange();
             } catch (error) {
-                console.error('❌ ERROR:', error);
+                // 🦇 Silently handle - radio still works
             }
         });
     });
@@ -5796,8 +5871,9 @@ function openPerkModal() {
         populatePerks(); // Refresh perks in modal
         updatePerkSelection(); // Update selection states
     } catch (error) {
-        console.error('Error populating perks:', error);
-        alert('Error populating perks: ' + error.message);
+        // 🦇 Perks failed to load - show user-friendly message
+        console.warn('Error populating perks:', error.message);
+        addMessage?.('Failed to load perks - please try again');
         return;
     }
 
@@ -6484,8 +6560,8 @@ function randomizeCharacter() {
         console.log('✅✅✅ RANDOMIZATION COMPLETE ✅✅✅');
 
     } catch (error) {
-        // 🖤 Single error log instead of verbose dump
-        console.error('🖤 Randomize character failed:', error.message);
+        // 🦇 Randomization failed - warn and let outer handler decide
+        console.warn('🖤 Randomize character failed:', error.message);
         throw error; // Re-throw so outer catch can also log it
     }
 }
@@ -6985,7 +7061,8 @@ function initializeGameWorld() {
     // Get the actual location data
     const startLocation = GameWorld.locations[startLocationId];
     if (!startLocation) {
-        console.error(`Starting location ${startLocationId} not found! Defaulting to greendale`);
+        // 🦇 Invalid start location - fall back to greendale silently
+        console.warn(`Starting location ${startLocationId} not found - using greendale`);
         startLocationId = 'greendale';
     }
 
@@ -9057,13 +9134,14 @@ function saveGame() {
             try {
                 localStorage.setItem('tradingGameSave', JSON.stringify(saveData));
             } catch (error) {
-                console.error('Failed to save game:', error);
-                addMessage('Failed to save game!', 'error');
+                // 🦇 localStorage full or unavailable
+                addMessage('Failed to save - storage full!', 'warning');
+                return;
             }
             addMessage('Game saved successfully!');
         } catch (error) {
-            console.error('Save failed:', error);
-            addMessage('Failed to save game!');
+            // 🦇 Game state couldn't be serialized
+            addMessage('Failed to save game!', 'warning');
         }
     }
 }
@@ -9080,8 +9158,8 @@ function loadGame() {
                 try {
                     parsedData = JSON.parse(saveData);
                 } catch (error) {
-                    console.error('Failed to parse save data:', error);
-                    addMessage('Save data is corrupted!', 'error');
+                    // 🦇 Corrupt save data - inform user
+                    addMessage('Save data is corrupted!', 'warning');
                     return;
                 }
                 game.loadState(parsedData);
@@ -9092,8 +9170,8 @@ function loadGame() {
                 addMessage('No saved game found!');
             }
         } catch (error) {
-            console.error('Load failed:', error);
-            addMessage('Failed to load game!');
+            // 🦇 Load failed - inform user
+            addMessage('Failed to load game!', 'warning');
         }
     }
 }

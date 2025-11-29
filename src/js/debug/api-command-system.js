@@ -316,6 +316,43 @@ const APICommandSystem = {
         });
 
         // ═══════════════════════════════════════════════════════════
+        // 🌦️ WEATHER HANDLERS - dramatic weather for events
+        // ═══════════════════════════════════════════════════════════
+
+        this.registerHandler('triggerWeather', (params, context) => {
+            const [eventType, duration] = params;
+            console.log(`🤖 Triggering weather event: ${eventType}`);
+            if (typeof WeatherSystem !== 'undefined' && WeatherSystem.triggerEventWeather) {
+                const options = duration ? { duration: parseInt(duration) } : {};
+                WeatherSystem.triggerEventWeather(eventType, options);
+                return { triggered: true, eventType };
+            }
+            return { triggered: false, error: 'WeatherSystem not available' };
+        });
+
+        this.registerHandler('forceWeather', (params, context) => {
+            const [weatherType, message] = params;
+            console.log(`🤖 Forcing weather: ${weatherType}`);
+            if (typeof WeatherSystem !== 'undefined' && WeatherSystem.forceWeather) {
+                WeatherSystem.forceWeather(weatherType, {
+                    message: message || null,
+                    saveCurrentWeather: true
+                });
+                return { forced: true, weatherType };
+            }
+            return { forced: false, error: 'WeatherSystem not available' };
+        });
+
+        this.registerHandler('restoreWeather', (params, context) => {
+            console.log(`🤖 Restoring weather after event`);
+            if (typeof WeatherSystem !== 'undefined' && WeatherSystem.restoreWeatherAfterEvent) {
+                WeatherSystem.restoreWeatherAfterEvent();
+                return { restored: true };
+            }
+            return { restored: false, error: 'WeatherSystem not available' };
+        });
+
+        // ═══════════════════════════════════════════════════════════
         // 💰 MERCHANT HANDLERS - trading and items
         // ═══════════════════════════════════════════════════════════
 
@@ -520,16 +557,49 @@ const APICommandSystem = {
             // check if quest is actually completable
             const progress = QuestSystem.checkProgress(questId);
             if (progress.status !== 'ready_to_complete') {
+                // Provide helpful message for NPC to respond with
+                let npcHint = '';
+                if (progress.objectives) {
+                    const incomplete = progress.objectives.filter(o =>
+                        (o.count !== undefined && (o.current || 0) < o.count) ||
+                        (o.completed === false)
+                    );
+                    if (incomplete.length > 0) {
+                        const obj = incomplete[0];
+                        if (obj.type === 'collect') {
+                            npcHint = `Player still needs ${obj.count - (obj.current || 0)} more ${obj.item}`;
+                        } else if (obj.type === 'defeat') {
+                            npcHint = `Player still needs to defeat ${obj.count - (obj.current || 0)} more ${obj.enemy}`;
+                        } else if (obj.type === 'visit') {
+                            npcHint = `Player hasn't visited ${obj.location} yet`;
+                        } else if (obj.type === 'talk') {
+                            npcHint = `Player needs to speak with ${obj.npc}`;
+                        }
+                    }
+                }
                 return {
                     success: false,
                     error: 'objectives_incomplete',
                     status: progress.status,
                     progress: progress.progress,
+                    npcHint: npcHint,
                     message: `Quest not ready - progress: ${progress.progress}`
                 };
             }
 
             const result = QuestSystem.completeQuest(questId);
+
+            // Handle validation errors from completeQuest
+            if (!result.success) {
+                // Add NPC-friendly hints for common errors
+                if (result.error === 'missing_collection_items') {
+                    result.npcHint = `Player claims to have ${result.item} but only has ${result.playerHas}/${result.required}. Ask them to gather more.`;
+                    if (typeof addMessage === 'function') {
+                        addMessage(`You need ${result.required - result.playerHas} more ${result.item}!`, 'warning');
+                    }
+                }
+                return result;
+            }
 
             // announce next quest in chain if there is one
             if (result.success && result.nextQuest) {

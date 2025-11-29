@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // 🗺️ GAME WORLD SYSTEM - The Realm Where Dreams Die and Gold Lives
 // ═══════════════════════════════════════════════════════════════
-// File Version: 1.0
+// File Version: 0.81
 // Made by Unity AI Lab - Hackall360, Sponge, GFourteen
 // ═══════════════════════════════════════════════════════════════
 // 🖤 Extracted from game.js - now the world has its own dark domain
@@ -772,6 +772,144 @@ const GameWorld = {
     },
 
     // ═══════════════════════════════════════════════════════════════
+    // 👥 NPC SPAWN CONFIG - who the fuck lives where? 🖤
+    // ═══════════════════════════════════════════════════════════════
+    // 🦇 Maps location types to NPC types that spawn there
+    // This makes People panel actually show people, imagine that
+    npcSpawnsByLocationType: {
+        capital: ['innkeeper', 'blacksmith', 'jeweler', 'tailor', 'banker', 'guard', 'noble', 'general_store', 'apothecary'],
+        city: ['innkeeper', 'blacksmith', 'general_store', 'apothecary', 'guard', 'merchant', 'tailor'],
+        town: ['innkeeper', 'blacksmith', 'general_store', 'farmer', 'guard'],
+        village: ['innkeeper', 'farmer', 'general_store'],
+        mine: ['miner', 'blacksmith', 'general_store'],
+        forest: ['hunter', 'herbalist', 'druid'],
+        farm: ['farmer', 'general_store'],
+        inn: ['innkeeper', 'traveler', 'merchant', 'guard'],
+        cave: ['explorer', 'miner'],
+        dungeon: ['adventurer', 'guard'],
+        ruins: ['scholar', 'adventurer', 'explorer'],
+        outpost: ['guard', 'blacksmith', 'general_store', 'healer'],
+        port: ['ferryman', 'merchant', 'sailor', 'general_store', 'fisherman'],
+        temple: ['priest', 'healer'],
+        grove: ['druid', 'herbalist']
+    },
+
+    // 🖤 Get NPCs that should spawn at a location
+    getNPCsForLocation(locationId) {
+        const location = this.locations[locationId];
+        if (!location) return [];
+
+        // 💀 Check if location has explicit NPCs defined
+        if (location.npcs && location.npcs.length > 0) {
+            return location.npcs;
+        }
+
+        // 🦇 Fall back to type-based spawns
+        const typeNPCs = this.npcSpawnsByLocationType[location.type] || [];
+
+        // 🖤 Scale number of NPCs based on population
+        let npcCount = 2; // minimum 2 NPCs
+        if (location.population >= 1000) npcCount = 6;
+        else if (location.population >= 500) npcCount = 5;
+        else if (location.population >= 100) npcCount = 4;
+        else if (location.population >= 50) npcCount = 3;
+
+        // 🦇 Return the first N NPCs of this type
+        return typeNPCs.slice(0, Math.min(npcCount, typeNPCs.length));
+    },
+
+    // 💀 Get NPC data with persona info for display
+    getNPCDataForLocation(locationId) {
+        const npcTypes = this.getNPCsForLocation(locationId);
+        const location = this.locations[locationId];
+
+        return npcTypes.map(npcType => {
+            // 🖤 Try to get persona from database
+            let persona = null;
+            if (typeof NPCPersonaDatabase !== 'undefined') {
+                persona = NPCPersonaDatabase.getPersona(npcType);
+            }
+
+            // 🦇 Generate unique ID for this NPC at this location
+            const npcId = `${locationId}_${npcType}`;
+
+            return {
+                id: npcId,
+                type: npcType,
+                name: persona?.name || this.formatNPCName(npcType),
+                title: persona?.title || this.getNPCTitle(npcType),
+                voice: persona?.voice || 'nova',
+                personality: persona?.personality || 'friendly',
+                location: locationId,
+                locationName: location?.name || locationId,
+                ...persona
+            };
+        });
+    },
+
+    // 🖤 Helper: format NPC type to display name
+    formatNPCName(npcType) {
+        const names = {
+            innkeeper: 'The Innkeeper',
+            blacksmith: 'The Blacksmith',
+            general_store: 'General Store Owner',
+            apothecary: 'The Apothecary',
+            jeweler: 'The Jeweler',
+            tailor: 'The Tailor',
+            banker: 'The Banker',
+            guard: 'Town Guard',
+            merchant: 'Traveling Merchant',
+            farmer: 'Local Farmer',
+            miner: 'Miner',
+            hunter: 'Hunter',
+            herbalist: 'Herbalist',
+            druid: 'Forest Druid',
+            explorer: 'Explorer',
+            adventurer: 'Adventurer',
+            scholar: 'Scholar',
+            healer: 'Healer',
+            ferryman: 'Ferryman',
+            sailor: 'Sailor',
+            fisherman: 'Fisherman',
+            traveler: 'Weary Traveler',
+            noble: 'Noble',
+            priest: 'Priest'
+        };
+        return names[npcType] || npcType.charAt(0).toUpperCase() + npcType.slice(1).replace(/_/g, ' ');
+    },
+
+    // 🦇 Helper: get NPC title based on type
+    getNPCTitle(npcType) {
+        const titles = {
+            innkeeper: 'Keeper of the Inn',
+            blacksmith: 'Master of the Forge',
+            general_store: 'Purveyor of Goods',
+            apothecary: 'Keeper of Remedies',
+            jeweler: 'Dealer in Precious Things',
+            tailor: 'Crafter of Fine Garments',
+            banker: 'Guardian of Gold',
+            guard: 'Protector of the Peace',
+            merchant: 'Dealer in Trade Goods',
+            farmer: 'Tiller of the Land',
+            miner: 'Delver of the Deep',
+            hunter: 'Tracker of Game',
+            herbalist: 'Gatherer of Plants',
+            druid: 'Keeper of the Grove',
+            explorer: 'Seeker of the Unknown',
+            adventurer: 'Seeker of Fortune',
+            scholar: 'Keeper of Knowledge',
+            healer: 'Mender of Wounds',
+            ferryman: 'Master of the Waters',
+            sailor: 'Man of the Sea',
+            fisherman: 'Catcher of Fish',
+            traveler: 'Wanderer of Roads',
+            noble: 'Person of Standing',
+            priest: 'Servant of the Divine'
+        };
+        return titles[npcType] || 'Local Resident';
+    },
+
+    // ═══════════════════════════════════════════════════════════════
     // 🌙 RUNTIME STATE - Unlocked regions and visited locations
     // ═══════════════════════════════════════════════════════════════
     unlockedRegions: [],
@@ -791,7 +929,7 @@ const GameWorld = {
         try {
             this.setupMarketPrices();
         } catch (error) {
-            console.error('❌ setupMarketPrices failed:', error.message);
+            console.warn('❌ setupMarketPrices failed:', error.message);
         }
 
         // ⚰️ Initialize dependent systems (wrap each in try-catch)
@@ -801,7 +939,7 @@ const GameWorld = {
                 console.log('✅ CityReputationSystem initialized');
             }
         } catch (error) {
-            console.error('❌ CityReputationSystem.init failed:', error.message);
+            console.warn('❌ CityReputationSystem.init failed:', error.message);
         }
 
         try {
@@ -810,7 +948,7 @@ const GameWorld = {
                 console.log('✅ CityEventSystem initialized');
             }
         } catch (error) {
-            console.error('❌ CityEventSystem.init failed:', error.message);
+            console.warn('❌ CityEventSystem.init failed:', error.message);
         }
 
         try {
@@ -819,7 +957,7 @@ const GameWorld = {
                 console.log('✅ MarketPriceHistory initialized');
             }
         } catch (error) {
-            console.error('❌ MarketPriceHistory.init failed:', error.message);
+            console.warn('❌ MarketPriceHistory.init failed:', error.message);
         }
 
         try {
@@ -828,7 +966,7 @@ const GameWorld = {
                 console.log('✅ DynamicMarketSystem initialized');
             }
         } catch (error) {
-            console.error('❌ DynamicMarketSystem.init failed:', error.message);
+            console.warn('❌ DynamicMarketSystem.init failed:', error.message);
         }
 
         console.log('✅ GameWorld initialization complete - the realm awaits');
@@ -845,7 +983,8 @@ const GameWorld = {
             }
             console.log('✅ ItemDatabase is available, setting up market prices...');
         } catch (error) {
-            console.error('❌ ItemDatabase is not loaded! Skipping market setup.');
+            // 🦇 ItemDatabase not ready - use empty markets
+            console.warn('❌ ItemDatabase not loaded - using fallback market pricing');
             Object.values(this.locations).forEach(location => {
                 location.marketPrices = {};
             });
@@ -1019,6 +1158,15 @@ const GameWorld = {
         const toLocation = this.locations[toId];
         if (!fromLocation || !toLocation) return 0;
 
+        // 💀 Check for Dungeon Bonanza event (July 18th) - instant 30 min dungeon travel
+        if (typeof DungeonBonanzaSystem !== 'undefined') {
+            const bonanzaOverride = DungeonBonanzaSystem.getDungeonTravelTimeOverride(fromId, toId);
+            if (bonanzaOverride !== null) {
+                console.log(`💀 Dark Convergence active! Dungeon travel reduced to ${bonanzaOverride} minutes`);
+                return bonanzaOverride;
+            }
+        }
+
         let baseTime = (fromLocation.travelCost.base + toLocation.travelCost.base) * 5;
         const transport = transportationOptions[game.player.transportation];
         const speedModifier = transport ? transport.speedModifier : 1.0;
@@ -1078,6 +1226,11 @@ const GameWorld = {
         if (!this.visitedLocations.includes(locationId)) {
             this.visitedLocations.push(locationId);
             addMessage(`📍 First time visiting ${destination.name}!`);
+        }
+
+        // 🦇 Update map backdrop based on location type (dungeon vs normal)
+        if (typeof GameWorldRenderer !== 'undefined' && GameWorldRenderer.updateBackdropForLocation) {
+            GameWorldRenderer.updateBackdropForLocation(locationId);
         }
 
         updateLocationInfo();

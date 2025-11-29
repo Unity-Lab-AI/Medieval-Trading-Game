@@ -13,6 +13,7 @@ const MenuWeatherSystem = {
     currentSeason: null,
     particleInterval: null,
     lightningInterval: null,
+    meteorInterval: null,
     isActive: false,
 
     // 🌦️ Available seasons with their weights (higher = more likely)
@@ -22,7 +23,8 @@ const MenuWeatherSystem = {
         thundersnow: { weight: 8, name: 'Lightning Blizzard' }, // 🖤 Rare! Snow + Lightning
         autumn: { weight: 20, name: 'Autumn Winds' },     // Falling leaves
         spring: { weight: 18, name: 'Spring Blossoms' },  // Cherry petals
-        summer: { weight: 11, name: 'Summer Dusk' }       // Dust motes + sun rays
+        summer: { weight: 11, name: 'Summer Dusk' },      // Dust motes + sun rays
+        apocalypse: { weight: 0, name: 'The Dark Convergence' } // ☄️ Meteors & doom (debug only)
     },
 
     // 🎲 Select random season based on weights
@@ -41,11 +43,16 @@ const MenuWeatherSystem = {
 
     // 🚀 Initialize the weather system
     init() {
+        console.log('🌦️ MenuWeatherSystem.init() called');
         this.container = document.getElementById('menu-weather-container');
         if (!this.container) {
-            console.warn('🌦️ Menu weather container not found');
+            console.warn('🌦️ Menu weather container not found - retrying in 500ms');
+            setTimeout(() => this.init(), 500);
             return;
         }
+
+        // 🖤 Clear any existing content
+        this.container.innerHTML = '';
 
         // Select random season
         this.currentSeason = this.selectRandomSeason();
@@ -87,7 +94,129 @@ const MenuWeatherSystem = {
             case 'summer':
                 this.startSummer();
                 break;
+            case 'apocalypse':
+                this.startApocalypse();
+                break;
         }
+    },
+
+    // ☄️ APOCALYPSE - Meteors, red sky, doom
+    startApocalypse() {
+        // Add red pulsing sky overlay
+        const skyOverlay = document.createElement('div');
+        skyOverlay.className = 'apocalypse-sky';
+        skyOverlay.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at top, rgba(80, 0, 0, 0.6) 0%, rgba(30, 0, 0, 0.8) 100%);
+            animation: apocalypsePulse 3s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 1;
+        `;
+        this.container.appendChild(skyOverlay);
+
+        // Add apocalypse keyframes if not exists
+        if (!document.getElementById('apocalypse-keyframes')) {
+            const style = document.createElement('style');
+            style.id = 'apocalypse-keyframes';
+            style.textContent = `
+                @keyframes apocalypsePulse {
+                    0%, 100% { opacity: 0.7; }
+                    50% { opacity: 1; }
+                }
+                @keyframes meteorFall {
+                    0% { transform: translateX(0) translateY(0) rotate(-45deg); opacity: 1; }
+                    100% { transform: translateX(300px) translateY(100vh) rotate(-45deg); opacity: 0; }
+                }
+                @keyframes emberFloat {
+                    0% { transform: translateY(0) scale(1); opacity: 0.8; }
+                    100% { transform: translateY(-100px) scale(0.5); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // Start meteor shower
+        this.startMeteorShower();
+
+        // Create floating embers
+        this.particleInterval = setInterval(() => {
+            if (!this.isActive) return;
+
+            const ember = document.createElement('div');
+            ember.style.cssText = `
+                position: absolute;
+                bottom: 0;
+                left: ${Math.random() * 100}%;
+                width: ${3 + Math.random() * 5}px;
+                height: ${3 + Math.random() * 5}px;
+                background: radial-gradient(circle, #ff6600, #ff0000);
+                border-radius: 50%;
+                animation: emberFloat ${3 + Math.random() * 4}s ease-out forwards;
+                pointer-events: none;
+                z-index: 5;
+            `;
+            this.container.appendChild(ember);
+
+            setTimeout(() => ember.remove(), 7000);
+        }, 100);
+
+        // Add lightning for dramatic effect
+        this.startLightning();
+
+        // Add fog for atmosphere
+        this.createFog(2);
+    },
+
+    // ☄️ Meteor shower effect
+    startMeteorShower() {
+        const spawnMeteor = () => {
+            if (!this.isActive) return;
+
+            const meteor = document.createElement('div');
+            meteor.style.cssText = `
+                position: absolute;
+                top: -50px;
+                left: ${Math.random() * 80}%;
+                font-size: ${20 + Math.random() * 30}px;
+                animation: meteorFall ${1.5 + Math.random()}s linear forwards;
+                pointer-events: none;
+                z-index: 10;
+                filter: drop-shadow(0 0 10px #ff4400) drop-shadow(0 0 20px #ff0000);
+            `;
+            meteor.textContent = '☄️';
+            this.container.appendChild(meteor);
+
+            // Create impact flash
+            setTimeout(() => {
+                if (!this.isActive) return;
+                const flash = document.createElement('div');
+                flash.style.cssText = `
+                    position: absolute;
+                    bottom: 0;
+                    left: ${parseFloat(meteor.style.left) + 15}%;
+                    width: 100px;
+                    height: 50px;
+                    background: radial-gradient(ellipse at bottom, rgba(255, 100, 0, 0.8), transparent);
+                    animation: fadeOut 0.5s forwards;
+                    pointer-events: none;
+                    z-index: 4;
+                `;
+                this.container.appendChild(flash);
+                setTimeout(() => flash.remove(), 500);
+            }, 1200 + Math.random() * 500);
+
+            setTimeout(() => meteor.remove(), 3000);
+
+            // Next meteor in 3-10 seconds
+            this.meteorInterval = setTimeout(spawnMeteor, 3000 + Math.random() * 7000);
+        };
+
+        // First meteor immediately
+        spawnMeteor();
     },
 
     // ⛈️ STORM - Rain with lightning
@@ -396,6 +525,11 @@ const MenuWeatherSystem = {
         if (this.lightningInterval) {
             clearTimeout(this.lightningInterval);
             this.lightningInterval = null;
+        }
+
+        if (this.meteorInterval) {
+            clearTimeout(this.meteorInterval);
+            this.meteorInterval = null;
         }
 
         if (this.container) {

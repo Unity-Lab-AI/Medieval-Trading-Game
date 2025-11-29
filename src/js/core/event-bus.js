@@ -4,24 +4,24 @@
 // File Version: GameConfig.version.file
 // Made by Unity AI Lab - Hackall360, Sponge, GFourteen
 // ═══════════════════════════════════════════════════════════════
-// This is the event bus for inter-system communication.
-// Systems emit events here instead of calling each other directly.
-// This decouples systems and makes the code more maintainable.
+// 💀 The pulse of the machine - systems scream into the void here
+// 🦇 No direct calls, only dark signals echoing through the network
+// 🗡️ Decoupled chaos - beautiful, maintainable isolation
 // ═══════════════════════════════════════════════════════════════
 
 const EventBus = {
-    // Map of event name -> Set of callbacks
+    // 🖤 Map of screams -> Set of ears listening
     listeners: new Map(),
 
-    // Track event history for debugging
+    // 💀 Track event history - the digital graveyard of past signals
     history: [],
     maxHistory: 100,
 
-    // Whether to log events (for debugging)
+    // 🦇 Whether to log events - paranoid mode for the curious
     verbose: false,
 
     // ═══════════════════════════════════════════════════════════
-    // 📡 CORE METHODS
+    // 📡 CORE METHODS - The dark API of communication
     // ═══════════════════════════════════════════════════════════
 
     /**
@@ -36,7 +36,7 @@ const EventBus = {
         }
         this.listeners.get(event).add(callback);
 
-        // Return unsubscribe function for easy cleanup
+        // 🗡️ Return unsubscribe function - cutting ties is sometimes necessary
         return () => this.off(event, callback);
     },
 
@@ -48,7 +48,7 @@ const EventBus = {
     off(event, callback) {
         if (this.listeners.has(event)) {
             this.listeners.get(event).delete(callback);
-            // Clean up empty sets
+            // 💀 Clean up empty sets - no ghosts allowed
             if (this.listeners.get(event).size === 0) {
                 this.listeners.delete(event);
             }
@@ -75,32 +75,34 @@ const EventBus = {
      * @param {*} data - Data to pass to callbacks
      */
     emit(event, data = null) {
-        // Log if verbose
+        // 🦇 Log if verbose - watching every whisper
         if (this.verbose) {
             console.log(`📡 EventBus: ${event}`, data);
         }
 
-        // Add to history
+        // 💀 Add to history - documenting the chaos
         this.addToHistory(event, data);
 
-        // Call all listeners
+        // 🖤 Call all listeners - spread the dark message
         if (this.listeners.has(event)) {
             this.listeners.get(event).forEach(callback => {
                 try {
                     callback(data);
                 } catch (error) {
-                    console.error(`❌ EventBus: Error in handler for '${event}':`, error);
+                    // 🦇 Event handler crashed - log for devs
+                    console.warn(`❌ EventBus: Handler error for '${event}':`, error.message);
                 }
             });
         }
 
-        // Also emit to wildcard listeners
+        // 🌙 Also emit to wildcard listeners - the paranoid ones who hear everything
         if (this.listeners.has('*')) {
             this.listeners.get('*').forEach(callback => {
                 try {
                     callback({ event, data });
                 } catch (error) {
-                    console.error(`❌ EventBus: Error in wildcard handler:`, error);
+                    // 🦇 Wildcard handler crashed
+                    console.warn(`❌ EventBus: Wildcard handler error:`, error.message);
                 }
             });
         }
@@ -129,7 +131,8 @@ const EventBus = {
                     promises.push(result);
                 }
             } catch (error) {
-                console.error(`❌ EventBus: Error in async handler for '${event}':`, error);
+                // 🦇 Async event handler crashed
+                console.warn(`❌ EventBus: Async handler error for '${event}':`, error.message);
             }
         });
 
@@ -137,7 +140,7 @@ const EventBus = {
     },
 
     // ═══════════════════════════════════════════════════════════
-    // 🔧 UTILITY METHODS
+    // 🔧 UTILITY METHODS - Tools for the obsessed
     // ═══════════════════════════════════════════════════════════
 
     /**
@@ -179,7 +182,7 @@ const EventBus = {
     },
 
     // ═══════════════════════════════════════════════════════════
-    // 📜 HISTORY & DEBUGGING
+    // 📜 HISTORY & DEBUGGING - Peer into the past
     // ═══════════════════════════════════════════════════════════
 
     addToHistory(event, data) {
@@ -189,7 +192,7 @@ const EventBus = {
             timestamp: Date.now()
         });
 
-        // Keep history bounded
+        // 💀 Keep history bounded - can't remember everything forever
         while (this.history.length > this.maxHistory) {
             this.history.shift();
         }
@@ -236,92 +239,92 @@ const EventBus = {
 };
 
 // ═══════════════════════════════════════════════════════════════
-// 🎯 STANDARD EVENT NAMES
+// 🎯 STANDARD EVENT NAMES - The vocabulary of darkness
 // ═══════════════════════════════════════════════════════════════
-// Use these constants to avoid typos in event names
+// 💀 Use these constants to avoid typos - precision matters when screaming into the void
 
 EventBus.EVENTS = {
-    // Game lifecycle
+    // 🖤 Game lifecycle - birth, death, resurrection
     GAME_READY: 'game:ready',
     GAME_STARTED: 'game:started',
     GAME_PAUSED: 'game:paused',
     GAME_RESUMED: 'game:resumed',
     GAME_OVER: 'game:over',
 
-    // Player events
+    // 💀 Player events - the protagonist's suffering
     PLAYER_CREATED: 'player:created',
     PLAYER_GOLD_CHANGED: 'player:gold_changed',
     PLAYER_STATS_CHANGED: 'player:stats_changed',
     PLAYER_LEVEL_UP: 'player:level_up',
     PLAYER_DIED: 'player:died',
 
-    // Inventory events
+    // 🎒 Inventory events - hoarding and loss
     INVENTORY_CHANGED: 'inventory:changed',
     ITEM_ADDED: 'inventory:item_added',
     ITEM_REMOVED: 'inventory:item_removed',
     ITEM_USED: 'inventory:item_used',
     ITEM_EQUIPPED: 'inventory:item_equipped',
 
-    // Travel events
+    // 🚶 Travel events - the journey never ends
     TRAVEL_STARTED: 'travel:started',
     TRAVEL_PROGRESS: 'travel:progress',
     TRAVEL_COMPLETED: 'travel:completed',
     TRAVEL_CANCELLED: 'travel:cancelled',
     LOCATION_CHANGED: 'travel:location_changed',
 
-    // Trading events
+    // 💰 Trading events - capitalism in the shadows
     TRADE_STARTED: 'trade:started',
     TRADE_COMPLETED: 'trade:completed',
     ITEM_BOUGHT: 'trade:item_bought',
     ITEM_SOLD: 'trade:item_sold',
 
-    // Property events
+    // 🏚️ Property events - owning pieces of the wasteland
     PROPERTY_PURCHASED: 'property:purchased',
     PROPERTY_SOLD: 'property:sold',
     PROPERTY_UPGRADED: 'property:upgraded',
     PROPERTY_INCOME: 'property:income',
 
-    // Employee events
+    // 👥 Employee events - managing the wage slaves
     EMPLOYEE_HIRED: 'employee:hired',
     EMPLOYEE_FIRED: 'employee:fired',
     EMPLOYEE_ASSIGNED: 'employee:assigned',
     EMPLOYEE_WAGES_PAID: 'employee:wages_paid',
 
-    // Quest events
+    // 📜 Quest events - purpose in the meaningless
     QUEST_ACCEPTED: 'quest:accepted',
     QUEST_PROGRESS: 'quest:progress',
     QUEST_COMPLETED: 'quest:completed',
     QUEST_FAILED: 'quest:failed',
 
-    // Achievement events
+    // 🏆 Achievement events - validation from the void
     ACHIEVEMENT_UNLOCKED: 'achievement:unlocked',
 
-    // Time events
+    // ⏰ Time events - the relentless march
     TIME_TICK: 'time:tick',
     HOUR_CHANGED: 'time:hour_changed',
     DAY_CHANGED: 'time:day_changed',
 
-    // Combat/Dungeon events
+    // 🗡️ Combat/Dungeon events - violence in the depths
     COMBAT_STARTED: 'combat:started',
     COMBAT_ENDED: 'combat:ended',
     DUNGEON_ENTERED: 'dungeon:entered',
     DUNGEON_EXITED: 'dungeon:exited',
     BOSS_DEFEATED: 'dungeon:boss_defeated',
 
-    // Save/Load events
+    // 💾 Save/Load events - preserving existence
     GAME_SAVED: 'save:completed',
     GAME_LOADED: 'load:completed',
 
-    // UI events
+    // 🎨 UI events - the face of the machine
     PANEL_OPENED: 'ui:panel_opened',
     PANEL_CLOSED: 'ui:panel_closed',
     NOTIFICATION_SHOWN: 'ui:notification',
 
-    // Crafting events
+    // 🔨 Crafting events - creating from destruction
     CRAFTING_STARTED: 'crafting:started',
     CRAFTING_COMPLETED: 'crafting:completed',
 
-    // NPC events
+    // 🧑 NPC events - the others we pretend matter
     NPC_DIALOGUE_STARTED: 'npc:dialogue_started',
     NPC_DIALOGUE_ENDED: 'npc:dialogue_ended',
     NPC_TRADE_OPENED: 'npc:trade_opened'

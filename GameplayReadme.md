@@ -156,7 +156,15 @@ Choose starting bonuses that define your playstyle:
 
 ## 🗺️ THE WORLD MAP
 
-The kingdom consists of **6 regions** radiating from the Royal Capital:
+The kingdom consists of **6 regions** radiating from the Royal Capital, featuring **42 unique locations** spread across a spoke-and-hub layout. The world map supports **seasonal backdrop images** that crossfade as the seasons change in-game.
+
+**Seasonal Backdrops:**
+- 🌸 **Spring** - Cherry blossoms, fresh green meadows
+- ☀️ **Summer** - Lush forests, golden wheat fields
+- 🍂 **Autumn** - Orange/red foliage, harvest colors
+- ❄️ **Winter** - Snow blankets, frozen rivers
+
+*See `gameworldprompt.md` for AI image generation prompts to create custom backdrops.*
 
 ### Regions
 
@@ -858,13 +866,45 @@ ROI = 2,500 / 5.5 = **454 days to profit**
 
 ### Survival Stats
 
-| Stat | Decay Rate | Empty Penalty |
-|------|------------|---------------|
-| **Hunger** | -1 per 5min | -2 health/5min |
-| **Thirst** | -2 per 5min | -3 health/5min |
-| **Stamina** | -0.5 per 5min | Slower travel |
-| **Health** | Varies | Death at 0 |
-| **Happiness** | Varies | Affects all stats |
+Stats now decay automatically as time passes. The decay system runs every 30 game minutes and is affected by the current season.
+
+| Stat | Base Decay | Empty Penalty | Notes |
+|------|------------|---------------|-------|
+| **Hunger** | -1 per 30min | -1 health/tick | Affected by season |
+| **Thirst** | -1.2 per 30min | -1.5 health/tick | Higher in summer |
+| **Stamina** | -2 while traveling | Slower travel | Recovers when resting |
+| **Health** | Varies | Death at 0 | Damaged by starvation/dehydration |
+| **Happiness** | Varies | Affects all stats | Drops when other stats low |
+
+### Seasonal Effects on Stats
+
+Each season modifies stat decay rates:
+
+| Season | Hunger Drain | Thirst Drain | Stamina Drain |
+|--------|--------------|--------------|---------------|
+| **Spring** | 1.0x | 1.0x | 0.95x |
+| **Summer** | 0.9x | **1.3x** | 1.1x |
+| **Autumn** | 1.1x | 0.9x | 1.0x |
+| **Winter** | **1.3x** | 0.7x | **1.4x** |
+
+*In summer, carry extra water. In winter, stock up on food and rest often.*
+
+### Weather System
+
+The world has dynamic weather that affects gameplay:
+
+| Weather | Visual Effect | Gameplay Effect |
+|---------|--------------|-----------------|
+| **Clear** ☀️ | Sunny skies | Normal travel speed |
+| **Cloudy** ☁️ | Overcast | Slightly slower travel |
+| **Rain** 🌧️ | Rain particles | -10% travel speed |
+| **Storm** ⛈️ | Rain + Lightning | -20% speed, +encounter chance |
+| **Fog** 🌫️ | Dense fog | -15% speed, reduced visibility |
+| **Snow** ❄️ | Snowflakes | -25% speed (winter only) |
+| **Blizzard** 🌨️ | Heavy snow + wind | -40% speed, +stamina drain |
+| **Apocalypse** ☄️ | Meteors, red sky | -50% speed, 2x encounters |
+
+Weather changes naturally based on season and time, but certain events (like The Dark Convergence) can trigger special weather.
 
 ### Death
 When health hits 0, you die. Your high score is recorded based on:
@@ -873,6 +913,57 @@ When health hits 0, you die. Your high score is recorded based on:
 - Cause of death
 
 *There is no respawn. Only a new game. Like life itself.*
+
+---
+
+## 💀 THE DARK CONVERGENCE (July 18th)
+
+*"Once a year, the veil between worlds thins, and the dungeons call to those brave enough to answer..."*
+
+Every **July 18th**, a special event occurs called **The Dark Convergence**. On this day:
+
+| Effect | Normal | During Event |
+|--------|--------|--------------|
+| **Dungeon Travel Time** | 60-120 minutes | **30 minutes** |
+| **Dungeon Cooldowns** | 12 hours | **REMOVED** |
+| **Boss Fights** | Limited by cooldowns | **Unlimited** |
+
+### Why It Matters
+
+The "Dungeon Crawler" hidden achievement requires defeating **50 dungeon bosses within 5 in-game years**. With normal 12-hour cooldowns, this is extremely challenging. The Dark Convergence makes it possible to complete this achievement in a single glorious day of dungeon crawling!
+
+### Strategy for July 18th
+
+1. **Prepare beforehand** - Stock up on food, bandages, and weapons
+2. **Start at midnight** - You have 24 hours of dungeon madness
+3. **Travel fast** - Every dungeon is only 30 minutes away
+4. **No cooldowns** - Hit every dungeon multiple times!
+5. **Track your kills** - You can clear 20+ dungeons in one day
+
+### Dungeon Backdrop
+
+When you enter a dungeon, cave, ruins, or mine, the world map fades to a dark **dungeon backdrop** to set the mood. The backdrop transitions smoothly as you travel in and out of dungeon locations.
+
+### ☄️ Apocalypse Weather
+
+During The Dark Convergence, the world is consumed by apocalyptic weather:
+
+- **☄️ Meteor Showers** - Fiery meteors streak across the sky every 3-10 seconds
+- **🔴 Red Sky** - Pulsing crimson atmosphere
+- **🔥 Embers** - Floating fire particles rise from below
+- **⚡ Lightning** - Intense electrical storms
+
+This dramatic effect triggers automatically on July 18th, or can be activated manually with the `doom` debug command.
+
+### The Doom Command
+
+For those who want to summon The Dark Convergence at will, the `doom` debug command triggers:
+
+1. **Apocalypse Weather** - Full meteor shower effect
+2. **Dungeon World Backdrop** - Map fades to dungeon view
+3. **Bonanza Benefits** - 30-min travel + no cooldowns for one game day
+
+This works on both the **main menu** (menu weather system) and **in-game** (game weather system).
 
 ---
 
@@ -1264,12 +1355,16 @@ The game features **57 achievements** across 12 categories, including 10 hidden 
 ```
 /
 ├── index.html                    # Main game entry point
-├── README.md                     # This file (you're reading it!)
+├── GameplayReadme.md             # This file (you're reading it!)
+├── NerdReadme.md                 # Technical documentation for developers
+├── DebuggerReadme.md             # Debug commands and cheat codes
+├── gameworld.md                  # Complete world data (42 locations, coordinates, connections)
+├── gameworldprompt.md            # AI prompts for generating backdrop images
 ├── todo.md                       # Development tasks
 ├── src/                          # Source code directory
 │   ├── js/                       # JavaScript files
 │   │   ├── game.js               # Main game logic
-│   │   ├── game-world-renderer.js # World map rendering
+│   │   ├── game-world-renderer.js # World map rendering + seasonal backdrops
 │   │   ├── item-database.js      # All items definition
 │   │   ├── trading-system.js     # Buy/sell mechanics
 │   │   ├── travel-system.js      # Movement and journeys
@@ -1284,6 +1379,10 @@ The game features **57 achievements** across 12 categories, including 10 hidden 
 │   └── data/                     # Data and docs
 └── assets/                       # Static assets
     ├── images/                   # Image assets
+    │   ├── world-map-spring.png  # Spring seasonal backdrop
+    │   ├── world-map-summer.png  # Summer seasonal backdrop
+    │   ├── world-map-autumn.png  # Autumn seasonal backdrop
+    │   └── world-map-winter.png  # Winter seasonal backdrop
     ├── sounds/                   # Sound effects
     └── music/                    # Background music
 ```
@@ -1305,7 +1404,7 @@ The game features **57 achievements** across 12 categories, including 10 hidden 
 ```
 ═══════════════════════════════════════════════════════════════════════
                     🖤 MEDIEVAL TRADING GAME 🖤
-                         Version 0.7
+                         Version 0.8
 ═══════════════════════════════════════════════════════════════════════
 
     Conjured by: Unity AI Lab

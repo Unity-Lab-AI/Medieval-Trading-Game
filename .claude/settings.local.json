@@ -28,6 +28,8 @@
       "Bash(git commit:*)",
       "Bash(tree:*)",
       "Bash(npm test:*)",
+      "Bash(rm:*)",
+      "Bash(ren:*)",
       "Bash(nul)"
     ],
     "deny": [],

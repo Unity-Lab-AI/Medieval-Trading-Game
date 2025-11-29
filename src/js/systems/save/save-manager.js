@@ -60,7 +60,9 @@ const SaveManager = {
             try {
                 this.saveSlots = JSON.parse(metadata);
             } catch (e) {
-                console.error('💀 Failed to load save slots metadata:', e);
+                // 🦇 Corrupt metadata - silently reset to empty, not worth screaming about
+                console.warn('💀 Save slots metadata corrupt, resetting...');
+                localStorage.removeItem('tradingGameSaveSlots');
                 this.saveSlots = {};
             }
         } else {
@@ -97,7 +99,8 @@ const SaveManager = {
                 currentIndex: this.currentAutoSaveIndex
             }));
         } catch (e) {
-            console.error('💀 Failed to save slots metadata:', e);
+            // 🦇 localStorage might be full - warn but don't scream, game still works
+            console.warn('💀 Failed to save slots metadata (storage full?):', e.message);
         }
     },
 
@@ -199,11 +202,14 @@ const SaveManager = {
                     tradeRoutes: game.player.tradeRoutes
                 } : null,
                 currentLocation: game.currentLocation,
-                timeState: typeof TimeSystem !== 'undefined' ? {
-                    currentTime: TimeSystem.currentTime,
-                    currentSpeed: TimeSystem.currentSpeed,
-                    isPaused: TimeSystem.isPaused
-                } : null,
+                // 🖤 Use TimeMachine's getSaveData for complete time state
+                timeState: typeof TimeMachine !== 'undefined' && TimeMachine.getSaveData
+                    ? TimeMachine.getSaveData()
+                    : (typeof TimeSystem !== 'undefined' ? {
+                        currentTime: TimeSystem.currentTime,
+                        currentSpeed: TimeSystem.currentSpeed,
+                        isPaused: TimeSystem.isPaused
+                    } : null),
                 eventState: typeof EventSystem !== 'undefined' ? {
                     activeEvents: safeCall(() => EventSystem.getActiveEvents(), []),
                     scheduledEvents: EventSystem.scheduledEvents || []
@@ -249,7 +255,8 @@ const SaveManager = {
             const compressed = this.unicodeCompress(jsonString);
             return 'UC:' + compressed;
         } catch (e) {
-            console.error('Compression failed:', e);
+            // 🦇 Compression failed - fallback to uncompressed, no big deal
+            console.warn('💾 Compression failed, using uncompressed save');
             return JSON.stringify(saveData);
         }
     },
@@ -278,7 +285,8 @@ const SaveManager = {
             }
             return JSON.parse(compressedData);
         } catch (e) {
-            console.error('Decompression failed:', e);
+            // 🦇 Corrupt save data - return null, caller handles the fallback
+            console.warn('💾 Decompression failed - save may be corrupt');
             return null;
         }
     },
@@ -430,10 +438,15 @@ const SaveManager = {
             game.player = { ...game.player, ...gameData.player };
         }
 
-        if (gameData.timeState && typeof TimeSystem !== 'undefined') {
-            TimeSystem.currentTime = gameData.timeState.currentTime;
-            TimeSystem.setSpeed?.(gameData.timeState.currentSpeed);
-            TimeSystem.isPaused = gameData.timeState.isPaused;
+        // 🖤 Use TimeMachine's loadSaveData for complete time restoration
+        if (gameData.timeState) {
+            if (typeof TimeMachine !== 'undefined' && TimeMachine.loadSaveData) {
+                TimeMachine.loadSaveData(gameData.timeState);
+            } else if (typeof TimeSystem !== 'undefined') {
+                TimeSystem.currentTime = gameData.timeState.currentTime;
+                TimeSystem.setSpeed?.(gameData.timeState.currentSpeed);
+                TimeSystem.isPaused = gameData.timeState.isPaused;
+            }
         }
 
         if (gameData.worldState && typeof GameWorld !== 'undefined') {
@@ -606,7 +619,7 @@ const SaveManager = {
             };
             localStorage.setItem('tradingGameEmergencySave', JSON.stringify(saveData));
         } catch (e) {
-            console.error('Emergency save failed:', e);
+            // 🦇 Already in emergency mode - screaming won't help, stay silent
         }
     },
 
@@ -646,7 +659,13 @@ const SaveManager = {
     calculateDaysSurvived(saveData) {
         if (!saveData.gameData?.timeState?.currentTime) return 0;
         const t = saveData.gameData.timeState.currentTime;
-        return t.day + (t.month - 1) * 30 + (t.year - 1) * 360;
+        // 🖤 Get starting date from config - the single source of truth
+        const startDate = typeof GameConfig !== 'undefined' ? GameConfig.time.startingDate : { year: 1111, month: 4, day: 1 };
+
+        const startDays = startDate.day + (startDate.month - 1) * 30 + (startDate.year - 1) * 360;
+        const currentDays = t.day + (t.month - 1) * 30 + (t.year - 1) * 360;
+
+        return Math.max(0, currentDays - startDays);
     },
 
     getSaveSlotInfo(slotNumber) {
@@ -701,7 +720,8 @@ const SaveManager = {
 
             return await GlobalLeaderboardSystem.submitScore(scoreData);
         } catch (e) {
-            console.error('Leaderboard submission failed:', e);
+            // 🦇 Leaderboard is optional - don't spam console for network issues
+            console.warn('🏆 Leaderboard submission failed (network?)');
             return false;
         }
     },
@@ -1361,7 +1381,7 @@ window.SaveUISystem = {
 
                 container.innerHTML = html;
             }).catch(err => {
-                console.error('Failed to load Hall of Champions:', err);
+                // 🦇 Network issue - show friendly message, not console spam
                 container.innerHTML = '<div class="leaderboard-empty">Failed to load champions...</div>';
             });
         } else {
@@ -1375,7 +1395,8 @@ window.SaveUISystem = {
         const content = document.getElementById('leaderboard-panel-content');
 
         if (!overlay) {
-            console.error('🏆 leaderboard-overlay not found!');
+            // 🦇 DOM not ready yet - not an error, just skip
+            console.warn('🏆 leaderboard-overlay not in DOM yet');
             return;
         }
 
@@ -1391,7 +1412,7 @@ window.SaveUISystem = {
             GlobalLeaderboardSystem.fetchLeaderboard().then(() => {
                 GlobalLeaderboardSystem.renderFullHallOfChampions('leaderboard-panel-content');
             }).catch(err => {
-                console.error('🏆 Failed to fetch leaderboard:', err);
+                // 🦇 Network issue - try cached data or show friendly message
                 if (content && GlobalLeaderboardSystem.leaderboard?.length > 0) {
                     GlobalLeaderboardSystem.renderFullHallOfChampions('leaderboard-panel-content');
                 } else if (content) {

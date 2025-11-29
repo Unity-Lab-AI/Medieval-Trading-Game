@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // ⏰ THE TIME MACHINE - All of existence, unified in one dark engine
 // ═══════════════════════════════════════════════════════════════
-// File Version: 3.0
+// File Version: 0.81
 // Made by Unity AI Lab - Hackall360, Sponge, GFourteen
 // ═══════════════════════════════════════════════════════════════
 // 🖤 This is THE source of all time in the game
@@ -467,6 +467,9 @@ const TimeMachine = {
     // ═══════════════════════════════════════════════════════════════
 
     onTimeAdvance() {
+        // 🍖 STAT DECAY - hunger, thirst, stamina drain over time
+        this.processStatDecay();
+
         // 🌙 Midnight processing
         if (this.currentTime.hour === 0 && this.currentTime.minute === 0) {
             if (this.lastProcessedDay !== this.currentTime.day) {
@@ -491,6 +494,11 @@ const TimeMachine = {
             CityEventSystem.updateEvents();
         }
 
+        // 💀 Dungeon Bonanza (July 18th special event)
+        if (typeof DungeonBonanzaSystem !== 'undefined') {
+            DungeonBonanzaSystem.update();
+        }
+
         // 🏠 Property systems
         if (typeof PropertySystem !== 'undefined') {
             if (PropertySystem.processWorkQueues) PropertySystem.processWorkQueues();
@@ -506,6 +514,75 @@ const TimeMachine = {
         // 🚶 Travel progress
         if (typeof TravelSystem !== 'undefined' && TravelSystem.playerPosition?.isTraveling) {
             TravelSystem.updateTravelProgress();
+        }
+    },
+
+    // 🍖 STAT DECAY - Process hunger, thirst, stamina drain
+    // 🦇 Called every time tick - drains stats based on seasonal effects
+    lastStatDecayMinute: 0,
+    STAT_DECAY_INTERVAL: 30, // 🖤 Decay every 30 game minutes
+
+    processStatDecay() {
+        // 💀 Only decay every STAT_DECAY_INTERVAL minutes
+        const totalMinutes = this.getTotalMinutes();
+        if (totalMinutes - this.lastStatDecayMinute < this.STAT_DECAY_INTERVAL) {
+            return;
+        }
+        this.lastStatDecayMinute = totalMinutes;
+
+        // 🦇 Get player stats
+        if (typeof game === 'undefined' || !game.player || !game.player.stats) {
+            return;
+        }
+
+        const stats = game.player.stats;
+        const season = this.getSeasonData();
+
+        // 🍖 Hunger decay - affected by season
+        const hungerDrain = 1 * (season.effects.hungerDrain || 1.0);
+        stats.hunger = Math.max(0, stats.hunger - hungerDrain);
+
+        // 💧 Thirst decay - affected by season
+        const thirstDrain = 1.2 * (season.effects.thirstDrain || 1.0);
+        stats.thirst = Math.max(0, stats.thirst - thirstDrain);
+
+        // ⚡ Stamina recovery when resting, drain when active
+        const isTraveling = typeof TravelSystem !== 'undefined' && TravelSystem.playerPosition?.isTraveling;
+        if (isTraveling) {
+            // 🚶 Traveling drains stamina
+            const staminaDrain = 2 * (season.effects.staminaDrain || 1.0);
+            stats.stamina = Math.max(0, stats.stamina - staminaDrain);
+        } else {
+            // 🛋️ Resting slowly recovers stamina
+            stats.stamina = Math.min(stats.maxStamina, stats.stamina + 0.5);
+        }
+
+        // 💀 Low stats cause health damage
+        if (stats.hunger <= 0 || stats.thirst <= 0) {
+            const damage = (stats.hunger <= 0 ? 1 : 0) + (stats.thirst <= 0 ? 1.5 : 0);
+            stats.health = Math.max(0, stats.health - damage);
+
+            // ⚰️ Warning messages
+            if (stats.hunger <= 0 && Math.random() < 0.1) {
+                if (typeof addMessage === 'function') {
+                    addMessage('💀 You are starving! Find food immediately!', 'danger');
+                }
+            }
+            if (stats.thirst <= 0 && Math.random() < 0.1) {
+                if (typeof addMessage === 'function') {
+                    addMessage('💀 You are dying of thirst! Find water immediately!', 'danger');
+                }
+            }
+        }
+
+        // 😊 Happiness affected by other stats
+        if (stats.hunger < 30 || stats.thirst < 30 || stats.stamina < 20) {
+            stats.happiness = Math.max(0, stats.happiness - 0.5);
+        }
+
+        // 🎨 Update UI
+        if (typeof updatePlayerStats === 'function') {
+            updatePlayerStats();
         }
     },
 
@@ -801,6 +878,127 @@ const TimeMachine = {
     },
 
     // ═══════════════════════════════════════════════════════════════
+    // ⏩ TIME SKIP - Jump forward without killing the player
+    // ═══════════════════════════════════════════════════════════════
+
+    // 🖤 Skip forward by N months - preserves player stats (cheat mode)
+    skipMonths(months, preserveStats = true) {
+        console.log(`⏩ Skipping ${months} month(s)...`);
+
+        // 💾 Save current stats if preserving
+        let savedStats = null;
+        if (preserveStats && typeof game !== 'undefined' && game.player?.stats) {
+            savedStats = { ...game.player.stats };
+            console.log('💾 Stats preserved:', savedStats);
+        }
+
+        const oldSeason = this.getSeason();
+        const startMonth = this.currentTime.month;
+        const startYear = this.currentTime.year;
+
+        // ⏩ Advance months
+        for (let i = 0; i < months; i++) {
+            this.advanceMonth();
+        }
+
+        // 🍂 Check for season change
+        const newSeason = this.getSeason();
+        if (oldSeason !== newSeason) {
+            console.log(`🍂 Season changed: ${oldSeason} → ${newSeason}`);
+            this.onSeasonChange(oldSeason, newSeason);
+
+            // 🗺️ Update seasonal backdrop
+            if (typeof GameWorldRenderer !== 'undefined' && GameWorldRenderer.loadSeasonalBackdrop) {
+                GameWorldRenderer.loadSeasonalBackdrop(newSeason);
+            }
+        }
+
+        // 🌦️ Generate new weather for the new time
+        if (typeof WeatherSystem !== 'undefined' && WeatherSystem.generateWeather) {
+            WeatherSystem.generateWeather();
+        }
+
+        // 💾 Restore stats if preserved
+        if (savedStats && typeof game !== 'undefined' && game.player?.stats) {
+            game.player.stats = savedStats;
+            console.log('💾 Stats restored');
+            if (typeof updatePlayerStats === 'function') {
+                updatePlayerStats();
+            }
+        }
+
+        // 🔔 Fire events for systems that need to update
+        if (typeof EventBus !== 'undefined') {
+            EventBus.emit('timeSkipped', {
+                months,
+                from: { month: startMonth, year: startYear },
+                to: { month: this.currentTime.month, year: this.currentTime.year }
+            });
+        }
+
+        // 📢 Notify player
+        if (typeof addMessage === 'function') {
+            const seasonData = this.SEASONS[newSeason];
+            addMessage(`⏩ Time has jumped forward ${months} month(s). It is now ${this.getFormattedDate()}. ${seasonData.icon} ${seasonData.name}`);
+        }
+
+        // 🎨 Update UI
+        this.updateUI();
+
+        console.log(`⏩ Time skip complete: ${this.getFormattedDate()}`);
+        return this.getFormattedDate();
+    },
+
+    // 🦇 Skip forward by N days - preserves player stats (cheat mode)
+    skipDays(days, preserveStats = true) {
+        console.log(`⏩ Skipping ${days} day(s)...`);
+
+        // 💾 Save current stats if preserving
+        let savedStats = null;
+        if (preserveStats && typeof game !== 'undefined' && game.player?.stats) {
+            savedStats = { ...game.player.stats };
+        }
+
+        const oldSeason = this.getSeason();
+
+        // ⏩ Advance days
+        for (let i = 0; i < days; i++) {
+            this.advanceDay();
+        }
+
+        // 🍂 Check for season change
+        const newSeason = this.getSeason();
+        if (oldSeason !== newSeason) {
+            this.onSeasonChange(oldSeason, newSeason);
+            if (typeof GameWorldRenderer !== 'undefined' && GameWorldRenderer.loadSeasonalBackdrop) {
+                GameWorldRenderer.loadSeasonalBackdrop(newSeason);
+            }
+        }
+
+        // 🌦️ Generate new weather
+        if (typeof WeatherSystem !== 'undefined' && WeatherSystem.generateWeather) {
+            WeatherSystem.generateWeather();
+        }
+
+        // 💾 Restore stats if preserved
+        if (savedStats && typeof game !== 'undefined' && game.player?.stats) {
+            game.player.stats = savedStats;
+            if (typeof updatePlayerStats === 'function') {
+                updatePlayerStats();
+            }
+        }
+
+        // 🎨 Update UI
+        this.updateUI();
+
+        if (typeof addMessage === 'function') {
+            addMessage(`⏩ ${days} day(s) have passed. It is now ${this.getFormattedDate()}.`);
+        }
+
+        return this.getFormattedDate();
+    },
+
+    // ═══════════════════════════════════════════════════════════════
     // 💾 SAVE/LOAD - Preserving time across the void
     // ═══════════════════════════════════════════════════════════════
 
@@ -811,7 +1009,8 @@ const TimeMachine = {
             isPaused: this.isPaused,
             accumulatedTime: this.accumulatedTime,
             lastProcessedDay: this.lastProcessedDay,
-            lastWageProcessedDay: this.lastWageProcessedDay
+            lastWageProcessedDay: this.lastWageProcessedDay,
+            lastStatDecayMinute: this.lastStatDecayMinute // 🍖 Stat decay tracking
         };
     },
 
@@ -845,8 +1044,17 @@ const TimeMachine = {
         if (typeof data.lastWageProcessedDay !== 'undefined') {
             this.lastWageProcessedDay = data.lastWageProcessedDay;
         }
+        if (typeof data.lastStatDecayMinute !== 'undefined') {
+            this.lastStatDecayMinute = data.lastStatDecayMinute;
+        }
 
-        console.log(`⏰ TIME MACHINE restored: ${this.getFormattedTime()}`);
+        // 🍂 Restore seasonal backdrop after load
+        const season = this.getSeason();
+        if (typeof GameWorldRenderer !== 'undefined' && GameWorldRenderer.loadSeasonalBackdrop) {
+            setTimeout(() => GameWorldRenderer.loadSeasonalBackdrop(season), 100);
+        }
+
+        console.log(`⏰ TIME MACHINE restored: ${this.getFormattedTime()} (${this.SEASONS[season].icon} ${season})`);
     }
 };
 

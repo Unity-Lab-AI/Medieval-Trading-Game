@@ -202,7 +202,7 @@ const NPCTradeWindow = {
         this.npcOffer = { items: {}, gold: 0 };
         this.currentDiscount = npcData.currentDiscount || 0;
 
-        // Check for stored discount
+        // 🏷️ Did we earn a discount earlier? Check the session's memory 💾
         if (typeof sessionStorage !== 'undefined') {
             const storedDiscount = parseInt(sessionStorage.getItem('merchant_discount')) || 0;
             if (storedDiscount > this.currentDiscount) {
@@ -222,7 +222,7 @@ const NPCTradeWindow = {
             this.isOpen = true;
         }
 
-        // Fire event
+        // 📡 Broadcast to the void - the trade window has awakened 🔔
         const event = new CustomEvent('trade-window-opened', {
             detail: { npc: npcData, type }
         });
@@ -239,7 +239,7 @@ const NPCTradeWindow = {
             this.isOpen = false;
         }
 
-        // Clear stored discount
+        // 🗑️ Erase the discount from memory - this deal is done 💸
         if (typeof sessionStorage !== 'undefined') {
             sessionStorage.removeItem('merchant_discount');
             sessionStorage.removeItem('merchant_discount_npc');
@@ -250,7 +250,7 @@ const NPCTradeWindow = {
         this.playerOffer = { items: {}, gold: 0 };
         this.npcOffer = { items: {}, gold: 0 };
 
-        // Fire event
+        // 📡 Signal to the world - the merchant has closed their shop 🚪
         const event = new CustomEvent('trade-window-closed', {});
         document.dispatchEvent(event);
     },
@@ -275,7 +275,7 @@ const NPCTradeWindow = {
     },
 
     async updateNPCSection(npcData) {
-        // Update portrait
+        // 🎭 Draw their face in pixels - every NPC gets an avatar 👤
         const portrait = document.getElementById('npc-portrait');
         if (portrait) {
             const avatar = portrait.querySelector('.npc-avatar');
@@ -284,7 +284,7 @@ const NPCTradeWindow = {
             }
         }
 
-        // Update mood
+        // 😊 How do they feel about you today? Update their emotional state 💭
         const moodEl = document.getElementById('npc-mood');
         if (moodEl) {
             const mood = this.getNPCMood(npcData);
@@ -742,7 +742,7 @@ const NPCTradeWindow = {
     },
 
     updateOfferDisplay() {
-        // Player offer
+        // 👤 What are you putting on the table? Show your offer 🎁
         const playerOfferEl = document.getElementById('player-offer-items');
         if (playerOfferEl) {
             playerOfferEl.innerHTML = Object.entries(this.playerOffer.items).map(([itemId, qty]) => `
@@ -752,7 +752,7 @@ const NPCTradeWindow = {
             `).join('') || '<span class="empty">Nothing</span>';
         }
 
-        // NPC offer
+        // 🧑‍💼 What are they willing to give? Display their counter-offer 💼
         const npcOfferEl = document.getElementById('npc-offer-items');
         if (npcOfferEl) {
             npcOfferEl.innerHTML = Object.entries(this.npcOffer.items).map(([itemId, qty]) => `
@@ -764,14 +764,14 @@ const NPCTradeWindow = {
     },
 
     updateTradeValue() {
-        // Get gold offers
+        // 💰 How much gold are you throwing into the deal? Extract the numbers 🪙
         const playerGoldOffer = parseInt(document.getElementById('player-gold-offer')?.value) || 0;
         const npcGoldRequest = parseInt(document.getElementById('npc-gold-request')?.value) || 0;
 
         this.playerOffer.gold = playerGoldOffer;
         this.npcOffer.gold = npcGoldRequest;
 
-        // Calculate item values
+        // 📊 Add up the value of your offerings - every item has a price ⚖️
         let playerItemValue = 0;
         for (const [itemId, qty] of Object.entries(this.playerOffer.items)) {
             playerItemValue += Math.floor(this.getItemPrice(itemId) * 0.5) * qty; // Sell at half
@@ -787,13 +787,13 @@ const NPCTradeWindow = {
         const playerTotalValue = playerItemValue + playerGoldOffer;
         const npcTotalValue = npcItemValue + npcGoldRequest;
 
-        // Update displays
+        // 🖥️ Refresh the UI with the new values - let them see the deal 👁️
         document.getElementById('player-offer-gold').textContent = `${playerGoldOffer}g`;
         document.getElementById('npc-offer-gold').textContent = `${npcGoldRequest}g`;
         document.getElementById('player-offer-value').textContent = playerTotalValue;
         document.getElementById('npc-offer-value').textContent = npcTotalValue;
 
-        // Update status
+        // ⚖️ Is it fair? Favorable? Calculate the balance of the trade 📉
         const statusEl = document.getElementById('trade-status');
         if (statusEl) {
             const diff = playerTotalValue - npcTotalValue;
@@ -826,7 +826,7 @@ const NPCTradeWindow = {
     proposeTrade() {
         if (!this.currentNPC) return;
 
-        // Calculate values
+        // 🧮 Crunch the numbers - is this trade worthy of acceptance? 💎
         let playerTotalValue = this.playerOffer.gold;
         for (const [itemId, qty] of Object.entries(this.playerOffer.items)) {
             playerTotalValue += Math.floor(this.getItemPrice(itemId) * 0.5) * qty;
@@ -839,7 +839,7 @@ const NPCTradeWindow = {
             npcTotalValue += discountedPrice * qty;
         }
 
-        // Check if player can afford
+        // 💸 Can you even afford this? Check your pockets before promising gold 🪙
         if (typeof game !== 'undefined' && game.player) {
             if (this.playerOffer.gold > game.player.gold) {
                 this.showNPCResponse("You don't have enough gold for that offer.");
@@ -847,7 +847,7 @@ const NPCTradeWindow = {
             }
         }
 
-        // NPC acceptance logic based on personality
+        // 🎭 Will they accept? Their personality determines the threshold 🎲
         const personality = this.currentNPC.personality || 'friendly';
         let acceptanceThreshold = 0; // How much extra value NPC requires
 
@@ -878,11 +878,12 @@ const NPCTradeWindow = {
 
     executeTrade() {
         if (typeof game === 'undefined' || !game.player) {
-            console.error('💱 Cannot execute trade: no game state');
+            // 🦇 No game state - can't trade, silently return
+            addMessage?.('Trade failed - please try again');
             return;
         }
 
-        // Remove items from player, add to NPC
+        // 📦 Transfer the goods - take from player, give to merchant 🔄
         for (const [itemId, qty] of Object.entries(this.playerOffer.items)) {
             game.player.inventory[itemId] = (game.player.inventory[itemId] || 0) - qty;
             if (game.player.inventory[itemId] <= 0) {
@@ -890,23 +891,23 @@ const NPCTradeWindow = {
             }
         }
 
-        // Add items to player, remove from NPC
+        // 🎁 Claim your prizes - merchant's wares become yours 💰
         for (const [itemId, qty] of Object.entries(this.npcOffer.items)) {
             game.player.inventory[itemId] = (game.player.inventory[itemId] || 0) + qty;
-            // NPC inventory would be updated here if persistent
+            // 💭 Merchant inventory would update here if it was persistent 🗃️
         }
 
-        // Handle gold
+        // 💰 Exchange the coin - subtract what you gave, add what you got 🪙
         game.player.gold = (game.player.gold || 0) - this.playerOffer.gold + this.npcOffer.gold;
 
-        // Show success
+        // ✅ Deal sealed - merchant smiles (or doesn't) 😊
         this.showNPCResponse("Pleasure doing business with you!");
 
         if (typeof addMessage === 'function') {
             addMessage('Trade completed successfully!', 'success');
         }
 
-        // Fire event for quest tracking
+        // 📡 Tell the quest system - this trade might matter 📜
         const event = new CustomEvent('trade-completed', {
             detail: {
                 npc: this.currentNPC,
@@ -916,7 +917,7 @@ const NPCTradeWindow = {
         });
         document.dispatchEvent(event);
 
-        // Also fire item-purchased for quest tracking
+        // 🎯 Track each item purchased - quests might be listening 👂
         for (const itemId of Object.keys(this.npcOffer.items)) {
             const purchaseEvent = new CustomEvent('item-purchased', {
                 detail: { itemId, npc: this.currentNPC }
@@ -924,7 +925,7 @@ const NPCTradeWindow = {
             document.dispatchEvent(purchaseEvent);
         }
 
-        // Clear and update
+        // 🧹 Clean the slate - reset for the next deal 🔄
         this.clearOffer();
         this.updatePlayerGold();
         this.renderContent(this.interactionType, this.currentNPC);
@@ -960,7 +961,7 @@ const NPCTradeWindow = {
 
             game.player.gold -= totalCost;
 
-            // Add to player's employees (would need employee system)
+            // 👥 Add them to your crew - they work for you now 🤝
             game.player.employees = game.player.employees || [];
             game.player.employees.push({
                 ...this.currentNPC,
@@ -1005,7 +1006,7 @@ const NPCTradeWindow = {
 
         switch (action) {
             case 'fight':
-                // Simple fight outcome based on stats
+                // ⚔️ Roll the dice of combat - strength vs strength 🎲
                 const playerStrength = game.player.attributes?.strength || 5;
                 const banditStrength = this.currentNPC.strength || 5;
                 const playerLuck = game.player.attributes?.luck || 5;
@@ -1013,7 +1014,7 @@ const NPCTradeWindow = {
                 const winChance = 0.3 + (playerStrength - banditStrength) * 0.05 + playerLuck * 0.02;
 
                 if (Math.random() < winChance) {
-                    // Player wins
+                    // 🏆 Victory! Strip the corpse of its coin 💀
                     const loot = Math.floor(Math.random() * 50) + 20;
                     game.player.gold += loot;
                     this.showNPCResponse("Argh! You win this time!");
@@ -1021,13 +1022,13 @@ const NPCTradeWindow = {
                         addMessage(`You defeated the bandit and found ${loot} gold!`, 'success');
                     }
 
-                    // Fire defeat event for quests
+                    // 📡 Broadcast your triumph - the quest system cares 🎯
                     const event = new CustomEvent('enemy-defeated', {
                         detail: { enemyType: 'bandit' }
                     });
                     document.dispatchEvent(event);
                 } else {
-                    // Player loses
+                    // 💔 Defeat tastes bitter - they take your health and gold 🩸
                     const damage = Math.floor(Math.random() * 30) + 10;
                     game.player.health = Math.max(1, (game.player.health || 100) - damage);
                     const stolenGold = Math.floor(game.player.gold * 0.5);
@@ -1146,10 +1147,10 @@ const NPCTradeWindow = {
     },
 
     getNPCInventory(npcData) {
-        // If NPC has specific inventory, use it
+        // 🎒 Do they have a custom inventory? Use it, otherwise generate 📦
         if (npcData.inventory) return npcData.inventory;
 
-        // Otherwise generate based on type
+        // 🏪 Generic merchant stock - generated by their profession 🛒
         return this.generateNPCInventory(npcData.type);
     },
 
@@ -1172,7 +1173,7 @@ const NPCTradeWindow = {
     },
 
     getItemPrice(itemId) {
-        // Check config first
+        // 💎 Check the official price list first - what's this item worth? 📋
         const categories = ['consumables', 'resources', 'tools', 'luxury'];
         for (const category of categories) {
             const items = GameConfig?.items?.[category];
@@ -1181,7 +1182,7 @@ const NPCTradeWindow = {
             }
         }
 
-        // Fallback prices
+        // 💰 No official price? Use these backup values 🪙
         const fallbackPrices = {
             food: 5, water: 2, bread: 3, fish: 8, ale: 10,
             wood: 8, stone: 5, iron_ore: 12, coal: 6,
@@ -1209,18 +1210,18 @@ const NPCTradeWindow = {
     },
 
     setupTradeListeners() {
-        // Additional listeners for trade UI if needed
+        // 🎧 Hook up additional UI listeners if we need them later 🔌
     },
 
     setupEventListeners() {
-        // Listen for trade window commands from API
+        // 📡 Listen for external commands to open the trade window 🎮
         document.addEventListener('open-trade-window', (e) => {
             if (e.detail?.npc) {
                 this.open(e.detail.npc, e.detail.type || 'trade');
             }
         });
 
-        // Keyboard shortcuts
+        // ⌨️ Escape key closes the window - quick exit from capitalism ❌
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && this.isOpen) {
                 this.close();
@@ -1240,10 +1241,10 @@ const NPCTradeWindow = {
     triggerRandomEncounter(location) {
         const playerGold = (typeof game !== 'undefined' && game.player?.gold) || 0;
 
-        // Build weighted pool of possible events
+        // 🎲 Create a lottery of possible encounters - weighted by chance 🎰
         const possibleEvents = [];
         for (const [eventId, event] of Object.entries(this.randomEvents)) {
-            // Check conditions
+            // 💰 Can this event trigger? Check if you have enough gold 🪙
             if (event.minGold && playerGold < event.minGold) continue;
 
             for (let i = 0; i < event.weight; i++) {
@@ -1253,11 +1254,11 @@ const NPCTradeWindow = {
 
         if (possibleEvents.length === 0) return null;
 
-        // Select random event
+        // 🎰 Spin the wheel of fate - which encounter wins? 🔮
         const selected = possibleEvents[Math.floor(Math.random() * possibleEvents.length)];
         const { eventId, event } = selected;
 
-        // Generate NPC for this event
+        // 👤 Summon a soul for this encounter - who appears? 🎭
         const npcType = event.npcTypes[Math.floor(Math.random() * event.npcTypes.length)];
         const npc = this.generateEventNPC(npcType, eventId, event);
 
@@ -1286,7 +1287,7 @@ const NPCTradeWindow = {
             personality: this.getPersonalityForType(npcType)
         };
 
-        // Special properties based on event
+        // 🗡️ Customize them based on what's happening - robbers want gold 💰
         if (eventId === 'robbery') {
             npc.demandedGold = Math.floor((game?.player?.gold || 100) * (0.2 + Math.random() * 0.2));
             npc.strength = 4 + Math.floor(Math.random() * 4);

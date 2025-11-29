@@ -10,7 +10,16 @@ const DraggablePanels = {
     STORAGE_KEY: 'trader-claude-panel-positions',
     eventsSetup: false,
     // Panels that should NOT have a close button from drag handle (they have their own or should only minimize)
-    noCloseButtonPanels: ['location-panel', 'side-panel', 'message-log', 'people-panel', 'panel-toolbar'],
+    noCloseButtonPanels: ['location-panel', 'side-panel', 'message-log', 'people-panel', 'panel-toolbar', 'quest-tracker'],
+
+    // 🖤 Panels with special close behavior (call a function instead of just hiding)
+    specialClosePanels: {
+        'game-setup-panel': () => {
+            if (typeof window.cancelGameSetup === 'function') {
+                window.cancelGameSetup();
+            }
+        }
+    },
 
     init() {
         console.log('🖤 DraggablePanels: Initializing...');
@@ -56,6 +65,62 @@ const DraggablePanels = {
 
         // Setup message log with special handling
         this.setupMessageLog();
+
+        // 🖤 Setup quest tracker with special handling (like message log)
+        this.setupQuestTracker();
+    },
+
+    // 🦇 Setup quest tracker for dragging - this brooding little panel needs love too
+    setupQuestTracker() {
+        const questTracker = document.querySelector('.quest-tracker');
+        if (!questTracker) {
+            console.log('🖤 Quest tracker not found yet, will try again later');
+            // Try again after a delay (quest system may not have created it yet)
+            setTimeout(() => this.setupQuestTracker(), 1000);
+            return;
+        }
+
+        // Check if already setup
+        if (questTracker.dataset.draggable === 'true') {
+            console.log('🖤 Quest tracker already setup for dragging');
+            return;
+        }
+
+        questTracker.dataset.draggable = 'true';
+
+        // Get the tracker header
+        let header = questTracker.querySelector('.tracker-header');
+        if (header) {
+            // Header already has cursor: move in CSS, just add events
+            const self = this;
+
+            // Remove any existing handlers by cloning
+            const newHeader = header.cloneNode(true);
+            header.parentNode.replaceChild(newHeader, header);
+            header = newHeader;
+
+            // Add drag events
+            header.addEventListener('mousedown', function(e) {
+                // Don't drag if clicking a button inside the header
+                if (e.target.closest('button')) return;
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('🖤 Quest tracker header mousedown');
+                self.startDrag(e, questTracker);
+            }, true);
+
+            header.addEventListener('touchstart', function(e) {
+                if (e.target.closest('button')) return;
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('🖤 Quest tracker header touchstart');
+                self.startDrag(e, questTracker);
+            }, { passive: false, capture: true });
+
+            console.log('🖤 Quest tracker drag setup complete - this dark soul can now be moved');
+        } else {
+            console.warn('🖤 Quest tracker header (.tracker-header) not found');
+        }
     },
 
     setupMessageLog() {
@@ -122,12 +187,27 @@ const DraggablePanels = {
         }
     },
 
+    // 🖤 Panels with existing headers that should be used as drag handles
+    // These get the close button added to their existing header instead of a new drag-handle
+    panelsWithExistingHeaders: {
+        'market-panel': '.market-header',
+        'travel-panel': '.travel-header',
+        'game-setup-panel': '.setup-header'
+    },
+
     makeDraggable(element, customTitle = null) {
         if (element.dataset.draggable === 'true') return;
         element.dataset.draggable = 'true';
 
         // Skip if already has a drag handle
         if (element.querySelector('.drag-handle')) return;
+
+        // 🖤 Check if this panel has an existing header we should use
+        const existingHeaderSelector = this.panelsWithExistingHeaders[element.id];
+        if (existingHeaderSelector) {
+            this.setupExistingHeaderAsDragHandle(element, existingHeaderSelector);
+            return;
+        }
 
         // Get title
         let title = customTitle;
@@ -177,12 +257,17 @@ const DraggablePanels = {
         // Insert drag handle
         element.insertBefore(dragHandle, element.firstChild);
 
-        // Close button - only hide with class, not display:none
+        // Close button - check for special close behavior first
         const closeBtn = dragHandle.querySelector('.drag-close');
         if (closeBtn) {
             closeBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                element.classList.add('hidden');
+                // 🖤 Check for special close behavior
+                if (this.specialClosePanels[element.id]) {
+                    this.specialClosePanels[element.id]();
+                } else {
+                    element.classList.add('hidden');
+                }
             });
         }
 
@@ -198,6 +283,90 @@ const DraggablePanels = {
             e.preventDefault();
             this.startDrag(e, element);
         }, { passive: false });
+    },
+
+    // 🖤 Setup an existing header element as the drag handle (keeps the detailed header info)
+    setupExistingHeaderAsDragHandle(element, headerSelector) {
+        const header = element.querySelector(headerSelector);
+        if (!header) {
+            console.warn('🖤 DraggablePanels: Expected header not found:', headerSelector);
+            return;
+        }
+
+        // 💀 Remove any existing panel-close-x buttons (we'll add one to the header)
+        const oldCloseBtn = element.querySelector('.panel-close-x');
+        if (oldCloseBtn) {
+            oldCloseBtn.remove();
+        }
+
+        // 🖤 Make header draggable
+        header.style.cursor = 'move';
+        header.style.userSelect = 'none';
+        header.style.position = 'relative';
+
+        // 🦇 Add drag grip to the left of the header if not present
+        if (!header.querySelector('.drag-grip')) {
+            const grip = document.createElement('span');
+            grip.className = 'drag-grip';
+            grip.style.cssText = 'opacity:0.5;font-size:14px;margin-right:8px;pointer-events:none;';
+            grip.textContent = '⋮⋮';
+            header.insertBefore(grip, header.firstChild);
+        }
+
+        // 🖤 Add close button to the right of the header if panel needs one
+        const showCloseButton = !this.noCloseButtonPanels.includes(element.id);
+        if (showCloseButton && !header.querySelector('.drag-close')) {
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'drag-close';
+            closeBtn.title = 'Close';
+            closeBtn.innerHTML = '×';
+            closeBtn.style.cssText = `
+                position: absolute;
+                top: 50%;
+                right: 10px;
+                transform: translateY(-50%);
+                background: rgba(244,67,54,0.8);
+                border: none;
+                border-radius: 50%;
+                width: 24px;
+                height: 24px;
+                color: white;
+                font-size: 16px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10;
+            `;
+            closeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // 🖤 Check for special close behavior
+                if (this.specialClosePanels[element.id]) {
+                    this.specialClosePanels[element.id]();
+                } else {
+                    element.classList.add('hidden');
+                }
+            });
+            header.appendChild(closeBtn);
+        }
+
+        // 🦇 Attach drag events to the existing header
+        const self = this;
+        header.addEventListener('mousedown', function(e) {
+            if (e.target.classList.contains('drag-close')) return;
+            if (e.target.closest('button')) return;
+            e.preventDefault();
+            self.startDrag(e, element);
+        });
+
+        header.addEventListener('touchstart', function(e) {
+            if (e.target.classList.contains('drag-close')) return;
+            if (e.target.closest('button')) return;
+            e.preventDefault();
+            self.startDrag(e, element);
+        }, { passive: false });
+
+        console.log('🖤 DraggablePanels: Using existing header as drag handle for', element.id);
     },
 
     startDrag(e, element) {

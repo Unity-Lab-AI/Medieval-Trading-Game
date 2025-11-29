@@ -90,28 +90,24 @@ async function startNewGame(page) {
 }
 
 /**
- * Open the debug console
+ * Open the Debooger console (button-only, no keyboard shortcut)
  */
 async function openDebugConsole(page) {
-  // Try clicking the Debooger button first (most reliable)
+  // 🖤 Click the Debooger button - no keyboard shortcut exists anymore
   const debugBtn = page.locator('#toggle-debug-console, #debug-toggle-btn, .debug-toggle, button:has-text("Debooger")');
   if (await debugBtn.count() > 0) {
     await debugBtn.first().click();
     await page.waitForTimeout(config.actionDelay);
-  } else {
-    // Fallback to backtick key
-    await page.keyboard.press('Backquote');
-    await page.waitForTimeout(config.actionDelay);
   }
 
-  // Wait for debug console to be visible
+  // Wait for Debooger console to be visible
   await page.waitForFunction(() => {
     const console = document.getElementById('debug-console') ||
                     document.querySelector('.debug-console');
     return console && !console.classList.contains('hidden');
   }, { timeout: 5000 }).catch(() => {
     // If still not visible, try clicking again
-    console.log('Debug console not visible, trying again...');
+    console.log('Debooger console not visible, trying again...');
   });
 
   // Give a moment for the input to be ready

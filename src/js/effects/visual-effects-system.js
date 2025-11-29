@@ -1,14 +1,14 @@
 // ═══════════════════════════════════════════════════════════════
-// ✨ VISUAL EFFECTS SYSTEM - eye candy for the soul
+// ✨ VISUAL EFFECTS SYSTEM - dark enchantments for your retinas
 // ═══════════════════════════════════════════════════════════════
 // File Version: GameConfig.version.file
 // conjured by Unity AI Lab - Hackall360, Sponge, GFourteen
 // ═══════════════════════════════════════════════════════════════
-// particles, screen shake, transitions... the dramatic flair
-// because even buying wheat deserves sparkles
+// 💫 Particles dance. Screens shake. Reality bends to my aesthetic will.
+// Because even mundane actions deserve theatrical sparkles... 🖤
 
 const VisualEffectsSystem = {
-    // Visual settings
+    // 🎨 Visual settings - controlling the chaos with precision
     settings: {
         particlesEnabled: true,
         screenShakeEnabled: true,
@@ -19,13 +19,13 @@ const VisualEffectsSystem = {
         flashWarnings: true
     },
     
-    // Active effects tracking
+    // 🌟 Active effects tracking - cataloging the magic currently manifesting
     activeParticles: [],
     activeAnimations: [],
     screenShakeActive: false,
     weatherActive: null,
     
-    // Particle system
+    // ✨ Particle system - my army of tiny, glowing minions
     particleSystem: {
         container: null,
         maxParticles: 100,
@@ -47,15 +47,15 @@ const VisualEffectsSystem = {
         intensity: 0
     },
     
-    // Initialize visual effects system
+    // 🌙 Initialize visual effects system - conjuring the spectacle
     init() {
         this.createParticleContainer();
         this.loadSettings();
         this.setupEventListeners();
-        console.log('Visual effects system initialized');
+        console.log('✨ Visual effects system awakened... prepare for beauty and chaos 🖤');
     },
     
-    // Create particle container
+    // 📦 Create particle container - building the stage for our tiny performers
     createParticleContainer() {
         this.particleSystem.container = document.createElement('div');
         this.particleSystem.container.id = 'particle-container';
@@ -72,7 +72,7 @@ const VisualEffectsSystem = {
         document.body.appendChild(this.particleSystem.container);
     },
     
-    // Load settings from localStorage
+    // 💾 Load settings from localStorage - resurrecting past preferences
     loadSettings() {
         const savedSettings = localStorage.getItem('tradingGameVisualSettings');
         if (savedSettings) {
@@ -85,14 +85,14 @@ const VisualEffectsSystem = {
         }
     },
     
-    // Save settings to localStorage
+    // 📜 Save settings to localStorage - inscribing choices into the void
     saveSettings() {
         localStorage.setItem('tradingGameVisualSettings', JSON.stringify(this.settings));
     },
     
-    // Setup event listeners for visual effects
+    // 👂 Setup event listeners - waiting for moments worthy of visual drama
     setupEventListeners() {
-        // Listen for game events that trigger visual effects
+        // 🎭 Listen for game events that trigger visual effects - the cues for our performances
         EventManager.addEventListener(document, 'goldTransaction', (e) => this.createGoldParticles(e.detail));
         EventManager.addEventListener(document, 'itemPickup', (e) => this.createItemPickupEffect(e.detail));
         EventManager.addEventListener(document, 'levelUp', (e) => this.createLevelUpEffect(e.detail));
@@ -103,7 +103,7 @@ const VisualEffectsSystem = {
         EventManager.addEventListener(document, 'timeChange', (e) => this.updateTimeBasedEffects(e.detail));
     },
     
-    // Particle creation methods
+    // ✨ Particle creation methods - birthing tiny fragments of magic
     createParticle(x, y, options = {}) {
         if (!this.settings.particlesEnabled || !this.particleSystem.container) {
             return null;
@@ -112,7 +112,7 @@ const VisualEffectsSystem = {
         const particle = document.createElement('div');
         const particleId = this.particleSystem.particleId++;
         
-        // Default particle options
+        // 🎨 Default particle options - the blueprint for sparkly existence
         const defaults = {
             size: 4,
             color: '#FFD700',
@@ -128,7 +128,7 @@ const VisualEffectsSystem = {
         
         const config = { ...defaults, ...options };
         
-        // Set particle styles
+        // 🎨 Set particle styles - dressing up our magical dots
         particle.style.cssText = `
             position: absolute;
             left: ${x}px;
@@ -145,7 +145,7 @@ const VisualEffectsSystem = {
         
         this.particleSystem.container.appendChild(particle);
         
-        // Track particle
+        // 📊 Track particle - adding this minion to our roster
         const particleData = {
             id: particleId,
             element: particle,
@@ -164,7 +164,7 @@ const VisualEffectsSystem = {
         
         this.activeParticles.push(particleData);
         
-        // Limit particle count
+        // ⚖️ Limit particle count - even chaos needs boundaries
         if (this.activeParticles.length > this.particleSystem.maxParticles) {
             const oldestParticle = this.activeParticles.shift();
             if (oldestParticle.element.parentNode) {
@@ -175,7 +175,7 @@ const VisualEffectsSystem = {
         return particleData;
     },
     
-    // Update particles animation
+    // 🔄 Update particles animation - orchestrating the dance of light
     updateParticles() {
         const now = Date.now();
         
@@ -189,18 +189,18 @@ const VisualEffectsSystem = {
                 return false;
             }
             
-            // Update physics
+            // 🔬 Update physics - gravity and velocity conspire
             particle.velocity.y += particle.gravity;
             particle.x += particle.velocity.x;
             particle.y += particle.velocity.y;
             particle.rotation += particle.rotationSpeed;
             
-            // Update opacity if fading
+            // 👻 Update opacity if fading - slow dissolution into nothingness
             if (particle.fade) {
                 particle.opacity = 1 - (elapsed / particle.duration);
             }
             
-            // Apply transformations
+            // 🌀 Apply transformations - reshaping reality itself
             particle.element.style.transform = `
                 translate(${particle.x}px, ${particle.y}px) 
                 translate(-50%, -50%) 
@@ -213,7 +213,7 @@ const VisualEffectsSystem = {
         });
     },
     
-    // Start particle animation loop
+    // 🔁 Start particle animation loop - the eternal cycle begins
     startParticleLoop() {
         const animate = () => {
             this.updateParticles();
@@ -222,7 +222,7 @@ const VisualEffectsSystem = {
         animate();
     },
     
-    // Specific particle effects
+    // 🎆 Specific particle effects - each moment demands its own magic
     createGoldParticles(data) {
         const { x, y, amount } = data;
         const particleCount = Math.min(Math.floor(amount / 10), 20);
@@ -612,7 +612,7 @@ const VisualEffectsSystem = {
         document.head.appendChild(style);
         document.body.appendChild(sandstormOverlay);
         
-        // Add sand particles
+        // 🏜️ Add sand particles - the desert's wrath
         const particleCount = Math.floor(50 * this.weatherSystem.intensity);
         for (let i = 0; i < particleCount; i++) {
             TimerManager.setTimeout(() => {
@@ -638,7 +638,7 @@ const VisualEffectsSystem = {
         }
     },
     
-    // Time-based effects
+    // 🌅 Time-based effects - light and darkness wage eternal war
     updateTimeBasedEffects(timeData) {
         const { isNight, hour } = timeData;
         
@@ -648,7 +648,7 @@ const VisualEffectsSystem = {
             this.removeNightEffect();
         }
         
-        // Apply golden hour effect
+        // 🌇 Apply golden hour effect - that brief moment of perfect light
         if (hour >= 6 && hour <= 8 || hour >= 17 && hour <= 19) {
             this.applyGoldenHourEffect();
         } else {
@@ -716,7 +716,7 @@ const VisualEffectsSystem = {
         }
     },
     
-    // Highlighting system
+    // 🔦 Highlighting system - spotlighting the important with dramatic flair
     highlightElement(element, options = {}) {
         if (!element || !this.settings.animationsEnabled) {
             return;
@@ -731,12 +731,12 @@ const VisualEffectsSystem = {
         
         const config = { ...defaults, ...options };
         
-        // Store original styles
+        // 💾 Store original styles - remember what was before the transformation
         const originalBoxShadow = element.style.boxShadow;
         const originalTransform = element.style.transform;
         const originalTransition = element.style.transition;
         
-        // Apply highlight
+        // ✨ Apply highlight - bathing in radiant attention
         element.style.transition = `all ${config.duration / 1000}s ease-in-out`;
         element.style.boxShadow = `0 0 20px ${config.color}`;
         
@@ -744,7 +744,7 @@ const VisualEffectsSystem = {
             element.style.transform = `scale(${config.scale})`;
         }
         
-        // Pulse effect
+        // 💗 Pulse effect - the heartbeat of emphasis
         if (config.pulse) {
             const pulseAnimation = TimerManager.setInterval(() => {
                 const currentScale = parseFloat(element.style.transform.match(/scale\(([\d.]+)\)/)?.[1] || 1);
@@ -755,7 +755,7 @@ const VisualEffectsSystem = {
             TimerManager.setTimeout(() => TimerManager.clearInterval(pulseAnimation), config.duration);
         }
         
-        // Restore original styles
+        // 🔄 Restore original styles - returning to normalcy after the spectacle
         TimerManager.setTimeout(() => {
             element.style.boxShadow = originalBoxShadow;
             element.style.transform = originalTransform;
@@ -763,7 +763,7 @@ const VisualEffectsSystem = {
         }, config.duration);
     },
     
-    // Fade transitions
+    // 🌫️ Fade transitions - graceful entrances and exits from reality
     fadeIn(element, duration = 300) {
         if (!element) return;
         
@@ -797,7 +797,7 @@ const VisualEffectsSystem = {
         }, duration / 2);
     },
     
-    // Resource particle effects
+    // 💎 Resource particle effects - materialism made magical
     createResourceParticles(data) {
         const { x, y, resourceType, amount } = data;
         const colors = {
@@ -827,11 +827,11 @@ const VisualEffectsSystem = {
         }
     },
     
-    // Settings management
+    // ⚙️ Settings management - fine-tuning the spectacle
     setQuality(quality) {
         this.settings.quality = quality;
         
-        // Adjust particle count based on quality
+        // 🔢 Adjust particle count based on quality - more magic or less lag?
         switch (quality) {
             case 'low':
                 this.particleSystem.maxParticles = 30;
@@ -883,7 +883,7 @@ const VisualEffectsSystem = {
         this.saveSettings();
     },
     
-    // Cleanup methods
+    // 🧹 Cleanup methods - sweeping away the remnants of magic
     clearAllParticles() {
         this.activeParticles.forEach(particle => {
             if (particle.element && particle.element.parentNode) {
@@ -897,21 +897,21 @@ const VisualEffectsSystem = {
         this.clearAllParticles();
         this.clearWeather();
         
-        // Remove overlays
+        // 💀 Remove overlays - banishing the layers of illusion
         const overlays = ['night-overlay', 'golden-hour-overlay', 'weather-overlay'];
         overlays.forEach(id => {
             const element = document.getElementById(id);
             if (element) element.remove();
         });
         
-        // Remove particle container
+        // 🗑️ Remove particle container - destroying the stage itself
         if (this.particleSystem.container && this.particleSystem.container.parentNode) {
             this.particleSystem.container.remove();
         }
     }
 };
 
-// Export for use in other modules
+// 📤 Export for use in other modules - spreading visual darkness far and wide
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = VisualEffectsSystem;
 }

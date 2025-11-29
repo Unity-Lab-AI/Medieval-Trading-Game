@@ -214,6 +214,26 @@ const WeatherSystem = {
             visualClass: 'weather-windy',
             ambientColor: 'rgba(150, 150, 150, 0.1)',
             probability: { spring: 0.15, summer: 0.1, autumn: 0.2, winter: 0.15 }
+        },
+        // 💀 APOCALYPSE WEATHER - Dungeon-only event weather
+        apocalypse: {
+            id: 'apocalypse',
+            name: 'The Dark Convergence',
+            icon: '☄️',
+            description: 'Meteors streak across a blood-red sky. The veil between worlds grows thin.',
+            effects: {
+                travelSpeed: 0.5,
+                priceModifier: 1.5,
+                encounterChance: 2.0, // Double encounters!
+                staminaDrain: 1.5,
+                visibility: 0.4
+            },
+            visualClass: 'weather-apocalypse',
+            ambientColor: 'rgba(80, 20, 30, 0.5)',
+            probability: { spring: 0, summer: 0, autumn: 0, winter: 0 }, // Never occurs naturally
+            particles: true,
+            lightning: true,
+            meteors: true // 💀 Special meteor effect
         }
     },
 
@@ -942,6 +962,13 @@ const WeatherSystem = {
             } else {
                 this.stopLightning();
             }
+
+            // 💀 Handle meteors for apocalypse weather
+            if (weather.meteors) {
+                this.startMeteors();
+            } else {
+                this.stopMeteors();
+            }
         }
     },
 
@@ -982,6 +1009,7 @@ const WeatherSystem = {
     },
 
     lightningInterval: null,
+    meteorInterval: null, // 💀 Meteor shower interval
 
     startLightning() {
         if (this.lightningInterval) return;
@@ -1012,6 +1040,97 @@ const WeatherSystem = {
         // Thunder sound would go here if AudioSystem is available
         if (typeof AudioSystem !== 'undefined' && AudioSystem.playSound) {
             AudioSystem.playSound('thunder');
+        }
+    },
+
+    // 💀 METEOR SHOWER SYSTEM - Apocalyptic dungeon weather
+    // ═══════════════════════════════════════════════════════════════
+    startMeteors() {
+        if (this.meteorInterval) return;
+        console.log('☄️ Starting meteor shower...');
+
+        // 🦇 Meteors spawn every 3-10 seconds
+        const spawnMeteor = () => {
+            this.createMeteor();
+            // Schedule next meteor in 3-10 seconds
+            const nextDelay = 3000 + Math.random() * 7000;
+            this.meteorInterval = setTimeout(spawnMeteor, nextDelay);
+        };
+
+        // Start immediately
+        this.createMeteor();
+        // Schedule next
+        this.meteorInterval = setTimeout(spawnMeteor, 3000 + Math.random() * 7000);
+    },
+
+    stopMeteors() {
+        if (this.meteorInterval) {
+            clearTimeout(this.meteorInterval);
+            this.meteorInterval = null;
+        }
+        // 💀 Remove any existing meteors
+        const particles = document.getElementById('weather-particles');
+        if (particles) {
+            const meteors = particles.querySelectorAll('.meteor');
+            meteors.forEach(m => m.remove());
+        }
+    },
+
+    createMeteor() {
+        const particles = document.getElementById('weather-particles');
+        if (!particles) return;
+
+        // 🦇 Create meteor element
+        const meteor = document.createElement('div');
+        meteor.className = 'meteor';
+
+        // 💀 Random position - start from top, streak diagonally
+        const startX = 10 + Math.random() * 80; // 10-90% from left
+        const startY = -10; // Start above viewport
+
+        // 🖤 Random size for variety
+        const size = 0.8 + Math.random() * 0.6; // 0.8x to 1.4x size
+
+        meteor.style.cssText = `
+            position: absolute;
+            left: ${startX}%;
+            top: ${startY}%;
+            font-size: ${24 * size}px;
+            opacity: 0;
+            z-index: 10;
+            filter: drop-shadow(0 0 10px #ff6600) drop-shadow(0 0 20px #ff3300);
+            animation: meteor-fall ${1.5 + Math.random() * 1}s ease-in forwards;
+        `;
+        meteor.innerHTML = '☄️';
+
+        particles.appendChild(meteor);
+
+        // 💀 Flash effect when meteor "hits"
+        setTimeout(() => {
+            this.meteorImpact();
+        }, 1200 + Math.random() * 500);
+
+        // 🦇 Remove meteor after animation
+        setTimeout(() => {
+            if (meteor.parentNode) {
+                meteor.remove();
+            }
+        }, 3000);
+    },
+
+    meteorImpact() {
+        // 💀 Brief red flash for meteor impact
+        const overlay = document.getElementById('weather-overlay');
+        if (!overlay) return;
+
+        overlay.classList.add('meteor-impact');
+        setTimeout(() => {
+            overlay.classList.remove('meteor-impact');
+        }, 150);
+
+        // 🦇 Optional: play impact sound
+        if (typeof AudioSystem !== 'undefined' && AudioSystem.playSound) {
+            AudioSystem.playSound('explosion');
         }
     },
 
@@ -1123,6 +1242,81 @@ const WeatherSystem = {
             @keyframes heatwave-shimmer {
                 0%, 100% { opacity: 0.1; }
                 50% { opacity: 0.3; }
+            }
+
+            /* 💀 APOCALYPSE WEATHER - Dungeon doom and gloom */
+            .weather-apocalypse {
+                background: radial-gradient(ellipse at center, rgba(80, 20, 30, 0.4) 0%, rgba(40, 10, 20, 0.6) 100%) !important;
+                animation: apocalypse-pulse 3s ease-in-out infinite;
+            }
+            @keyframes apocalypse-pulse {
+                0%, 100% {
+                    filter: brightness(1) saturate(1.2);
+                    background: radial-gradient(ellipse at center, rgba(80, 20, 30, 0.4) 0%, rgba(40, 10, 20, 0.6) 100%);
+                }
+                50% {
+                    filter: brightness(0.9) saturate(1.4);
+                    background: radial-gradient(ellipse at center, rgba(100, 30, 40, 0.5) 0%, rgba(50, 15, 25, 0.7) 100%);
+                }
+            }
+
+            /* ☄️ Meteor animation - diagonal streak */
+            @keyframes meteor-fall {
+                0% {
+                    opacity: 0;
+                    transform: translateX(0) translateY(0) rotate(-45deg) scale(0.5);
+                }
+                10% {
+                    opacity: 1;
+                }
+                80% {
+                    opacity: 1;
+                }
+                100% {
+                    opacity: 0;
+                    transform: translateX(200px) translateY(120vh) rotate(-45deg) scale(1.2);
+                }
+            }
+
+            /* 🦇 Meteor trail effect */
+            .meteor::after {
+                content: '';
+                position: absolute;
+                top: 50%;
+                right: 100%;
+                width: 80px;
+                height: 3px;
+                background: linear-gradient(to left, #ff6600, #ff3300, transparent);
+                transform: translateY(-50%);
+                border-radius: 50%;
+                filter: blur(2px);
+            }
+
+            /* 💀 Meteor impact flash */
+            .meteor-impact {
+                background: rgba(255, 100, 50, 0.6) !important;
+                transition: none !important;
+            }
+
+            /* 🖤 Apocalypse particles - ember/ash */
+            .weather-apocalypse .weather-particle {
+                animation-name: apocalypse-ember !important;
+                color: #ff6600;
+                text-shadow: 0 0 5px #ff3300, 0 0 10px #ff0000;
+            }
+            @keyframes apocalypse-ember {
+                0% {
+                    transform: translateY(0) translateX(0) scale(1);
+                    opacity: 0.9;
+                }
+                50% {
+                    transform: translateY(50vh) translateX(30px) scale(0.8);
+                    opacity: 0.7;
+                }
+                100% {
+                    transform: translateY(100vh) translateX(-20px) scale(0.5);
+                    opacity: 0.2;
+                }
             }
         `;
         document.head.appendChild(style);

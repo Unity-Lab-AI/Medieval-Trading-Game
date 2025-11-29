@@ -2312,7 +2312,7 @@ const SettingsPanel = {
             };
 
             this.previewAudio.onerror = (e) => {
-                console.error('🎭 Audio playback error:', e);
+                // 🦇 Audio failed - update UI, no console spam
                 this.updateVoicePreviewStatus(`Playback error`, 'error');
                 URL.revokeObjectURL(audioUrl);
                 this.previewAudio = null;
@@ -2322,8 +2322,8 @@ const SettingsPanel = {
             await this.previewAudio.play();
 
         } catch (error) {
-            console.error('🎭 Voice preview error:', error.message, error.stack);
-            this.updateVoicePreviewStatus(`Text API failed: ${error.message} - using fallback`, 'error');
+            // 🦇 Voice preview failed - fallback will handle it
+            this.updateVoicePreviewStatus(`Text API failed - using fallback`, 'error');
 
             // Fallback to old method if NPCDialogueSystem fails
             this.testVoicePreviewFallback(personality, volume);
@@ -2579,8 +2579,8 @@ const SettingsPanel = {
             console.log(`🤖 Dropdown populated with ${models.length} models`);
 
         } catch (error) {
-            console.error('🤖 Failed to fetch models:', error);
-            // Use fallback models
+            // 🦇 API unavailable - use fallback models
+            console.warn('🤖 Using fallback models');
             selectElement.innerHTML = '';
             const fallbackModels = [
                 { name: 'openai', desc: 'OpenAI GPT-4o Mini' },
@@ -2877,7 +2877,7 @@ const SettingsPanel = {
                         <span class="studio-label">Created by</span>
                         <span class="studio-name">Unity AI Lab</span>
                     </div>
-                    <div class="about-copyright">© 2024 Unity AI Lab. all rights reserved.</div>
+                    <div class="about-copyright">© 2025 Unity AI Lab. all rights reserved.</div>
                 </div>
             `;
         }
@@ -3289,8 +3289,8 @@ const SettingsPanel = {
         try {
             this.currentSettings = JSON.parse(JSON.stringify(this.defaultSettings));
         } catch (error) {
-            console.error('Failed to reset settings:', error);
-            this.currentSettings = JSON.parse(JSON.stringify(this.defaultSettings));
+            // 🦇 Clone failed - shouldn't happen, but handle it
+            this.currentSettings = { ...this.defaultSettings };
         }
 
         // update ui controls - show the defaults in all their glory
@@ -3429,7 +3429,7 @@ const SettingsPanel = {
             window.location.reload(true);
 
         } catch (error) {
-            console.error('Error clearing data:', error);
+            // 🦇 Clear failed - alert user with guidance
             alert('❌ Error clearing some data. Please try clearing your browser data manually.\n\nError: ' + error.message);
         }
     },
@@ -3529,7 +3529,7 @@ const SettingsPanel = {
         try {
             return JSON.parse(JSON.stringify(this.currentSettings));
         } catch (error) {
-            console.error('Failed to clone settings:', error);
+            // 🦇 Clone failed - return empty object
             return {};
         }
     },

@@ -160,20 +160,20 @@ const ResourceGatheringSystem = {
         quarry: 'both'
     },
 
-    // Initialize the system
+    // ⛏️ wake this fucker up - time to ruin your back gathering rocks
     init() {
-        console.log('⛏️ ResourceGatheringSystem: Initializing...');
+        console.log('⛏️ ResourceGatheringSystem: Crawling out of the mines to serve you...');
 
-        // Ensure player has tools tracking
+        // 💀 make sure player has somewhere to store their pickaxe collection
         this.initPlayerTools();
 
-        // Setup gathering UI
+        // 🦇 slap the gathering UI into existence
         this.setupGatheringUI();
 
-        console.log('⛏️ ResourceGatheringSystem: Ready');
+        console.log('⛏️ ResourceGatheringSystem: Ready to break your spine for shiny rocks 🖤');
     },
 
-    // Initialize player tools tracking
+    // 🔨 conjure the player's tool tracking from the void
     initPlayerTools() {
         if (typeof game !== 'undefined' && game.player) {
             game.player.tools = game.player.tools || {};
@@ -187,22 +187,22 @@ const ResourceGatheringSystem = {
         }
     },
 
-    // Check if player has required tool for a resource
+    // 🔮 reality check - do you even have the right tool or are you gonna mine with your bare hands
     hasRequiredTool(resourceId) {
         const requirement = this.TOOL_REQUIREMENTS[resourceId];
         if (!requirement || !requirement.tool) {
-            return { hasTool: true, tool: null }; // No tool required
+            return { hasTool: true, tool: null }; // 🦇 no tool needed - peasant work
         }
 
         if (typeof game === 'undefined' || !game.player) {
             return { hasTool: false, reason: 'Player data not available' };
         }
 
-        // Check if player owns any version of the required tool
+        // 💀 dig through player's shit to see if they own the right equipment
         const toolType = requirement.tool;
         const playerTools = game.player.tools || {};
 
-        // Check for exact tool or upgraded versions
+        // 🗡️ find exact match or any upgraded version (because we're generous like that)
         const matchingTools = Object.keys(this.TOOLS).filter(toolId => {
             const tool = this.TOOLS[toolId];
             return toolId === toolType ||
@@ -223,7 +223,7 @@ const ResourceGatheringSystem = {
         return { hasTool: true, tool: ownedTool, toolInfo: this.TOOLS[ownedTool] };
     },
 
-    // Check skill level requirement
+    // 📜 skill check - are you even qualified to do this or just pretending
     hasRequiredSkill(resourceId) {
         const requirement = this.TOOL_REQUIREMENTS[resourceId];
         if (!requirement || requirement.minLevel === 0) {
@@ -231,7 +231,7 @@ const ResourceGatheringSystem = {
         }
 
         if (typeof game === 'undefined' || !game.player || !game.player.skills) {
-            return { hasSkill: true }; // Can't check, allow
+            return { hasSkill: true }; // 🦇 can't verify - fuck it, let them try
         }
 
         const playerSkillLevel = game.player.skills[requirement.skill] || 0;

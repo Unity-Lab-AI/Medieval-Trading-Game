@@ -66,7 +66,7 @@ This game follows a loosely-coupled module architecture where each system is its
 
 1. **`game`** - The global game state object (player, inventory, time, etc.)
 2. **`GameWorld`** - All locations, paths, and world data
-3. **`TimeSystem`** - The heartbeat that drives everything
+3. **`TimeMachine`** - The heartbeat: time, seasons, stat decay, time skipping
 
 ---
 
@@ -79,6 +79,9 @@ Trader 71/
 ├── GameplayReadme.md             # For players who read documentation
 ├── NerdReadme.md                 # You are here, brave soul
 ├── DebuggerReadme.md             # Debug console commands
+├── gameworld.md                  # Complete world data reference (42 locations)
+├── gameworldprompt.md            # AI image generation prompts for backdrop
+├── Gee's Unity Thoughts.md       # Unity's dark diary of code commentary
 ├── todo.md                       # The neverending TODO list
 │
 ├── src/
@@ -89,6 +92,7 @@ Trader 71/
 │       ├── core/                 # Core engine systems
 │       │   ├── game.js           # THE BIG ONE (~8000 lines)
 │       │   ├── game-engine.js    # Game loop and initialization
+│       │   ├── time-machine.js   # Central time: calendar, seasons, stat decay, time skip
 │       │   ├── time-system.js    # Gregorian calendar (April 1111)
 │       │   ├── event-manager.js  # Custom event system
 │       │   ├── timer-manager.js  # setTimeout/setInterval wrapper
@@ -110,7 +114,7 @@ Trader 71/
 │       │   ├── story/            # Initial encounter
 │       │   ├── trading/          # Markets, prices, routes
 │       │   ├── travel/           # Movement, mounts, ships, gatehouses
-│       │   └── world/            # Weather, day-night, city events
+│       │   └── world/            # Weather, day-night, city events, dungeon bonanza
 │       │
 │       ├── ui/                   # User interface
 │       │   ├── components/       # Tooltips, modals, panels, draggable
@@ -130,7 +134,8 @@ Trader 71/
 │       ├── effects/              # Visual effects
 │       │   ├── visual-effects-system.js
 │       │   ├── animation-system.js
-│       │   └── environmental-effects-system.js
+│       │   ├── environmental-effects-system.js
+│       │   └── menu-weather-system.js    # Main menu seasonal weather effects
 │       │
 │       ├── audio/                # Sound and music
 │       │   └── audio-system.js
@@ -152,6 +157,15 @@ Trader 71/
 │   ├── config/test-config.js     # Test configuration
 │   ├── helpers/test-helpers.js   # Test utilities
 │   └── *.spec.js                 # Test files
+│
+├── assets/
+│   └── images/                   # Game images
+│       ├── world-map-spring.png  # Spring backdrop (AI generated)
+│       ├── world-map-summer.png  # Summer backdrop
+│       ├── world-map-autumn.png  # Autumn backdrop
+│       ├── world-map-winter.png  # Winter backdrop
+│       ├── world-map-dungeon.png # Dungeon backdrop (fades in at dungeons)
+│       └── .gitkeep              # Instructions for generating images
 │
 └── .claude/skills/               # Claude AI skill files
     ├── masterplan.md             # Workflow guide
@@ -248,36 +262,119 @@ const ItemDatabase = {
 
 ---
 
-### TimeSystem - The Eternal Tick
+### TimeMachine - The Heart of Time
 
-*"Time waits for no merchant. Unless you pause it."*
+*"Time waits for no merchant. Unless you pause it. Or skip it entirely."*
 
-The game runs on a tick system. Every real second, game time advances based on speed:
+The game uses `TimeMachine` as the central time management system, handling the Gregorian calendar, seasons, stat decay, and time skipping.
 
 ```javascript
-TimeSystem = {
+TimeMachine = {
+    // Core time state
+    currentTime: { year: 1111, month: 4, day: 1, hour: 8, minute: 0 },
+    isPaused: false,
+    currentSpeed: 'NORMAL',
+
     SPEEDS: {
         PAUSED: 0,        // frozen like my heart
-        NORMAL: 2,        // 2 game minutes per real second (1 hour = 30 real seconds)
-        FAST: 10,         // 10 game minutes per real second (1 hour = 6 real seconds)
-        VERY_FAST: 30     // 30 game minutes per real second (1 hour = 2 real seconds)
+        NORMAL: 2,        // 2 game minutes per real second
+        FAST: 10,         // 10 game minutes per real second
+        VERY_FAST: 30     // 30 game minutes per real second
     },
 
-    update() {
-        // Called every frame
-        // Advances time, triggers events
-        // Calls all system updates
+    // 🍂 Season configuration
+    SEASONS: {
+        spring: { name: 'Spring', months: [3, 4, 5], icon: '🌸', effects: {...} },
+        summer: { name: 'Summer', months: [6, 7, 8], icon: '☀️', effects: {...} },
+        autumn: { name: 'Autumn', months: [9, 10, 11], icon: '🍂', effects: {...} },
+        winter: { name: 'Winter', months: [12, 1, 2], icon: '❄️', effects: {...} }
     },
 
-    getTotalMinutes() {
-        // Returns total game minutes since start
-        // Used for travel sync, events, etc.
-    }
+    // 🍖 Stat decay system
+    lastStatDecayMinute: 0,
+    STAT_DECAY_INTERVAL: 30, // Decay every 30 game minutes
+
+    // Core methods
+    update(),              // Called every frame
+    getTotalMinutes(),     // Total minutes since game start
+    getSeason(),           // Returns current season name
+    getSeasonData(),       // Returns season config with effects
+
+    // 🍖 Stat decay
+    processStatDecay(),    // Runs every 30 game minutes
+
+    // ⏰ Time skipping (preserves stats)
+    skipDays(days, preserveStats),
+    skipMonths(months, preserveStats),
+
+    // 💾 Save/Load integration
+    getSaveData(),         // Returns all time state for saving
+    loadSaveData(data)     // Restores time state from save
 };
 ```
 
+### Stat Decay System
+
+*"Your body doesn't care about your trading profits."*
+
+Stats automatically decay as time passes, affected by the current season:
+
+```javascript
+processStatDecay() {
+    // Runs every 30 game minutes
+    const season = this.getSeasonData();
+
+    // 🍖 Hunger decay - affected by season
+    const hungerDrain = 1 * (season.effects.hungerDrain || 1.0);
+    stats.hunger = Math.max(0, stats.hunger - hungerDrain);
+
+    // 💧 Thirst decay - affected by season
+    const thirstDrain = 1.2 * (season.effects.thirstDrain || 1.0);
+    stats.thirst = Math.max(0, stats.thirst - thirstDrain);
+
+    // ⚡ Stamina - drains while traveling, recovers while resting
+    if (isTraveling) {
+        stats.stamina -= 2 * season.effects.staminaDrain;
+    } else {
+        stats.stamina += 0.5; // Recovery
+    }
+
+    // 💀 Low stats cause health damage
+    if (stats.hunger <= 0 || stats.thirst <= 0) {
+        stats.health -= damage;
+        // Warning messages for starvation/dehydration
+    }
+}
+```
+
+**Seasonal Modifiers:**
+| Season | Hunger | Thirst | Stamina |
+|--------|--------|--------|---------|
+| Spring | 1.0x | 1.0x | 0.95x |
+| Summer | 0.9x | 1.3x | 1.1x |
+| Autumn | 1.1x | 0.9x | 1.0x |
+| Winter | 1.3x | 0.7x | 1.4x |
+
+### Time Skip System
+
+*"When you need to see the seasons change without dying of old age."*
+
+```javascript
+// Skip months while preserving player stats
+TimeMachine.skipMonths(6, true);  // Skip 6 months, keep stats
+
+// What happens during a time skip:
+// 1. Save current player stats (if preserveStats=true)
+// 2. Advance calendar by specified amount
+// 3. Trigger season change events if season changed
+// 4. Update seasonal backdrop image
+// 5. Generate new weather
+// 6. Restore saved stats
+// 7. Emit 'timeSkipped' event
+```
+
 **Travel Animation Sync:**
-Travel animations use `TimeSystem.getTotalMinutes()` to sync player marker movement with game time. This means:
+Travel animations use `TimeMachine.getTotalMinutes()` to sync player marker movement with game time. This means:
 - A 2-hour journey (120 game minutes) takes exactly 60 real seconds at NORMAL speed
 - Pausing the game pauses the travel animation
 - Speed changes affect travel progress in real-time
@@ -389,6 +486,15 @@ const GameWorldRenderer = {
         wilderness: { speedMultiplier: 0.4, staminaDrain: 1.5, safety: 0.3 }
     },
 
+    // 🖤 Seasonal backdrop configuration
+    SEASONAL_BACKDROPS: {
+        spring: 'assets/images/world-map-spring.png',
+        summer: 'assets/images/world-map-summer.png',
+        autumn: 'assets/images/world-map-autumn.png',
+        winter: 'assets/images/world-map-winter.png'
+    },
+    SEASON_FADE_DURATION: 2000,  // 2 second crossfade
+
     init(),
     render(),
     renderPaths(),         // SVG paths with hover tooltips
@@ -404,6 +510,13 @@ const GameWorldRenderer = {
     animateTravel(fromId, toId, travelTimeMinutes),
     runTravelAnimation(),  // Uses TimeSystem.getTotalMinutes()
     onTravelStart(fromId, toId, duration),
+
+    // 🖤 Seasonal backdrop methods
+    setupBackdropContainer(),    // Creates crossfade layer structure
+    loadSeasonalBackdrop(season), // Load season-specific image
+    transitionToBackdrop(url, season), // Smooth crossfade transition
+    setupSeasonListener(),       // Polls TimeSystem for season changes
+    setSeason(season),           // Manual season change (for testing)
     // ...
 };
 ```
@@ -412,6 +525,193 @@ const GameWorldRenderer = {
 - `'visible'` - Location visited, fully shown
 - `'discovered'` - Connected to visited location, greyed out
 - `'hidden'` - Not yet connected to explored area
+
+### Seasonal Backdrop System
+
+*"The world breathes with the seasons. Snow falls, flowers bloom, leaves turn."*
+
+The game supports **seasonal backdrop images** that crossfade smoothly as the in-game season changes.
+
+### Dungeon Backdrop System
+
+*"When you enter the darkness, the world fades away..."*
+
+When players enter dungeon-type locations (dungeon, cave, ruins, mine), the map backdrop fades to a special dungeon image:
+
+```javascript
+// In GameWorldRenderer:
+isDungeonLocation(locationId) {
+    const location = GameWorld.locations[locationId];
+    return ['dungeon', 'cave', 'ruins', 'mine'].includes(location.type);
+}
+
+enterDungeonMode() {
+    // Fade to dungeon backdrop (2 second transition)
+    this.transitionToDungeonBackdrop(this.DUNGEON_BACKDROP);
+}
+
+exitDungeonMode() {
+    // Return to seasonal backdrop
+    this.loadSeasonalBackdrop(currentSeason);
+}
+```
+
+**Dungeon backdrop file:** `assets/images/world-map-dungeon.png`
+
+### DungeonBonanzaSystem - The Dark Convergence
+
+*"July 18th - When the veil between worlds thins..."*
+
+Every July 18th, a special event triggers that makes dungeon crawling incredibly fast:
+
+```javascript
+const DungeonBonanzaSystem = {
+    EVENT_MONTH: 7,   // July
+    EVENT_DAY: 18,    // 18th
+    DUNGEON_TRAVEL_TIME: 30, // minutes (normally 60-120)
+
+    isDungeonBonanzaDay() {
+        return TimeMachine.currentTime.month === 7 &&
+               TimeMachine.currentTime.day === 18;
+    },
+
+    shouldBypassCooldowns() {
+        // Returns true on July 18th - no dungeon cooldowns!
+        return this.isDungeonBonanzaDay();
+    },
+
+    getDungeonTravelTimeOverride(fromId, toId) {
+        // Returns 30 for dungeon destinations on July 18th
+        if (!this.isDungeonBonanzaDay()) return null;
+        if (!isDungeonType(toId)) return null;
+        return this.DUNGEON_TRAVEL_TIME;
+    }
+};
+```
+
+**Manual Override (Doom Command):**
+```javascript
+// Activate bonanza for one game day via debug command
+DungeonBonanzaSystem.activateManualOverride();
+
+// The override lasts until the current game day ends
+// When the day changes, it automatically deactivates
+isManualOverrideValid() {
+    if (!this.manualOverrideActive) return false;
+    const currentDay = this.getCurrentDay();
+    if (currentDay !== this.manualOverrideEndDay) {
+        this.deactivateManualOverride();
+        return false;
+    }
+    return true;
+}
+```
+
+**Integration Points:**
+- `GameWorld.calculateTravelTime()` - Checks for bonanza override
+- `DungeonExplorationSystem.isOnCooldown()` - Bypassed during event
+- `doom` debug command - Activates manual override for one game day
+
+**Image Files (place in `assets/images/`):**
+```
+world-map-spring.png  - Cherry blossoms, fresh green
+world-map-summer.png  - Lush forests, golden wheat
+world-map-autumn.png  - Orange/red foliage, harvest colors
+world-map-winter.png  - Snow covered, frozen lakes
+```
+
+**Fallback Chain:**
+1. Try seasonal image (`world-map-{season}.png`)
+2. Fall back to single image (`world-map-backdrop.png`)
+3. Fall back to CSS gradient (the void wins)
+
+**Console Testing:**
+```javascript
+GameWorldRenderer.setSeason('winter');  // Force winter backdrop
+GameWorldRenderer.setSeason('summer');  // Force summer backdrop
+```
+
+### MenuWeatherSystem - Main Menu Seasonal Effects
+
+*"The main menu breathes before you even start playing."*
+
+The main menu has its own weather system separate from in-game weather. It displays seasonal particle effects on the title screen.
+
+```javascript
+const MenuWeatherSystem = {
+    isActive: true,
+    currentSeason: 'spring',
+
+    seasons: {
+        spring: { weight: 25, name: 'Spring Breeze' },
+        summer: { weight: 25, name: 'Summer Warmth' },
+        autumn: { weight: 25, name: 'Autumn Winds' },
+        winter: { weight: 25, name: 'Winter Chill' },
+        apocalypse: { weight: 0, name: 'The Dark Convergence' }  // Debug only
+    },
+
+    // Methods
+    start(),                    // Begin weather effects
+    stop(),                     // Stop effects
+    changeSeason(season),       // Manually set season
+
+    // Seasonal effects
+    startSpringEffects(),       // Floating petals, butterflies
+    startSummerEffects(),       // Heat shimmer, fireflies
+    startAutumnEffects(),       // Falling leaves, wind gusts
+    startWinterEffects(),       // Snowflakes, frost
+    startApocalypse()           // ☄️ Meteors, red sky, embers
+};
+```
+
+**Apocalypse Weather (Doom Command):**
+
+When triggered by the `doom` debug command, apocalypse weather displays:
+- Red pulsing sky overlay
+- Meteor showers with impact flashes (☄️)
+- Floating embers rising from below
+- Blood-red lightning effects
+- Ominous fog layer
+
+```javascript
+startMeteorShower() {
+    const spawnMeteor = () => {
+        // Create meteor with ☄️ emoji
+        // Random horizontal position
+        // 1.5-2.5 second fall animation
+        // Impact flash effect on ground
+        // Next meteor spawns in 3-10 seconds
+        this.meteorInterval = setTimeout(spawnMeteor, 3000 + Math.random() * 7000);
+    };
+    spawnMeteor();
+}
+```
+
+**Integration with Doom Command:**
+```javascript
+// In debug-command-system.js
+registerCommand('doom', '...', () => {
+    // Trigger menu weather (main menu)
+    if (MenuWeatherSystem.isActive) {
+        MenuWeatherSystem.changeSeason('apocalypse');
+    }
+    // Trigger in-game weather
+    if (WeatherSystem) {
+        WeatherSystem.changeWeather('apocalypse');
+    }
+    // Fade in dungeon backdrop
+    if (GameWorldRenderer) {
+        GameWorldRenderer.enterDungeonMode();
+    }
+    // Activate bonanza for one day
+    if (DungeonBonanzaSystem) {
+        DungeonBonanzaSystem.activateManualOverride();
+    }
+});
+```
+
+**Generation Prompts:**
+See `gameworldprompt.md` for AI image generation prompts that match the world layout exactly. The prompt includes all 42 locations with coordinates, seasonal variations, color palette, and style notes.
 
 ### dungeon-exploration-system.js - Into the Darkness
 
@@ -576,7 +876,7 @@ Old saves are NEVER auto-submitted. Only active gameplay triggers leaderboard up
 
 ```javascript
 const SaveLoadSystem = {
-    SAVE_VERSION: '0.5',
+    SAVE_VERSION: '0.6',
 
     saveGame(slotId),
     loadGame(slotId),
@@ -598,6 +898,35 @@ const SaveLoadSystem = {
     // - Hides all setup screens, shows game UI
     // - Triggers full UI refresh (player info, inventory, time display)
 };
+```
+
+### TimeMachine Save/Load Integration
+
+*"Time itself bends to the save file."*
+
+The TimeMachine system has its own save/load methods that are called by SaveManager:
+
+```javascript
+// In save-manager.js getCompleteGameState():
+timeState: typeof TimeMachine !== 'undefined' && TimeMachine.getSaveData
+    ? TimeMachine.getSaveData()
+    : fallbackTimeState,
+
+// TimeMachine.getSaveData() returns:
+{
+    currentTime: { year, month, day, hour, minute },
+    currentSpeed: 'NORMAL',
+    isPaused: false,
+    accumulatedTime: 0,
+    lastProcessedDay: 0,
+    lastWageProcessedDay: 0,
+    lastStatDecayMinute: 0  // 🍖 Stat decay tracking
+}
+
+// On load, TimeMachine.loadSaveData() restores:
+// - All time state
+// - Stat decay tracking
+// - Seasonal backdrop image (with 100ms delay for DOM)
 ```
 
 ### draggable-panels.js - Panel Position Persistence

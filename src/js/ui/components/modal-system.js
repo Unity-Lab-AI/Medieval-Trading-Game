@@ -53,7 +53,7 @@ const ModalSystem = {
             ? `<button class="modal-close-x" title="Close">×</button>`
             : '';
 
-        // Build the modal HTML
+        // 🖤 Conjure the modal's dark structure into being
         const html = `
             <div class="modal-dialog ${draggable ? 'modal-draggable' : ''}">
                 <div class="modal-header ${draggable ? 'modal-drag-handle' : ''}">
@@ -68,7 +68,7 @@ const ModalSystem = {
             </div>
         `;
 
-        // Get or create modal container
+        // 🔮 Summon or retrieve the modal's vessel from the void
         let modalContainer = document.getElementById(this.currentModalId);
         if (!modalContainer) {
             modalContainer = document.createElement('div');
@@ -77,16 +77,16 @@ const ModalSystem = {
             document.body.appendChild(modalContainer);
         }
 
-        // Store reference
+        // 💀 Keep this soul in our dark registry
         this.activeModals.set(this.currentModalId, modalContainer);
 
-        // Set content and show
+        // ⚡ Breathe life into the vessel and reveal it to the world
         modalContainer.innerHTML = html;
         modalContainer.style.display = 'flex';
 
         const dialog = modalContainer.querySelector('.modal-dialog');
 
-        // Setup button click handlers
+        // 🗡️ Wire up the choices that shape your fate
         buttons.forEach((btn, idx) => {
             const btnEl = modalContainer.querySelector(`[data-btn-idx="${idx}"]`);
             if (btnEl && btn.onClick) {
@@ -96,21 +96,21 @@ const ModalSystem = {
             }
         });
 
-        // Setup close button if closeable
+        // 💀 Grant the power to banish this dark window
         if (closeable) {
             const closeX = modalContainer.querySelector('.modal-close-x');
             if (closeX) {
                 closeX.addEventListener('click', () => this.hide());
             }
 
-            // Click outside to close
+            // 🌙 Click the void to dismiss the vision
             modalContainer.addEventListener('click', (e) => {
                 if (e.target === modalContainer) {
                     this.hide();
                 }
             });
 
-            // ESC to close
+            // ⚰️ ESC - the universal "fuck this" button
             this._escHandler = (e) => {
                 if (e.key === 'Escape') {
                     this.hide();
@@ -119,7 +119,7 @@ const ModalSystem = {
             document.addEventListener('keydown', this._escHandler);
         }
 
-        // Setup dragging if draggable
+        // 🦇 Let control freaks drag this shit around
         if (draggable && dialog) {
             const handle = modalContainer.querySelector('.modal-drag-handle');
             if (handle) {
@@ -171,7 +171,7 @@ const ModalSystem = {
             const { dialog, offsetX, offsetY } = this.dragState;
             let newX = e.clientX - offsetX;
             let newY = e.clientY - offsetY;
-            // Keep within viewport
+            // 🔮 Cage this window within the screen's boundaries - no escape
             const rect = dialog.getBoundingClientRect();
             newX = Math.max(0, Math.min(newX, window.innerWidth - rect.width));
             newY = Math.max(0, Math.min(newY, window.innerHeight - rect.height));

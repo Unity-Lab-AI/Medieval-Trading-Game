@@ -151,7 +151,7 @@ const NPCScheduleSystem = {
             });
         }
 
-        console.log('📅 NPCScheduleSystem initialized');
+        console.log('📅 NPCScheduleSystem initialized - NPCs got their own lives, deal with it 🦇');
     },
 
     // Sync with game time

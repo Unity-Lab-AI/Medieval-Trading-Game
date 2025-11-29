@@ -2177,6 +2177,84 @@ const ItemDatabase = {
             weight: 3,
             basePrice: 120,
             craftable: true
+        },
+
+        // === QUEST ITEMS - Required for storyline ===
+        potion: {
+            id: 'potion',
+            name: 'Potion',
+            description: 'A mysterious healing elixir brewed by alchemists.',
+            icon: '🧪',
+            category: 'consumables',
+            rarity: 'uncommon',
+            weight: 0.5,
+            basePrice: 25,
+            consumable: true,
+            effects: {
+                health: 35,
+                hunger: 5
+            }
+        },
+        grapes: {
+            id: 'grapes',
+            name: 'Grapes',
+            description: 'Sweet, sun-ripened grapes from the vineyard.',
+            icon: '🍇',
+            category: 'consumables',
+            rarity: 'common',
+            weight: 0.5,
+            basePrice: 8,
+            consumable: true,
+            effects: {
+                hunger: 8,
+                health: 3,
+                happiness: 5
+            }
+        },
+        warm_cloak: {
+            id: 'warm_cloak',
+            name: 'Warm Cloak',
+            description: 'A thick fur-lined cloak that protects against the harshest winter winds.',
+            icon: '🧥',
+            category: 'armor',
+            rarity: 'uncommon',
+            weight: 3,
+            basePrice: 75,
+            equipSlot: 'body',
+            equipType: 'clothing',
+            bonuses: { defense: 5, endurance: 8, cold_resistance: 20 }
+        },
+        ice_blade: {
+            id: 'ice_blade',
+            name: 'Ice Blade',
+            description: 'A legendary blade forged from eternal ice. It never melts and chills all it touches.',
+            icon: '🗡️',
+            category: 'weapons',
+            rarity: 'epic',
+            weight: 4,
+            basePrice: 500,
+            damage: 55,
+            equipSlot: 'weapon',
+            equipType: 'weapon',
+            bonuses: { attack: 18, damage: 55, cold_damage: 15, speed: 3 },
+            lore: 'Forged in the frozen heart of Frostholm by the legendary Frost Lord himself.'
+        },
+        dragonbone_blade: {
+            id: 'dragonbone_blade',
+            name: 'Dragonbone Blade',
+            description: 'A massive blade carved from the bones of an ancient dragon. Radiates primal power.',
+            icon: '⚔️',
+            category: 'weapons',
+            rarity: 'legendary',
+            weight: 8,
+            basePrice: 2000,
+            damage: 85,
+            equipSlot: 'weapon',
+            equipType: 'weapon',
+            bonuses: { attack: 30, damage: 85, fire_damage: 25, strength: 10, intimidation: 15 },
+            lore: 'Only the mightiest warriors who have slain a dragon may wield this terrible weapon.',
+            special: true,
+            unique: true
         }
     },
 

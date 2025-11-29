@@ -663,12 +663,12 @@ const EmployeeSystem = {
     // Load employees from save data
     loadEmployees(employees) {
         if (!employees || !Array.isArray(employees)) {
-            console.log('💾 No employees to load');
+            console.log('💾 No employees to load - guess you gotta do everything yourself 💀');
             return;
         }
 
         game.player.ownedEmployees = employees;
-        console.log(`💾 Loaded ${employees.length} employees from save`);
+        console.log(`💾 Loaded ${employees.length} employees from save - your workforce awaits exploitation 🖤`);
 
         // Update display if available
         this.updateEmployeeDisplay();

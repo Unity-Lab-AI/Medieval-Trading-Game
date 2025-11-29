@@ -671,7 +671,8 @@ const NPCMerchantSystem = {
 
             console.log('Merchant reputation loaded');
         } catch (error) {
-            console.error('Error loading merchant reputation:', error);
+            // 🦇 Corrupt reputation data - start fresh
+            console.warn('Merchant reputation reset - previous data corrupt');
         }
     },
 

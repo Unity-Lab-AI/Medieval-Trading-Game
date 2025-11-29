@@ -1327,6 +1327,12 @@ const DungeonExplorationSystem = {
 
     // Check if location is on cooldown
     isOnCooldown(locationId) {
+        // 💀 Dungeon Bonanza (July 18th) bypasses all cooldowns!
+        if (typeof DungeonBonanzaSystem !== 'undefined' && DungeonBonanzaSystem.shouldBypassCooldowns()) {
+            console.log('💀 Dark Convergence active - dungeon cooldowns bypassed!');
+            return false;
+        }
+
         const lastExplored = this.locationCooldowns[locationId];
         if (!lastExplored) return false;
 

@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// 🐛 DEBUG SYSTEM - Opt-in debugging for the dark souls of code 🖤
+// 🐛 DEBOOGER SYSTEM - Opt-in debugging for the dark souls of code 🖤
 // ═══════════════════════════════════════════════════════════════
 // disabled by default for performance, enable when you need to suffer 💀
 // File Version: GameConfig.version.file | Made by Unity AI Lab
@@ -12,21 +12,21 @@ const DebugSystem = {
     _originalWarn: null,
     _originalError: null,
 
-    // 🖤 Initialize debug system - ON by default for Super Hacker achievement ⚰️
+    // 🖤 Initialize Debooger system - ON by default for Super Hacker achievement ⚰️
     init() {
-        // always setup console capture - debug is on by default now 🦇
+        // always setup console capture - Debooger is on by default now 🦇
         this.setupConsoleCapture();
-        console.log('🐛 Debug system enabled by default - Super Hacker mode! 💀');
+        console.log('🐛 Debooger system enabled by default - Super Hacker mode! 💀');
     },
 
-    // 🔓 Enable debugging manually 🗡️
+    // 🔓 Enable Debooger manually 🗡️
     enable() {
         this.enabled = true;
         this.setupConsoleCapture();
-        console.log('🐛 Debug system manually enabled');
+        console.log('🐛 Debooger system manually enabled');
     },
 
-    // 🔒 Disable debugging 🌙
+    // 🔒 Disable Debooger 🌙
     disable() {
         this.enabled = false;
         if (this._originalLog) {
@@ -34,7 +34,7 @@ const DebugSystem = {
             console.warn = this._originalWarn;
             console.error = this._originalError;
         }
-        console.log('🐛 Debug system disabled');
+        console.log('🐛 Debooger system disabled');
     },
 
     // 🎯 Setup console capture (only when enabled) 🔮
@@ -93,4 +93,4 @@ if (document.readyState === 'loading') {
     DebugSystem.init();
 }
 
-console.log('🐛 Debug System loaded!');
+console.log('🐛 Debooger System loaded!');

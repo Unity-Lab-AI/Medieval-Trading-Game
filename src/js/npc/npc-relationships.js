@@ -125,7 +125,8 @@ const NPCRelationshipSystem = {
         try {
             localStorage.setItem('medievalTradingGameRelationships', JSON.stringify(saveData));
         } catch (e) {
-            console.error('💕 Failed to save relationships:', e);
+            // 🦇 Storage full - relationships live in memory only
+            console.warn('💕 Relationships not persisted - storage full');
         }
     },
 
@@ -140,7 +141,8 @@ const NPCRelationshipSystem = {
                 console.log('💕 Loaded relationships:', Object.keys(this.relationships).length, 'NPCs remembered');
             }
         } catch (e) {
-            console.error('💕 Failed to load relationships:', e);
+            // 🦇 Corrupt relationship data - start fresh
+            console.warn('💕 Relationships reset - previous data corrupt');
         }
     },
 
@@ -156,7 +158,7 @@ const NPCRelationshipSystem = {
      */
     getRelationship(npcId, npcData = null) {
         if (!this.relationships[npcId]) {
-            // Create new relationship
+            // 💀 Birth a new bond - every soul starts as a stranger in the void 🖤
             this.relationships[npcId] = {
                 npcId: npcId,
                 npcName: npcData?.name || npcId,
@@ -190,13 +192,13 @@ const NPCRelationshipSystem = {
         const oldRep = relationship.reputation;
         const oldLevel = this.getRelationshipLevel(oldRep);
 
-        // Apply change with caps
+        // 🎭 Adjust the emotional ledger - love and hate are capped at mortal limits 💕
         relationship.reputation = Math.max(-100, Math.min(100, oldRep + amount));
         relationship.lastInteraction = Date.now();
 
         const newLevel = this.getRelationshipLevel(relationship.reputation);
 
-        // Check for level change
+        // 🦇 Did we cross the threshold? From stranger to friend... or enemy? 💔
         if (oldLevel.label !== newLevel.label) {
             const event = new CustomEvent('relationship-level-changed', {
                 detail: {
@@ -215,7 +217,7 @@ const NPCRelationshipSystem = {
             }
         }
 
-        // Update faction reputation too
+        // 👥 Ripple effects - they all talk to each other, remember? 🗣️
         this.updateFactionReputation(relationship.npcType, amount * 0.5);
 
         this.saveRelationships();
@@ -251,16 +253,29 @@ const NPCRelationshipSystem = {
         relationship.lastInteraction = Date.now();
 
         switch (type) {
+            case 'conversation':
+                // 🦇 talking to an NPC - first meeting unlocks their quests in the Available filter
+                // the void tracks every whisper... every word exchanged... 🖤
+                if (data.npcData?.name) {
+                    relationship.npcName = data.npcData.name;
+                }
+                if (data.npcData?.type) {
+                    relationship.npcType = data.npcData.type;
+                }
+                // tiny rep boost for being social (not all of us have that skill...)
+                this.modifyReputation(npcId, 1, 'had conversation');
+                break;
+
             case 'trade':
                 relationship.timesTraded++;
                 relationship.totalGoldTraded += data.goldValue || 0;
-                // Small rep boost for trading
+                // 💰 A transaction is a tiny thread in the web of connection ⚖️
                 this.modifyReputation(npcId, 1, 'completed trade');
                 break;
 
             case 'quest_complete':
                 relationship.questsCompleted++;
-                // Bigger rep boost for quest completion
+                // 🎯 Proving yourself through deeds - they remember the heroes 🏆
                 this.modifyReputation(npcId, data.repBonus || 10, 'completed quest');
                 break;
 
@@ -274,7 +289,7 @@ const NPCRelationshipSystem = {
                     item: data.itemId,
                     date: Date.now()
                 });
-                // Rep boost based on gift value
+                // 🎁 Gifts speak when words fail - the value of kindness measured in gold 💎
                 const giftBonus = Math.floor((data.value || 10) / 10);
                 this.modifyReputation(npcId, giftBonus, 'gave gift');
                 break;
@@ -289,7 +304,7 @@ const NPCRelationshipSystem = {
 
             case 'attack':
                 this.modifyReputation(npcId, -50, 'attacked');
-                // Also affect faction
+                // ⚔️ Violence echoes - their whole community feels this betrayal 🩸
                 this.updateFactionReputation(relationship.npcType, -25);
                 break;
         }
@@ -328,7 +343,7 @@ const NPCRelationshipSystem = {
         if (key) {
             return relationship.memories[key]?.value;
         }
-        // Return all memories as simple key-value
+        // 🧠 Extract all memories from the vault of their mind 🔮
         const memories = {};
         for (const [k, v] of Object.entries(relationship.memories)) {
             memories[k] = v.value;
@@ -379,7 +394,7 @@ const NPCRelationshipSystem = {
             context += `- Quests completed for you: ${relationship.questsCompleted}\n`;
         }
 
-        // Add memories
+        // 💭 What do they remember about you? The past haunts every conversation 👻
         const memories = this.getMemory(npcId);
         if (Object.keys(memories).length > 0) {
             context += `- You remember about the player:\n`;
@@ -388,7 +403,7 @@ const NPCRelationshipSystem = {
             }
         }
 
-        // Add relationship-specific behavior hints
+        // 🎭 How should they treat you? Their feelings dictate their mask 😈
         if (level.key === 'hostile') {
             context += `- Be cold, dismissive, or hostile to the player.\n`;
         } else if (level.key === 'beloved') {
@@ -408,13 +423,13 @@ const NPCRelationshipSystem = {
      * @param {number} amount - Amount to change
      */
     updateFactionReputation(npcType, amount) {
-        // Find which faction this NPC type belongs to
+        // 🏛️ Every soul belongs to a tribe - find their collective and adjust accordingly 👥
         for (const [factionId, faction] of Object.entries(this.factions)) {
             if (faction.members.includes(npcType)) {
                 const oldRep = this.factionReputation[factionId] || 0;
                 this.factionReputation[factionId] = Math.max(-100, Math.min(100, oldRep + amount));
 
-                // Check for benefit unlocks
+                // 🔓 Have we earned their trust? Check if doors have opened 🚪
                 this.checkFactionBenefits(factionId);
 
                 this.saveRelationships();
@@ -442,8 +457,7 @@ const NPCRelationshipSystem = {
 
         for (const [threshold, benefit] of Object.entries(faction.benefits)) {
             const thresholdNum = parseInt(threshold);
-            // Check if we just crossed this threshold
-            // (This is simplified - would need more state to track properly)
+            // 🎯 Did we just unlock a new tier of their favor? (tracking needs work) 📊
         }
     },
 
@@ -507,7 +521,7 @@ const NPCRelationshipSystem = {
         const level = this.getRelationshipLevel(relationship.reputation);
         const mood = relationship.mood;
 
-        // Combine mood and relationship level
+        // 🎭 Mood + relationship = how they'll treat you today 💸
         let priceModifier = 0;
         let dialogueStyle = 'neutral';
 
@@ -542,7 +556,7 @@ const NPCRelationshipSystem = {
                 break;
         }
 
-        // Mood modifiers
+        // 😠 Bad mood = bad prices. They're taking it out on you 💢
         if (mood === 'angry') priceModifier += 10;
         if (mood === 'happy') priceModifier -= 5;
 

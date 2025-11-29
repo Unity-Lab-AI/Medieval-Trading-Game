@@ -1,11 +1,11 @@
 // ═══════════════════════════════════════════════════════════════
-// 🎭 IMMERSIVE EXPERIENCE INTEGRATION - connecting the vibes
+// 🎭 IMMERSIVE EXPERIENCE INTEGRATION - weaving the sensory tapestry
 // ═══════════════════════════════════════════════════════════════
 // File Version: GameConfig.version.file
 // conjured by Unity AI Lab - Hackall360, Sponge, GFourteen
 // ═══════════════════════════════════════════════════════════════
-// glues all the audio/visual systems together
-// the conductor of this aesthetic orchestra
+// 🌙 This is where all my dark magic converges.
+// Audio, visuals, weather... all orchestrated into one beautiful nightmare 🦇
 
 const ImmersiveExperienceIntegration = {
     // 🌙 Initialize all immersive systems - summoning the atmosphere
@@ -20,53 +20,53 @@ const ImmersiveExperienceIntegration = {
         }
     },
     
-    // Initialize all systems
+    // 🔮 Initialize all systems - awakening each piece of the experience
     initializeSystems() {
-        // Initialize audio system
+        // 🔊 Initialize audio system - giving voice to the void
         if (typeof AudioSystem !== 'undefined') {
             AudioSystem.init();
             this.setupAudioIntegration();
         }
         
-        // Initialize visual effects system
+        // ✨ Initialize visual effects system - painting reality with magic
         if (typeof VisualEffectsSystem !== 'undefined') {
             VisualEffectsSystem.init();
             this.setupVisualEffectsIntegration();
         }
         
-        // Initialize animation system
+        // 🎬 Initialize animation system - teaching pixels to dance
         if (typeof AnimationSystem !== 'undefined') {
             AnimationSystem.init();
             this.setupAnimationIntegration();
         }
         
-        // Initialize UI polish system
+        // 💅 Initialize UI polish system - making interfaces irresistibly smooth
         if (typeof UIPolishSystem !== 'undefined') {
             UIPolishSystem.init();
             this.setupUIPolishIntegration();
         }
         
-        // Initialize environmental effects system
+        // 🌧️ Initialize environmental effects system - commanding the atmosphere
         if (typeof EnvironmentalEffectsSystem !== 'undefined') {
             EnvironmentalEffectsSystem.init();
             this.setupEnvironmentalIntegration();
         }
         
-        // Initialize settings panel
+        // ⚙️ Initialize settings panel - giving control to the mortals
         if (typeof SettingsPanel !== 'undefined') {
             SettingsPanel.init();
             this.setupSettingsIntegration();
         }
         
-        // Start animation loops
+        // 🔁 Start animation loops - the eternal cycles commence
         if (typeof VisualEffectsSystem !== 'undefined') {
             VisualEffectsSystem.startParticleLoop();
         }
         
-        console.log('Immersive experience integration complete');
+        console.log('🎭 Immersive experience integration complete... reality is now mine to bend 🖤');
     },
     
-    // Setup audio integration with game events
+    // 🔊 Setup audio integration with game events - syncing sound to soul
     setupAudioIntegration() {
         // Game state changes
         EventManager.addEventListener(document, 'gameStateChange', (e) => {
@@ -83,7 +83,7 @@ const ImmersiveExperienceIntegration = {
             AudioSystem.updateAmbientForLocation(e.detail.locationType);
         });
         
-        // Trading events
+        // 💰 Trading events - capitalism sounds beautiful
         EventManager.addEventListener(document, 'buyItem', (e) => {
             AudioSystem.playContextualSound('market', 'buy');
         });
@@ -159,9 +159,9 @@ const ImmersiveExperienceIntegration = {
         });
     },
     
-    // Setup visual effects integration
+    // ✨ Setup visual effects integration - making every action sparkle
     setupVisualEffectsIntegration() {
-        // Gold transactions
+        // 💰 Gold transactions - money deserves to glitter
         EventManager.addEventListener(document, 'goldTransaction', (e) => {
             const rect = e.target?.getBoundingClientRect();
             if (rect) {
@@ -249,7 +249,7 @@ const ImmersiveExperienceIntegration = {
         });
     },
     
-    // Setup animation integration
+    // 🎬 Setup animation integration - motion for every emotion
     setupAnimationIntegration() {
         // Character movement
         EventManager.addEventListener(document, 'characterMove', (e) => {
@@ -290,7 +290,7 @@ const ImmersiveExperienceIntegration = {
         });
     },
     
-    // Setup UI polish integration
+    // 💅 Setup UI polish integration - making interfaces feel alive
     setupUIPolishIntegration() {
         // Panel transitions
         EventManager.addEventListener(document, 'panelOpen', (e) => {
@@ -356,7 +356,7 @@ const ImmersiveExperienceIntegration = {
         });
     },
     
-    // Setup environmental effects integration
+    // 🌦️ Setup environmental effects integration - weather responds to the game's mood
     setupEnvironmentalIntegration() {
         // Time changes
         EventManager.addEventListener(document, 'timeChange', (e) => {
@@ -384,12 +384,12 @@ const ImmersiveExperienceIntegration = {
         });
     },
     
-    // Setup settings integration
+    // ⚙️ Setup settings integration - control is an illusion, but a nice one
     setupSettingsIntegration() {
-        // settings button removed - we already have settings in the side panel and main menu
+        // 🚫 settings button removed - we already have settings in the side panel and main menu
         // no need for a floating button cluttering up the screen
 
-        // Setup keyboard shortcut for settings
+        // ⌨️ Setup keyboard shortcut for settings - Ctrl+Esc for the power users
         EventManager.addEventListener(document, 'keydown', (e) => {
             if (e.key === 'Escape' && e.ctrlKey) {
                 e.preventDefault();
@@ -398,16 +398,16 @@ const ImmersiveExperienceIntegration = {
         });
     },
     
-    // Hook into existing game functions to add immersive effects
+    // 🪝 Hook into existing game functions - injecting magic into the mundane
     hookIntoGameFunctions() {
-        // Hook into addMessage function for audio/visual feedback
+        // 💬 Hook into addMessage function - making text feel alive
         if (typeof addMessage === 'function') {
             const originalAddMessage = window.addMessage;
             window.addMessage = function(text, type = 'info') {
                 // Call original function
                 originalAddMessage.call(this, text, type);
                 
-                // Add immersive effects based on message type
+                // ✨ Add immersive effects based on message type - every word gets its flavor
                 if (type === 'warning') {
                     document.dispatchEvent(new CustomEvent('warning', { detail: { message: text } }));
                 } else if (type === 'error') {
@@ -416,19 +416,19 @@ const ImmersiveExperienceIntegration = {
                     document.dispatchEvent(new CustomEvent('success', { detail: { message: text } }));
                 }
                 
-                // Play notification sound
+                // 🔔 Play notification sound - the bells of attention
                 document.dispatchEvent(new CustomEvent('notification', { detail: { message: text } }));
             };
         }
         
-        // Hook into buyItem function
+        // 🛒 Hook into buyItem function - capitalism with sparkles
         if (typeof buyItem === 'function') {
             const originalBuyItem = window.buyItem;
             window.buyItem = function(itemId, quantity) {
                 const result = originalBuyItem.call(this, itemId, quantity);
                 
                 if (result) {
-                    // Trigger buy event
+                    // 🎯 Trigger buy event - the moment of acquisition
                     document.dispatchEvent(new CustomEvent('buyItem', { 
                         detail: { itemId, quantity } 
                     }));
@@ -605,9 +605,9 @@ const ImmersiveExperienceIntegration = {
         }
     },
     
-    // Performance monitoring
+    // 📊 Performance monitoring - keeping the magic smooth
     setupPerformanceMonitoring() {
-        // Monitor frame rate and adjust quality if needed
+        // 🎯 Monitor frame rate and adjust quality if needed - adaptive darkness
         let frameCount = 0;
         let lastTime = performance.now();
         let fps = 60;
@@ -622,9 +622,9 @@ const ImmersiveExperienceIntegration = {
                 frameCount = 0;
                 lastTime = currentTime;
                 
-                // Adjust quality based on performance
+                // ⚖️ Adjust quality based on performance - sacrifice beauty for smoothness
                 if (fps < 30) {
-                    // Reduce quality for better performance
+                    // 🔽 Reduce quality for better performance - the machine struggles
                     if (typeof VisualEffectsSystem !== 'undefined') {
                         VisualEffectsSystem.setQuality('low');
                     }
@@ -635,7 +635,7 @@ const ImmersiveExperienceIntegration = {
                         EnvironmentalEffectsSystem.setQuality('low');
                     }
                 } else if (fps > 50) {
-                    // Can handle higher quality
+                    // ⚡ Can handle higher quality - unleash the full power
                     if (typeof VisualEffectsSystem !== 'undefined') {
                         VisualEffectsSystem.setQuality('high');
                     }
@@ -654,18 +654,18 @@ const ImmersiveExperienceIntegration = {
         requestAnimationFrame(checkPerformance);
     },
     
-    // Initialize everything when ready
+    // 🚀 Initialize everything when ready - the grand awakening
     start() {
         this.init();
         
-        // Hook into game functions after a short delay to ensure everything is loaded
+        // ⏱️ Hook into game functions after a short delay - patience before possession
         setTimeout(() => {
             this.hookIntoGameFunctions();
             this.setupPerformanceMonitoring();
         }, 1000);
     },
     
-    // Cleanup all systems
+    // 🧹 Cleanup all systems - erasing all traces of our dark magic
     cleanup() {
         if (typeof AudioSystem !== 'undefined') {
             AudioSystem.cleanup();
@@ -691,7 +691,7 @@ const ImmersiveExperienceIntegration = {
             SettingsPanel.cleanup();
         }
         
-        // Remove settings button
+        // 🗑️ Remove settings button - if it even exists
         const settingsBtn = document.getElementById('immersive-settings-btn');
         if (settingsBtn) {
             settingsBtn.remove();
@@ -699,10 +699,10 @@ const ImmersiveExperienceIntegration = {
     }
 };
 
-// Auto-start the integration when the script loads
+// 🌙 Auto-start the integration when the script loads - the magic begins unbidden
 ImmersiveExperienceIntegration.start();
 
-// Export for use in other modules
+// 📤 Export for use in other modules - share the darkness
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = ImmersiveExperienceIntegration;
 }

@@ -644,7 +644,8 @@ Be sympathetic, desperate but not pathetic.`
                 isBoss: isBoss
             };
         } catch (error) {
-            console.error('🎭 Dialogue generation failed:', error);
+            // 🦇 API failed - use fallback dialogue gracefully
+            console.warn('🎭 Dialogue generation using fallback');
             // Return a fallback based on type
             const fallbackText = isBoss
                 ? this.getBossFallback(npcType, context)
@@ -710,9 +711,8 @@ Be sympathetic, desperate but not pathetic.`
         console.log('🎭 callTextAPI: Response status:', response.status);
 
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error('🎭 callTextAPI: API error response:', errorText);
-            throw new Error(`Text API error: ${response.status} - ${errorText}`);
+            // 🦇 API returned error - throw to trigger fallback
+            throw new Error(`Text API error: ${response.status}`);
         }
 
         const data = await response.json();
@@ -720,7 +720,7 @@ Be sympathetic, desperate but not pathetic.`
         let text = data.choices?.[0]?.message?.content?.trim() || '';
 
         if (!text) {
-            console.error('🎭 callTextAPI: Empty response from API, full data:', data);
+            // 🦇 API returned empty - throw to trigger fallback
             throw new Error('Empty response from text API');
         }
         console.log('🎭 callTextAPI: Got response:', text.substring(0, 80) + '...');
@@ -762,7 +762,7 @@ Be sympathetic, desperate but not pathetic.`
         try {
             await audio.play();
         } catch (error) {
-            console.error('🎭 TTS playback error:', error);
+            // 🦇 Audio blocked by browser - common, silently ignore
         }
     },
 
@@ -1043,7 +1043,7 @@ Available commands:\n`;
                     console.warn(`🎮 Command failed: ${cmd.action}`, result.message);
                 }
             } catch (error) {
-                console.error(`🎮 Command error: ${cmd.action}`, error);
+                // 🦇 Command failed - track but don't spam console
                 results.push({
                     command: cmd,
                     success: false,
@@ -1353,7 +1353,7 @@ Available commands:\n`;
                 npcType: npcType
             };
         } catch (error) {
-            console.error('🎭 Interactive dialogue failed:', error);
+            // 🦇 Interactive dialogue failed - use fallback gracefully
             return {
                 text: this.getMerchantFallback(npcType),
                 voice: options.voice || persona.voice || 'nova',

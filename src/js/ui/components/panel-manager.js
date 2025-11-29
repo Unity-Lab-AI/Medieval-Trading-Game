@@ -34,24 +34,24 @@ const PanelManager = {
     init() {
         console.log('🪟 PanelManager: Initializing...');
 
-        // Create the panel toolbar
+        // 🎨 Build the command center for your window chaos
         this.createPanelToolbar();
 
-        // Setup ESC key handler
+        // 🗡️ Arm the ESC key - your emergency exit from this madness
         this.setupEscHandler();
 
-        // Monitor panel visibility changes
+        // 👁️ Watch the panels like a paranoid fucking hawk
         this.observePanelChanges();
 
-        // Patch existing panel functions
+        // 🔮 Hijack the old panel functions - we run this show now
         this.patchPanelFunctions();
 
         console.log('🪟 PanelManager: Ready');
     },
 
-    // Create a toolbar with buttons to reopen panels
+    // 🖤 Create a toolbar with buttons to reopen panels - because you'll fucking close them all
     createPanelToolbar() {
-        // Check if toolbar already exists
+        // 💀 Don't double-summon this abomination
         if (document.getElementById('panel-toolbar')) return;
 
         const toolbar = document.createElement('div');
@@ -81,7 +81,7 @@ const PanelManager = {
 
         document.body.appendChild(toolbar);
 
-        // Style the header
+        // 🌙 Paint this header with dark gradients and control-freak vibes
         const header = toolbar.querySelector('.panel-toolbar-header');
         header.style.cssText = `
             display: flex;
@@ -284,12 +284,12 @@ const PanelManager = {
         }
     },
 
-    // Open a panel
+    // 🔮 Summon a panel from the hidden depths
     openPanel(panelId) {
         const panel = document.getElementById(panelId);
         const info = this.panelInfo[panelId];
 
-        // Special handling for settings-panel - use SettingsPanel.show()
+        // ⚙️ Settings panel is special - it has its own dark rituals
         if (panelId === 'settings-panel') {
             if (typeof SettingsPanel !== 'undefined' && SettingsPanel.show) {
                 SettingsPanel.show();
@@ -297,18 +297,18 @@ const PanelManager = {
             return;
         }
 
-        // Handle panels that use 'active' class (like achievement-overlay)
+        // 🖤 Some panels are built different - they use 'active' instead of hiding
         if (info && info.useActiveClass) {
-            // Special handling for dynamically created overlays
+            // 🦇 Dynamically created overlays need special召唤術
             if (panelId === 'character-sheet-overlay') {
-                // Use KeyBindings to create/show the character sheet
+                // 👤 Invoke the character sheet through KeyBindings
                 if (typeof KeyBindings !== 'undefined' && KeyBindings.openCharacterSheet) {
                     KeyBindings.openCharacterSheet();
                     return;
                 }
             }
             if (panelId === 'financial-sheet-overlay') {
-                // Use KeyBindings to create/show the financial sheet
+                // 💰 Summon your financial shame
                 if (typeof KeyBindings !== 'undefined' && KeyBindings.openFinancialSheet) {
                     KeyBindings.openFinancialSheet();
                     return;
@@ -316,14 +316,14 @@ const PanelManager = {
             }
             if (panelId === 'achievement-overlay' && typeof openAchievementPanel === 'function') {
                 openAchievementPanel();
-                return; // Let the function handle everything
+                return; // 🏆 Let achievements handle their own glory
             }
-            // For other active-class panels, just add the class
+            // 🌙 For other active-class panels, just flip the switch
             if (panel) {
                 panel.classList.add('active');
             }
         } else {
-            // Show the panel normally
+            // 💀 Reveal the panel from the shadows
             if (!panel) return;
             panel.classList.remove('hidden');
             panel.style.display = '';
@@ -332,20 +332,20 @@ const PanelManager = {
 
         if (!panel) return;
 
-        // Add to open stack (remove if already there, then add to end)
+        // 📚 Track this panel in our stack of chaos
         this.openPanels = this.openPanels.filter(id => id !== panelId);
         this.openPanels.push(panelId);
 
-        // Bring to front
+        // 🗡️ Bring this window to the fucking front
         panel.style.zIndex = 100 + this.openPanels.length;
 
         this.updateToolbarButtons();
         console.log(`🪟 Opened panel: ${panelId}, stack:`, this.openPanels);
     },
 
-    // Close a panel
+    // ⚰️ Banish a panel back to the void
     closePanel(panelId) {
-        // Special handling for settings-panel - use SettingsPanel.hide()
+        // ⚙️ Settings panel gets its own ceremonial closing
         if (panelId === 'settings-panel') {
             if (typeof SettingsPanel !== 'undefined' && SettingsPanel.hide) {
                 SettingsPanel.hide();
@@ -360,26 +360,26 @@ const PanelManager = {
 
         const info = this.panelInfo[panelId];
 
-        // Handle panels that use 'active' class (like achievement-overlay)
+        // 💀 Active-class panels need different dark magic
         if (info && info.useActiveClass) {
             panel.classList.remove('active');
-            // Also call the specific close function if it exists
+            // 🖤 Some panels have special close rituals
             if (panelId === 'achievement-overlay' && typeof closeAchievementPanel === 'function') {
                 closeAchievementPanel();
             }
         } else {
-            // Hide the panel normally
+            // 🌙 Send normal panels into the hidden realm
             panel.classList.add('hidden');
         }
 
-        // Remove from open stack
+        // 📚 Erase this panel from our stack of open windows
         this.openPanels = this.openPanels.filter(id => id !== panelId);
 
         this.updateToolbarButtons();
         console.log(`🪟 Closed panel: ${panelId}, stack:`, this.openPanels);
     },
 
-    // Close the most recently opened panel
+    // 🗡️ Kill the top panel in the stack - last in, first to fucking die
     closeTopPanel() {
         if (this.openPanels.length === 0) {
             console.log('🪟 No panels to close');
@@ -412,17 +412,20 @@ const PanelManager = {
     setupEscHandler() {
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                // Prevent default behavior
+                // 🖤 Check if any panels are open BEFORE deciding to handle
+                if (this.openPanels.length === 0) {
+                    // No panels open - let the event bubble to open the menu
+                    console.log('🪟 ESC: No panels open, letting menu handle it');
+                    return; // Don't prevent default - let KeyBindings handle it
+                }
+
+                // There are panels open - close the top one
                 e.preventDefault();
                 e.stopPropagation();
 
-                // Close the most recently opened panel
                 const closed = this.closeTopPanel();
-
                 if (closed) {
                     console.log('🪟 ESC: Closed top panel');
-                } else {
-                    console.log('🪟 ESC: No panels open');
                 }
             }
         }, true); // Use capture to handle before other handlers

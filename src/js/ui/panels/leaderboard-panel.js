@@ -199,8 +199,8 @@ const GlobalLeaderboardSystem = {
                     return this.fetchFromLocal();
             }
         } catch (error) {
-            console.error('🏆 Failed to fetch leaderboard:', error);
-            return this.fetchFromLocal(); // Fallback to local
+            // 🦇 Network issue - silently fall back to local, no console spam
+            return this.fetchFromLocal();
         }
     },
 
@@ -233,7 +233,7 @@ const GlobalLeaderboardSystem = {
                     return true; // Already saved locally
             }
         } catch (error) {
-            console.error('🏆 Failed to submit score globally:', error);
+            // 🦇 Global submission failed - user already notified via addMessage
             addMessage?.('score saved locally. global submission failed - the void consumed it.');
             return false;
         }
@@ -273,9 +273,8 @@ const GlobalLeaderboardSystem = {
             console.log('🏆 Fetch response status:', response.status);
 
             if (!response.ok) {
-                const errorText = await response.text();
-                console.error('🏆 JSONBin fetch failed:', response.status, errorText);
-                throw new Error(`JSONBin fetch failed: ${response.status} - ${errorText}`);
+                // 🦇 API error - will fall back to local, throw to trigger catch
+                throw new Error(`JSONBin fetch failed: ${response.status}`);
             }
 
             const data = await response.json();
@@ -301,7 +300,8 @@ const GlobalLeaderboardSystem = {
             console.log(`🏆 Fetched ${this.leaderboard.length} global scores from JSONBin`);
             return this.leaderboard;
         } catch (error) {
-            console.error('🏆 JSONBin fetch error:', error);
+            // 🦇 Network hiccup - silently fall back to local cache
+            console.warn('🏆 JSONBin unreachable, using local cache');
             return this.fetchFromLocal();
         }
     },
@@ -383,9 +383,8 @@ const GlobalLeaderboardSystem = {
             console.log('🏆 PUT response status:', response.status);
 
             if (!response.ok) {
-                const errorText = await response.text();
-                console.error('🏆 JSONBin update failed:', response.status, errorText);
-                throw new Error(`JSONBin update failed: ${response.status} - ${errorText}`);
+                // 🦇 API rejected update - throw to trigger user notification
+                throw new Error(`JSONBin update failed: ${response.status}`);
             }
 
             const result = await response.json();
@@ -403,8 +402,8 @@ const GlobalLeaderboardSystem = {
             addMessage?.('🏆 your legacy echoes across the realm! score submitted to Hall of Champions.');
             return true;
         } catch (error) {
-            console.error('🏆 JSONBin submit error:', error);
-            addMessage?.('⚠️ failed to submit to Hall of Champions: ' + error.message);
+            // 🦇 Submission failed - user gets notified, no console spam needed
+            addMessage?.('⚠️ failed to submit to Hall of Champions - saved locally instead');
             return false;
         }
     },
@@ -628,9 +627,12 @@ const GlobalLeaderboardSystem = {
         // Base score from gold
         let score = Math.max(0, player.gold || 0);
 
-        // Bonus for days survived
-        const time = typeof TimeSystem !== 'undefined' ? TimeSystem.currentTime : { day: 1, month: 1, year: 1 };
-        const days = time.day + ((time.month - 1) * 30) + ((time.year - 1) * 360);
+        // Bonus for days survived - get starting date from config (single source of truth)
+        const startDate = typeof GameConfig !== 'undefined' ? GameConfig.time.startingDate : { year: 1111, month: 4, day: 1 };
+        const time = typeof TimeSystem !== 'undefined' ? TimeSystem.currentTime : { day: startDate.day, month: startDate.month, year: startDate.year };
+        const startDays = startDate.day + (startDate.month - 1) * 30 + (startDate.year - 1) * 360;
+        const currentDays = time.day + (time.month - 1) * 30 + (time.year - 1) * 360;
+        const days = Math.max(0, currentDays - startDays);
         score += days * 10;
 
         // Bonus for properties
@@ -906,7 +908,7 @@ window.testJSONBin = async function() {
     const apiKey = GameConfig?.leaderboard?.jsonbin?.apiKey || localStorage.getItem('jsonbin_key');
 
     if (!binId || !apiKey) {
-        console.error('❌ JSONBin credentials not configured. Set them in Settings > Leaderboard.');
+        console.warn('❌ JSONBin credentials not configured. Set them in Settings > Leaderboard.');
         return;
     }
 
@@ -974,8 +976,8 @@ window.resetLeaderboard = async function() {
     console.log('  API_KEY present:', !!apiKey);
 
     if (!binId || !apiKey) {
-        console.error('❌ JSONBin credentials not configured.');
-        console.error('  Check GameConfig.leaderboard.jsonbin in config.js');
+        console.warn('❌ JSONBin credentials not configured.');
+        console.warn('  Check GameConfig.leaderboard.jsonbin in config.js');
         return false;
     }
 
@@ -1025,12 +1027,13 @@ window.resetLeaderboard = async function() {
             console.log('🎉 Leaderboard has been completely reset! The Hall of Champions is now empty.');
             return true;
         } else {
-            const errorText = await response.text();
-            console.error('❌ Failed to reset leaderboard:', response.status, errorText);
+            // 🦇 Reset failed - user running the command will see false return
+            console.warn('❌ Failed to reset leaderboard:', response.status);
             return false;
         }
     } catch (error) {
-        console.error('❌ Error resetting leaderboard:', error);
+        // 🦇 Network error during reset - report to console for debugging
+        console.warn('❌ Error resetting leaderboard:', error.message);
         return false;
     }
 };

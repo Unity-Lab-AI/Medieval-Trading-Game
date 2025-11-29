@@ -32,7 +32,7 @@
  * - Crafting: getCraftingBonuses() for the maker
  *
  * @author Claude 🖤
- * @version 0.5 - "The Awakening"
+ * @version 0.81
  * ========================================
  */
 

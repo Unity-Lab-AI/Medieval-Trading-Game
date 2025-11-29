@@ -656,13 +656,22 @@ const NPCChatUI = {
 
     open(npcData) {
         if (!npcData) {
-            console.error('🗨️ NPCChatUI: No NPC data provided');
+            // 🦇 No NPC data - silently return, nothing to show
+            console.warn('🗨️ NPCChatUI: No NPC data provided');
             return;
         }
 
         this.currentNPC = npcData;
         this.chatHistory = [];
         this.isWaitingForResponse = false;
+
+        // 🦇 TRACK NPC MEETING - so quests know we've actually talked to this person
+        // the void remembers all who cross its path... 🖤
+        const npcId = npcData.id || npcData.type || npcData.name;
+        if (typeof NPCRelationshipSystem !== 'undefined' && npcId) {
+            NPCRelationshipSystem.recordInteraction(npcId, 'conversation', { npcData });
+            console.log(`🦇 Recorded meeting with ${npcData.name || npcId} - quest availability updated`);
+        }
 
         // update UI with NPC info
         this.updateNPCInfo(npcData);
@@ -681,7 +690,7 @@ const NPCChatUI = {
             const greeting = persona.greetings[Math.floor(Math.random() * persona.greetings.length)];
             this.addNPCMessage(greeting, true);
 
-            // Play greeting with TTS
+            // 🎤 Give their greeting a voice - let them speak into the void 🔊
             if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.settings?.voiceEnabled) {
                 const voice = npcData.voice || persona.voice || 'nova';
                 NPCVoiceChatSystem.playVoice(greeting, voice);
@@ -774,7 +783,7 @@ const NPCChatUI = {
                 }
             }
         } catch (error) {
-            console.error('🗨️ NPCChatUI: Error sending message:', error);
+            // 🦇 API failed - NPC gives a graceful "distracted" response
             this.hideTypingIndicator();
             this.addNPCMessage('*seems distracted and doesn\'t respond*');
         }
@@ -821,7 +830,7 @@ const NPCChatUI = {
         messagesContainer.appendChild(messageEl);
         this.scrollToBottom();
 
-        // Get the bubble element for typewriter effect
+        // 🖋️ Find the message bubble to animate - typewriter magic begins ✍️
         const bubbleEl = messageEl.querySelector('.message-bubble');
         if (bubbleEl) {
             this.typewriterEffect(bubbleEl, text);
@@ -842,10 +851,10 @@ const NPCChatUI = {
         let inTag = false;
         let currentTag = '';
 
-        // Parse the formatted text to handle HTML tags properly
+        // ⏱️ Character by character - revealing the message like a ritual 🔮
         const typeNext = () => {
             if (charIndex >= formattedText.length) {
-                // Done typing - ensure final content is set
+                // 💀 Typing complete - the message has fully manifested 📜
                 element.innerHTML = formattedText;
                 this.scrollToBottom();
                 return;
@@ -853,7 +862,7 @@ const NPCChatUI = {
 
             const char = formattedText[charIndex];
 
-            // Handle HTML tags - don't display character by character
+            // 🏷️ HTML tag detected - swallow it whole, not char by char 📝
             if (char === '<') {
                 inTag = true;
                 currentTag = '<';
@@ -870,11 +879,11 @@ const NPCChatUI = {
 
             charIndex++;
 
-            // Update display
+            // 🖥️ Add this character to the visible text ✨
             element.innerHTML = displayText;
             this.scrollToBottom();
 
-            // Calculate delay - faster for spaces, slower for punctuation
+            // ⏰ Calculate typing speed - pauses make it feel human 🎭
             let delay = speed;
             if (char === ' ') {
                 delay = speed * 0.5;
@@ -884,11 +893,11 @@ const NPCChatUI = {
                 delay = speed * 2;
             }
 
-            // Schedule next character
+            // ⏭️ Queue the next character - the ritual continues 🔄
             setTimeout(typeNext, delay);
         };
 
-        // Start the typewriter effect
+        // 🎬 Begin the performance - start typing the message 📝
         typeNext();
     },
 
@@ -1058,7 +1067,7 @@ const NPCChatUI = {
             const maxChecks = 120; // 60 seconds max (120 * 500ms)
             const checkVoice = setInterval(() => {
                 checkCount++;
-                // Clear if voice stopped, element removed, or safety timeout hit
+                // 🛑 Stop the animation if voice ended or timeout hit ⏱️
                 if (typeof NPCVoiceChatSystem === 'undefined' ||
                     !NPCVoiceChatSystem.isVoicePlaying() ||
                     !document.getElementById('npc-voice-indicator') ||
@@ -1095,28 +1104,27 @@ window.openNPCChat = function(npcData) {
     if (typeof NPCChatUI !== 'undefined') {
         NPCChatUI.open(npcData);
     } else {
-        console.error('NPCChatUI not loaded');
+        // 🦇 Chat UI not loaded - user sees nothing, no console spam
+        addMessage?.('The merchant is unavailable.');
     }
 };
 
 // open merchant chat - gets current merchant from NPCMerchantSystem
 NPCChatUI.openMerchantChat = function() {
     if (typeof NPCMerchantSystem === 'undefined') {
-        console.error('🗨️ NPCMerchantSystem not loaded');
-        if (typeof addMessage === 'function') {
-            addMessage('The merchant seems to be away...');
-        }
+        // 🦇 Merchant system not loaded - graceful user message
+        addMessage?.('The merchant seems to be away...');
         return;
     }
 
     let merchant = NPCMerchantSystem.getCurrentMerchant();
 
-    // If no merchant exists for this location, try to create one on the fly
+    // 🏪 No merchant here? Summon one from the void if we can 🔮
     if (!merchant && game?.currentLocation?.id) {
         const locationId = game.currentLocation.id;
         console.log(`🗨️ No merchant for ${locationId}, generating one...`);
 
-        // Generate a merchant for this location
+        // 💼 Conjure a temporary merchant for this location 🧙
         const personalityKeys = Object.keys(NPCMerchantSystem.personalityTypes);
         const personalityId = personalityKeys[Math.floor(Math.random() * personalityKeys.length)];
         const personality = NPCMerchantSystem.personalityTypes[personalityId];
@@ -1146,10 +1154,8 @@ NPCChatUI.openMerchantChat = function() {
     }
 
     if (!merchant) {
-        console.error('🗨️ No active merchant found and could not create one');
-        if (typeof addMessage === 'function') {
-            addMessage('There is no merchant here to talk to.');
-        }
+        // 🦇 No merchant available - graceful user message
+        addMessage?.('There is no merchant here to talk to.');
         return;
     }
 

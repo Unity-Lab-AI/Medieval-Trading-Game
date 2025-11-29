@@ -293,15 +293,12 @@ test.describe('UI Elements', () => {
       }
     });
 
-    test('Debug input accepts commands', async ({ page }) => {
-      // Click the Debooger button to open console
+    test('Debooger input accepts commands', async ({ page }) => {
+      // 🖤 Click the Debooger button to open console (no keyboard shortcut)
       const debugBtn = page.locator('#toggle-debug-console, #debug-toggle-btn, .debug-toggle, button:has-text("Debooger")');
       if (await debugBtn.count() > 0) {
         await debugBtn.first().click();
         await page.waitForTimeout(500);
-      } else {
-        await page.keyboard.press('Backquote');
-        await page.waitForTimeout(300);
       }
 
       const input = await page.locator('#debug-command-input');

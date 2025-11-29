@@ -1,10 +1,10 @@
 # 🖤 DEBUGGER README - The Secret Arts of Game Manipulation 🖤
 ## Medieval Trading Game - Debug Console Documentation
 
-**Version:** 0.7
+**Version:** 0.8
 **Last Updated:** 2025-11-28
-**Access:** Unlocked via "Super Hacker" achievement OR backtick key (`)
-**Total Commands:** 30
+**Access:** Click the 🐛 Debooger button (bottom-right) OR set `GameConfig.debug.enabled = true`
+**Total Commands:** 47
 
 ---
 
@@ -14,41 +14,59 @@
 
 ## COMPLETE COMMAND LIST (A-Z)
 
-All 30 debug commands in alphabetical order:
+All 47 debug commands in alphabetical order:
 
 | # | Command | Description |
 |---|---------|-------------|
 | 1 | `advancetime <hours>` | Advance time by hours |
-| 2 | `clear` | Clear the debug console |
-| 3 | `clearinventory` | Clear player inventory |
-| 4 | `clearleaderboard` | Clear all entries from the Hall of Champions |
-| 5 | `encounter [type]` | Spawn random encounter |
-| 6 | `gamestate` | Show current game state |
-| 7 | `geecashnow` | Add 1000 gold (respects carry weight) |
-| 8 | `givegold <amount>` | Add gold to player |
-| 9 | `giveitem <itemId> [qty]` | Add item to inventory |
-| 10 | `giveproperty <type>` | Give property to player |
-| 11 | `heal` | Fully heal player |
-| 12 | `help` | Show all available commands |
-| 13 | `listachievements` | List all achievements |
-| 14 | `listitems` | List all item IDs |
-| 15 | `listlocations` | List all locations |
-| 16 | `listnpctypes` | List all NPC encounter types |
-| 17 | `merchant` | Spawn merchant encounter |
-| 18 | `refreshleaderboard` | Force refresh Hall of Champions display |
-| 19 | `reload` | Reload the game |
-| 20 | `resetachievements` | Reset all achievements |
-| 21 | `setgold <amount>` | Set gold to exact amount |
-| 22 | `setstat <stat> <value>` | Set player stat value |
-| 23 | `showgold` | Show gold from all sources |
-| 24 | `showleaderboard` | Show all leaderboard entries in console |
-| 25 | `smuggler` | Spawn smuggler encounter (rare items) |
-| 26 | `teleport <locationId>` | Teleport to location |
-| 27 | `testachievement` | Test achievement popup (unlocks 3 random) |
-| 28 | `trader` | Spawn random trader encounter |
-| 29 | `unlockachievement <id>` | Unlock specific achievement |
-| 30 | `unlockall` | Unlock ALL achievements (triggers Super Hacker!) |
-| 31 | `verifyeconomy` | Verify circular economy chains |
+| 2 | `autumn` | Jump to start of Autumn (September 1) |
+| 3 | `bonanzastatus` | Check if Dungeon Bonanza (July 18th) event is active |
+| 4 | `clear` | Clear the debug console |
+| 5 | `clearinventory` | Clear player inventory |
+| 6 | `clearleaderboard` | Clear all entries from the Hall of Champions |
+| 7 | `doom` | ☄️ Trigger apocalypse: weather, dungeon backdrop, bonanza for 1 day |
+| 8 | `dungeonmode [on/off]` | Toggle dungeon backdrop manually |
+| 9 | `encounter [type]` | Spawn random encounter |
+| 10 | `gamestate` | Show current game state |
+| 11 | `geecashnow` | Add 1000 gold (respects carry weight) |
+| 12 | `givegold <amount>` | Add gold to player |
+| 13 | `giveitem <itemId> [qty]` | Add item to inventory |
+| 14 | `giveproperty <type>` | Give property to player |
+| 15 | `heal` | Fully heal player |
+| 16 | `help` | Show all available commands |
+| 17 | `hidemap` | Reset map to only show visited locations |
+| 18 | `listachievements` | List all achievements |
+| 19 | `listitems` | List all item IDs |
+| 20 | `listlocations` | List all locations |
+| 21 | `listnpctypes` | List all NPC encounter types |
+| 22 | `merchant` | Spawn merchant encounter |
+| 23 | `refreshleaderboard` | Force refresh Hall of Champions display |
+| 24 | `reload` | Reload the game |
+| 25 | `resetachievements` | Reset all achievements |
+| 26 | `revealmap` | Reveal entire world map (all 42 locations) |
+| 27 | `setgold <amount>` | Set gold to exact amount |
+| 28 | `setseason <season>` | Jump to specific season (spring/summer/autumn/winter) |
+| 29 | `setstat <stat> <value>` | Set player stat value |
+| 30 | `showgold` | Show gold from all sources |
+| 31 | `showleaderboard` | Show all leaderboard entries in console |
+| 32 | `showtime` | Show current time and season info |
+| 33 | `skipday` | Skip forward 1 day (preserves stats) |
+| 34 | `skipdays <n>` | Skip forward N days (preserves stats) |
+| 35 | `skipmonth` | Skip forward 1 month (preserves stats) |
+| 36 | `skipmonths <n>` | Skip forward N months (preserves stats) |
+| 37 | `skip6months` | Skip forward 6 months (preserves stats) |
+| 38 | `smuggler` | Spawn smuggler encounter (rare items) |
+| 39 | `spring` | Jump to start of Spring (March 1) |
+| 40 | `summer` | Jump to start of Summer (June 1) |
+| 41 | `teleport <locationId>` | Teleport to location |
+| 42 | `testachievement` | Test achievement popup (unlocks 3 random) |
+| 43 | `trader` | Spawn random trader encounter |
+| 44 | `triggerbonanza` | Set date to July 18th to activate Dungeon Bonanza |
+| 45 | `unlockachievement <id>` | Unlock specific achievement |
+| 46 | `unlockall` | Unlock ALL achievements (triggers Super Hacker!) |
+| 47 | `verifyeconomy` | Verify circular economy chains |
+| 48 | `weather <type>` | Change weather (clear, rain, storm, fog, snow, apocalypse) |
+| 49 | `winter` | Jump to start of Winter (December 1) |
 
 ---
 
@@ -72,29 +90,35 @@ All 30 debug commands in alphabetical order:
 
 ## UNLOCKING THE DEBUG CONSOLE
 
-The debug console is hidden by default. There are two ways to unlock it:
+The debug console can be accessed in several ways:
 
-### Method 1: Achievement Unlock (Legitimate)
-Earn the **"Super Hacker"** ULTRA achievement by unlocking ALL other achievements (including the 11 hidden ones). This is the intended way to access debug mode.
+### Method 1: Config File (Developer Mode)
+Set `debug.enabled: true` in `config.js` (root folder). This enables all debug commands without needing any achievements.
 
-### Method 2: Direct Access (Developer Mode)
-Press the **backtick key (`)** at any time to open the debug console directly. This bypasses the achievement requirement.
+### Method 2: Achievement Unlock (Legitimate)
+Earn the **"Super Hacker"** ULTRA achievement by unlocking ALL other achievements (including the 11 hidden ones). This permanently unlocks debug mode for that save.
+
+### Method 3: Direct Button Access
+The **🐛 Debooger** button in the bottom-right corner of the screen always opens the console panel. Commands will only execute if debug is enabled (via config or achievement).
 
 ---
 
 ## OPENING THE CONSOLE
 
-Once unlocked, you can open the debug console by:
+Click the **🐛 Debooger** button in the bottom-right corner of the screen. This works on both the main menu and in-game.
 
-1. **Pressing backtick (`)** - Opens/focuses the command input
-2. **Clicking the 🐛 Debooger button** in the panels panel (if visible)
-3. **Using keyboard shortcut** - Backtick always works
+The console appears as a green-bordered panel with:
+- **Header** - "🐛 DEBOOGER CONSOLE" title and Close button
+- **Output log** - Shows console messages with timestamps (green=log, yellow=warn, red=error)
+- **Command input** - Type commands here, press Enter to execute
+- **Run button** - Alternative to pressing Enter
+- **? button** - Shows help
 
-The console appears as a dark overlay with:
-- Command input field at the bottom
-- Output log showing previous commands and results
+**Features:**
 - Auto-scroll to most recent output
 - Max 500 entries before cleanup
+- Tab key for autocomplete
+- Up/Down arrows for command history
 
 ---
 
@@ -180,18 +204,182 @@ Lists all available location IDs.
   ...
 ```
 
+### revealmap
+Reveals the entire world map by marking all 42 locations as visited. Lifts the fog of war completely.
+```
+> revealmap
+🗺️ Revealed 42 locations in GameWorld
+🗺️ Map re-rendered with all locations visible
+🗺️ The fog of war has been lifted! All locations revealed.
+```
+
+### hidemap
+Resets map visibility to only show visited locations. Essentially undoes `revealmap`.
+```
+> hidemap
+🗺️ Map reset to starting visibility
+🗺️ The fog of war returns... only visited locations visible.
+```
+
 ---
 
 ## TIME COMMANDS
 
 ### advancetime <hours>
-Advances game time by specified hours.
+Advances game time by specified hours. **Note:** Stats will decay normally during time advance.
 ```
 > advancetime 24
 ⏰ Advanced time by 24 hours. It's now Day 2, 08:00
 
 > advancetime 168
 ⏰ Advanced time by 168 hours. It's now Day 8, 08:00
+```
+
+### skipday
+Skip forward 1 day while **preserving player stats** (hunger, thirst, health stay the same).
+```
+> skipday
+⏰ Skipped 1 day. Now: April 2, 1111 - 08:00
+```
+
+### skipdays <n>
+Skip forward N days while preserving stats.
+```
+> skipdays 7
+⏰ Skipped 7 days. Now: April 8, 1111 - 08:00
+
+> skipdays 30
+⏰ Skipped 30 days. Now: May 1, 1111 - 08:00
+```
+
+### skipmonth
+Skip forward 1 month while preserving stats. Triggers season change if applicable.
+```
+> skipmonth
+⏰ Skipped 1 month. Now: May 1, 1111 - 08:00
+🍂 Season changed to Spring!
+```
+
+### skipmonths <n>
+Skip forward N months while preserving stats.
+```
+> skipmonths 3
+⏰ Skipped 3 months. Now: July 1, 1111 - 08:00
+☀️ Season changed to Summer!
+```
+
+### skip6months
+Shortcut to skip 6 months while preserving stats. Great for testing seasonal changes.
+```
+> skip6months
+⏰ Skipped 6 months. Now: October 1, 1111 - 08:00
+🍂 Season changed to Autumn!
+```
+
+### setseason <season>
+Jump directly to a specific season (spring, summer, autumn, winter). Advances time to the appropriate month.
+```
+> setseason winter
+❄️ Season set to Winter! Now: January 1, 1112 - 08:00
+
+> setseason summer
+☀️ Season set to Summer! Now: July 1, 1112 - 08:00
+```
+**Valid seasons:** spring, summer, autumn, winter
+
+### showtime
+Display current time, date, and season information.
+```
+> showtime
+⏰ Current Time: April 15, 1111 - 14:30
+🌸 Season: Spring
+📅 Day 15 of Year 1111
+```
+
+---
+
+## DUNGEON BONANZA COMMANDS
+
+*"The Dark Convergence - when the veil between worlds thins..."*
+
+### triggerbonanza
+Sets the game date to July 18th to activate the Dungeon Bonanza event immediately.
+```
+> triggerbonanza
+💀 Date set to July 18th - The Dark Convergence begins!
+```
+
+### bonanzastatus
+Check if the Dungeon Bonanza event is currently active.
+```
+> bonanzastatus
+💀 THE DARK CONVERGENCE IS ACTIVE!
+   Dungeon travel: 30 min | Cooldowns: REMOVED
+```
+
+### dungeonmode [on/off]
+Manually toggle the dungeon backdrop without traveling to a dungeon.
+```
+> dungeonmode on
+Dungeon backdrop enabled
+
+> dungeonmode off
+Dungeon backdrop disabled
+```
+
+**What is Dungeon Bonanza?**
+
+Every July 18th, "The Dark Convergence" occurs:
+- **30-minute dungeon travel** - All travel to dungeons/caves/ruins/mines takes only 30 minutes
+- **No cooldowns** - Dungeon exploration cooldowns are completely removed
+- **Boss rush day** - Perfect for completing the 50 boss kills achievement in one day!
+
+---
+
+## WEATHER COMMANDS
+
+### weather <type>
+Change the current weather to any type.
+```
+> weather apocalypse
+☄️ Changed weather to apocalypse
+
+> weather clear
+🌤️ Changed weather to clear
+
+> weather storm
+⛈️ Changed weather to storm
+```
+
+**Valid weather types:**
+- `clear` - Clear skies
+- `cloudy` - Overcast
+- `rain` - Rainfall
+- `storm` - Thunderstorm with lightning
+- `fog` - Dense fog
+- `snow` - Snowfall
+- `blizzard` - Heavy snow
+- `apocalypse` - ☄️ Meteors, red sky, lightning (The Dark Convergence)
+
+### doom
+The ultimate chaos command! Triggers:
+1. **Apocalypse weather** - Meteors, red pulsing sky, embers, lightning
+2. **Dungeon world backdrop** - Fades to the dungeon map
+3. **Dungeon Bonanza** - 30-min travel, no cooldowns for one game day
+
+Works on both main menu AND in-game!
+```
+> doom
+☄️ DOOM ACTIVATED! Menu weather: apocalypse | Game weather: apocalypse | Dungeon backdrop: active | Bonanza: active for 1 day
+```
+
+### Season Shortcuts
+Quick commands to jump to season start:
+```
+> spring    → Jump to March 1st (Spring)
+> summer    → Jump to June 1st (Summer)
+> autumn    → Jump to September 1st (Autumn)
+> winter    → Jump to December 1st (Winter)
 ```
 
 ---

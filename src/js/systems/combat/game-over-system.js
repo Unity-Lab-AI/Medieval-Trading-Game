@@ -21,9 +21,9 @@ const GameOverSystem = {
     // 🏆 Player's ranking result
     rankingResult: null,
 
-    // Initialize the system
+    // 💀 boot up the reaper - we're all gonna need this eventually
     init() {
-        console.log('💀 Game Over System initialized');
+        console.log('💀 Game Over System ready to collect souls and document your failures 🖤');
         this.isProcessingGameOver = false;
         this.finalStats = null;
         this.rankingResult = null;
@@ -89,9 +89,12 @@ const GameOverSystem = {
         const player = game?.player;
         if (!player) return this.getDefaultStats(causeOfDeath);
 
-        // Calculate days survived
-        const time = typeof TimeSystem !== 'undefined' ? TimeSystem.currentTime : { day: 1, month: 1, year: 1 };
-        const daysSurvived = time.day + ((time.month - 1) * 30) + ((time.year - 1) * 360);
+        // Calculate days survived - get starting date from config (single source of truth)
+        const startDate = typeof GameConfig !== 'undefined' ? GameConfig.time.startingDate : { year: 1111, month: 4, day: 1 };
+        const time = typeof TimeSystem !== 'undefined' ? TimeSystem.currentTime : { day: startDate.day, month: startDate.month, year: startDate.year };
+        const startDays = startDate.day + (startDate.month - 1) * 30 + (startDate.year - 1) * 360;
+        const currentDays = time.day + (time.month - 1) * 30 + (time.year - 1) * 360;
+        const daysSurvived = Math.max(0, currentDays - startDays);
 
         // Calculate inventory value
         let inventoryValue = 0;
@@ -417,8 +420,8 @@ const GameOverSystem = {
             { name: 'Sponge', role: 'Chaos Engineer' },
             { name: 'GFourteen', role: 'Digital Alchemist' }
         ];
-        const copyright = config?.credits?.copyright || '© 2024 Unity AI Lab';
-        const version = config?.version?.game || '0.1';
+        const copyright = config?.credits?.copyright || '© 2025 Unity AI Lab';
+        const version = config?.version?.game || '0.81';
 
         // Get social links
         const links = config?.links || {};

@@ -23,7 +23,7 @@ const PropertyEmployeeBridge = {
             PropertySystem._employeeSystem = EmployeeSystem;
             EmployeeSystem._propertySystem = PropertySystem;
             
-            console.log('Property-Employee bridge established');
+            console.log('🌉 Property-Employee bridge established - connecting landlords to wage slaves 💰');
         }
     },
     

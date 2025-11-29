@@ -990,6 +990,78 @@ const AchievementSystem = {
             }
         },
 
+        // ═══════════════════════════════════════════════════════════
+        // 🏛️ FACTION REPUTATION ACHIEVEMENTS - 5 solid milestones 🖤
+        // ═══════════════════════════════════════════════════════════
+
+        first_faction_friend: {
+            id: 'first_faction_friend',
+            name: 'Making Friends',
+            description: 'Reach Friendly (25) reputation with any faction',
+            icon: '🤝',
+            category: 'faction',
+            rarity: 'common',
+            unlocked: false,
+            unlockedAt: null,
+            condition: () => {
+                if (typeof FactionSystem === 'undefined') return false;
+                return Object.keys(FactionSystem.factions).some(f => FactionSystem.getReputation(f) >= 25);
+            }
+        },
+        faction_diplomat: {
+            id: 'faction_diplomat',
+            name: 'Faction Diplomat',
+            description: 'Reach Honored (50) with 3 different factions',
+            icon: '🕊️',
+            category: 'faction',
+            rarity: 'uncommon',
+            unlocked: false,
+            unlockedAt: null,
+            condition: () => {
+                if (typeof FactionSystem === 'undefined') return false;
+                return Object.keys(FactionSystem.factions).filter(f => FactionSystem.getReputation(f) >= 50).length >= 3;
+            }
+        },
+        reputation_maxed: {
+            id: 'reputation_maxed',
+            name: 'Perfect Standing',
+            description: 'Reach maximum reputation (100) with any faction',
+            icon: '💯',
+            category: 'faction',
+            rarity: 'rare',
+            unlocked: false,
+            unlockedAt: null,
+            condition: () => {
+                if (typeof FactionSystem === 'undefined') return false;
+                return Object.keys(FactionSystem.factions).some(f => FactionSystem.getReputation(f) >= 100);
+            }
+        },
+        universal_respect: {
+            id: 'universal_respect',
+            name: 'Universal Respect',
+            description: 'Reach maximum reputation (100) with ALL factions',
+            icon: '🏆',
+            category: 'faction',
+            rarity: 'legendary',
+            unlocked: false,
+            unlockedAt: null,
+            condition: () => {
+                if (typeof FactionSystem === 'undefined') return false;
+                return Object.keys(FactionSystem.factions).every(f => FactionSystem.getReputation(f) >= 100);
+            }
+        },
+        redemption_arc: {
+            id: 'redemption_arc',
+            name: 'Redemption Arc',
+            description: 'Recover from Hated (-75) to Friendly (25) with any faction',
+            icon: '🔄',
+            category: 'faction',
+            rarity: 'rare',
+            unlocked: false,
+            unlockedAt: null,
+            condition: () => AchievementSystem.stats.redemptionArcCompleted
+        },
+
         // --- ULTRA ACHIEVEMENT - THE FINAL REWARD ---
         // This is THE achievement. The end game. The ultimate flex.
         super_hacker: {

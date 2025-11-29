@@ -210,7 +210,7 @@ const CurrentTaskSystem = {
             this.updateTaskDisplays();
         }, 1000);
 
-        console.log('🎯 CurrentTaskSystem initialized');
+        console.log('🎯 CurrentTaskSystem initialized - tracking your procrastination in real time 💀');
     }
 };
 

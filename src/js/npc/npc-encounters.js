@@ -38,7 +38,7 @@ const NPCEncounterSystem = {
     // ═══════════════════════════════════════════════════════════
 
     encounterTypes: {
-        // Road encounters (during travel)
+        // 🛣️ The road is never safe - who will you meet in the wilderness? 🦇
         road: {
             friendly: [
                 { type: 'traveler', weight: 30, minRep: -50 },
@@ -57,7 +57,7 @@ const NPCEncounterSystem = {
             ]
         },
 
-        // Location encounters (in towns/cities)
+        // 🏰 Every location holds souls waiting to speak or strike 👥
         location: {
             tavern: [
                 { type: 'innkeeper', weight: 30, minRep: -30 },
@@ -109,7 +109,7 @@ const NPCEncounterSystem = {
             ]
         },
 
-        // Event-based encounters
+        // ⚡ When chaos reigns, special souls emerge from the shadows 🎭
         event: {
             festival: [
                 { type: 'drunk', weight: 30, minRep: -100 },
@@ -290,7 +290,7 @@ const NPCEncounterSystem = {
     triggerEncounter(encounter, context) {
         console.log(`🎭 Triggering ${encounter.type} encounter in ${context}`);
 
-        // PAUSE TIME during encounter
+        // ⏸️ Freeze the world - this moment matters 🕰️
         this.pauseTimeForEncounter();
 
         // update timing
@@ -325,7 +325,7 @@ const NPCEncounterSystem = {
         this.showEncounterDialog(npcData, context);
     },
 
-    // Pause time during encounters
+    // ⏸️ Halt the march of time - give this encounter your full attention 💀
     pauseTimeForEncounter() {
         if (typeof TimeSystem !== 'undefined' && !TimeSystem.isPaused) {
             this.wasTimePaused = false;
@@ -336,7 +336,7 @@ const NPCEncounterSystem = {
         }
     },
 
-    // Resume time after encounter ends
+    // ▶️ Release time from its cage - the encounter has ended 🕰️
     resumeTimeAfterEncounter() {
         if (typeof TimeSystem !== 'undefined' && !this.wasTimePaused) {
             TimeSystem.isPaused = false;
@@ -369,7 +369,7 @@ const NPCEncounterSystem = {
             greetings: persona?.greetings || ["Hello there."]
         };
 
-        // Add inventory for tradeable NPC types
+        // 💼 Some souls carry treasures - give them items to barter 🎒
         if (this.canTrade(type)) {
             npcData.canTrade = true;
             npcData.inventory = this.generateTravelerInventory(type);
@@ -379,13 +379,13 @@ const NPCEncounterSystem = {
         return npcData;
     },
 
-    // Check if NPC type can trade
+    // 💱 Can this soul engage in capitalism's cold embrace? 💰
     canTrade(type) {
         const tradingTypes = ['traveler', 'merchant', 'smuggler', 'courier', 'pilgrim'];
         return tradingTypes.includes(type);
     },
 
-    // Generate balanced inventory for traveling NPCs
+    // 🎒 Fill their pockets with survival and sin - what do wanderers carry? 🗡️
     generateTravelerInventory(type) {
         const inventoryTemplates = {
             traveler: {
@@ -418,7 +418,7 @@ const NPCEncounterSystem = {
         const template = inventoryTemplates[type] || inventoryTemplates.traveler;
         const inventory = [];
 
-        // Add 2-4 common items
+        // 📦 The basics - bread, water, the mundane necessities of existence 🍞
         const commonCount = 2 + Math.floor(Math.random() * 3);
         for (let i = 0; i < commonCount && template.common.length > 0; i++) {
             const item = template.common[Math.floor(Math.random() * template.common.length)];
@@ -428,7 +428,7 @@ const NPCEncounterSystem = {
             });
         }
 
-        // Add 1-2 uncommon items (70% chance each)
+        // ✨ Something slightly special - the uncommon treasures they've found 🔮
         const uncommonCount = Math.random() > 0.3 ? (Math.random() > 0.5 ? 2 : 1) : 0;
         for (let i = 0; i < uncommonCount && template.uncommon.length > 0; i++) {
             const item = template.uncommon[Math.floor(Math.random() * template.uncommon.length)];
@@ -438,7 +438,7 @@ const NPCEncounterSystem = {
             });
         }
 
-        // Add 0-1 rare items (20% chance)
+        // 💎 Jackpot - a rare prize hidden among their wares (20% chance) 🎰
         if (Math.random() < 0.2 && template.rare.length > 0) {
             const item = template.rare[Math.floor(Math.random() * template.rare.length)];
             inventory.push({
@@ -450,7 +450,7 @@ const NPCEncounterSystem = {
         return inventory;
     },
 
-    // Generate gold for traveling NPCs
+    // 💰 How much coin weighs down their purse? Depends on their trade 💸
     generateTravelerGold(type) {
         const goldRanges = {
             traveler: { min: 10, max: 50 },
@@ -529,7 +529,7 @@ const NPCEncounterSystem = {
 
         const contextMsg = contextMessages[context] || `You meet ${npcData.name}.`;
 
-        // Build buttons based on NPC capabilities
+        // 🎮 Give the player choices - talk, trade, or walk away 🚪
         const buttons = [
             {
                 text: '🗨️ Talk',
@@ -541,7 +541,7 @@ const NPCEncounterSystem = {
             }
         ];
 
-        // Add Trade button if NPC can trade
+        // 💱 Can we haggle with this soul? Add the trade option 🤝
         if (npcData.canTrade) {
             buttons.push({
                 text: '💰 Trade',
@@ -594,14 +594,14 @@ const NPCEncounterSystem = {
         console.log('🎭 NPC inventory:', npcData.inventory);
         console.log('🎭 NPC gold:', npcData.gold);
 
-        // Open trade window with encounter NPC
+        // 💼 Open the market interface - let capitalism flow 💸
         if (typeof NPCTradeWindow !== 'undefined') {
             NPCTradeWindow.open(npcData);
         } else if (typeof openTradeWindow === 'function') {
             openTradeWindow(npcData);
         } else {
-            console.error('🎭 No trade window system available');
-            // Fallback to conversation
+            // 🦇 No trade window - graceful fallback to conversation
+            console.warn('🎭 Trade window unavailable, starting conversation');
             this.startEncounterConversation(npcData);
         }
     },
@@ -612,7 +612,7 @@ const NPCEncounterSystem = {
         console.log('🎭 Encounter dismissed');
     },
 
-    // End an encounter (called when conversation ends)
+    // 👋 The stranger fades back into the void - encounter over 🌫️
     endEncounter(npcId) {
         this.activeEncounters = this.activeEncounters.filter(e => e.npc?.id !== npcId);
         this.resumeTimeAfterEncounter();
@@ -699,7 +699,8 @@ const NPCEncounterSystem = {
     spawnRandomEncounter(context = 'road', type = null) {
         const contextEncounters = this.encounterTypes[context];
         if (!contextEncounters) {
-            console.error('🎭 Invalid encounter context:', context);
+            // 🦇 Unknown context - return null, caller handles it
+            console.warn('🎭 Unknown encounter context:', context);
             return null;
         }
 

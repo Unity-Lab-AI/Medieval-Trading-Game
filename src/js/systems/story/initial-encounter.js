@@ -34,19 +34,19 @@ const InitialEncounterSystem = {
 
     // 🚀 INITIALIZE - called when game starts
     init() {
-        console.log('🌟 InitialEncounterSystem: Awakened, waiting for new souls...');
+        console.log('🌟 InitialEncounterSystem: Awakened from the void, ready to haunt new souls... 🖤');
     },
 
     // 🎭 TRIGGER INITIAL ENCOUNTER - called after character creation
     triggerInitialEncounter(playerName, startLocation) {
         // 🖤 only trigger ONCE per new game
         if (this.hasShownEncounter) {
-            console.log('🌟 Initial encounter already shown this session');
+            console.log('🌟 Initial encounter already shown this session - no repeats, this darkness only strikes once 💀');
             return;
         }
 
         this.hasShownEncounter = true;
-        console.log(`🌟 Preparing initial encounter for ${playerName} at ${startLocation}...`);
+        console.log(`🌟 Preparing initial encounter for ${playerName} at ${startLocation}... destiny calls 🦇`);
 
         // 🌙 Delay for dramatic effect - let the player see the world first
         setTimeout(() => {
@@ -75,6 +75,7 @@ const InitialEncounterSystem = {
                         <p style="color: #a0a0c0;">As you take your first steps into the village square, you notice a hooded figure watching you from the shadows...</p>
                     </div>
                 `,
+                closeable: false, // 🖤 Must approach the stranger - no escape from destiny
                 buttons: [
                     {
                         text: '🎭 Approach the Stranger',
@@ -82,13 +83,6 @@ const InitialEncounterSystem = {
                         onClick: () => {
                             ModalSystem.hide();
                             this.showStrangerEncounter(playerName);
-                        }
-                    },
-                    {
-                        text: '🚶 Ignore and Explore',
-                        onClick: () => {
-                            ModalSystem.hide();
-                            this.skipEncounterButUnlockQuest();
                         }
                     }
                 ]
@@ -129,21 +123,22 @@ const InitialEncounterSystem = {
                     <p style="color: #f0a0a0; margin-bottom: 1rem;">The stranger pauses, and for a moment you feel a chill run down your spine.</p>
                     <p style="font-style: italic; color: #c0a0ff; font-size: 1.1em;">"You are more than a simple trader, young one. Fate has brought you here for a reason. Seek out Elder Morin in this village. He will guide your first steps on this path."</p>
                 `,
+                closeable: false, // 🖤 Must accept quest - no escape from destiny
                 buttons: [
                     {
-                        text: '❓ "Who are you?"',
+                        text: '📚 Tutorial',
                         className: 'secondary',
                         onClick: () => {
                             ModalSystem.hide();
-                            this.showStrangerReveal(playerName);
+                            this.showTutorial(playerName);
                         }
                     },
                     {
-                        text: '✅ "I will find the Elder."',
+                        text: '✅ Accept Quest',
                         className: 'primary',
                         onClick: () => {
                             ModalSystem.hide();
-                            this.completeEncounter(true);
+                            this.showQuestAccepted(playerName);
                         }
                     }
                 ]
@@ -151,7 +146,51 @@ const InitialEncounterSystem = {
         }
     },
 
-    // 🎭 STRANGER REVEAL - who is this mysterious figure?
+    // 📚 TUTORIAL - teach the player the basics (placeholder for now)
+    showTutorial(playerName) {
+        // 🖤 Tutorial will be expanded later - for now show basic tips and accept quest
+        if (typeof ModalSystem !== 'undefined') {
+            ModalSystem.show({
+                title: '📚 Tutorial - Getting Started',
+                content: `
+                    <div style="line-height: 1.8;">
+                        <p style="margin-bottom: 1rem; color: #90EE90; font-weight: bold;">Welcome to the world of trading, ${playerName}!</p>
+
+                        <div style="background: rgba(100, 100, 150, 0.2); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <p style="margin-bottom: 0.5rem; color: #4fc3f7;"><strong>🎮 Basic Controls:</strong></p>
+                            <p style="color: #c0c0d0; margin-left: 1rem;">• <strong>M</strong> - Open Market (buy/sell goods)</p>
+                            <p style="color: #c0c0d0; margin-left: 1rem;">• <strong>I</strong> - Open Inventory</p>
+                            <p style="color: #c0c0d0; margin-left: 1rem;">• <strong>T</strong> - Travel to new locations</p>
+                            <p style="color: #c0c0d0; margin-left: 1rem;">• <strong>Q</strong> - View your Quest Log</p>
+                            <p style="color: #c0c0d0; margin-left: 1rem;">• <strong>C</strong> - Character Sheet</p>
+                        </div>
+
+                        <div style="background: rgba(100, 150, 100, 0.2); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <p style="margin-bottom: 0.5rem; color: #90EE90;"><strong>💰 Trading Tips:</strong></p>
+                            <p style="color: #c0c0d0; margin-left: 1rem;">• Buy low in one town, sell high in another</p>
+                            <p style="color: #c0c0d0; margin-left: 1rem;">• Watch for price differences between locations</p>
+                            <p style="color: #c0c0d0; margin-left: 1rem;">• Keep some gold for emergencies</p>
+                        </div>
+
+                        <p style="color: #a0a0c0; font-style: italic; font-size: 0.9em;">More tutorial content coming soon! For now, speak with Elder Morin to continue your journey.</p>
+                    </div>
+                `,
+                closeable: false, // 🖤 Must accept quest after tutorial
+                buttons: [
+                    {
+                        text: '✅ Accept Quest & Begin',
+                        className: 'primary',
+                        onClick: () => {
+                            ModalSystem.hide();
+                            this.showQuestAccepted(playerName);
+                        }
+                    }
+                ]
+            });
+        }
+    },
+
+    // 🎭 STRANGER REVEAL - who is this mysterious figure? (legacy - kept for story flow)
     showStrangerReveal(playerName) {
         if (typeof ModalSystem !== 'undefined') {
             ModalSystem.show({
@@ -163,13 +202,14 @@ const InitialEncounterSystem = {
                     <p style="font-style: italic; color: #c0a0ff; font-size: 1.1em; margin-bottom: 1rem;">"Perhaps when you have proven yourself worthy, we shall meet again. Until then... trade well, ${playerName}. Build your fortune. You will need it for what is to come."</p>
                     <p style="color: #a0a0c0; font-style: italic;">Before you can respond, the stranger melts back into the shadows as if they were never there.</p>
                 `,
+                closeable: false, // 🖤 Must accept quest - no escape
                 buttons: [
                     {
-                        text: '✅ Continue',
+                        text: '✅ Accept Quest',
                         className: 'primary',
                         onClick: () => {
                             ModalSystem.hide();
-                            this.completeEncounter(true);
+                            this.showQuestAccepted(playerName);
                         }
                     }
                 ]
@@ -177,20 +217,43 @@ const InitialEncounterSystem = {
         }
     },
 
-    // 🖤 SKIP ENCOUNTER - player chose to ignore the stranger
-    skipEncounterButUnlockQuest() {
-        this.completeEncounter(false);
+    // 📜 QUEST ACCEPTED - show confirmation and clear next steps
+    showQuestAccepted(playerName) {
+        // 🖤 Actually start the quest now
+        this.completeEncounter(true);
 
-        // Add a message about the stranger disappearing
-        if (typeof addMessage === 'function') {
-            addMessage('💨 The hooded figure fades into the crowd before you can approach...');
-            addMessage('📜 Perhaps speaking with the village elder would be wise.');
+        if (typeof ModalSystem !== 'undefined') {
+            ModalSystem.show({
+                title: '📜 Quest Accepted: A New Beginning',
+                content: `
+                    <div style="text-align: center; margin-bottom: 1.5rem;">
+                        <span style="font-size: 3rem;">📜</span>
+                    </div>
+                    <p style="margin-bottom: 1rem; color: #90EE90; font-weight: bold; text-align: center;">Quest Started!</p>
+                    <div style="background: rgba(100, 100, 150, 0.2); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                        <p style="margin-bottom: 0.5rem; color: #fff;"><strong>Objectives:</strong></p>
+                        <p style="color: #c0c0d0; margin-left: 1rem;">• Complete your first trade</p>
+                        <p style="color: #c0c0d0; margin-left: 1rem;">• Speak with Elder Morin</p>
+                    </div>
+                    <p style="color: #a0a0c0; font-style: italic; font-size: 0.9em;">Tip: Look for the Elder in the village. NPCs with quests have a 📜 icon. Press 'Q' to open your Quest Log.</p>
+                `,
+                closeable: true,
+                buttons: [
+                    {
+                        text: '🎮 Begin Adventure',
+                        className: 'primary',
+                        onClick: () => {
+                            ModalSystem.hide();
+                        }
+                    }
+                ]
+            });
         }
     },
 
     // ✅ COMPLETE ENCOUNTER - unlock the main quest and resume game
     completeEncounter(talkedToStranger) {
-        console.log('🌟 Initial encounter complete, talked to stranger:', talkedToStranger);
+        console.log('🌟 Initial encounter complete - you chose your path, stranger talk:', talkedToStranger, '💀');
 
         // 📜 Unlock the main quest
         this.unlockMainQuest();
@@ -216,24 +279,33 @@ const InitialEncounterSystem = {
             AchievementSystem.trackEvent('initial_encounter_complete', { talkedToStranger });
         }
 
-        console.log('🌟 Initial encounter system complete - main quest unlocked');
+        console.log('🌟 Initial encounter ritual complete - main quest unlocked, your fate sealed 🖤');
     },
 
-    // 📜 UNLOCK MAIN QUEST - make the prologue quest available
+    // 📜 UNLOCK MAIN QUEST - actually START the prologue quest (not just discover it)
     unlockMainQuest() {
         if (typeof QuestSystem !== 'undefined') {
-            // Discover the main prologue quest
-            if (QuestSystem.discoverQuest) {
+            // 🖤 Actually ASSIGN the quest so it becomes active, not just discovered
+            if (QuestSystem.assignQuest) {
+                const result = QuestSystem.assignQuest('main_prologue', { name: 'The Hooded Stranger' });
+                if (result.success) {
+                    console.log('🌟 main_prologue quest STARTED - the darkness beckons, no turning back 🦇');
+                } else {
+                    console.log('🌟 main_prologue assignment failed, darkness confused:', result.error, '💔');
+                    // Fallback to discover if already active or other issue
+                    if (QuestSystem.discoverQuest) {
+                        QuestSystem.discoverQuest('main_prologue');
+                    }
+                }
+            } else if (QuestSystem.discoverQuest) {
+                // Fallback to old behavior if assignQuest doesn't exist
                 QuestSystem.discoverQuest('main_prologue');
-                console.log('🌟 main_prologue quest discovered');
-            } else if (QuestSystem.discoveredQuests && !QuestSystem.discoveredQuests.includes('main_prologue')) {
-                QuestSystem.discoveredQuests.push('main_prologue');
-                console.log('🌟 main_prologue added to discovered quests');
+                console.log('🌟 main_prologue quest discovered (fallback) - old ritual, still works 🕯️');
             }
 
             // Update quest UI if available
-            if (QuestSystem.updateQuestLog) {
-                QuestSystem.updateQuestLog();
+            if (QuestSystem.updateQuestLogUI) {
+                QuestSystem.updateQuestLogUI();
             }
         } else {
             console.warn('🌟 QuestSystem not available - could not unlock main quest');

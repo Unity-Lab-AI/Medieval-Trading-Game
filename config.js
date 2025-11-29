@@ -12,9 +12,9 @@ const GameConfig = {
     // 📋 VERSION INFO - tracking our descent into madness
     // ═══════════════════════════════════════════════════════════════
     version: {
-        game: '0.7',           // the great reorganization update 🖤
-        file: '0.7',           // keeping pace with the darkness
-        build: '2025.11',      // born in the depths of 2024
+        game: '0.81',          // the great reorganization update 🖤
+        file: '0.81',          // keeping pace with the darkness
+        build: '2025.11',      // born in the depths of 2025
         releaseDate: '2025'    // the year we unleashed this beast
     },
 
@@ -524,6 +524,16 @@ const GameConfig = {
     // ═══════════════════════════════════════════════════════════════
     // how fast does existence accelerate toward entropy?
     time: {
+        // 📅 starting date - when every merchant's journey begins
+        // used for calculating days survived on leaderboards
+        startingDate: {
+            year: 1111,                // the year of reckoning
+            month: 4,                  // April - spring awakening
+            day: 1,                    // first day of your suffering
+            hour: 8,                   // 8 AM - early bird catches the plague
+            minute: 0
+        },
+
         // 🕐 game speed settings (ms between ticks)
         speeds: {
             PAUSED: 0,                 // frozen in time like your bank account

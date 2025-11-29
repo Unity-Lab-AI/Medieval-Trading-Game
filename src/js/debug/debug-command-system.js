@@ -1,58 +1,61 @@
 // ═══════════════════════════════════════════════════════════════
-// 🎮 DEBUG COMMAND SYSTEM - cheat codes for the morally flexible
+// 🎮 DEBOOGER COMMAND SYSTEM - cheat codes for the morally flexible
 // ═══════════════════════════════════════════════════════════════
 // File Version: GameConfig.version.file
 // conjured by Unity AI Lab - Hackall360, Sponge, GFourteen
 // ═══════════════════════════════════════════════════════════════
-// press ` (backtick) when debug console is open to focus command input
+// click the Debooger button to open the console
 // type commands and press enter to bend reality
 
-console.log('🎮 Debug Command System loading...');
+console.log('🎮 Debooger Command System loading...');
 
 const DebugCommandSystem = {
-    // Is the command input currently focused?
+    // 🖤 Is the command input currently focused? Reality bends to our will
     isInputFocused: false,
 
-    // Command history for up/down arrow navigation
+    // 🦇 Command history for up/down arrow navigation - remembering our sins
     commandHistory: [],
     historyIndex: -1,
 
-    // Available commands
+    // 🔮 Available commands - the keys to breaking reality
     commands: {},
 
-    // Initialize the system
+    // 💀 Initialize the system - awaken the chaos engine
     init() {
-        console.log('🎮 Debug Command System initializing...');
+        console.log('🎮 Debooger Command System initializing...');
 
-        // Wire up the command input UI (already in HTML)
+        // 🔌 Wire up the command input UI - connecting to the void
         this.wireUpCommandInput();
 
-        // Setup keyboard listener for ` key
+        // ⌨️ Setup keyboard listener (disabled - button only now, peasants must click)
         this.setupKeyboardListener();
 
-        // Register built-in commands
+        // 🗡️ Register built-in commands - loading our arsenal of reality-warping cheats
         this.registerBuiltInCommands();
 
-        console.log('🎮 Debug Command System ready! Press ` to focus command input.');
+        // 🦇 Show registered command count - behold our weapon collection
+        const cmdCount = Object.keys(this.commands).length;
+        console.log(`🎮 Debooger Command System ready! ${cmdCount} commands registered.`);
+        console.log('🎮 Commands:', Object.keys(this.commands).join(', '));
     },
 
-    // Wire up event listeners for command input (elements are in HTML)
+    // 🔧 Wire up event listeners for command input - binding reality to our interface
     wireUpCommandInput() {
         const input = document.getElementById('debug-command-input');
         const executeBtn = document.getElementById('debug-command-execute');
         const helpBtn = document.getElementById('debug-command-help');
 
         if (!input) {
-            console.warn('🎮 Command input not found, will retry...');
+            console.warn('🎮 Command input not found, will retry... patience, darkness requires it');
             setTimeout(() => this.wireUpCommandInput(), 500);
             return;
         }
 
-        // Remove any existing listeners by cloning
+        // 🧬 Remove any existing listeners by cloning - purge the old, embrace the new
         const newInput = input.cloneNode(true);
         input.parentNode.replaceChild(newInput, input);
 
-        // Add event listeners to the fresh input
+        // 🎯 Add event listeners to the fresh input - wire up our control mechanism
         newInput.addEventListener('keydown', (e) => this.handleInputKeydown(e));
         newInput.addEventListener('focus', () => { this.isInputFocused = true; });
         newInput.addEventListener('blur', () => { this.isInputFocused = false; });
@@ -68,27 +71,14 @@ const DebugCommandSystem = {
         console.log('🎮 Command input wired up and ready!');
     },
 
-    // Setup keyboard listener for backtick key
+    // 💀 Backtick key binding REMOVED - no keyboard shortcut for the Debooger
+    // Users must click the button to open/focus the Debooger console
     setupKeyboardListener() {
-        document.addEventListener('keydown', (e) => {
-            // ` (backtick) key to focus command input
-            if (e.key === '`' || e.code === 'Backquote') {
-                const debugConsole = document.getElementById('debug-console');
-                const input = document.getElementById('debug-command-input');
-
-                // Only if debug console is visible
-                if (debugConsole && debugConsole.style.display !== 'none') {
-                    e.preventDefault();
-                    if (input) {
-                        input.focus();
-                        console.log('🎮 Command input focused');
-                    }
-                }
-            }
-        });
+        // 🖤 Intentionally empty - the Debooger is button-only now
+        // No secret keyboard shortcuts for the peasants
     },
 
-    // Handle input keydown events
+    // ⌨️ Handle input keydown events - capturing your keystrokes like souls 🖤
     handleInputKeydown(e) {
         const input = e.target;
 
@@ -109,7 +99,7 @@ const DebugCommandSystem = {
         }
     },
 
-    // Navigate command history
+    // ⬆️⬇️ Navigate command history - time travel through your cheating past 🦇
     navigateHistory(direction) {
         const input = document.getElementById('debug-command-input');
         if (!input || this.commandHistory.length === 0) return;
@@ -128,7 +118,7 @@ const DebugCommandSystem = {
         }
     },
 
-    // Autocomplete command names
+    // 🔮 Autocomplete command names - lazy typing for the morally flexible
     autocomplete() {
         const input = document.getElementById('debug-command-input');
         if (!input) return;
@@ -147,7 +137,7 @@ const DebugCommandSystem = {
         }
     },
 
-    // Execute the current command in the input
+    // ⚡ Execute the current command in the input - reality bends NOW 💀
     executeCurrentCommand() {
         const input = document.getElementById('debug-command-input');
         if (!input) return;
@@ -155,42 +145,49 @@ const DebugCommandSystem = {
         const commandText = input.value.trim();
         if (!commandText) return;
 
-        // Add to history
+        // 📜 Add to history - never forget what we've done
         this.commandHistory.unshift(commandText);
         if (this.commandHistory.length > 50) {
             this.commandHistory.pop();
         }
         this.historyIndex = -1;
 
-        // Clear input
+        // 🧹 Clear input - clean slate for the next sin
         input.value = '';
 
-        // Execute
+        // 🔥 Execute - LET CHAOS REIGN
         this.execute(commandText);
     },
 
-    // Check if debug commands are enabled
+    // 🔒 Check if debug commands are enabled - are we worthy of this power?
     isDebugEnabled() {
-        // First check if debug is unlocked via Super Hacker achievement
+        // ⚙️ Config takes priority - config says yes? Reality says yes 🖤
+        if (typeof GameConfig !== 'undefined' && GameConfig.debug) {
+            if (GameConfig.debug.enabled === true) {
+                return true; // Config override - godmode enabled
+            }
+        }
+
+        // 🏆 If config disabled, check if unlocked via Super Hacker achievement - earned power
         if (typeof AchievementSystem !== 'undefined' && AchievementSystem.isDebugUnlockedForSave()) {
             return true;
         }
 
-        // Check GameConfig.debug.enabled
-        if (typeof GameConfig !== 'undefined' && GameConfig.debug) {
-            return GameConfig.debug.enabled === true;
+        // 🛠️ Default to true if config not loaded (dev mode) - developers deserve chaos
+        if (typeof GameConfig === 'undefined') {
+            return true;
         }
-        // Default to true if config not loaded
-        return true;
+
+        return false;
     },
 
-    // Execute a command string (supports async commands)
+    // 🗡️ Execute a command string (supports async commands) - bend reality to your will
     async execute(commandText) {
         console.log(`🎮 > ${commandText}`);
 
-        // Check if debug is locked out
+        // 🔐 Check if debug is locked out - gatekeeping the power
         if (!this.isDebugEnabled()) {
-            // Allow only 'help' command when locked out
+            // 📖 Allow only 'help' command when locked out - mortals can read, not act
             const cmdLower = commandText.trim().toLowerCase();
             if (cmdLower !== 'help' && !cmdLower.startsWith('help')) {
                 console.warn('🔒 Debug commands are DISABLED. Set GameConfig.debug.enabled = true to unlock.');
@@ -201,29 +198,30 @@ const DebugCommandSystem = {
             }
         }
 
-        // Parse command and arguments
+        // 📋 Parse command and arguments - deconstructing your intent
         const parts = commandText.trim().split(/\s+/);
         const commandName = parts[0].toLowerCase();
         const args = parts.slice(1);
 
-        // Find and execute command
+        // 🔍 Find and execute command - seeking the power you crave
         const command = this.commands[commandName];
         if (command) {
             try {
-                // Await the result in case it's an async command
+                // ⏳ Await the result in case it's an async command - patience for power
                 const result = await command.handler(args);
                 if (result !== undefined) {
                     console.log(`🎮 Result: ${result}`);
                 }
             } catch (error) {
-                console.error(`🎮 Command error: ${error.message}`);
+                // 🦇 Debug command failed - even gods stumble
+                console.warn(`🎮 Command failed: ${error.message}`);
             }
         } else {
             console.warn(`🎮 Unknown command: ${commandName}. Type 'help' for available commands.`);
         }
     },
 
-    // Register a command
+    // 📝 Register a command - adding weapons to our arsenal
     registerCommand(name, description, handler) {
         this.commands[name.toLowerCase()] = {
             name,
@@ -233,16 +231,16 @@ const DebugCommandSystem = {
         console.log(`🎮 Registered command: ${name}`);
     },
 
-    // Show help
+    // 📖 Show help - revealing the forbidden knowledge
     showHelp() {
         const isEnabled = this.isDebugEnabled();
 
         console.log('═══════════════════════════════════════════════════');
-        console.log('🎮 DEBUG COMMAND SYSTEM - Available Commands:');
+        console.log('🎮 DEBOOGER COMMAND SYSTEM - Available Commands:');
         if (!isEnabled) {
-            console.log('🔒 STATUS: LOCKED - Debug commands disabled in config.js');
+            console.log('🔒 STATUS: LOCKED - Debooger commands disabled in config.js');
         } else {
-            console.log('🔓 STATUS: UNLOCKED - Debug commands active');
+            console.log('🔓 STATUS: UNLOCKED - Debooger commands active');
         }
         console.log('═══════════════════════════════════════════════════');
 
@@ -252,47 +250,47 @@ const DebugCommandSystem = {
 
         console.log('═══════════════════════════════════════════════════');
         console.log('💡 Tips:');
-        console.log('  - Press ` (backtick) to focus command input');
+        console.log('  - Click Debooger button to open console');
         console.log('  - Press Enter to execute command');
         console.log('  - Press Up/Down to navigate history');
         console.log('  - Press Tab to autocomplete');
         if (!isEnabled) {
-            console.log('🔒 Debug is DISABLED. Set GameConfig.debug.enabled = true');
+            console.log('🔒 Debooger is DISABLED. Set GameConfig.debug.enabled = true');
         }
         console.log('═══════════════════════════════════════════════════');
     },
 
-    // Register built-in commands
+    // 🗡️ Register built-in commands - loading the reality-breaking toolbox
     registerBuiltInCommands() {
-        // Help command
-        this.registerCommand('help', 'Show all available commands', () => {
+        // 📖 Help command - reveal the dark arts
+        this.registerCommand('help', 'Show all available commands - reveal your power', () => {
             this.showHelp();
         });
 
-        // Clear console
-        this.registerCommand('clear', 'Clear the debug console', () => {
+        // 🧹 Clear console - wipe away the evidence of our sins
+        this.registerCommand('clear', 'Clear the Debooger console - fresh slate for chaos', () => {
             const content = document.getElementById('debug-console-content');
             if (content) content.innerHTML = '';
-            console.log('🎮 Console cleared');
+            console.log('🎮 Debooger console cleared');
         });
 
         // ═══════════════════════════════════════════════════════════════
-        // 💰 GOLD/MONEY CHEATS
+        // 💰 GOLD/MONEY CHEATS - summoning wealth from the void 🖤
         // ═══════════════════════════════════════════════════════════════
 
-        // geecashnow - Classic cheat code for 1000 gold
-        this.registerCommand('geecashnow', 'Add 1000 gold (respects carry weight)', () => {
+        // 💸 geecashnow - Classic cheat code to manifest 1000 gold from thin air
+        this.registerCommand('geecashnow', '💰 Conjure 1000 gold from the void - because we deserve it 🔮', () => {
             return this.addGoldCheat(1000);
         });
 
-        // givegold <amount> - Add specific amount of gold
-        this.registerCommand('givegold', 'Add gold: givegold <amount>', (args) => {
+        // 💎 givegold <amount> - Summon specific amounts of filthy lucre
+        this.registerCommand('givegold', '💰 Summon gold: givegold <amount> - greed made manifest 🖤', (args) => {
             const amount = parseInt(args[0]) || 100;
             return this.addGoldCheat(amount);
         });
 
-        // setgold <amount> - Set gold to specific amount
-        this.registerCommand('setgold', 'Set gold to amount: setgold <amount>', (args) => {
+        // 🎯 setgold <amount> - Rewrite reality to set exact gold amount
+        this.registerCommand('setgold', '💰 Set gold to exact amount: setgold <amount> - ultimate control 💀', (args) => {
             const amount = parseInt(args[0]) || 1000;
             if (typeof UniversalGoldManager !== 'undefined') {
                 UniversalGoldManager.setPersonalGold(amount, 'cheat');
@@ -306,8 +304,8 @@ const DebugCommandSystem = {
             return amount;
         });
 
-        // showgold - Show all gold across all sources
-        this.registerCommand('showgold', 'Show gold from all sources', () => {
+        // 💎 showgold - Reveal your entire hoard across all dimensions
+        this.registerCommand('showgold', '💰 Reveal ALL your gold sources - count your wealth 🖤', () => {
             if (typeof UniversalGoldManager !== 'undefined') {
                 return UniversalGoldManager.showAllGold();
             } else {
@@ -319,11 +317,11 @@ const DebugCommandSystem = {
         });
 
         // ═══════════════════════════════════════════════════════════════
-        // 🎒 INVENTORY CHEATS
+        // 🎒 INVENTORY CHEATS - materialization of desires 💀
         // ═══════════════════════════════════════════════════════════════
 
-        // giveitem <itemId> <quantity> - Add item to inventory
-        this.registerCommand('giveitem', 'Add item: giveitem <itemId> [quantity]', (args) => {
+        // 📦 giveitem <itemId> <quantity> - Manifest items from nothing
+        this.registerCommand('giveitem', '🎒 Manifest items: giveitem <itemId> [quantity] - creation from void 🦇', (args) => {
             const itemId = args[0];
             const quantity = parseInt(args[1]) || 1;
 
@@ -332,11 +330,11 @@ const DebugCommandSystem = {
                 return 'Usage: giveitem <itemId> [quantity]';
             }
 
-            // Always use game.player.inventory directly for reliability
+            // 🎯 Always use game.player.inventory directly for reliability - direct manipulation
             if (typeof game !== 'undefined' && game.player && game.player.inventory) {
                 game.player.inventory[itemId] = (game.player.inventory[itemId] || 0) + quantity;
                 console.log(`🎒 Added ${quantity}x ${itemId}`);
-                // Update display if function exists
+                // 🔄 Update display if function exists - show off our ill-gotten gains
                 if (typeof InventorySystem !== 'undefined' && InventorySystem.updateInventoryDisplay) {
                     InventorySystem.updateInventoryDisplay();
                 }
@@ -347,8 +345,8 @@ const DebugCommandSystem = {
             return 'No player inventory available';
         });
 
-        // listitems - List all available item IDs
-        this.registerCommand('listitems', 'List all item IDs', () => {
+        // 📋 listitems - Catalogue of everything that exists in this world
+        this.registerCommand('listitems', '📋 List all item IDs - the complete catalogue of existence 🔮', () => {
             if (typeof ItemDatabase !== 'undefined' && ItemDatabase.items) {
                 const items = Object.keys(ItemDatabase.items);
                 console.log('📦 Available items:', items.join(', '));
@@ -357,8 +355,8 @@ const DebugCommandSystem = {
             return 'ItemDatabase not found';
         });
 
-        // clearinventory - Clear player inventory
-        this.registerCommand('clearinventory', 'Clear player inventory', () => {
+        // 🧹 clearinventory - Purge everything you own into the void
+        this.registerCommand('clearinventory', '🎒 PURGE inventory - void everything you own 💀', () => {
             if (typeof game !== 'undefined' && game.player) {
                 game.player.inventory = { gold: game.player.gold || 0 };
                 console.log('🎒 Inventory cleared');
@@ -370,11 +368,11 @@ const DebugCommandSystem = {
         });
 
         // ═══════════════════════════════════════════════════════════════
-        // 👤 PLAYER CHEATS
+        // 👤 PLAYER CHEATS - godmode for mortals 🖤
         // ═══════════════════════════════════════════════════════════════
 
-        // heal - Full heal player
-        this.registerCommand('heal', 'Fully heal player', () => {
+        // ❤️ heal - Instant recovery from death's door
+        this.registerCommand('heal', '❤️ Full heal - death retreats before your power 🦇', () => {
             if (typeof game !== 'undefined' && game.player) {
                 game.player.health = game.player.maxHealth || 100;
                 game.player.hunger = 100;
@@ -387,8 +385,8 @@ const DebugCommandSystem = {
             return 'Healed!';
         });
 
-        // setstat <stat> <value> - Set player stat
-        this.registerCommand('setstat', 'Set stat: setstat <stat> <value>', (args) => {
+        // 📊 setstat <stat> <value> - Rewrite your character sheet
+        this.registerCommand('setstat', '📊 Set stat: setstat <stat> <value> - rewrite your existence 💀', (args) => {
             const stat = args[0];
             const value = parseInt(args[1]);
 
@@ -407,20 +405,21 @@ const DebugCommandSystem = {
         });
 
         // ═══════════════════════════════════════════════════════════════
-        // 🗺️ WORLD/TRAVEL CHEATS
+        // 🗺️ WORLD/TRAVEL CHEATS - bending space to our will 🔮
         // ═══════════════════════════════════════════════════════════════
 
-        // teleport <locationId> - Teleport to location
-        this.registerCommand('teleport', 'Teleport to location: teleport <locationId>', (args) => {
+        // 🌀 teleport <locationId> - Instant spatial manipulation
+        this.registerCommand('teleport', '🗺️ Teleport: teleport <locationId> - fold space like paper 🖤', (args) => {
             const locationId = args[0];
             if (!locationId) {
                 console.warn('🎮 Usage: teleport <locationId>');
                 if (typeof TravelSystem !== 'undefined' && TravelSystem.locations) {
-                    console.log('Available locations:', Object.keys(TravelSystem.locations).join(', '));
+                    console.log('🗺️ Available locations:', Object.keys(TravelSystem.locations).join(', '));
                 }
                 return;
             }
 
+            // 🌀 Warp reality to place you elsewhere
             if (typeof TravelSystem !== 'undefined' && TravelSystem.setPlayerLocation) {
                 TravelSystem.setPlayerLocation(locationId);
                 console.log(`🗺️ Teleported to ${locationId}`);
@@ -431,8 +430,8 @@ const DebugCommandSystem = {
             return locationId;
         });
 
-        // listlocations - Show all locations
-        this.registerCommand('listlocations', 'List all locations', () => {
+        // 📍 listlocations - Map of the entire realm
+        this.registerCommand('listlocations', '🗺️ List all locations - the complete world map 🦇', () => {
             if (typeof TravelSystem !== 'undefined' && TravelSystem.locations) {
                 const locs = Object.keys(TravelSystem.locations);
                 console.log('🗺️ Available locations:', locs.join(', '));
@@ -441,23 +440,361 @@ const DebugCommandSystem = {
             return 'TravelSystem not found';
         });
 
+        // 🌍 revealmap - Tear away the fog of war, expose EVERYTHING
+        this.registerCommand('revealmap', '🗺️ Reveal ENTIRE map - rip away the fog of war 💀', () => {
+            // 🖤 Rip away the fog of war and expose all the realm's secrets - omniscience NOW
+            let locationCount = 0;
+
+            // 🔍 Get all location IDs from GameWorld - extracting every secret
+            if (typeof GameWorld !== 'undefined' && GameWorld.locations) {
+                const allLocationIds = Object.keys(GameWorld.locations);
+                GameWorld.visitedLocations = [...allLocationIds];
+                locationCount = allLocationIds.length;
+                console.log(`🗺️ Revealed ${locationCount} locations in GameWorld`);
+            }
+
+            // 🔄 Also update game.visitedLocations if it exists - complete omniscience
+            if (typeof game !== 'undefined' && game.visitedLocations !== undefined) {
+                if (typeof GameWorld !== 'undefined' && GameWorld.locations) {
+                    game.visitedLocations = Object.keys(GameWorld.locations);
+                }
+            }
+
+            // 🎨 Re-render the map to show all locations - make it visible
+            if (typeof GameWorldRenderer !== 'undefined' && GameWorldRenderer.render) {
+                GameWorldRenderer.render();
+                console.log('🗺️ Map re-rendered with all locations visible');
+            }
+
+            // 🔄 Also refresh travel panel if open - update all the things
+            if (typeof TravelPanelMap !== 'undefined' && TravelPanelMap.render) {
+                TravelPanelMap.render();
+            }
+
+            console.log('🗺️ The fog of war has been lifted! All locations revealed.');
+            return `Revealed ${locationCount} locations`;
+        });
+
+        // 🌑 hidemap - Restore the fog of war, bring back the mystery
+        this.registerCommand('hidemap', '🗺️ Hide map - restore the fog of war, embrace darkness 🖤', () => {
+            // 🖤 Bring back the darkness - mystery returns
+            if (typeof GameWorld !== 'undefined') {
+                // Reset to just the starting location
+                GameWorld.visitedLocations = ['greendale'];
+                console.log('🗺️ Map reset to starting visibility');
+            }
+
+            // 🔄 Sync game state with the darkness
+            if (typeof game !== 'undefined' && game.visitedLocations !== undefined) {
+                game.visitedLocations = ['greendale'];
+            }
+
+            // 🎨 Re-render with darkness restored
+            if (typeof GameWorldRenderer !== 'undefined' && GameWorldRenderer.render) {
+                GameWorldRenderer.render();
+            }
+
+            if (typeof TravelPanelMap !== 'undefined' && TravelPanelMap.render) {
+                TravelPanelMap.render();
+            }
+
+            console.log('🗺️ The fog of war returns... only visited locations visible.');
+            return 'Map visibility reset';
+        });
+
         // ═══════════════════════════════════════════════════════════════
-        // ⏰ TIME CHEATS
+        // ⏰ TIME CHEATS - bend the flow of time itself 🔮
         // ═══════════════════════════════════════════════════════════════
 
-        // advancetime <hours> - Advance game time
-        this.registerCommand('advancetime', 'Advance time: advancetime <hours>', (args) => {
-            const hours = parseInt(args[0]) || 1;
-            if (typeof game !== 'undefined') {
-                game.hour = (game.hour || 0) + hours;
-                while (game.hour >= 24) {
-                    game.hour -= 24;
-                    game.day = (game.day || 1) + 1;
-                }
-                console.log(`⏰ Time: Day ${game.day}, Hour ${game.hour}`);
-                if (typeof updateTimeDisplay === 'function') updateTimeDisplay();
+        // ⏩ skipday - Fast-forward through time like a god
+        this.registerCommand('skipday', '⏰ Skip 1 day - manipulate time without consequences 🦇', () => {
+            if (typeof TimeMachine !== 'undefined' && TimeMachine.skipDays) {
+                const result = TimeMachine.skipDays(1, true);
+                console.log(`⏩ Skipped to ${result}`);
+                return result;
             }
-            return `+${hours} hours`;
+            return 'TimeMachine not found';
+        });
+
+        // ⏩ skipdays <n> - Leap through time in giant bounds
+        this.registerCommand('skipdays', '⏰ Skip N days: skipdays <days> - time acceleration 💀', (args) => {
+            const days = parseInt(args[0]) || 7;
+            if (typeof TimeMachine !== 'undefined' && TimeMachine.skipDays) {
+                const result = TimeMachine.skipDays(days, true);
+                console.log(`⏩ Skipped ${days} days to ${result}`);
+                return result;
+            }
+            return 'TimeMachine not found';
+        });
+
+        // 📅 skipmonth - Compress a month into an instant
+        this.registerCommand('skipmonth', '⏰ Skip 1 month - seasons shift at your command 🖤', () => {
+            if (typeof TimeMachine !== 'undefined' && TimeMachine.skipMonths) {
+                const result = TimeMachine.skipMonths(1, true);
+                console.log(`⏩ Skipped 1 month to ${result}`);
+                return result;
+            }
+            return 'TimeMachine not found';
+        });
+
+        // 📆 skip6months - Half a year in the blink of an eye
+        this.registerCommand('skip6months', '⏰ Skip 6 months - watch the seasons fly by 🦇', () => {
+            if (typeof TimeMachine !== 'undefined' && TimeMachine.skipMonths) {
+                const result = TimeMachine.skipMonths(6, true);
+                console.log(`⏩ Skipped 6 months to ${result}`);
+                return result;
+            }
+            return 'TimeMachine not found';
+        });
+
+        // 🗓️ skipmonths <n> - Custom time dilation
+        this.registerCommand('skipmonths', '⏰ Skip N months: skipmonths <months> - time bends to you 💀', (args) => {
+            const months = parseInt(args[0]) || 1;
+            if (typeof TimeMachine !== 'undefined' && TimeMachine.skipMonths) {
+                const result = TimeMachine.skipMonths(months, true);
+                console.log(`⏩ Skipped ${months} month(s) to ${result}`);
+                return result;
+            }
+            return 'TimeMachine not found';
+        });
+
+        // 🍂 setseason <season> - Command the seasons themselves
+        this.registerCommand('setseason', '⏰ Jump to season: setseason <spring|summer|autumn|winter> 🔮', (args) => {
+            const targetSeason = (args[0] || 'summer').toLowerCase();
+            const seasonMonths = { spring: 4, summer: 7, autumn: 10, winter: 1 };
+
+            if (!seasonMonths[targetSeason]) {
+                console.warn('🎮 Valid seasons: spring, summer, autumn, winter');
+                return 'Invalid season';
+            }
+
+            if (typeof TimeMachine !== 'undefined') {
+                const currentMonth = TimeMachine.currentTime.month;
+                const targetMonth = seasonMonths[targetSeason];
+
+                // Calculate months to skip (always forward)
+                let monthsToSkip = targetMonth - currentMonth;
+                if (monthsToSkip <= 0) monthsToSkip += 12; // Wrap around to next year
+
+                const result = TimeMachine.skipMonths(monthsToSkip, true);
+
+                // Force backdrop reload
+                if (typeof GameWorldRenderer !== 'undefined') {
+                    GameWorldRenderer.currentSeason = null;
+                    GameWorldRenderer.loadSeasonalBackdrop(targetSeason);
+                }
+
+                console.log(`🍂 Jumped to ${targetSeason}: ${result}`);
+                return `Now in ${targetSeason}`;
+            }
+            return 'TimeMachine not found';
+        });
+
+        // showtime - Show current time and season
+        this.registerCommand('showtime', 'Show current time and season info', () => {
+            if (typeof TimeMachine !== 'undefined') {
+                const info = TimeMachine.getTimeInfo();
+                console.log('⏰ Current Time:', info.formatted);
+                console.log(`🍂 Season: ${info.seasonData.icon} ${info.seasonData.name}`);
+                console.log(`📊 Effects: Hunger ${info.seasonData.effects.hungerDrain}x, Thirst ${info.seasonData.effects.thirstDrain}x`);
+                return info.formatted;
+            }
+            return 'TimeMachine not found';
+        });
+
+        // triggerbonanza - Trigger Dungeon Bonanza event (set date to July 18th)
+        this.registerCommand('triggerbonanza', 'Set date to July 18th to trigger Dungeon Bonanza', () => {
+            if (typeof TimeMachine !== 'undefined') {
+                TimeMachine.currentTime.month = 7;
+                TimeMachine.currentTime.day = 18;
+                if (typeof DungeonBonanzaSystem !== 'undefined') {
+                    DungeonBonanzaSystem.hasShownNotificationToday = false;
+                    DungeonBonanzaSystem.showEventNotification();
+                }
+                console.log('💀 Date set to July 18th - The Dark Convergence begins!');
+                return 'Dungeon Bonanza activated!';
+            }
+            return 'TimeMachine not found';
+        });
+
+        // bonanzastatus - Check if Dungeon Bonanza is active
+        this.registerCommand('bonanzastatus', 'Check Dungeon Bonanza event status', () => {
+            if (typeof DungeonBonanzaSystem !== 'undefined') {
+                const status = DungeonBonanzaSystem.getEventStatus();
+                if (status.active) {
+                    console.log('💀 THE DARK CONVERGENCE IS ACTIVE!');
+                    console.log(`   ${status.description}`);
+                    return 'Event ACTIVE';
+                } else {
+                    console.log('🌙 Dungeon Bonanza is not active.');
+                    console.log('   Next occurrence: July 18th');
+                    return 'Event inactive';
+                }
+            }
+            return 'DungeonBonanzaSystem not found';
+        });
+
+        // dungeonmode - Toggle dungeon backdrop manually
+        this.registerCommand('dungeonmode', 'Toggle dungeon backdrop on/off', (args) => {
+            if (typeof GameWorldRenderer !== 'undefined') {
+                const mode = args[0] || 'toggle';
+                if (mode === 'on' || (mode === 'toggle' && !GameWorldRenderer.isInDungeonMode)) {
+                    GameWorldRenderer.enterDungeonMode();
+                    return 'Dungeon backdrop enabled';
+                } else {
+                    GameWorldRenderer.exitDungeonMode();
+                    return 'Dungeon backdrop disabled';
+                }
+            }
+            return 'GameWorldRenderer not found';
+        });
+
+        // ═══════════════════════════════════════════════════════════════
+        // 🌦️ WEATHER & SEASON CHEATS
+        // ═══════════════════════════════════════════════════════════════
+
+        // weather <type> - Set weather instantly
+        this.registerCommand('weather', 'Set weather: weather <clear|rain|storm|snow|blizzard|fog|apocalypse|etc>', (args) => {
+            const type = (args[0] || 'clear').toLowerCase();
+            if (typeof WeatherSystem !== 'undefined') {
+                if (WeatherSystem.weatherTypes[type]) {
+                    WeatherSystem.changeWeather(type);
+                    const weather = WeatherSystem.weatherTypes[type];
+                    console.log(`🌦️ Weather set to: ${weather.icon} ${weather.name}`);
+                    return `${weather.icon} ${weather.name}`;
+                } else {
+                    console.log('🌦️ Valid types: ' + Object.keys(WeatherSystem.weatherTypes).join(', '));
+                    return 'Invalid weather type';
+                }
+            }
+            return 'WeatherSystem not found';
+        });
+
+        // doom - Instant apocalypse weather + dungeon bonanza for one day
+        this.registerCommand('doom', 'Trigger apocalypse: weather, dungeon backdrop, bonanza for 1 day', () => {
+            let results = [];
+
+            // Try menu weather first (main menu)
+            if (typeof MenuWeatherSystem !== 'undefined' && MenuWeatherSystem.isActive) {
+                MenuWeatherSystem.changeSeason('apocalypse');
+                console.log('☄️ MENU APOCALYPSE MODE ACTIVATED!');
+                results.push('Menu weather: apocalypse');
+            }
+
+            // Also try in-game weather
+            if (typeof WeatherSystem !== 'undefined') {
+                WeatherSystem.changeWeather('apocalypse');
+                console.log('☄️ GAME APOCALYPSE MODE ACTIVATED!');
+                results.push('Game weather: apocalypse');
+            }
+
+            // Activate dungeon backdrop (in-game)
+            if (typeof GameWorldRenderer !== 'undefined' && GameWorldRenderer.enterDungeonMode) {
+                GameWorldRenderer.enterDungeonMode();
+                console.log('☄️ DUNGEON WORLD BACKDROP ACTIVATED!');
+                results.push('Dungeon backdrop: active');
+            }
+
+            // Activate dungeon bonanza for one game day
+            if (typeof DungeonBonanzaSystem !== 'undefined') {
+                DungeonBonanzaSystem.activateManualOverride();
+                console.log('☄️ DUNGEON BONANZA FOR ONE DAY!');
+                results.push('Bonanza: active for 1 day');
+            }
+
+            if (results.length > 0) {
+                return '☄️ DOOM ACTIVATED! ' + results.join(' | ');
+            }
+            return 'No systems found';
+        });
+
+        // spring/summer/autumn/winter - Jump to season start (always forward, preserves stats)
+        this.registerCommand('spring', 'Jump to start of Spring (March 1)', () => {
+            if (typeof TimeMachine !== 'undefined') {
+                const currentMonth = TimeMachine.currentTime.month;
+                const targetMonth = 3; // March
+                // Calculate months to skip (always forward)
+                let monthsToSkip = targetMonth - currentMonth;
+                if (monthsToSkip <= 0) monthsToSkip += 12; // Wrap to next year
+
+                // Use skipMonths to preserve stats and advance properly
+                TimeMachine.skipMonths(monthsToSkip, true);
+
+                // Force backdrop reload
+                if (typeof GameWorldRenderer !== 'undefined') {
+                    GameWorldRenderer.currentSeason = null;
+                    GameWorldRenderer.loadSeasonalBackdrop('spring');
+                }
+                console.log('🌸 Jumped to Spring! March 1');
+                return 'March 1 - Spring begins';
+            }
+            return 'TimeMachine not found';
+        });
+
+        this.registerCommand('summer', 'Jump to start of Summer (June 1)', () => {
+            if (typeof TimeMachine !== 'undefined') {
+                const currentMonth = TimeMachine.currentTime.month;
+                const targetMonth = 6; // June
+                // Calculate months to skip (always forward)
+                let monthsToSkip = targetMonth - currentMonth;
+                if (monthsToSkip <= 0) monthsToSkip += 12; // Wrap to next year
+
+                // Use skipMonths to preserve stats and advance properly
+                TimeMachine.skipMonths(monthsToSkip, true);
+
+                // Force backdrop reload
+                if (typeof GameWorldRenderer !== 'undefined') {
+                    GameWorldRenderer.currentSeason = null;
+                    GameWorldRenderer.loadSeasonalBackdrop('summer');
+                }
+                console.log('☀️ Jumped to Summer! June 1');
+                return 'June 1 - Summer begins';
+            }
+            return 'TimeMachine not found';
+        });
+
+        this.registerCommand('autumn', 'Jump to start of Autumn (September 1)', () => {
+            if (typeof TimeMachine !== 'undefined') {
+                const currentMonth = TimeMachine.currentTime.month;
+                const targetMonth = 9; // September
+                // Calculate months to skip (always forward)
+                let monthsToSkip = targetMonth - currentMonth;
+                if (monthsToSkip <= 0) monthsToSkip += 12; // Wrap to next year
+
+                // Use skipMonths to preserve stats and advance properly
+                TimeMachine.skipMonths(monthsToSkip, true);
+
+                // Force backdrop reload
+                if (typeof GameWorldRenderer !== 'undefined') {
+                    GameWorldRenderer.currentSeason = null;
+                    GameWorldRenderer.loadSeasonalBackdrop('autumn');
+                }
+                console.log('🍂 Jumped to Autumn! September 1');
+                return 'September 1 - Autumn begins';
+            }
+            return 'TimeMachine not found';
+        });
+
+        this.registerCommand('winter', 'Jump to start of Winter (December 1)', () => {
+            if (typeof TimeMachine !== 'undefined') {
+                const currentMonth = TimeMachine.currentTime.month;
+                const targetMonth = 12; // December
+                // Calculate months to skip (always forward)
+                let monthsToSkip = targetMonth - currentMonth;
+                if (monthsToSkip <= 0) monthsToSkip += 12; // Wrap to next year
+
+                // Use skipMonths to preserve stats and advance properly
+                TimeMachine.skipMonths(monthsToSkip, true);
+
+                // Force backdrop reload
+                if (typeof GameWorldRenderer !== 'undefined') {
+                    GameWorldRenderer.currentSeason = null;
+                    GameWorldRenderer.loadSeasonalBackdrop('winter');
+                }
+                console.log('❄️ Jumped to Winter! December 1');
+                return 'December 1 - Winter begins';
+            }
+            return 'TimeMachine not found';
         });
 
         // ═══════════════════════════════════════════════════════════════
@@ -675,15 +1012,15 @@ const DebugCommandSystem = {
                         console.log('✅ Hall of Champions has been cleared!');
                         return '🏆 Leaderboard cleared! The Hall of Champions is now empty.';
                     } else {
-                        console.error('❌ Failed to clear leaderboard - function returned false/undefined');
+                        console.warn('❌ Failed to clear leaderboard - function returned false');
                         return '❌ Failed to clear leaderboard. Check console for details.';
                     }
                 } catch (error) {
-                    console.error('❌ Error clearing leaderboard:', error);
+                    console.warn('❌ Error clearing leaderboard:', error.message);
                     return '❌ Error: ' + error.message;
                 }
             } else {
-                console.error('❌ window.resetLeaderboard is not a function:', typeof window.resetLeaderboard);
+                console.warn('❌ window.resetLeaderboard is not a function');
                 // Try direct API call as fallback
                 console.log('🏆 Attempting direct API clear...');
                 try {
@@ -708,14 +1045,14 @@ const DebugCommandSystem = {
                             console.log('✅ Direct API clear successful!');
                             return '🏆 Leaderboard cleared via direct API!';
                         } else {
-                            console.error('❌ API error:', response.status);
+                            console.warn('❌ API error:', response.status);
                             return '❌ API error: ' + response.status;
                         }
                     } else {
                         return '❌ No API credentials found';
                     }
                 } catch (e) {
-                    console.error('❌ Direct API error:', e);
+                    console.warn('❌ Direct API error:', e.message);
                     return '❌ Error: ' + e.message;
                 }
             }
@@ -1038,4 +1375,4 @@ if (document.readyState === 'loading') {
     setTimeout(() => DebugCommandSystem.init(), 500);
 }
 
-console.log('🎮 Debug Command System loaded!');
+console.log('🎮 Debooger Command System loaded!');

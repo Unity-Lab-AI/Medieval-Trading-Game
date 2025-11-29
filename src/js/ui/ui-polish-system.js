@@ -604,13 +604,13 @@ const UIPolishSystem = {
     animateIcon(iconElement, animationType, duration = 1000) {
         if (!iconElement || !this.settings.animationsEnabled) return;
         
-        // Remove any existing animation classes
+        // 🗡️ Exorcise all previous animations from this icon's soul
         iconElement.classList.remove('icon-bounce', 'icon-spin', 'icon-pulse', 'icon-shake');
-        
-        // Add the new animation class
+
+        // ⚡ Possess it with new dark energy
         iconElement.classList.add(`icon-${animationType}`);
-        
-        // Remove the class after animation completes
+
+        // 🌙 Release the spirit when the ritual is complete
         setTimeout(() => {
             iconElement.classList.remove(`icon-${animationType}`);
         }, duration);

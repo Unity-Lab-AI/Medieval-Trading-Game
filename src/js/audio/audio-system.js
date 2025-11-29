@@ -68,7 +68,7 @@ const AudioSystem = {
             
             console.log('Audio system initialized successfully');
         } catch (error) {
-            console.error('Failed to initialize audio system:', error);
+            // 🦇 Audio init failed - disable audio silently
             this.settings.audioEnabled = false;
         }
     },
@@ -146,7 +146,7 @@ const AudioSystem = {
         try {
             this.sounds[soundName]();
         } catch (error) {
-            console.error(`Failed to play sound: ${soundName}`, error);
+            // 🦇 Sound playback failed - browser may have blocked it
         }
     },
     
@@ -163,7 +163,7 @@ const AudioSystem = {
             this.currentMusic = trackName;
             this.musicTracks[trackName](loop);
         } catch (error) {
-            console.error(`Failed to play music: ${trackName}`, error);
+            // 🦇 Music playback failed - browser may have blocked it
         }
     },
     
@@ -192,7 +192,7 @@ const AudioSystem = {
         try {
             this.ambientSounds[ambientName](loop);
         } catch (error) {
-            console.error(`Failed to play ambient: ${ambientName}`, error);
+            // 🦇 Ambient audio failed - browser may have blocked it
         }
     },
     

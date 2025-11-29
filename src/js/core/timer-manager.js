@@ -4,14 +4,14 @@
 // File Version: GameConfig.version.file
 // conjured by Unity AI Lab - Hackall360, Sponge, GFourteen
 // ═══════════════════════════════════════════════════════════════
-// centralized timer management because memory leaks are scarier than ghosts
-// tick tock goes the existential clock
+// 💀 Centralized timer management - because memory leaks are scarier than ghosts
+// ⏰ Tick tock goes the existential clock - we document every scheduled doom
 
 const TimerManager = {
-    // ⏱️ Store all active timers - time bombs of scheduled chaos
+    // ⏱️ Store all active timers - time bombs of scheduled chaos ticking in the shadows
     timers: new Map(),
-    
-    // Set a timeout with tracking
+
+    // 🖤 Set a timeout with tracking - schedule the inevitable
     setTimeout(callback, delay, ...args) {
         const timerId = setTimeout(callback, delay, ...args);
         const key = `timer_${Date.now()}_${Math.random()}`;
@@ -25,10 +25,10 @@ const TimerManager = {
             createdAt: Date.now()
         });
         
-        return key; // Return key for cancellation
+        return key; // 🗡️ Return key for cancellation - defuse if needed
     },
-    
-    // Set an interval with tracking
+
+    // 🔮 Set an interval with tracking - endless repetition, captured
     setInterval(callback, interval, ...args) {
         const intervalId = setInterval(callback, interval, ...args);
         const key = `interval_${Date.now()}_${Math.random()}`;
@@ -42,13 +42,13 @@ const TimerManager = {
             createdAt: Date.now()
         });
         
-        return key; // Return key for cancellation
+        return key; // 🗡️ Return key for cancellation - stop the cycle
     },
-    
-    // Clear a timeout by key
+
+    // 💀 Clear a timeout by key - defusing the time bomb
     clearTimeout(key) {
         if (!this.timers.has(key)) {
-            console.warn(`TimerManager: No timer found for key ${key}`);
+            console.warn(`⚠️ TimerManager: No timer found for key ${key}`);
             return false;
         }
         
@@ -64,7 +64,7 @@ const TimerManager = {
         return true;
     },
     
-    // Clear all timers
+    // ⚰️ Clear all timers - silence every ticking clock, total void
     clearAllTimers() {
         const count = this.timers.size;
         
@@ -80,7 +80,7 @@ const TimerManager = {
         return count;
     },
     
-    // Clear all timeouts
+    // 🗡️ Clear all timeouts - defuse every scheduled bomb
     clearTimeouts() {
         const keysToClear = [];
         
@@ -95,7 +95,7 @@ const TimerManager = {
         return keysToClear.length;
     },
     
-    // Clear all intervals
+    // 🦇 Clear all intervals - end every repeating cycle
     clearIntervals() {
         const keysToClear = [];
         
@@ -110,12 +110,12 @@ const TimerManager = {
         return keysToClear.length;
     },
     
-    // Get active timers count
+    // 📊 Get active timers count - how many time bombs are still ticking
     getActiveTimersCount() {
         return this.timers.size;
     },
     
-    // Get timers for debugging
+    // 🔍 Get timers for debugging - peer into the scheduled chaos
     getTimers() {
         return Array.from(this.timers.entries()).map(([key, timer]) => ({
             key,
@@ -126,12 +126,12 @@ const TimerManager = {
         }));
     },
     
-    // Check if timer is still active
+    // 💀 Check if timer is still active - is it still ticking?
     isTimerActive(key) {
         return this.timers.has(key) && this.timers.get(key).active;
     },
     
-    // Deactivate a timer without clearing it
+    // 🦇 Deactivate a timer without clearing it - mute the alarm
     deactivateTimer(key) {
         if (this.timers.has(key)) {
             const timer = this.timers.get(key);
@@ -141,7 +141,7 @@ const TimerManager = {
         return false;
     },
     
-    // Reactivate a timer
+    // ⚡ Reactivate a timer - resume the countdown
     reactivateTimer(key) {
         if (this.timers.has(key)) {
             const timer = this.timers.get(key);
@@ -151,18 +151,18 @@ const TimerManager = {
         return false;
     },
     
-    // Cleanup on page unload
+    // 🖤 Cleanup on page unload - silence before the void
     init() {
-        // Add cleanup on page unload
+        // 💀 Add cleanup on page unload - defuse everything before oblivion
         window.addEventListener('beforeunload', () => {
             this.clearAllTimers();
         });
 
-        console.log('TimerManager initialized');
+        console.log('🖤 TimerManager initialized - tracking all ticking time bombs');
     }
 };
 
-// Initialize timer manager
+// 🖤 Initialize timer manager - begin the countdown surveillance
 if (typeof document !== 'undefined') {
     TimerManager.init();
 }

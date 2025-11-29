@@ -79,32 +79,32 @@ const GameWorldRenderer = {
             return false;
         }
 
-        // Create the map element
+        // 🗺️ Conjure the map element from the digital void
         this.createMapElement();
 
-        // Create tooltip
+        // 💀 Create the tooltip - whisper location secrets on hover
         this.createTooltip();
 
-        // Setup event listeners
+        // ⚡ Wire up the event listeners - clicks, drags, the whole chaotic dance
         this.setupEventListeners();
 
-        // Load location history from storage
+        // 📚 Resurrect your travel history from localStorage
         this.loadLocationHistory();
 
-        // Render the map
+        // 🎨 Paint the world onto the canvas
         this.render();
 
-        // Center the map at default zoom after delays (to let container size settle)
+        // 🔮 Center the fucking map after the DOM settles its shit
         setTimeout(() => {
             this.resetView();
         }, 200);
 
-        // Also center again after a longer delay in case game state loads
+        // 🌙 Center again because async loading is a beautiful disaster
         setTimeout(() => {
             this.resetView();
-            // Update history panel after game fully loads
+            // 📜 Update your travel journal
             this.updateHistoryPanel();
-            // Record initial location visit if history is empty
+            // 🖤 Mark your starting location if this is a new journey
             if (this.locationHistory.length === 0 && typeof game !== 'undefined' && game.currentLocation) {
                 this.recordLocationVisit(game.currentLocation.id, { isFirstVisit: true });
             }
@@ -120,6 +120,7 @@ const GameWorldRenderer = {
     //    assets/images/world-map-summer.png
     //    assets/images/world-map-autumn.png
     //    assets/images/world-map-winter.png
+    //    assets/images/world-map-dungeon.png
     SEASONAL_BACKDROPS: {
         spring: './assets/images/world-map-spring.png',
         summer: './assets/images/world-map-summer.png',
@@ -127,6 +128,10 @@ const GameWorldRenderer = {
         fall: './assets/images/world-map-autumn.png', // 🖤 alias for autumn
         winter: './assets/images/world-map-winter.png'
     },
+    // 💀 Dungeon backdrop - fades in when entering dungeon locations
+    DUNGEON_BACKDROP: './assets/images/world-map-dungeon.png',
+    // 🦇 Track if we're currently in dungeon mode
+    isInDungeonMode: false,
     // 💀 Fallback for legacy single-image setup
     BACKDROP_IMAGE: './assets/images/world-map-backdrop.png',
     // 🦇 Fade transition duration in milliseconds
@@ -139,13 +144,13 @@ const GameWorldRenderer = {
 
     // 📦 conjure the map container from the html void
     createMapElement() {
-        // Remove old canvas if exists
+        // 💀 Banish the old canvas to the shadow realm
         const oldCanvas = document.getElementById('world-map-canvas');
         if (oldCanvas) {
             oldCanvas.style.display = 'none';
         }
 
-        // Create map element if not exists
+        // 🔮 Summon the map element or retrieve it from the DOM
         this.mapElement = document.getElementById('world-map-html');
         if (!this.mapElement) {
             this.mapElement = document.createElement('div');
@@ -356,6 +361,141 @@ const GameWorldRenderer = {
     setSeason(season) {
         console.log(`🗺️ Manually setting season to: ${season}`);
         this.loadSeasonalBackdrop(season);
+    },
+
+    // 💀 DUNGEON BACKDROP SYSTEM - The darkness calls when you enter the depths
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    // 🦇 Check if a location is a dungeon type
+    isDungeonLocation(locationId) {
+        if (!locationId) return false;
+        if (typeof GameWorld === 'undefined' || !GameWorld.locations) return false;
+        const location = GameWorld.locations[locationId];
+        if (!location) return false;
+        return ['dungeon', 'cave', 'ruins', 'mine'].includes(location.type);
+    },
+
+    // 💀 Enter dungeon mode - fade to dungeon backdrop + apocalypse weather
+    enterDungeonMode() {
+        if (this.isInDungeonMode) return;
+
+        console.log('🗺️ Entering the darkness... dungeon backdrop activating');
+        this.isInDungeonMode = true;
+
+        // 🦇 Load dungeon backdrop with faster fade (2 seconds for dramatic effect)
+        const img = new Image();
+        img.onload = () => {
+            this.transitionToDungeonBackdrop(this.DUNGEON_BACKDROP);
+        };
+        img.onerror = () => {
+            console.warn('🗺️ Dungeon backdrop not found at:', this.DUNGEON_BACKDROP);
+        };
+        img.src = this.DUNGEON_BACKDROP;
+
+        // 💀 Trigger apocalypse weather with meteors!
+        if (typeof WeatherSystem !== 'undefined') {
+            // Save current weather before dungeon
+            this.weatherBeforeDungeon = WeatherSystem.currentWeather;
+            WeatherSystem.changeWeather('apocalypse');
+            console.log('☄️ Apocalypse weather activated - meteors incoming!');
+        }
+    },
+
+    // 🖤 Exit dungeon mode - return to seasonal backdrop + normal weather
+    exitDungeonMode() {
+        if (!this.isInDungeonMode) return;
+
+        console.log('🗺️ Leaving the depths... returning to the surface world');
+        this.isInDungeonMode = false;
+
+        // 🦇 Return to current season's backdrop
+        let currentSeason = 'summer';
+        if (typeof TimeSystem !== 'undefined' && TimeSystem.getSeason) {
+            currentSeason = TimeSystem.getSeason().toLowerCase();
+        }
+        this.loadSeasonalBackdrop(currentSeason);
+
+        // 💀 Restore previous weather or generate seasonal weather
+        if (typeof WeatherSystem !== 'undefined') {
+            if (this.weatherBeforeDungeon && WeatherSystem.weatherTypes[this.weatherBeforeDungeon]) {
+                WeatherSystem.changeWeather(this.weatherBeforeDungeon);
+                console.log(`🌤️ Weather restored to: ${this.weatherBeforeDungeon}`);
+            } else {
+                const seasonalWeather = WeatherSystem.selectWeatherForSeason();
+                WeatherSystem.changeWeather(seasonalWeather);
+                console.log(`🌤️ Seasonal weather applied: ${seasonalWeather}`);
+            }
+            this.weatherBeforeDungeon = null;
+        }
+    },
+
+    // 🦇 Saved weather state before entering dungeon
+    weatherBeforeDungeon: null,
+
+    // 💀 Special dungeon transition - faster than seasonal (2 second fade)
+    transitionToDungeonBackdrop(imageUrl) {
+        if (!this.backdropContainer) {
+            this.setupBackdropContainer();
+        }
+
+        // 🦇 Move current to previous
+        if (this.currentBackdrop) {
+            this.previousBackdrop = this.currentBackdrop;
+            this.previousBackdrop.style.zIndex = '1';
+        }
+
+        // 💀 Create dungeon backdrop with faster fade and darker overlay
+        const newBackdrop = document.createElement('div');
+        newBackdrop.className = 'backdrop-layer dungeon-backdrop';
+        newBackdrop.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: ${this.MAP_WIDTH}px;
+            height: ${this.MAP_HEIGHT}px;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(20, 0, 40, 0.2)), url('${imageUrl}');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0;
+            transition: opacity 2000ms ease-in-out;
+            z-index: 2;
+        `;
+
+        this.backdropContainer.appendChild(newBackdrop);
+        this.currentBackdrop = newBackdrop;
+
+        // 🖤 Trigger the fade in
+        requestAnimationFrame(() => {
+            newBackdrop.style.opacity = '1';
+            if (this.mapElement) {
+                this.mapElement.style.background = 'transparent';
+            }
+        });
+
+        // 💀 Remove old backdrop after transition
+        if (this.previousBackdrop) {
+            const oldBackdrop = this.previousBackdrop;
+            setTimeout(() => {
+                oldBackdrop.style.opacity = '0';
+                setTimeout(() => {
+                    if (oldBackdrop.parentNode) {
+                        oldBackdrop.remove();
+                    }
+                }, 2000);
+            }, 100);
+        }
+
+        console.log('🗺️ Dungeon backdrop transition complete - embrace the darkness');
+    },
+
+    // 🦇 Update backdrop based on current location (call this when location changes)
+    updateBackdropForLocation(locationId) {
+        if (this.isDungeonLocation(locationId)) {
+            this.enterDungeonMode();
+        } else if (this.isInDungeonMode) {
+            this.exitDungeonMode();
+        }
     },
 
     // 💬 create tooltip - hover over things to learn about your mistakes

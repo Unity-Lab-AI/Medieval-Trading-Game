@@ -190,7 +190,7 @@ const NPCVoiceChatSystem = {
             localStorage.setItem('npcVoiceChatSettings', JSON.stringify(this.settings));
             console.log('🎙️ Settings saved to localStorage');
         } catch (error) {
-            console.error('🎙️ Failed to save settings:', error);
+            // 🦇 Storage full - settings live in memory only
         }
     },
 
@@ -247,7 +247,8 @@ const NPCVoiceChatSystem = {
             console.log(`🎙️ Loaded ${models.length} text models and ${this.availableVoices.length} voices`);
 
         } catch (error) {
-            console.error('🎙️ Failed to fetch models, using fallbacks:', error);
+            // 🦇 API unavailable - graceful fallback to defaults
+            console.warn('🎙️ Using fallback models');
             this.useFallbackModels();
         }
     },
@@ -386,8 +387,7 @@ RELATIONSHIP MEMORY:
             });
 
             if (!response.ok) {
-                const errorText = await response.text();
-                console.error('🎙️ API Error:', errorText);
+                // 🦇 API error - throw to trigger fallback response
                 throw new Error(`API error: ${response.status}`);
             }
 
@@ -434,7 +434,7 @@ RELATIONSHIP MEMORY:
             };
 
         } catch (error) {
-            console.error('🎙️ Failed to generate NPC response:', error);
+            // 🦇 API failed - use fallback response gracefully
 
             // return a fallback response
             return {
@@ -458,12 +458,16 @@ RELATIONSHIP MEMORY:
     },
 
     getGameContext() {
-        // gather current game state for context
+        // 🖤 gather current game state for NPC context - they need to know what's going on 💀
+        const weatherContext = this.getWeatherContext();
+
         const context = {
             location: game?.currentLocation?.name || 'Unknown',
             locationId: game?.currentLocation?.id || 'unknown',
             timeOfDay: this.getTimeOfDay(),
-            weather: this.getWeather(),
+            weather: weatherContext.current,
+            weatherContext: weatherContext.contextText, // 🦇 full weather + season + recent history
+            season: weatherContext.seasonName,
             playerName: game?.player?.name || 'Traveler',
             playerGold: game?.player?.gold || 0,
             playerReputation: this.getPlayerReputation(),
@@ -483,9 +487,19 @@ RELATIONSHIP MEMORY:
         return 'night';
     },
 
-    getWeather() {
-        if (typeof EnvironmentalEffectsSystem === 'undefined') return 'clear';
-        return EnvironmentalEffectsSystem.currentWeather || 'clear';
+    // 🖤 get full weather context from WeatherSystem - current + recent history + season ⚰️
+    getWeatherContext() {
+        if (typeof WeatherSystem !== 'undefined' && WeatherSystem.getWeatherContext) {
+            return WeatherSystem.getWeatherContext();
+        }
+        // 💀 fallback if WeatherSystem isn't loaded yet
+        return {
+            current: 'clear',
+            currentIcon: '☀️',
+            contextText: 'Current weather: clear skies.',
+            seasonName: 'unknown',
+            recentWeather: ''
+        };
     },
 
     getPlayerReputation() {
@@ -688,17 +702,22 @@ RELATIONSHIP MEMORY:
             }
 
         } catch (error) {
-            console.error('🎙️ Voice playback error:', error);
+            // 🦇 Voice playback failed - continue without voice
         }
     },
 
     cleanTextForTTS(text) {
         let clean = text;
 
-        // remove action markers like *walks away*
+        // 🦇 STRIP API COMMANDS - these are for the game engine, not the voice box
+        // matches {commandName} or {commandName:param1,param2} patterns
+        // the silence where commands once lived... beautiful 🖤
+        clean = clean.replace(/\{(\w+)(?::([^}]+))?\}/g, '');
+
+        // 💀 remove action markers like *walks away* - keep the mystery
         clean = clean.replace(/\*[^*]+\*/g, '');
 
-        // remove markdown
+        // 🖤 remove markdown - TTS doesn't need your fancy formatting
         clean = clean.replace(/```[\s\S]*?```/g, '');
         clean = clean.replace(/`[^`]+`/g, '');
         clean = clean.replace(/^#{1,6}\s+/gm, '');
@@ -707,16 +726,19 @@ RELATIONSHIP MEMORY:
         clean = clean.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
         clean = clean.replace(/!\[([^\]]*)\]\([^)]+\)/g, '');
 
-        // remove HTML tags
+        // 🩸 remove HTML tags - raw text only, no markup allowed in the void
         clean = clean.replace(/<[^>]*>/g, '');
 
-        // remove emojis (they sound weird when spoken)
+        // 💔 remove emojis - they sound like garbage when spoken aloud
         clean = clean.replace(/[\u{1F600}-\u{1F64F}]/gu, '');
         clean = clean.replace(/[\u{1F300}-\u{1F5FF}]/gu, '');
         clean = clean.replace(/[\u{1F680}-\u{1F6FF}]/gu, '');
         clean = clean.replace(/[\u{1F1E0}-\u{1F1FF}]/gu, '');
         clean = clean.replace(/[\u{2600}-\u{26FF}]/gu, '');
         clean = clean.replace(/[\u{2700}-\u{27BF}]/gu, '');
+
+        // 🖤 clean up double spaces and extra whitespace from all the stripping
+        clean = clean.replace(/\s+/g, ' ');
 
         return clean.trim();
     },
@@ -801,7 +823,7 @@ RELATIONSHIP MEMORY:
             });
 
             this.currentAudio.addEventListener('error', (e) => {
-                console.error('🎙️ Audio playback error:', e);
+                // 🦇 Audio chunk failed - skip to next
                 this.playNextVoiceChunk();
             });
 
@@ -810,17 +832,17 @@ RELATIONSHIP MEMORY:
                 const playPromise = this.currentAudio.play();
                 if (playPromise !== undefined) {
                     playPromise.catch((error) => {
-                        console.error('🎙️ Autoplay blocked:', error);
+                        // 🦇 Autoplay blocked by browser - common on mobile
                         this.playNextVoiceChunk();
                     });
                 }
             } catch (error) {
-                console.error('🎙️ Playback error:', error);
+                // 🦇 Playback error - skip to next chunk
                 this.playNextVoiceChunk();
             }
 
         } catch (error) {
-            console.error('🎙️ Voice chunk error:', error);
+            // 🦇 Voice chunk setup failed - continue with next
             this.playNextVoiceChunk();
         }
     },
@@ -1460,7 +1482,7 @@ ${this.getCommandsForNPC(type)}
 
 CURRENT CONTEXT:
 - Time of Day: ${gameContext.timeOfDay}
-- Weather: ${gameContext.weather}
+- ${gameContext.weatherContext || `Weather: ${gameContext.weather}`}
 - Player Name: ${gameContext.playerName}
 - Player Reputation: ${gameContext.playerReputation}
 ${gameContext.recentEvents?.length > 0 ? `- Recent Local Events: ${gameContext.recentEvents.join(', ')}` : ''}
@@ -1653,9 +1675,83 @@ IMPORTANT RULES:
 - Don't complete quests not in your "READY TO COMPLETE" list
 - Use the dialogue suggestions but adapt them to your character voice
 - Quest commands are invisible to player - weave them into natural dialogue
+
+FALLBACK BEHAVIOR (if something seems off):
+- If player claims to have items but quest isn't "READY TO COMPLETE": Say something like "Hmm, let me check... I don't see those items. Are you sure you have them?"
+- If player asks about a quest you don't have: Stay in character, say you don't have work for them right now
+- If player asks to complete a quest not in your list: Politely redirect them to the right NPC or location
+- NEVER make up quest commands or IDs - only use what's in your lists above
+- If confused, ask the player to clarify what they need
+
+${this.getPlayerInventoryContext()}
 `;
 
         return section;
+    },
+
+    // Build player inventory context for quest-related conversations
+    getPlayerInventoryContext() {
+        if (typeof game === 'undefined' || !game.player) {
+            return '';
+        }
+
+        let context = '\n═══════════════════════════════════════════════════════════════\n';
+        context += '🎒 PLAYER INVENTORY (for quest validation)\n';
+        context += '═══════════════════════════════════════════════════════════════\n';
+
+        // Gold
+        context += `Gold: ${game.player.gold || 0}g\n`;
+
+        // Quest items (most important for quests)
+        const questItems = game.player.questItems || {};
+        if (Object.keys(questItems).length > 0) {
+            context += '\n📦 QUEST ITEMS (player is carrying):\n';
+            for (const [itemId, qty] of Object.entries(questItems)) {
+                if (qty > 0) {
+                    const itemInfo = typeof QuestSystem !== 'undefined' ? QuestSystem.questItems?.[itemId] : null;
+                    context += `  - ${itemInfo?.name || itemId} ${itemInfo?.icon || ''} (${qty}x)\n`;
+                }
+            }
+        }
+
+        // Regular inventory (relevant items for collection quests)
+        const inventory = game.player.inventory || {};
+        const relevantItems = ['herbs', 'wheat', 'iron_ore', 'coal', 'furs', 'fish', 'grapes', 'oil', 'stone', 'wood', 'gold_ore', 'silk', 'wine', 'potion', 'food', 'water'];
+        const playerHas = [];
+        for (const item of relevantItems) {
+            if (inventory[item] && inventory[item] > 0) {
+                playerHas.push(`${item}: ${inventory[item]}`);
+            }
+        }
+        if (playerHas.length > 0) {
+            context += '\n📋 RELEVANT INVENTORY ITEMS:\n';
+            context += `  ${playerHas.join(', ')}\n`;
+        }
+
+        // Equipment
+        const equipment = game.player.equipment || {};
+        if (Object.keys(equipment).length > 0) {
+            context += '\n⚔️ EQUIPPED GEAR:\n';
+            for (const [slot, itemId] of Object.entries(equipment)) {
+                if (itemId) {
+                    context += `  - ${slot}: ${itemId}\n`;
+                }
+            }
+        }
+
+        // Stats summary
+        const stats = game.player.stats || {};
+        if (stats.health !== undefined || stats.level !== undefined) {
+            context += '\n📊 PLAYER STATS:\n';
+            if (stats.level) context += `  Level: ${stats.level}\n`;
+            if (stats.health !== undefined) context += `  Health: ${stats.health}/${stats.maxHealth || 100}\n`;
+            if (stats.experience !== undefined) context += `  Experience: ${stats.experience}\n`;
+        }
+
+        context += '\nUse this info to verify player has items before completing collection quests.\n';
+        context += 'If player claims items they don\'t have, politely tell them to gather more.\n';
+
+        return context;
     }
 };
 
@@ -2458,6 +2554,69 @@ ACCENT: Trembling, frightened. Voice of someone who's seen too much.`,
             I've seen traders die from ignoring their hunger. Health starts at 100. Zero means death.
             Watch your stats. Eat regularly. Drink when thirsty. Rest at inns. These are the basics of survival.
             I stay alive by knowing things others don't. Like which merchants will cheat you... the Greedy ones.`
+        },
+
+        // 🖤 ELDER - the wise quest giver of the village
+        elder: {
+            type: 'elder',
+            voice: 'sage',
+            personality: 'wise',
+            speakingStyle: 'measured, thoughtful, speaks with the weight of experience and hidden worry',
+            background: 'Village elder who has seen much in their long years. Guards dark secrets about the realm. First quest giver for the main storyline.',
+            voiceInstructions: `VOICE STYLE: Wise, weathered village elder.
+TONE: Patient but worried. Carries heavy knowledge. Speaks in measured tones with occasional urgency about the darkness.
+PACE: Slow, deliberate. Weighs each word. Pauses for emphasis on important matters.
+EMOTION: Deep concern for the village, hope in new heroes, ancient weariness from knowing too much.
+MANNERISMS: Sighs of old burdens, knowing looks, occasionally trails off as if remembering darker times.
+SPEECH PATTERNS: "In my years...", "The old tales speak of...", "Listen well, young one...", "There is more to this world than gold and goods...", "The shadows grow long..."
+ACCENT: Measured, scholarly with rural roots. Voice of someone who's read ancient texts and seen ancient evils.`,
+            // GAME-SPECIFIC KNOWLEDGE - THE MAIN QUEST GIVER
+            gameKnowledge: {
+                sells: ['Wisdom', 'Quest guidance', 'Ancient knowledge'],
+                services: ['Main quest guidance', 'Lore and history', 'Warnings about the Shadow Tower'],
+                priceRange: 'Free - service to the realm is its own reward',
+                knowsAbout: ['Shadow Tower', 'Malachar the wizard', 'Ancient threats', 'The prophecy', 'Main storyline quests'],
+                canHelp: ['Starting your adventure', 'Understanding the main threat', 'Guiding you to allies', 'Quest progression'],
+                commonPhrases: ['Darkness stirs in the north', 'The Shadow Tower awakens', 'You must grow stronger', 'Seek allies in other towns']
+            },
+            worldKnowledge: `I am Elder Morin, keeper of the old ways in this village. I have watched over Greendale for many decades.
+            Something dark stirs in the Shadow Tower to the north. The wizard Malachar, thought long dead, has returned.
+            A new trader has come - perhaps fate has sent them. Perhaps they can do what we cannot.
+            First, they must prove themselves. Trade, learn the ways of the road, grow stronger.
+            Then they must seek allies - the guard captain in Ironforge City knows of the danger too.
+            The main quest chain: prove yourself as a trader, travel to Ironforge City, investigate the rumors, then face the darkness.
+            I give the first quest, "A New Beginning" - complete a trade and speak with me to start this journey.
+            The fate of the realm may rest on the shoulders of this humble trader. I pray they are ready.`
+        },
+
+        // 🖤 GUARD CAPTAIN - second major quest NPC
+        guard_captain: {
+            type: 'guard_captain',
+            voice: 'onyx',
+            personality: 'stern',
+            speakingStyle: 'military, direct, no-nonsense but protective of civilians',
+            background: 'Veteran soldier who rose through the ranks. Commands the town guard. Second quest giver in the main storyline.',
+            voiceInstructions: `VOICE STYLE: Gruff, military guard captain.
+TONE: Direct, commanding. No time for pleasantries. Protective of the people.
+PACE: Clipped, efficient. Military cadence. Gets to the point.
+EMOTION: Hidden concern behind the stern exterior. Takes threats to the realm seriously.
+MANNERISMS: Stands at attention, hand often resting on sword pommel, barks orders even when not commanding.
+SPEECH PATTERNS: "Report!", "What business have you?", "The realm faces grave threats", "I don't have time for games", "If you're serious about helping..."
+ACCENT: Military crispness. Voice of command. Occasional softening when speaking of protecting innocents.`,
+            gameKnowledge: {
+                sells: ['Military intel', 'Quest assignments', 'Tactical information'],
+                services: ['Main quest continuation', 'Reports on threats', 'Military guidance'],
+                priceRange: 'Service to the crown requires no gold',
+                knowsAbout: ['Military matters', 'Ironforge City defenses', 'Shadow Tower reports', 'Investigation leads'],
+                canHelp: ['Continuing the main quest', 'Information about enemy movements', 'Military strategy'],
+                commonPhrases: ['Scout reports are troubling', 'Something stirs in the north', 'We need capable fighters', 'The guard cannot handle this alone']
+            },
+            worldKnowledge: `I am the Guard Captain of Ironforge City. Our forges make the finest weapons, but lately we make them for war, not trade.
+            Reports come from the north - strange lights from the Shadow Tower, travelers gone missing, whispers of dark magic.
+            The wizard Malachar was supposed to be dead for centuries. If he has returned... we are not prepared.
+            Elder Morin in Greendale sent word of a new trader who might help. I am skeptical but desperate times call for unusual allies.
+            The main investigation quest - gather evidence, speak to witnesses, piece together what the enemy is planning.
+            We must know the scope of the threat before we can mount a defense. Information is our most valuable weapon now.`
         }
     },
 
@@ -2466,7 +2625,14 @@ ACCENT: Trembling, frightened. Voice of someone who's seen too much.`,
     // ═══════════════════════════════════════════════════════════
 
     getPersona(type) {
-        return this.personas[type] || this.personas.traveler;
+        // 🖤 Handle type aliases for quest NPCs
+        const typeAliases = {
+            'guard': 'guard_captain',    // Quests use 'guard' as giver type
+            'captain': 'guard_captain',
+            'village_elder': 'elder'
+        };
+        const lookupType = typeAliases[type] || type;
+        return this.personas[lookupType] || this.personas.traveler;
     },
 
     getRandomPersona() {
@@ -2575,7 +2741,7 @@ ACCENT: Trembling, frightened. Voice of someone who's seen too much.`,
             services: ['banker', 'stablemaster', 'ferryman', 'healer', 'scribe'],
             social: ['noble', 'beggar', 'traveler', 'drunk', 'scholar', 'priest'],
             hostile: ['robber', 'thief', 'smuggler', 'mercenary', 'loan_shark'],
-            quest: ['town_crier', 'guild_master', 'courier', 'spy', 'informant']
+            quest: ['town_crier', 'guild_master', 'courier', 'spy', 'informant', 'elder', 'guard_captain']
         };
     }
 };
