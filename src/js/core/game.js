@@ -6837,19 +6837,32 @@ function cancelGameSetup() {
     const mainMenu = document.getElementById('main-menu');
     const menuContent = mainMenu?.querySelector('.menu-content');
 
+    // 🖤 IMPORTANT: Restore menu content visibility BEFORE moving weather container
+    if (menuContent) {
+        menuContent.style.display = ''; // Restore menu content visibility
+        console.log('🖤 Menu content visibility restored');
+    }
+
     if (weatherContainer && mainMenu) {
         // Move it back to main menu as first child (CSS handles positioning)
         mainMenu.insertBefore(weatherContainer, mainMenu.firstChild);
         console.log('🌦️ Weather container restored to main menu');
     }
 
-    if (menuContent) {
-        menuContent.style.display = ''; // Restore menu content visibility
+    // 🖤 Make sure main menu is NOT hidden before showScreen tries to show it
+    if (mainMenu) {
+        mainMenu.classList.remove('hidden');
     }
 
     // Show main menu screen
     showScreen('main-menu');
     changeState(GameState.MENU);
+
+    // 🖤 Re-initialize menu weather if it stopped
+    if (typeof MenuWeatherSystem !== 'undefined' && !MenuWeatherSystem.isActive) {
+        console.log('🌦️ Restarting menu weather system...');
+        MenuWeatherSystem.init();
+    }
 
     console.log('🏠 Returned to main menu');
 }
