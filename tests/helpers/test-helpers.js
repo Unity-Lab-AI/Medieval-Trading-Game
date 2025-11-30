@@ -82,20 +82,20 @@ async function startNewGame(page) {
 }
 
 /**
- * Open the Debooger console (button-only, no keyboard shortcut)
+ * 🖤 Open the Debooger console (button-only, no keyboard shortcut) 💀
  */
-async function openDebugConsole(page) {
+async function openDeboogerConsole(page) {
   // 🖤 Click the Debooger button - no keyboard shortcut exists anymore
-  const debugBtn = page.locator('#toggle-debug-console, #debug-toggle-btn, .debug-toggle, button:has-text("Debooger")');
-  if (await debugBtn.count() > 0) {
-    await debugBtn.first().click();
+  const deboogerBtn = page.locator('#toggle-debooger-console, #debooger-toggle-btn, .debooger-toggle, button:has-text("Debooger")');
+  if (await deboogerBtn.count() > 0) {
+    await deboogerBtn.first().click();
     await page.waitForTimeout(config.actionDelay);
   }
 
-  // Wait for Debooger console to be visible
+  // Wait for Debooger console to be visible 🕯️
   await page.waitForFunction(() => {
-    const console = document.getElementById('debug-console') ||
-                    document.querySelector('.debug-console');
+    const console = document.getElementById('debooger-console') ||
+                    document.querySelector('.debooger-console');
     return console && !console.classList.contains('hidden');
   }, { timeout: 5000 }).catch(() => {
     // If still not visible, try clicking again
@@ -107,42 +107,42 @@ async function openDebugConsole(page) {
 }
 
 /**
- * Execute a debug command
+ * 🖤 Execute a debooger command 🔮
  */
-async function runDebugCommand(page, command) {
-  // Ensure debug console is open
+async function runDeboogerCommand(page, command) {
+  // Ensure debooger console is open
   const isOpen = await page.evaluate(() => {
-    const console = document.getElementById('debug-console') ||
-                    document.querySelector('.debug-console');
+    const console = document.getElementById('debooger-console') ||
+                    document.querySelector('.debooger-console');
     return console && !console.classList.contains('hidden');
   });
 
   if (!isOpen) {
-    await openDebugConsole(page);
+    await openDeboogerConsole(page);
   }
 
-  // Focus the debug input
-  const input = page.locator('#debug-command-input, .debug-input');
+  // Focus the debooger input ⚰️
+  const input = page.locator('#debooger-command-input, .debooger-input');
   if (await input.count() > 0) {
     await input.first().focus();
     await page.waitForTimeout(100);
   }
 
   // Clear any existing text and type the command
-  await page.fill('#debug-command-input', command);
+  await page.fill('#debooger-command-input', command);
   await page.waitForTimeout(100);
 
-  // Press Enter to execute
+  // Press Enter to execute 💀
   await page.keyboard.press('Enter');
   await page.waitForTimeout(config.actionDelay);
 }
 
 /**
- * Get the last debug console output
+ * 🖤 Get the last debooger console output 🦇
  */
-async function getDebugOutput(page) {
+async function getDeboogerOutput(page) {
   return await page.evaluate(() => {
-    const content = document.getElementById('debug-console-content');
+    const content = document.getElementById('debooger-console-content');
     if (!content) return '';
     const lastEntry = content.lastElementChild;
     return lastEntry ? lastEntry.textContent : '';
@@ -310,9 +310,9 @@ function filterCriticalErrors(errors) {
 module.exports = {
   waitForGameLoad,
   startNewGame,
-  openDebugConsole,
-  runDebugCommand,
-  getDebugOutput,
+  openDeboogerConsole,
+  runDeboogerCommand,
+  getDeboogerOutput,
   isPanelVisible,
   togglePanelWithKey,
   openPanel,

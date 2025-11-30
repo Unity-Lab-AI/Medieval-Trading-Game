@@ -36,18 +36,18 @@ test.describe('GameConfig Settings Tests', () => {
     });
 
     // ═══════════════════════════════════════════════════════════════
-    // 🔧 DEBUG SETTINGS - chaos agent configuration
+    // 🔧 DEBOOGER SETTINGS 🦇 - chaos agent configuration 💀
     // ═══════════════════════════════════════════════════════════════
 
-    test('GameConfig.debug exists with enabled flag', async ({ page }) => {
-        const debug = await page.evaluate(() => {
-            return window.GameConfig?.debug || null;
+    test('GameConfig.debooger exists with enabled flag 🖤', async ({ page }) => {
+        const debooger = await page.evaluate(() => {
+            return window.GameConfig?.debooger || null;
         });
 
-        expect(debug).not.toBeNull();
-        expect(debug).toHaveProperty('enabled');
-        expect(typeof debug.enabled).toBe('boolean');
-        expect(debug).toHaveProperty('showConsoleWarnings');
+        expect(debooger).not.toBeNull();
+        expect(debooger).toHaveProperty('enabled');
+        expect(typeof debooger.enabled).toBe('boolean');
+        expect(debooger).toHaveProperty('showConsoleWarnings');
     });
 
     // ═══════════════════════════════════════════════════════════════

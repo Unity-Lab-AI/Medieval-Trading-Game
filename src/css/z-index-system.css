@@ -64,7 +64,7 @@
     /* ⚠️ LAYER 2000+: Critical/System UI */
     --z-loading-screen: 2000;
     --z-error-modal: 2500;
-    --z-debug-console: 3000;
+    --z-debooger-console: 3000;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -246,12 +246,12 @@ body:has(#game-setup-panel:not(.hidden)) #game-world {
     z-index: var(--z-loading-screen) !important;
 }
 
-/* Debug console - absolute top (inline styles take precedence) */
-#debug-console,
-.debug-console {
+/* 🦇 Debooger console - absolute top (inline styles take precedence) 💀 */
+#debooger-console,
+.debooger-console {
     z-index: 999998;
 }
 
-#toggle-debug-console {
+#toggle-debooger-console {
     z-index: 999999;
 }

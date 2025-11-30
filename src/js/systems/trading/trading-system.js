@@ -4,7 +4,7 @@
 // buy low, sell high, cry always... the trader's way
 // File Version: GameConfig.version.file
 // Game Version: 0.2
-// Made by Unity AI Lab - Hackall360, Sponge, GFourteen
+// Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 
 const TradingSystem = {
     // ⚙️ Config - how we're gonna hustle today

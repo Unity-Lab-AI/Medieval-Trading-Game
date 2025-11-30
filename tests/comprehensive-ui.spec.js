@@ -7,7 +7,7 @@
 
 const { test, expect } = require('@playwright/test');
 const config = require('./config/test-config');
-const { startNewGame, openDebugConsole, runDebugCommand } = require('./helpers/test-helpers');
+const { startNewGame, openDeboogerConsole, runDeboogerCommand } = require('./helpers/test-helpers');
 
 // ═══════════════════════════════════════════════════════════════
 // 🗺️ MAP CONTROLS TESTS
@@ -514,14 +514,14 @@ test.describe('Inventory Advanced Features', () => {
   });
 
   test('Item details panel can display item information', async ({ page }) => {
-    // Give item via debug command
-    await openDebugConsole(page);
-    await runDebugCommand(page, 'giveitem bread 5');
+    // 🖤 Give item via debooger command 💀
+    await openDeboogerConsole(page);
+    await runDeboogerCommand(page, 'giveitem bread 5');
     await page.waitForTimeout(300);
 
-    // Close debug console
+    // Close debooger console 🦇
     await page.evaluate(() => {
-      const dc = document.getElementById('debug-console');
+      const dc = document.getElementById('debooger-console');
       if (dc) dc.style.display = 'none';
     });
 

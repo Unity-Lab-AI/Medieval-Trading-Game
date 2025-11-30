@@ -32,7 +32,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 10000;
+    z-index: var(--z-npc-chat); /* 🖤 FIXED: was 10000, now uses z-index system (1200) 💀 */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -561,7 +561,7 @@
     border: 2px solid var(--npc-border);
     border-radius: 12px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-    z-index: 9999;
+    z-index: var(--z-modal); /* 🖤 FIXED: was 9999, now uses z-index system (1000) 💀 */
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -1153,7 +1153,7 @@
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.8);
-    z-index: 5000;
+    z-index: var(--z-overlay-container); /* 🖤 FIXED: was 5000, now uses z-index system (600) 💀 */
     align-items: center;
     justify-content: center;
 }
@@ -1616,7 +1616,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 100000;
+    z-index: var(--z-loading-screen); /* 🖤 FIXED: was 100000(!), now uses z-index system (2000) 💀 */
     animation: rankUpFadeIn 0.5s ease-out;
 }
 
@@ -2389,6 +2389,38 @@
 .equipment-slot-box.equipped {
     border-color: var(--npc-success);
     background: linear-gradient(135deg, var(--npc-bg-dark) 0%, rgba(76, 175, 80, 0.1) 100%);
+}
+
+/* 💀 Clickable equipped items - click to unequip */
+.equipment-slot-box.clickable-unequip {
+    cursor: pointer;
+}
+
+.equipment-slot-box.clickable-unequip:hover {
+    border-color: #ff6b6b;
+    background: linear-gradient(135deg, var(--npc-bg-dark) 0%, rgba(255, 107, 107, 0.15) 100%);
+    transform: scale(1.02);
+}
+
+.equipment-slot-box.clickable-unequip:hover::after {
+    content: '🔄 Click to unequip';
+    position: absolute;
+    bottom: -24px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: #ff6b6b;
+    white-space: nowrap;
+    opacity: 0.9;
+}
+
+.equipment-slot-box.clickable-unequip {
+    position: relative;
+}
+
+.equipment-slot-box.clickable-unequip:active {
+    transform: scale(0.98);
+    background: linear-gradient(135deg, var(--npc-bg-dark) 0%, rgba(255, 107, 107, 0.25) 100%);
 }
 
 .equipment-slot-box.empty {

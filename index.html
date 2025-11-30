@@ -51,7 +51,7 @@
         <!-- 👤 Character Creation Overlay - define your tragic protagonist -->
         <div id="character-creation-overlay" class="overlay">
             <div class="overlay-content">
-                <button class="overlay-close" data-close-overlay="character-creation-overlay">×</button>
+                <button class="overlay-close" data-close-overlay="character-creation-overlay" title="Close character creation">×</button>
                 <h2>Create Your Character</h2>
                 <div id="character-creation-content">
                     <!-- Character creation will be populated here -->
@@ -62,7 +62,7 @@
         <!-- Market Overlay -->
         <div id="market-overlay" class="overlay">
             <div class="overlay-content">
-                <button class="overlay-close" data-close-overlay="market-overlay">×</button>
+                <button class="overlay-close" data-close-overlay="market-overlay" title="Close market">×</button>
                 <h2>Market</h2>
                 <div id="market-overlay-content">
                     <!-- Market content will be populated here -->
@@ -73,7 +73,7 @@
         <!-- Inventory Overlay -->
         <div id="inventory-overlay" class="overlay">
             <div class="overlay-content">
-                <button class="overlay-close" data-close-overlay="inventory-overlay">×</button>
+                <button class="overlay-close" data-close-overlay="inventory-overlay" title="Close inventory">×</button>
                 <h2>Inventory</h2>
                 <div id="inventory-overlay-content">
                     <!-- Inventory content will be populated here -->
@@ -133,15 +133,15 @@
                 </div>
 
                 <div class="achievement-categories">
-                    <button class="achievement-category-btn active" data-category="all" onclick="filterAchievements(this, 'all')">All</button>
-                    <button class="achievement-category-btn" data-category="wealth" onclick="filterAchievements(this, 'wealth')">💰 Wealth</button>
-                    <button class="achievement-category-btn" data-category="trading" onclick="filterAchievements(this, 'trading')">🤝 Trading</button>
-                    <button class="achievement-category-btn" data-category="travel" onclick="filterAchievements(this, 'travel')">🗺️ Travel</button>
-                    <button class="achievement-category-btn" data-category="survival" onclick="filterAchievements(this, 'survival')">🛡️ Survival</button>
-                    <button class="achievement-category-btn" data-category="collection" onclick="filterAchievements(this, 'collection')">🎒 Collection</button>
-                    <button class="achievement-category-btn" data-category="time" onclick="filterAchievements(this, 'time')">⏰ Time</button>
-                    <button class="achievement-category-btn" data-category="special" onclick="filterAchievements(this, 'special')">✨ Special</button>
-                    <button class="achievement-category-btn leaderboard-btn" onclick="showLeaderboardPanel()">🏆 Hall of Champions</button>
+                    <button class="achievement-category-btn active" data-category="all" onclick="filterAchievements(this, 'all')" title="Show all achievements">All</button>
+                    <button class="achievement-category-btn" data-category="wealth" onclick="filterAchievements(this, 'wealth')" title="Show wealth-related achievements">💰 Wealth</button>
+                    <button class="achievement-category-btn" data-category="trading" onclick="filterAchievements(this, 'trading')" title="Show trading-related achievements">🤝 Trading</button>
+                    <button class="achievement-category-btn" data-category="travel" onclick="filterAchievements(this, 'travel')" title="Show travel-related achievements">🗺️ Travel</button>
+                    <button class="achievement-category-btn" data-category="survival" onclick="filterAchievements(this, 'survival')" title="Show survival-related achievements">🛡️ Survival</button>
+                    <button class="achievement-category-btn" data-category="collection" onclick="filterAchievements(this, 'collection')" title="Show collection-related achievements">🎒 Collection</button>
+                    <button class="achievement-category-btn" data-category="time" onclick="filterAchievements(this, 'time')" title="Show time-based achievements">⏰ Time</button>
+                    <button class="achievement-category-btn" data-category="special" onclick="filterAchievements(this, 'special')" title="Show special achievements">✨ Special</button>
+                    <button class="achievement-category-btn leaderboard-btn" onclick="showLeaderboardPanel()" title="View global leaderboard">🏆 Hall of Champions</button>
                 </div>
 
                 <div id="achievement-grid" class="achievement-grid">
@@ -149,7 +149,7 @@
                 </div>
 
                 <div class="panel-footer">
-                    <button class="panel-close-btn-footer" onclick="closeAchievementPanel(); event.stopPropagation();">Close</button>
+                    <button class="panel-close-btn-footer" onclick="closeAchievementPanel(); event.stopPropagation();" title="Close achievement panel">Close</button>
                 </div>
             </div>
         </div>
@@ -171,9 +171,9 @@
                     <!-- Ranking info populated by JavaScript -->
                 </div>
                 <div class="game-over-actions">
-                    <button class="game-over-btn primary" onclick="closeGameOverAndRestart()">🔄 Try Again</button>
-                    <button class="game-over-btn" onclick="closeGameOverToMenu()">🏠 Main Menu</button>
-                    <button class="game-over-btn" onclick="showLeaderboardFromGameOver()">🏆 View Leaderboard</button>
+                    <button class="game-over-btn primary" onclick="closeGameOverAndRestart()" title="Start a new game">🔄 Try Again</button>
+                    <button class="game-over-btn" onclick="closeGameOverToMenu()" title="Return to main menu">🏠 Main Menu</button>
+                    <button class="game-over-btn" onclick="showLeaderboardFromGameOver()" title="View the Hall of Champions">🏆 View Leaderboard</button>
                 </div>
             </div>
         </div>
@@ -184,7 +184,7 @@
         <div class="overlay-content perk-modal-content">
             <div class="perk-modal-header">
                 <h2>⚡ Choose Your Perks</h2>
-                <button class="overlay-close" onclick="closePerkModal()">×</button>
+                <button class="overlay-close" onclick="closePerkModal()" title="Close perk selection">×</button>
             </div>
             <div class="perk-modal-body">
                 <div class="perk-modal-info">
@@ -199,8 +199,8 @@
                 </div>
             </div>
             <div class="perk-modal-footer">
-                <button type="button" class="btn-secondary" onclick="closePerkModal()">Cancel</button>
-                <button type="button" id="confirm-perk-btn" class="btn-primary" onclick="confirmPerkSelection()">Confirm Selection</button>
+                <button type="button" class="btn-secondary" onclick="closePerkModal()" title="Cancel perk selection">Cancel</button>
+                <button type="button" id="confirm-perk-btn" class="btn-primary" onclick="confirmPerkSelection()" title="Confirm your perk choices">Confirm Selection</button>
             </div>
         </div>
     </div>
@@ -209,10 +209,10 @@
         <!-- 🖤 TOP BAR - Time controls, title, and info widgets -->
         <div id="top-bar">
             <div class="time-controls-top">
-                <button id="pause-btn" class="time-btn active" title="Pause">⏸️</button>
-                <button id="normal-speed-btn" class="time-btn" title="Normal Speed">▶️</button>
-                <button id="fast-speed-btn" class="time-btn" title="Fast">⏩</button>
-                <button id="very-fast-speed-btn" class="time-btn" title="Very Fast">⏭️</button>
+                <button id="pause-btn" class="time-btn active" title="Pause game time">⏸️</button>
+                <button id="normal-speed-btn" class="time-btn" title="Set time to normal speed (1x)">▶️</button>
+                <button id="fast-speed-btn" class="time-btn" title="Set time to fast speed (2x)">⏩</button>
+                <button id="very-fast-speed-btn" class="time-btn" title="Set time to very fast speed (3x)">⏭️</button>
             </div>
             <div class="top-bar-title" id="top-bar-title">Medieval Trading Game</div>
             <div class="top-bar-widgets" id="top-bar-widgets">
@@ -229,11 +229,11 @@
                     <div id="map-container" class="map-container">
                         <!-- 🖤 Using HTML-based GameWorldRenderer - canvas removed -->
                         <div id="map-controls" class="map-controls">
-                            <button id="zoom-in-btn" title="Zoom In" onclick="if(GameWorldRenderer) GameWorldRenderer.zoomIn()">+</button>
-                            <button id="zoom-out-btn" title="Zoom Out" onclick="if(GameWorldRenderer) GameWorldRenderer.zoomOut()">-</button>
-                            <button id="reset-view-btn" title="Reset View" onclick="if(GameWorldRenderer) GameWorldRenderer.resetView()">⟲</button>
-                            <button id="fullscreen-btn" title="Toggle Fullscreen" onclick="if(GameWorldRenderer) GameWorldRenderer.toggleFullscreen()">⛶</button>
-                            <button id="center-on-player-btn" title="Center on Player" onclick="if(GameWorldRenderer) GameWorldRenderer.centerOnPlayer()">📍</button>
+                            <button id="zoom-in-btn" title="Zoom in on the map" onclick="if(GameWorldRenderer) GameWorldRenderer.zoomIn()">+</button>
+                            <button id="zoom-out-btn" title="Zoom out on the map" onclick="if(GameWorldRenderer) GameWorldRenderer.zoomOut()">-</button>
+                            <button id="reset-view-btn" title="Reset map view to default" onclick="if(GameWorldRenderer) GameWorldRenderer.resetView()">⟲</button>
+                            <button id="fullscreen-btn" title="Toggle fullscreen map mode" onclick="if(GameWorldRenderer) GameWorldRenderer.toggleFullscreen()">⛶</button>
+                            <button id="center-on-player-btn" title="Center map on your current location" onclick="if(GameWorldRenderer) GameWorldRenderer.centerOnPlayer()">📍</button>
                         </div>
                     </div>
 
@@ -318,7 +318,7 @@
                     <div class="setup-header">
                         <h2>New Game Setup</h2>
                     </div>
-                    <form id="game-setup-form">
+                    <form id="game-setup-form" onsubmit="event.preventDefault(); return false;">
                         <div class="form-group character-name-row">
                             <label for="character-name-input">Character Name:</label>
                             <div class="name-gold-inputs">
@@ -377,64 +377,54 @@
                             </div>
                         </div>
                         
-                        <!-- 📊 Character Attributes - min-max to your heart's content -->
+                        <!-- 📊 Character Attributes - emoji icons with tooltips 🦇 -->
                         <div class="attributes-display">
                             <div class="attributes-header">
-                                <h3>Character Attributes</h3>
-                                <div class="attribute-points-remaining">
-                                    <span class="points-label">Points Remaining:</span>
+                                <span class="attr-header-label">Attributes</span>
+                                <div class="attribute-points-remaining" title="Distribute these points among your attributes">
                                     <span class="points-value" id="attr-points-remaining">5</span>
+                                    <span class="points-label">pts</span>
                                 </div>
                             </div>
                             <div class="attributes-grid">
-                                <div class="attribute">
-                                    <span class="attribute-name">Strength</span>
-                                    <div class="attribute-controls">
-                                        <button type="button" class="attr-btn attr-down" data-attr="strength">▼</button>
-                                        <span class="attribute-value" id="attr-strength">5</span>
-                                        <button type="button" class="attr-btn attr-up" data-attr="strength">▲</button>
-                                    </div>
+                                <div class="attribute" title="Strength: Combat damage, carrying capacity, intimidation">
+                                    <span class="attribute-icon">💪</span>
+                                    <button type="button" class="attr-btn attr-down" data-attr="strength" title="Decrease Strength">−</button>
+                                    <span class="attribute-value" id="attr-strength">5</span>
+                                    <button type="button" class="attr-btn attr-up" data-attr="strength" title="Increase Strength">+</button>
                                 </div>
-                                <div class="attribute">
-                                    <span class="attribute-name">Intelligence</span>
-                                    <div class="attribute-controls">
-                                        <button type="button" class="attr-btn attr-down" data-attr="intelligence">▼</button>
-                                        <span class="attribute-value" id="attr-intelligence">5</span>
-                                        <button type="button" class="attr-btn attr-up" data-attr="intelligence">▲</button>
-                                    </div>
+                                <div class="attribute" title="Intelligence: Better prices, crafting quality, learning speed">
+                                    <span class="attribute-icon">🧠</span>
+                                    <button type="button" class="attr-btn attr-down" data-attr="intelligence" title="Decrease Intelligence">−</button>
+                                    <span class="attribute-value" id="attr-intelligence">5</span>
+                                    <button type="button" class="attr-btn attr-up" data-attr="intelligence" title="Increase Intelligence">+</button>
                                 </div>
-                                <div class="attribute">
-                                    <span class="attribute-name">Charisma</span>
-                                    <div class="attribute-controls">
-                                        <button type="button" class="attr-btn attr-down" data-attr="charisma">▼</button>
-                                        <span class="attribute-value" id="attr-charisma">5</span>
-                                        <button type="button" class="attr-btn attr-up" data-attr="charisma">▲</button>
-                                    </div>
+                                <div class="attribute" title="Charisma: Persuasion, NPC relationships, quest rewards">
+                                    <span class="attribute-icon">💬</span>
+                                    <button type="button" class="attr-btn attr-down" data-attr="charisma" title="Decrease Charisma">−</button>
+                                    <span class="attribute-value" id="attr-charisma">5</span>
+                                    <button type="button" class="attr-btn attr-up" data-attr="charisma" title="Increase Charisma">+</button>
                                 </div>
-                                <div class="attribute">
-                                    <span class="attribute-name">Endurance</span>
-                                    <div class="attribute-controls">
-                                        <button type="button" class="attr-btn attr-down" data-attr="endurance">▼</button>
-                                        <span class="attribute-value" id="attr-endurance">5</span>
-                                        <button type="button" class="attr-btn attr-up" data-attr="endurance">▲</button>
-                                    </div>
+                                <div class="attribute" title="Endurance: Max health, stamina, resistance to hardship">
+                                    <span class="attribute-icon">❤️</span>
+                                    <button type="button" class="attr-btn attr-down" data-attr="endurance" title="Decrease Endurance">−</button>
+                                    <span class="attribute-value" id="attr-endurance">5</span>
+                                    <button type="button" class="attr-btn attr-up" data-attr="endurance" title="Increase Endurance">+</button>
                                 </div>
-                                <div class="attribute">
-                                    <span class="attribute-name">Luck</span>
-                                    <div class="attribute-controls">
-                                        <button type="button" class="attr-btn attr-down" data-attr="luck">▼</button>
-                                        <span class="attribute-value" id="attr-luck">5</span>
-                                        <button type="button" class="attr-btn attr-up" data-attr="luck">▲</button>
-                                    </div>
+                                <div class="attribute" title="Luck: Critical hits, rare loot, random events favor you">
+                                    <span class="attribute-icon">🍀</span>
+                                    <button type="button" class="attr-btn attr-down" data-attr="luck" title="Decrease Luck">−</button>
+                                    <span class="attribute-value" id="attr-luck">5</span>
+                                    <button type="button" class="attr-btn attr-up" data-attr="luck" title="Increase Luck">+</button>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="form-actions">
-                            <button type="button" id="randomize-character-btn" class="secondary" onclick="console.log('📍 INLINE ONCLICK FIRED'); if(typeof window.randomizeCharacter === 'function') { window.randomizeCharacter(); } else { console.error('❌ window.randomizeCharacter not found, type:', typeof window.randomizeCharacter); }">Randomize</button>
-                            <button type="button" id="start-game-btn" class="primary" onclick="if(typeof createCharacter === 'function') { createCharacter(event); } else if(typeof window.createCharacter === 'function') { window.createCharacter(event); } else { console.error('createCharacter not found'); }">Start Game</button>
-                            <button type="button" id="setup-settings-btn" class="secondary" title="Settings" onclick="if(typeof SettingsPanel !== 'undefined' && SettingsPanel.show) { SettingsPanel.show(); } else { console.error('SettingsPanel not available'); }">⚙️</button>
-                            <button type="button" id="cancel-setup-btn" class="secondary" onclick="if(typeof cancelGameSetup === 'function') { cancelGameSetup(); } else { document.getElementById('game-setup-panel')?.classList.add('hidden'); document.getElementById('main-menu')?.classList.remove('hidden'); }">Exit</button>
+                            <button type="button" id="randomize-character-btn" class="secondary" title="Randomize all character options" onclick="event.preventDefault(); console.log('📍 Randomize clicked'); if(typeof window.randomizeCharacter === 'function') { window.randomizeCharacter(); } else { console.error('❌ randomizeCharacter not found'); }">🎲</button>
+                            <button type="button" id="start-game-btn" class="primary" title="Begin your journey into darkness" onclick="event.preventDefault(); console.log('📍 Start Game clicked'); if(typeof window.createCharacter === 'function') { window.createCharacter(event); } else { console.error('❌ createCharacter not found'); }">▶ Start</button>
+                            <button type="button" id="setup-settings-btn" class="secondary" title="Open settings menu" onclick="event.preventDefault(); if(typeof SettingsPanel !== 'undefined' && SettingsPanel.show) { SettingsPanel.show(); } else { console.error('SettingsPanel not available'); }">⚙️</button>
+                            <button type="button" id="cancel-setup-btn" class="secondary" title="Return to main menu" onclick="event.preventDefault(); if(typeof cancelGameSetup === 'function') { cancelGameSetup(); } else { document.getElementById('game-setup-panel')?.classList.add('hidden'); document.getElementById('main-menu')?.classList.remove('hidden'); }">✖</button>
                         </div>
                     </form>
                 </section>
@@ -490,8 +480,8 @@
                     <!-- Trading Controls -->
                     <div class="trading-controls">
                         <div class="trade-mode-toggle">
-                            <button id="single-trade-btn" class="trade-mode-btn active">Single</button>
-                            <button id="bulk-trade-btn" class="trade-mode-btn">Bulk</button>
+                            <button id="single-trade-btn" class="trade-mode-btn active" title="Trade items one at a time">Single</button>
+                            <button id="bulk-trade-btn" class="trade-mode-btn" title="Trade multiple items at once">Bulk</button>
                         </div>
                         <div class="trade-summary" id="trade-summary">
                             <span id="trade-total">Total: 0 gold</span>
@@ -500,20 +490,20 @@
                     </div>
                     
                     <div class="tabs">
-                        <button class="tab-btn active" data-tab="buy">Buy</button>
-                        <button class="tab-btn" data-tab="sell">Sell</button>
-                        <button class="tab-btn" data-tab="compare">Compare</button>
-                        <button class="tab-btn" data-tab="history">History</button>
-                        <button class="tab-btn" data-tab="routes">Routes</button>
-                        <button class="tab-btn" data-tab="alerts">Alerts</button>
-                        <button class="tab-btn" data-tab="news">News</button>
+                        <button class="tab-btn active" data-tab="buy" title="Buy items from the market">Buy</button>
+                        <button class="tab-btn" data-tab="sell" title="Sell your items for gold">Sell</button>
+                        <button class="tab-btn" data-tab="compare" title="Compare prices across locations">Compare</button>
+                        <button class="tab-btn" data-tab="history" title="View your trade history">History</button>
+                        <button class="tab-btn" data-tab="routes" title="Plan profitable trade routes">Routes</button>
+                        <button class="tab-btn" data-tab="alerts" title="Set up price alerts">Alerts</button>
+                        <button class="tab-btn" data-tab="news" title="Read market news and events">News</button>
                     </div>
                     
                     <div id="market-content">
                         <div id="buy-tab" class="tab-content active">
                             <div class="market-controls">
-                                <button id="refresh-market-btn">Refresh Market</button>
-                                <select id="item-filter">
+                                <button id="refresh-market-btn" title="Refresh market prices and inventory">Refresh Market</button>
+                                <select id="item-filter" title="Filter items by category">
                                     <option value="all">All Items</option>
                                     <option value="consumables">Consumables</option>
                                     <option value="resources">Resources</option>
@@ -521,9 +511,9 @@
                                     <option value="luxury">Luxury</option>
                                 </select>
                                 <div class="bulk-controls hidden" id="bulk-buy-controls">
-                                    <button id="select-all-buy-btn">Select All</button>
-                                    <button id="clear-selection-buy-btn">Clear Selection</button>
-                                    <button id="buy-selected-btn">Buy Selected</button>
+                                    <button id="select-all-buy-btn" title="Select all available items">Select All</button>
+                                    <button id="clear-selection-buy-btn" title="Clear your selection">Clear Selection</button>
+                                    <button id="buy-selected-btn" title="Purchase all selected items">Buy Selected</button>
                                 </div>
                             </div>
                             <div id="buy-items" class="items-grid">
@@ -537,8 +527,8 @@
                                     <span>Total Weight: <span id="preview-total-weight">0</span> lbs</span>
                                 </div>
                                 <div class="trade-actions">
-                                    <button id="confirm-trade-btn">Confirm Trade</button>
-                                    <button id="cancel-trade-btn">Cancel</button>
+                                    <button id="confirm-trade-btn" title="Complete this trade">Confirm Trade</button>
+                                    <button id="cancel-trade-btn" title="Cancel this trade">Cancel</button>
                                 </div>
                             </div>
                         </div>
@@ -547,9 +537,9 @@
                             <div class="market-controls">
                                 <span id="sell-info">Sell your items for gold</span>
                                 <div class="bulk-controls hidden" id="bulk-sell-controls">
-                                    <button id="select-all-sell-btn">Select All</button>
-                                    <button id="clear-selection-sell-btn">Clear Selection</button>
-                                    <button id="sell-selected-btn">Sell Selected</button>
+                                    <button id="select-all-sell-btn" title="Select all your items to sell">Select All</button>
+                                    <button id="clear-selection-sell-btn" title="Clear your selection">Clear Selection</button>
+                                    <button id="sell-selected-btn" title="Sell all selected items">Sell Selected</button>
                                 </div>
                             </div>
                             <div id="sell-items" class="items-grid">
@@ -559,11 +549,11 @@
                         
                         <div id="compare-tab" class="tab-content">
                             <div class="market-controls">
-                                <select id="compare-item-select">
+                                <select id="compare-item-select" title="Choose an item to compare prices">
                                     <option value="">Select an item to compare</option>
                                 </select>
-                                <button id="update-comparison-btn">Update Comparison</button>
-                                <button id="add-route-btn">Add to Route Planner</button>
+                                <button id="update-comparison-btn" title="Update price comparison data">Update Comparison</button>
+                                <button id="add-route-btn" title="Add this item to your trade route plan">Add to Route Planner</button>
                             </div>
                             <div id="price-comparison" class="price-comparison">
                                 <!-- Price comparison will be displayed here -->
@@ -572,8 +562,8 @@
                         
                         <div id="history-tab" class="tab-content">
                             <div class="market-controls">
-                                <button id="clear-history-btn">Clear History</button>
-                                <button id="export-history-btn">Export History</button>
+                                <button id="clear-history-btn" title="Clear all trade history">Clear History</button>
+                                <button id="export-history-btn" title="Export trade history data">Export History</button>
                             </div>
                             <div id="trade-history" class="trade-history">
                                 <!-- Trade history will be displayed here -->
@@ -582,8 +572,8 @@
                         
                         <div id="routes-tab" class="tab-content">
                             <div class="market-controls">
-                                <button id="plan-route-btn">Plan New Route</button>
-                                <button id="clear-routes-btn">Clear Routes</button>
+                                <button id="plan-route-btn" title="Plan a new profitable trade route">Plan New Route</button>
+                                <button id="clear-routes-btn" title="Clear all saved routes">Clear Routes</button>
                             </div>
                             <div id="route-planner" class="route-planner">
                                 <!-- Route planning will be displayed here -->
@@ -592,8 +582,8 @@
                         
                         <div id="alerts-tab" class="tab-content">
                             <div class="market-controls">
-                                <button id="add-alert-btn">Add Price Alert</button>
-                                <button id="clear-alerts-btn">Clear Alerts</button>
+                                <button id="add-alert-btn" title="Create a new price alert">Add Price Alert</button>
+                                <button id="clear-alerts-btn" title="Clear all price alerts">Clear Alerts</button>
                             </div>
                             <div id="price-alerts" class="price-alerts">
                                 <!-- Price alerts will be displayed here -->
@@ -602,7 +592,7 @@
                         
                         <div id="news-tab" class="tab-content">
                             <div class="market-controls">
-                                <button id="refresh-news-btn">Refresh News</button>
+                                <button id="refresh-news-btn" title="Refresh market news">Refresh News</button>
                             </div>
                             <div id="market-news" class="market-news">
                                 <!-- Market news will be displayed here -->
@@ -611,7 +601,7 @@
                     </div>
                     
                     <div class="panel-footer">
-                        <button id="close-market-btn" class="panel-close-btn-footer" data-close-overlay="market-panel">Close</button>
+                        <button id="close-market-btn" class="panel-close-btn-footer" data-close-overlay="market-panel" title="Close the market panel">Close</button>
                     </div>
                 </section>
 
@@ -626,9 +616,9 @@
                                 <span id="inventory-value">Value: 0 gold</span>
                             </div>
                             <div class="inventory-actions">
-                                <button id="sort-inventory-btn" title="Sort Inventory">🔤</button>
-                                <button id="filter-inventory-btn" title="Filter Items">🔍</button>
-                                <button id="inventory-settings-btn" title="Inventory Settings" onclick="if(typeof SettingsPanel !== 'undefined' && SettingsPanel.show) SettingsPanel.show();">⚙️</button>
+                                <button id="sort-inventory-btn" title="Sort inventory items">🔤</button>
+                                <button id="filter-inventory-btn" title="Filter inventory items">🔍</button>
+                                <button id="inventory-settings-btn" title="Open game settings" onclick="if(typeof SettingsPanel !== 'undefined' && SettingsPanel.show) SettingsPanel.show();">⚙️</button>
                             </div>
                         </div>
                     </div>
@@ -664,7 +654,7 @@
                                 <option value="category">Category</option>
                                 <option value="rarity">Rarity</option>
                             </select>
-                            <button id="inventory-sort-order" title="Toggle Sort Order">⬇️</button>
+                            <button id="inventory-sort-order" title="Toggle sort order (ascending/descending)">⬇️</button>
                         </div>
                     </div>
                     
@@ -714,16 +704,16 @@
                             </div>
                         </div>
                         <div class="item-details-actions">
-                            <button id="use-item-btn" class="action-btn">Use</button>
-                            <button id="equip-item-btn" class="action-btn">Equip</button>
-                            <button id="drop-item-btn" class="action-btn">Drop</button>
-                            <button id="examine-item-btn" class="action-btn">Examine</button>
-                            <button id="gift-item-btn" class="action-btn">Gift</button>
+                            <button id="use-item-btn" class="action-btn" title="Use this item">Use</button>
+                            <button id="equip-item-btn" class="action-btn" title="Equip this item">Equip</button>
+                            <button id="drop-item-btn" class="action-btn" title="Drop this item from inventory">Drop</button>
+                            <button id="examine-item-btn" class="action-btn" title="Examine this item closely">Examine</button>
+                            <button id="gift-item-btn" class="action-btn" title="Gift this item to an NPC">Gift</button>
                         </div>
                     </div>
                     
                     <div class="panel-footer">
-                        <button id="close-inventory-btn" class="panel-close-btn-footer" data-close-overlay="inventory-panel">Close</button>
+                        <button id="close-inventory-btn" class="panel-close-btn-footer" data-close-overlay="inventory-panel" title="Close the inventory panel">Close</button>
                     </div>
                 </section>
 
@@ -735,11 +725,11 @@
                     <div class="travel-header">
                         <h2>Travel & Exploration</h2>
                         <div class="travel-tabs">
-                            <button class="travel-tab-btn" data-travel-tab="destination">🎯 Destination</button>
-                            <button class="travel-tab-btn active" data-travel-tab="destinations">📍 Locations</button>
-                            <button class="travel-tab-btn" data-travel-tab="map">🗺️ Map</button>
-                            <button class="travel-tab-btn" id="open-world-map-overlay-btn">⛶ Full Map</button>
-                            <button class="travel-tab-btn" data-travel-tab="history">📜 History</button>
+                            <button class="travel-tab-btn" data-travel-tab="destination" title="View your current destination">🎯 Destination</button>
+                            <button class="travel-tab-btn active" data-travel-tab="destinations" title="Browse all locations">📍 Locations</button>
+                            <button class="travel-tab-btn" data-travel-tab="map" title="View the travel map">🗺️ Map</button>
+                            <button class="travel-tab-btn" id="open-world-map-overlay-btn" title="Open fullscreen world map">⛶ Full Map</button>
+                            <button class="travel-tab-btn" data-travel-tab="history" title="View your travel history">📜 History</button>
                         </div>
                     </div>
 
@@ -754,8 +744,7 @@
                                 </div>
                             </div>
                             <div id="destination-actions" class="destination-actions hidden">
-                                <button id="travel-to-destination-btn" class="travel-btn-primary">🚶 Begin Journey</button>
-                                <button id="clear-destination-btn" class="travel-btn-danger">✕ Cancel</button>
+                                <button id="clear-destination-btn" class="travel-btn-danger" title="Cancel your current destination">✕ Cancel Destination</button>
                             </div>
                         </div>
 
@@ -804,10 +793,10 @@
                             <div id="travel-mini-map-container" class="travel-mini-map-container">
                                 <div id="travel-mini-map" class="travel-mini-map"></div>
                                 <div class="mini-map-controls">
-                                    <button onclick="TravelPanelMap.zoomIn()" title="Zoom In">+</button>
-                                    <button onclick="TravelPanelMap.zoomOut()" title="Zoom Out">−</button>
-                                    <button onclick="TravelPanelMap.centerOnPlayer()" title="Center on Player">📍</button>
-                                    <button onclick="TravelPanelMap.resetView()" title="Reset View">⟲</button>
+                                    <button onclick="TravelPanelMap.zoomIn()" title="Zoom in on the travel map">+</button>
+                                    <button onclick="TravelPanelMap.zoomOut()" title="Zoom out on the travel map">−</button>
+                                    <button onclick="TravelPanelMap.centerOnPlayer()" title="Center map on your location">📍</button>
+                                    <button onclick="TravelPanelMap.resetView()" title="Reset travel map view">⟲</button>
                                 </div>
                             </div>
                             <!-- Map Legend (matches main world map) -->
@@ -838,8 +827,8 @@
                         <!-- History Tab -->
                         <div id="history-tab" class="travel-tab-content">
                             <div class="history-controls">
-                                <button id="clear-history-btn">🗑️ Clear History</button>
-                                <button id="export-history-btn">📤 Export</button>
+                                <button id="clear-history-btn" title="Clear all travel history">🗑️ Clear History</button>
+                                <button id="export-history-btn" title="Export travel history data">📤 Export</button>
                             </div>
                             <div id="travel-history" class="travel-history-list">
                                 <!-- Travel history will be populated by JavaScript -->
@@ -848,7 +837,7 @@
                     </div>
 
                     <div class="panel-footer">
-                        <button id="close-travel-btn" class="panel-close-btn-footer" data-close-overlay="travel-panel">Close</button>
+                        <button id="close-travel-btn" class="panel-close-btn-footer" data-close-overlay="travel-panel" title="Close the travel panel">Close</button>
                     </div>
                 </section>
 
@@ -866,7 +855,7 @@
                         <!-- Transportation options will be populated by JavaScript -->
                     </div>
                     <div class="panel-footer">
-                        <button id="close-transportation-btn" class="panel-close-btn-footer" data-close-overlay="transportation-panel">Close</button>
+                        <button id="close-transportation-btn" class="panel-close-btn-footer" data-close-overlay="transportation-panel" title="Close the transportation panel">Close</button>
                     </div>
                 </section>
 
@@ -883,19 +872,19 @@
                     </div>
                     
                     <div class="tabs">
-                        <button class="tab-btn active" data-tab="properties">Properties</button>
-                        <button class="tab-btn" data-tab="employees">Employees</button>
-                        <button class="tab-btn" data-tab="trade-routes">Trade Routes</button>
-                        <button class="tab-btn" data-tab="financial">Financial</button>
+                        <button class="tab-btn active" data-tab="properties" title="Manage your properties">Properties</button>
+                        <button class="tab-btn" data-tab="employees" title="Manage your employees">Employees</button>
+                        <button class="tab-btn" data-tab="trade-routes" title="View and manage trade routes">Trade Routes</button>
+                        <button class="tab-btn" data-tab="financial" title="View financial information">Financial</button>
                     </div>
                     
                     <div id="property-employee-content">
                         <!-- Properties Tab -->
                         <div id="properties-tab" class="tab-content active">
                             <div class="properties-controls">
-                                <button id="buy-property-btn">Buy Property</button>
-                                <button id="property-upgrades-btn">Manage Upgrades</button>
-                                <button id="repair-all-btn">Repair All</button>
+                                <button id="buy-property-btn" title="Purchase a new property">Buy Property</button>
+                                <button id="property-upgrades-btn" title="Manage property upgrades">Manage Upgrades</button>
+                                <button id="repair-all-btn" title="Repair all damaged properties">Repair All</button>
                             </div>
                             <div id="owned-properties" class="properties-grid">
                                 <!-- Owned properties will be populated by JavaScript -->
@@ -905,9 +894,9 @@
                         <!-- Employees Tab -->
                         <div id="employees-tab" class="tab-content">
                             <div class="employees-controls">
-                                <button id="hire-employee-btn">Hire Employee</button>
-                                <button id="employee-training-btn">Training</button>
-                                <button id="pay-wages-btn">Pay Wages</button>
+                                <button id="hire-employee-btn" title="Hire a new employee">Hire Employee</button>
+                                <button id="employee-training-btn" title="Train your employees">Training</button>
+                                <button id="pay-wages-btn" title="Pay employee wages">Pay Wages</button>
                             </div>
                             <div id="hired-employees" class="employees-grid">
                                 <!-- Hired employees will be populated by JavaScript -->
@@ -917,9 +906,9 @@
                         <!-- Trade Routes Tab -->
                         <div id="trade-routes-tab" class="tab-content">
                             <div class="trade-routes-controls">
-                                <button id="create-route-btn">Create Route</button>
-                                <button id="optimize-routes-btn">Optimize Routes</button>
-                                <button id="route-history-btn">Route History</button>
+                                <button id="create-route-btn" title="Create a new trade route">Create Route</button>
+                                <button id="optimize-routes-btn" title="Optimize existing trade routes">Optimize Routes</button>
+                                <button id="route-history-btn" title="View route history">Route History</button>
                             </div>
                             <div id="active-routes" class="routes-grid">
                                 <!-- Active trade routes will be populated by JavaScript -->
@@ -959,7 +948,7 @@
                     </div>
                     
                     <div class="panel-footer">
-                        <button id="close-property-employee-btn" class="panel-close-btn-footer" data-close-overlay="property-employee-panel">Close</button>
+                        <button id="close-property-employee-btn" class="panel-close-btn-footer" data-close-overlay="property-employee-panel" title="Close the property panel">Close</button>
                     </div>
                 </section>
 
@@ -1012,9 +1001,9 @@
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button id="repair-property-btn" class="action-btn">Repair</button>
-                            <button id="upgrade-property-btn" class="action-btn">Upgrade</button>
-                            <button id="sell-property-btn" class="action-btn danger">Sell</button>
+                            <button id="repair-property-btn" class="action-btn" title="Repair this property">Repair</button>
+                            <button id="upgrade-property-btn" class="action-btn" title="Upgrade this property">Upgrade</button>
+                            <button id="sell-property-btn" class="action-btn danger" title="Sell this property">Sell</button>
                         </div>
                     </div>
                 </div>
@@ -1066,18 +1055,18 @@
                                     <!-- Assignment info will be populated by JavaScript -->
                                 </div>
                                 <div class="assignment-controls">
-                                    <select id="assignment-property-select">
+                                    <select id="assignment-property-select" title="Choose a property to assign">
                                         <option value="">Select Property</option>
                                     </select>
-                                    <button id="assign-employee-btn">Assign</button>
-                                    <button id="unassign-employee-btn">Unassign</button>
+                                    <button id="assign-employee-btn" title="Assign employee to selected property">Assign</button>
+                                    <button id="unassign-employee-btn" title="Unassign employee from current property">Unassign</button>
                                 </div>
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button id="train-employee-btn" class="action-btn">Train</button>
-                            <button id="promote-employee-btn" class="action-btn">Promote</button>
-                            <button id="fire-employee-btn" class="action-btn danger">Fire</button>
+                            <button id="train-employee-btn" class="action-btn" title="Train this employee">Train</button>
+                            <button id="promote-employee-btn" class="action-btn" title="Promote this employee">Promote</button>
+                            <button id="fire-employee-btn" class="action-btn danger" title="Fire this employee">Fire</button>
                         </div>
                     </div>
                 </div>
@@ -1091,9 +1080,9 @@
             <h2 id="location-name">Town Square</h2>
             <p id="location-description">You are in the town square.</p>
             <div id="location-actions">
-                <button id="visit-market-btn">Visit Market</button>
-                <button id="travel-btn">Travel</button>
-                <button id="transportation-btn">Transportation</button>
+                <button id="visit-market-btn" title="Visit the local market">Visit Market</button>
+                <button id="travel-btn" title="Open travel menu">Travel</button>
+                <button id="transportation-btn" title="View transportation options">Transportation</button>
             </div>
         </section>
 
@@ -1143,9 +1132,9 @@
             <h1 id="main-menu-title">Medieval Trading Game</h1>
             <p id="main-menu-version" class="version-text"></p>
             <div class="menu-buttons">
-                <button id="new-game-btn" onclick="if(typeof startNewGame==='function'){startNewGame();}else if(window.startNewGame){window.startNewGame();}else{console.error('startNewGame not found');}">New Game</button>
-                <button id="load-game-btn" onclick="if(typeof loadGame === 'function') loadGame();" disabled>Load Game</button>
-                <button id="settings-btn" onclick="if(typeof SettingsPanel !== 'undefined' && SettingsPanel.show) SettingsPanel.show(); else console.error('SettingsPanel not loaded');">Settings</button>
+                <button id="new-game-btn" onclick="if(typeof startNewGame==='function'){startNewGame();}else if(window.startNewGame){window.startNewGame();}else{console.error('startNewGame not found');}" title="Start a new game">New Game</button>
+                <button id="load-game-btn" onclick="if(typeof loadGame === 'function') loadGame();" disabled title="Load a saved game">Load Game</button>
+                <button id="settings-btn" onclick="if(typeof SettingsPanel !== 'undefined' && SettingsPanel.show) SettingsPanel.show(); else console.error('SettingsPanel not loaded');" title="Open game settings">Settings</button>
             </div>
 
             <!-- 🏆 Hall of Champions is created dynamically by save-ui-system.js -->
@@ -1174,35 +1163,35 @@
                 <!-- Populated by JavaScript -->
             </div>
             <div class="panel-footer">
-                <button class="panel-close-btn-footer" onclick="if(typeof SaveUISystem !== 'undefined') SaveUISystem.closeHallOfChampions(); else closeLeaderboardPanel();">Close</button>
+                <button class="panel-close-btn-footer" onclick="if(typeof SaveUISystem !== 'undefined') SaveUISystem.closeHallOfChampions(); else closeLeaderboardPanel();" title="Close the Hall of Champions">Close</button>
             </div>
         </div>
     </div>
 
     <!-- 🐛 DEBOOGER CONSOLE - ON-SCREEN CONSOLE LOG (z-index above main menu) -->
-    <div id="debug-console" style="position: fixed; bottom: 0; right: 0; width: 600px; height: 80vh; max-height: 800px; background: rgba(0,0,0,0.95); color: #0f0; font-family: monospace; font-size: 11px; z-index: 999998; border: 2px solid #0f0; display: none; flex-direction: column;">
+    <div id="debooger-console" style="position: fixed; bottom: 0; right: 0; width: 600px; height: 80vh; max-height: 800px; background: rgba(0,0,0,0.95); color: #0f0; font-family: monospace; font-size: 11px; z-index: 999998; border: 2px solid #0f0; display: none; flex-direction: column;">
         <!-- Header -->
         <div style="display: flex; justify-content: space-between; padding: 8px 10px; border-bottom: 1px solid #0f0; background: rgba(0,0,0,0.98); flex-shrink: 0;">
             <strong style="color: #0ff;">🐛 DEBOOGER CONSOLE</strong>
-            <button onclick="document.getElementById('debug-console').style.display='none'" style="background: #f00; color: #fff; border: none; padding: 2px 8px; cursor: pointer;">Close</button>
+            <button onclick="document.getElementById('debooger-console').style.display='none'" style="background: #f00; color: #fff; border: none; padding: 2px 8px; cursor: pointer;" title="Close the debugger console">Close</button>
         </div>
         <!-- Scrollable Log Content -->
-        <div id="debug-console-content" style="flex: 1; overflow-y: auto; padding: 10px; font-size: 10px; line-height: 1.4;"></div>
+        <div id="debooger-console-content" style="flex: 1; overflow-y: auto; padding: 10px; font-size: 10px; line-height: 1.4;"></div>
         <!-- Command Input (Fixed at Bottom) -->
-        <div id="debug-command-container" style="display: flex; gap: 8px; align-items: center; padding: 8px 10px; border-top: 2px solid #0f0; background: rgba(0,20,0,0.98); flex-shrink: 0;">
+        <div id="debooger-command-container" style="display: flex; gap: 8px; align-items: center; padding: 8px 10px; border-top: 2px solid #0f0; background: rgba(0,20,0,0.98); flex-shrink: 0;">
             <span style="color: #0ff; font-weight: bold; font-size: 14px;">></span>
             <input type="text"
-                   id="debug-command-input"
+                   id="debooger-command-input"
                    placeholder="Type command... (Enter to run, Tab to autocomplete)"
                    style="flex: 1; background: rgba(0,40,0,0.8); border: 1px solid #0f0; color: #0f0; font-family: monospace; font-size: 12px; padding: 8px 10px; outline: none; border-radius: 4px;"
                    autocomplete="off"
                    spellcheck="false"
             />
-            <button id="debug-command-execute" style="background: #0a0; border: 1px solid #0f0; color: #fff; padding: 8px 12px; cursor: pointer; font-family: monospace; font-size: 12px; border-radius: 4px;">Run</button>
-            <button id="debug-command-help" style="background: #005; border: 1px solid #0ff; color: #0ff; padding: 8px 12px; cursor: pointer; font-family: monospace; font-size: 12px; border-radius: 4px;">?</button>
+            <button id="debooger-command-execute" style="background: #0a0; border: 1px solid #0f0; color: #fff; padding: 8px 12px; cursor: pointer; font-family: monospace; font-size: 12px; border-radius: 4px;" title="Execute the command">Run</button>
+            <button id="debooger-command-help" style="background: #005; border: 1px solid #0ff; color: #0ff; padding: 8px 12px; cursor: pointer; font-family: monospace; font-size: 12px; border-radius: 4px;" title="Show available commands">?</button>
         </div>
     </div>
-    <button id="toggle-debug-console" onclick="var dc=document.getElementById('debug-console');if(dc){dc.style.display=(dc.style.display==='none'||dc.style.display==='')?'flex':'none';}" style="position: fixed; bottom: 10px; right: 10px; z-index: 999999; background: #000; color: #0f0; border: 2px solid #0f0; padding: 10px; cursor: pointer; font-family: monospace;">
+    <button id="toggle-debooger-console" onclick="var dc=document.getElementById('debooger-console');if(dc){dc.style.display=(dc.style.display==='none'||dc.style.display==='')?'flex':'none';}" style="position: fixed; bottom: 10px; right: 10px; z-index: 999999; background: #000; color: #0f0; border: 2px solid #0f0; padding: 10px; cursor: pointer; font-family: monospace;" title="Toggle developer debugger console">
         🐛 Debooger
     </button>
 
@@ -1264,9 +1253,10 @@
     <script src="src/js/systems/story/initial-encounter.js?v=0.81"></script>
     <script src="src/js/npc/npc-relationships.js?v=0.81"></script>
     <script src="src/js/npc/npc-trade.js?v=0.81"></script>
+    <script src="src/js/ui/panels/trade-cart-panel.js?v=0.81"></script>
 
     <!-- 🤖 Command & Quest Systems (v0.7) -->
-    <script src="src/js/debug/api-command-system.js?v=0.81"></script>
+    <script src="src/js/debooger/api-command-system.js?v=0.81"></script>
     <script src="src/js/systems/progression/quest-system.js?v=0.81"></script>
 
     <!-- 👑 Merchant Rank System - defines property/employee limits -->
@@ -1359,10 +1349,10 @@
     <script src="src/js/effects/menu-weather-system.js?v=0.81"></script>
 
     <!-- ⚡ Performance Optimizer -->
-    <script src="src/js/debug/performance-optimizer.js?v=0.81"></script>
+    <script src="src/js/debooger/performance-optimizer.js?v=0.81"></script>
 
     <!-- 🐛 Debooger System - ON by default for Super Hacker achievement 🖤 -->
-    <script src="src/js/core/debug-system.js?v=0.81"></script>
+    <script src="src/js/core/debooger-system.js?v=0.81"></script>
 
     <!-- 🎯 Current Task System - tracks player activity 💀 -->
     <script src="src/js/systems/current-task-system.js?v=0.81"></script>
@@ -1376,7 +1366,7 @@
     <!-- 🎮 GAME ENGINE - NOW HANDLED BY TIME MACHINE (time-machine.js loaded earlier) -->
 
     <!-- 🎮 DEBOOGER COMMAND SYSTEM - Cheat codes and developer tools -->
-    <script src="src/js/debug/debug-command-system.js?v=0.81"></script>
+    <script src="src/js/debooger/debooger-command-system.js?v=0.81"></script>
 
     <!-- 🖤 BOOTSTRAP - Coordinates initialization of all systems (loads last) -->
     <script src="src/js/init/bootstrap.js?v=0.81"></script>
@@ -1443,7 +1433,7 @@
             }
 
             console.log(`🎮 ${GameConfig.game.name} v${GameConfig.version.game} initialized`);
-            console.log(`🏢 Made by ${GameConfig.credits.studio}`);
+            console.log(`🏢 Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com`);
         }
     </script>
 
@@ -1451,7 +1441,7 @@
     <script>
         // 🐛 Global toggle function (backup - inline onclick is primary)
         window.toggleDebooger = function() {
-            var dc = document.getElementById('debug-console');
+            var dc = document.getElementById('debooger-console');
             if (dc) {
                 dc.style.display = (dc.style.display === 'none' || dc.style.display === '') ? 'flex' : 'none';
             }

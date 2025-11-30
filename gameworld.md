@@ -1,8 +1,8 @@
-# Game World Reference Data
+# Game World Reference Data 🗺️🖤
 
 **PURPOSE:** This file contains the RAW DATA for the game world. This is NOT for generating images - see `gameworldprompt.md` for that.
 
-This file is for developers who need to understand the world structure, add new locations, or debug game logic.
+This file is for developers who need to understand the world structure, add new locations, or debug game logic (debugging = fixing code, NOT the Debooger Console 🐛).
 
 ---
 

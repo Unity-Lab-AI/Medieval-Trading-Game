@@ -18,6 +18,133 @@ Each entry follows this format:
 
 ## Current Session
 
+### 2025-11-30 - GO Workflow (Full Codebase Audit)
+
+**Request:** GO - Full workflow triggered by Gee
+**Context:** Running complete codebase audit - bugs, missing features, dead code, performance, security. Then fix shit.
+**Status:** Completed ✅ 🖤
+
+**Audit Found:** 50+ issues across 6 agent scans (core, systems, UI, NPC, property, CSS/config)
+
+**Fixed This Session:**
+1. ✅ **XSS in combat-system.js:603,670-672** - Added escapeHtml() to combat log messages
+2. ✅ **Race condition in property-income.js:245-267** - Fixed forEach mutation by collecting IDs first
+3. ✅ **Crafting quality bonus exploit (crafting-engine.js:291-305)** - Capped bonus at 30% chance + 25% max output
+4. ✅ **navigateList() undefined bug (ui-enhancements.js:937)** - Fixed `newIndex = newIndex + 1` → `currentIndex + 1`
+5. ✅ **Transport innerHTML XSS + logic bug (game.js:8091-8116)** - Added escapeHtml() + fixed empty check
+6. ✅ **Z-index chaos (npc-systems.css)** - Replaced 10000/9999/5000/100000 with CSS variables
+
+**Files Modified:**
+- combat-system.js - Added escapeHtml() method, sanitized combat log
+- property-income.js - Fixed processRentPayments() race condition
+- crafting-engine.js - Added diminishing returns + cap to quality bonus
+- ui-enhancements.js - Fixed navigateList() undefined reference
+- game.js - Fixed populateTransportationOptions() XSS + logic
+- npc-systems.css - Fixed 4 hardcoded z-index values to use CSS variables
+
+**Still Pending (documented in todo.md):**
+- Exposed API credentials (config.js:172)
+- getTotalDays() calculation bug
+- Memory leaks from uncanceled timers
+- 15+ :has() CSS selectors (performance)
+- Incomplete faction benefits (npc-relationships.js)
+- Various null reference bugs
+
+---
+
+### 2025-11-29 - Trade Cart Panel System (NEW FEATURE)
+
+**Request:** Create a proper trade panel that opens when clicking buy buttons. Features: quantity selection, validation (gold, weight, stock), price tally, haggle system with TTS API, complete/cancel buttons.
+
+**Status:** Completed ✅
+
+**Implementation:**
+- Created `src/js/ui/panels/trade-cart-panel.js` - full shopping cart system
+- Modified `src/js/npc/npc-trade.js` - added Buy/Sell buttons to inventory items
+- Added CSS styles for `.item-trade-btn` in styles.css
+- Added script to index.html
+
+**TradeCartPanel Features:**
+1. **Cart Management**: Add items with buy buttons, adjust quantity with +/- or direct input
+2. **Real-time Validation**:
+   - 💰 Not enough gold check
+   - 🎒 Carry weight capacity check
+   - 📦 Stock availability check
+3. **Price Tally**: Subtotal, discount row (if haggled), final total, remaining gold preview
+4. **Haggle System**:
+   - Success chance based on: Charisma, Reputation, Speech skill
+   - 5-20% discount on success
+   - TTS/API integration for merchant dialogue
+   - One haggle attempt per transaction
+5. **Trade Completion**: Deducts gold, adds items to inventory, updates merchant stock
+
+**Flow:**
+```
+1. Open NPC trade window
+2. Click 🛒 Buy on any item → Opens TradeCartPanel
+3. Adjust quantities, see validation in real-time
+4. Optional: Click 🗣️ Haggle for discount
+5. Click ✅ Complete Trade or ❌ Cancel
+```
+
+---
+
+### 2025-11-29 - Starting Area & Zone Progression Overhaul (MASSIVE TASK)
+
+**Request:** Fix starting area - all outposts had passage fees, trapping players in starter zone. Redesign zone progression with proper toll gates and a "back path" to bypass the eastern toll via the south.
+
+**Zone Progression Design:**
+- 🏠 **Starter** → Always FREE (spawn zone)
+- 🌴 **Southern/Glendale** → FREE (natural expansion, no gatehouse)
+- 🌅 **Eastern** → 1,000g toll (early-mid game) OR sneak via south back path
+- ❄️ **Northern** → 10,000g toll (mid game)
+- 🏔️ **Western** → 50,000g toll (late game/endgame)
+- 👑 **Capital** → Always FREE (central hub)
+
+**Back Path (Free Eastern Access):**
+starter → greendale → sunhaven (south/FREE) → coastal_cave → smugglers_cove (eastern!)
+Players can grind in south, then sneak into eastern zone without paying 1k toll!
+
+**Status:** Completed ✅
+
+**Changes Made:**
+1. ✅ Southern zone = FREE (no gatehouse, accessible: true)
+2. ✅ Eastern gate = 1,000g (early-mid game)
+3. ✅ Northern gate = 10,000g (mid game)
+4. ✅ Western gate = 50,000g (late game)
+5. ✅ Back path logic in `canAccessLocation()` - checks connected zones
+6. ✅ "Already in zone" logic - once you sneak in, you can move freely
+7. ✅ Quest progression restructured for zone gates
+8. ✅ Zone-based trade bonuses added for balanced profit margins
+
+**Main Story Quest Chain (Restructured):**
+```
+1. main_prologue (greendale) - Tutorial, buy something
+2. main_rumors (greendale→sunhaven) - Go SOUTH first (FREE)
+3. main_eastern_clues (sunhaven→smugglers_cove) - Go EAST via back path
+4. main_investigation (smugglers_cove→ironforge) - Need 10,000g for north toll
+5. main_preparation (ironforge) - Gather supplies
+6. main_western_approach (ironforge→western_outpost) - Need 50,000g for west toll
+7. main_shadow_key (western_outpost) - Find the key in Overgrown Crypt
+8. main_tower_assault (western_outpost→shadow_dungeon) - Final boss!
+```
+
+**Trade Route Balancing (ZONE_TRADE_BONUSES):**
+```
+Starter → Southern: Buy wheat/grain cheap, sell fish/wine (20-30% profit)
+Southern → Eastern: Buy fish/pearls cheap, sell silk/spices (30-40% profit)
+Eastern → Northern: Buy silk/spices cheap, sell furs/ores (40-50% profit)
+Northern → Western: Buy furs/iron cheap, sell artifacts (50-60% profit)
+Western → Capital: Buy artifacts/gems cheap, sell premium (60-80% profit)
+```
+This creates natural progression - can't become a millionaire from one trade!
+
+**Files Modified:**
+- `src/js/systems/travel/gatehouse-system.js` - Zone fees, gatehouse definitions, back path logic, trade bonuses
+- `src/js/systems/progression/quest-system.js` - Main story chain restructured for zone progression
+
+---
+
 ### 2025-11-29 - Travel System Overhaul
 
 **Request:** Streamline travel - click destination = instant travel, no "Begin Travel" button. Destination stays visible until arrival then grays out with learned info. Floating pin/tack marker above player location.
@@ -773,7 +900,7 @@ Fixed `constrainToBounds()` in game-world-renderer.js:
 
 # 🔧 DEBUGGING & CONSOLE
 
-### Debooger Console
+### Debooger Console 🐛🖤
 **Request:**
 - Rename "Debug" to "Debooger" throughout code
 - Remove ` key ability to open debooger
@@ -785,14 +912,14 @@ Fixed `constrainToBounds()` in game-world-renderer.js:
 - Selling gold goes to personal inventory/wagon/cart
 **Status:** Pending
 
-### Debooger Visibility
+### Debooger Visibility 🐛
 **Request:**
 - Should be visible on start menu
 - Toggle on in config until final version
 - Separate readme (DebuggerReadme.md)
 **Status:** Pending
 
-### Debooger Auto-scroll
+### Debooger Auto-scroll 🐛
 **Request:** Lock to most recent timestamp, not initial initialization
 **Status:** Pending
 

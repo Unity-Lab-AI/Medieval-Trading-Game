@@ -32,31 +32,31 @@ const GatehouseSystem = {
         },
         northern: {
             name: 'Northern Territories',
-            description: 'Cold northern lands with valuable furs and minerals',
+            description: 'Cold northern lands with valuable furs and minerals. A harsh realm for seasoned traders.',
             accessible: false,
             gatehouse: 'northern_outpost',
-            fee: 100
+            fee: 10000 // 💀 Mid-game barrier - 10k gold to brave the frozen north
         },
         eastern: {
             name: 'Eastern Reaches',
-            description: 'Prosperous trading regions to the east',
+            description: 'Prosperous trading regions to the east. Rich markets await those who can afford entry.',
             accessible: false,
             gatehouse: 'eastern_gate',
-            fee: 125
+            fee: 1000 // 🦇 Early-mid game - 1k gold OR sneak through south
         },
         western: {
             name: 'Western Wilds',
-            description: 'Untamed western frontier with rare resources',
+            description: 'Untamed western frontier with rare resources. Only the wealthiest merchants dare enter.',
             accessible: false,
             gatehouse: 'western_outpost',
-            fee: 150
+            fee: 50000 // ⚰️ Late-game barrier - 50k gold for the endgame zone
         },
         southern: {
             name: 'Southern Coast',
-            description: 'Wealthy coastal cities and ports',
-            accessible: false,
-            gatehouse: 'southern_gate',
-            fee: 100
+            description: 'The Glendale region - a natural expansion from the starter area. Free passage for all traders.',
+            accessible: true, // 🖤 FREE! Natural progression from starter
+            gatehouse: null, // No gatehouse - always open
+            fee: 0
         },
         mountain: {
             name: 'Mountain Kingdom',
@@ -70,14 +70,14 @@ const GatehouseSystem = {
     // Gatehouse/Outpost definitions - uses existing GameWorld outposts as paywalls
     // These outposts control access to their respective zones
     GATEHOUSES: {
-        // Northern zone gatehouse (existing outpost)
+        // Northern zone gatehouse (existing outpost) - MID GAME 10k
         northern_outpost: {
             id: 'northern_outpost',
             name: 'Northern Outpost',
             type: 'gatehouse',
             icon: '🏰',
-            description: 'Military outpost controlling access to the Northern Territories. Pay the passage fee to explore the frozen north.',
-            fee: 100,
+            description: 'Military outpost controlling access to the Northern Territories. Only seasoned traders with 10,000 gold may pass.',
+            fee: 10000, // 💀 Mid-game barrier
             unlocksZone: 'northern',
             guards: 'Northern Guard',
             services: ['passage', 'supplies', 'weapons'],
@@ -98,14 +98,14 @@ const GatehouseSystem = {
             visibleAlways: true,
             useGameWorldLocation: true
         },
-        // Western zone gatehouse (existing outpost)
+        // Western zone gatehouse (existing outpost) - LATE GAME 50k
         western_outpost: {
             id: 'western_outpost',
             name: 'Western Watch',
             type: 'gatehouse',
             icon: '🏰',
-            description: 'Frontier outpost marking the edge of civilized lands. Beyond lies the Western Wilds with ancient forests and deep mines.',
-            fee: 150,
+            description: 'Frontier outpost marking the edge of civilized lands. Only the wealthiest merchants (50,000 gold) may enter the Western Wilds.',
+            fee: 50000, // ⚰️ Late-game barrier - endgame zone
             unlocksZone: 'western',
             guards: 'Frontier Rangers',
             services: ['passage', 'supplies', 'bounties'],
@@ -128,47 +128,33 @@ const GatehouseSystem = {
             virtualGate: true,
             nearLocation: 'greendale'
         },
-        // Eastern zone gatehouse
+        // Eastern zone gatehouse - EARLY-MID GAME 1k (or sneak through south)
         eastern_gate: {
             id: 'eastern_gate',
             name: 'Eastern Checkpoint',
             type: 'gatehouse',
             icon: '🏰',
-            description: 'The checkpoint to the prosperous Eastern Kingdoms. Traders pay tolls to access exotic markets.',
-            fee: 125,
+            description: 'The checkpoint to the prosperous Eastern Kingdoms. Pay 1,000 gold for direct access, or find the back path through the south.',
+            fee: 1000, // 🦇 Early-mid game - can bypass via south
             unlocksZone: 'eastern',
             guards: 'Eastern Merchants Guild',
             services: ['passage', 'trade_permits'],
             visibleAlways: true,
             virtualGate: true,
             nearLocation: 'jade_harbor'
-        },
-        // Southern zone gatehouse
-        southern_gate: {
-            id: 'southern_gate',
-            name: 'Coastal Gate',
-            type: 'gatehouse',
-            icon: '🏰',
-            description: 'The gateway to the Southern Coast. Pay the toll to access wealthy port cities.',
-            fee: 100,
-            unlocksZone: 'southern',
-            guards: 'Coastal Watch',
-            services: ['passage', 'shipping'],
-            visibleAlways: true,
-            virtualGate: true,
-            nearLocation: 'sunhaven'
         }
+        // 🖤 Southern/Glendale has NO gatehouse - FREE access from starter!
     },
 
     // Map zones to their controlling gatehouses
-    // Note: These are defaults - actual access depends on starting zone
+    // 🖤 Progression: starter → south (FREE) → east (1k or back path) → north (10k) → west (50k)
     ZONE_GATEHOUSES: {
-        'northern': 'northern_outpost',
+        'northern': 'northern_outpost',    // 💀 10,000g - mid game
         'northern_deep': 'winterwatch_outpost',
-        'western': 'western_outpost',
-        'eastern': 'eastern_gate',
-        'southern': 'southern_gate',
-        'capital': null,  // Capital ALWAYS accessible
+        'western': 'western_outpost',      // ⚰️ 50,000g - late game
+        'eastern': 'eastern_gate',         // 🦇 1,000g - early-mid (bypassable via south)
+        'southern': null,                  // 🖤 FREE! No gatehouse - natural expansion
+        'capital': null,                   // Capital ALWAYS accessible
         'starter': 'starter_gate'
     },
 
@@ -358,7 +344,8 @@ const GatehouseSystem = {
     },
 
     // Check if a location is accessible
-    canAccessLocation(locationId) {
+    // 🖤 Back path logic: if you can reach a location through connected FREE zones, you can access it
+    canAccessLocation(locationId, fromLocationId = null) {
         // Get location zone using our mapping first
         const zone = this.LOCATION_ZONES[locationId] || this.getLocationZone(locationId);
 
@@ -369,6 +356,11 @@ const GatehouseSystem = {
 
         // Your starting zone is ALWAYS accessible
         if (zone === this.startingZone) {
+            return { accessible: true, reason: null };
+        }
+
+        // 🦇 Southern zone is ALWAYS FREE - no gatehouse!
+        if (zone === 'southern') {
             return { accessible: true, reason: null };
         }
 
@@ -393,6 +385,34 @@ const GatehouseSystem = {
         const gatehouseId = this.ZONE_GATEHOUSES[zone];
         if (gatehouseId && this.unlockedGates.has(gatehouseId)) {
             return { accessible: true, reason: null };
+        }
+
+        // 💀 BACK PATH CHECK: If traveling from a connected accessible location, allow it!
+        // This enables: starter → south (free) → coastal_cave → smugglers_cove (eastern)
+        if (fromLocationId) {
+            const fromZone = this.LOCATION_ZONES[fromLocationId] || this.getLocationZone(fromLocationId);
+            const fromZoneInfo = this.ZONES[fromZone];
+
+            // If coming from an accessible zone and locations are connected, allow passage
+            if (fromZoneInfo?.accessible || fromZone === this.startingZone || fromZone === 'capital' || fromZone === 'southern') {
+                // Check if locations are actually connected in GameWorld
+                if (typeof GameWorld !== 'undefined' && GameWorld.locations) {
+                    const fromLoc = GameWorld.locations[fromLocationId];
+                    if (fromLoc?.connections?.includes(locationId)) {
+                        console.log(`🦇 Back path access granted: ${fromLocationId} → ${locationId}`);
+                        return { accessible: true, reason: null, backPath: true };
+                    }
+                }
+            }
+        }
+
+        // 🖤 Also check if player is currently IN the zone (already snuck in via back path)
+        if (typeof game !== 'undefined' && game.currentLocation) {
+            const currentZone = this.LOCATION_ZONES[game.currentLocation.id] || this.getLocationZone(game.currentLocation.id);
+            if (currentZone === zone) {
+                // Already in this zone - can move freely within it
+                return { accessible: true, reason: null, alreadyInZone: true };
+            }
         }
 
         // Zone is locked - need to pay at gatehouse
@@ -496,8 +516,11 @@ const GatehouseSystem = {
 
         if (originalStartTravel) {
             TravelSystem.startTravel = function(destinationId) {
-                // Check zone access
-                const access = self.canAccessLocation(destinationId);
+                // 🖤 Get current location for back path check
+                const fromLocationId = game?.currentLocation?.id || null;
+
+                // Check zone access (with back path support)
+                const access = self.canAccessLocation(destinationId, fromLocationId);
 
                 if (!access.accessible) {
                     // Show gatehouse prompt
@@ -508,7 +531,7 @@ const GatehouseSystem = {
                 // Proceed with travel
                 originalStartTravel(destinationId);
             };
-            console.log('🏰 Patched TravelSystem.startTravel for zone checking');
+            console.log('🏰 Patched TravelSystem.startTravel for zone checking (with back path support)');
         }
     },
 
@@ -687,6 +710,98 @@ const GatehouseSystem = {
         });
 
         return { accessible, locked };
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // 💰 ZONE-BASED PRICE MODIFIERS - balanced trade route profits
+    // ═══════════════════════════════════════════════════════════════
+    // 🖤 Each zone has specialty items that are cheaper to BUY there
+    // and items that are in demand (higher SELL price)
+    // This creates natural trade routes without one trade = millionaire
+    ZONE_TRADE_BONUSES: {
+        starter: {
+            // Starter zone - basic goods, balanced prices
+            cheapItems: ['wheat', 'grain', 'vegetables', 'bread', 'eggs'],
+            expensiveItems: ['silk', 'spices', 'gems', 'exotic_goods'],
+            buyMultiplier: 0.9,   // 10% cheaper to buy basics here
+            sellMultiplier: 1.0,  // Normal sell prices
+            description: 'Farming goods are cheap, exotic goods are expensive'
+        },
+        southern: {
+            // Southern zone - fish, wine, coastal goods
+            cheapItems: ['fish', 'wine', 'salt', 'rope', 'canvas', 'pearls', 'oil'],
+            expensiveItems: ['furs', 'iron_ore', 'coal', 'wool'],
+            buyMultiplier: 0.85,  // 15% cheaper for coastal goods
+            sellMultiplier: 1.15, // 15% more for northern goods
+            description: 'Coastal goods are cheap, cold-weather goods are valuable'
+        },
+        eastern: {
+            // Eastern zone - silk, spices, exotic
+            cheapItems: ['silk', 'spices', 'tea', 'exotic_goods', 'porcelain', 'jade'],
+            expensiveItems: ['iron_bar', 'steel_bar', 'weapons', 'armor', 'furs'],
+            buyMultiplier: 0.8,   // 20% cheaper for exotic goods
+            sellMultiplier: 1.25, // 25% more for metal goods
+            description: 'Eastern luxuries are cheap, metal goods are valuable'
+        },
+        northern: {
+            // Northern zone - furs, ores, metals
+            cheapItems: ['furs', 'iron_ore', 'coal', 'iron_bar', 'steel_bar', 'leather'],
+            expensiveItems: ['silk', 'spices', 'wine', 'exotic_goods', 'fruits'],
+            buyMultiplier: 0.75,  // 25% cheaper for cold-weather goods
+            sellMultiplier: 1.35, // 35% more for warm-weather luxuries
+            description: 'Northern resources are cheap, southern luxuries are valuable'
+        },
+        western: {
+            // Western zone - artifacts, rare items, endgame
+            cheapItems: ['artifacts', 'rare_gems', 'gems', 'crystals', 'timber', 'stone'],
+            expensiveItems: ['food', 'bread', 'ale', 'medical_plants', 'bandages'],
+            buyMultiplier: 0.7,   // 30% cheaper for rare items
+            sellMultiplier: 1.5,  // 50% more for survival supplies
+            description: 'Rare treasures are cheap, survival supplies are gold'
+        },
+        capital: {
+            // Capital - luxury goods, balanced high prices
+            cheapItems: ['royal_goods', 'luxury_items', 'jewelry', 'fine_clothes'],
+            expensiveItems: ['artifacts', 'rare_gems', 'silk', 'gems', 'gold_bar'],
+            buyMultiplier: 1.1,   // 10% MORE expensive (luxury tax)
+            sellMultiplier: 1.4,  // 40% more for rare treasures
+            description: 'Luxury goods available but taxed, rare items fetch premium'
+        }
+    },
+
+    // 💀 Get price modifier for an item at a location
+    getZonePriceModifier(locationId, itemId, isBuying) {
+        const zone = this.LOCATION_ZONES[locationId] || this.getLocationZone(locationId);
+        const zoneBonus = this.ZONE_TRADE_BONUSES[zone];
+
+        if (!zoneBonus) return 1.0; // No modifier
+
+        if (isBuying) {
+            // Player is BUYING from merchant
+            if (zoneBonus.cheapItems?.includes(itemId)) {
+                return zoneBonus.buyMultiplier; // Discounted
+            }
+        } else {
+            // Player is SELLING to merchant
+            if (zoneBonus.expensiveItems?.includes(itemId)) {
+                return zoneBonus.sellMultiplier; // Premium
+            }
+        }
+
+        return 1.0; // No special modifier
+    },
+
+    // 🦇 Get trade route suggestion for a zone
+    getTradeRouteSuggestion(fromZone) {
+        const routes = {
+            starter: { to: 'southern', buy: 'wheat/grain', sell: 'fish/wine', profit: '~20-30%' },
+            southern: { to: 'eastern', buy: 'fish/pearls', sell: 'silk/spices', profit: '~30-40%' },
+            eastern: { to: 'northern', buy: 'silk/spices', sell: 'furs/ores', profit: '~40-50%' },
+            northern: { to: 'western', buy: 'furs/iron_bar', sell: 'artifacts', profit: '~50-60%' },
+            western: { to: 'capital', buy: 'artifacts/gems', sell: 'premium', profit: '~60-80%' },
+            capital: { to: 'starter', buy: 'luxury_items', sell: 'to nobles', profit: 'prestige' }
+        };
+        return routes[fromZone] || null;
     }
 };
 

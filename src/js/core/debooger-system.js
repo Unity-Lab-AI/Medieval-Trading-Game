@@ -1,10 +1,10 @@
 // ═══════════════════════════════════════════════════════════════
-// 🐛 DEBOOGER SYSTEM - Opt-in debugging for the dark souls of code 🖤
+// 🐛 DEBOOGER SYSTEM - Opt-in deboogering for the dark souls of code 🖤
 // ═══════════════════════════════════════════════════════════════
 // disabled by default for performance, enable when you need to suffer 💀
-// File Version: GameConfig.version.file | Made by Unity AI Lab
+// File Version: GameConfig.version.file | Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 
-const DebugSystem = {
+const DeboogerSystem = {
     enabled: true,  // 🔥 ON by default - for the Super Hacker achievement 🖤💀
     maxEntries: 500, // prevent memory bloat like my todo list 🦇
     _initialized: false,
@@ -41,11 +41,11 @@ const DebugSystem = {
     setupConsoleCapture() {
         if (this._initialized) return;
 
-        const debugConsoleContent = () => document.getElementById('debug-console-content');
+        const deboogerConsoleContent = () => document.getElementById('debooger-console-content');
 
-        const addToDebugConsole = (type, args) => {
+        const addToDeboogerConsole = (type, args) => {
             if (!this.enabled) return;
-            const contentEl = debugConsoleContent();
+            const contentEl = deboogerConsoleContent();
             if (!contentEl) return;
 
             const timestamp = new Date().toLocaleTimeString();
@@ -72,25 +72,25 @@ const DebugSystem = {
         this._originalWarn = console.warn;
         this._originalError = console.error;
 
-        console.log = (...args) => { this._originalLog.apply(console, args); addToDebugConsole('log', args); };
-        console.warn = (...args) => { this._originalWarn.apply(console, args); addToDebugConsole('warn', args); };
-        console.error = (...args) => { this._originalError.apply(console, args); addToDebugConsole('error', args); };
+        console.log = (...args) => { this._originalLog.apply(console, args); addToDeboogerConsole('log', args); };
+        console.warn = (...args) => { this._originalWarn.apply(console, args); addToDeboogerConsole('warn', args); };
+        console.error = (...args) => { this._originalError.apply(console, args); addToDeboogerConsole('error', args); };
 
         this._initialized = true;
     }
 };
 
 // 🌙 expose to global scope 🦇
-window.DebugSystem = DebugSystem;
+window.DeboogerSystem = DeboogerSystem;
 
-// 🖤 AUTO-INIT - Debug system initializes itself on load
+// 🖤 AUTO-INIT - Debooger system initializes itself on load
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-        DebugSystem.init();
+        DeboogerSystem.init();
     });
 } else {
     // DOM already loaded, init now
-    DebugSystem.init();
+    DeboogerSystem.init();
 }
 
 console.log('🐛 Debooger System loaded!');

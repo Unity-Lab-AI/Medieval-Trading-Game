@@ -1347,8 +1347,11 @@ const GameWorldRenderer = {
             }
         }
 
-        // 🖤 Create marker if it doesn't exist - a floating tack/pin above the location icon
-        if (!this.playerMarker) {
+        // 🖤 Create marker if it doesn't exist OR if it was removed from DOM (render() clears innerHTML)
+        // Check if marker exists AND is still in the DOM - if not, recreate it
+        if (!this.playerMarker || !this.mapElement.contains(this.playerMarker)) {
+            // Reset the reference if it was orphaned
+            this.playerMarker = null;
             this.playerMarker = document.createElement('div');
             this.playerMarker.id = 'player-marker';
             this.playerMarker.className = 'player-marker';
@@ -1500,7 +1503,12 @@ const GameWorldRenderer = {
             startGameTime: typeof TimeSystem !== 'undefined' ? TimeSystem.getTotalMinutes() : 0
         };
 
+        // 🖤 CRITICAL: Ensure marker exists BEFORE applying traveling style
+        // Call updatePlayerMarker with start position to create marker if needed
+        this.updatePlayerMarker(scaledFrom.x, scaledFrom.y, true);
+
         // 🖤 Add traveling class to marker - the tack walks along the path 💀
+        // Now marker is guaranteed to exist after updatePlayerMarker call above
         if (this.playerMarker) {
             this.playerMarker.classList.add('traveling');
             // Switch to walking animation (defined in CSS above)
@@ -1516,11 +1524,22 @@ const GameWorldRenderer = {
             }
         }
 
+        console.log('🗺️ animateTravel: Starting travel animation', {
+            from: fromLocationId,
+            to: toLocationId,
+            duration: travelTimeMinutes,
+            startTime: this.currentTravel.startGameTime,
+            markerExists: !!this.playerMarker
+        });
+
         // Start the animation loop
         this.runTravelAnimation();
     },
 
     // 🔄 keep the travel animation going - time waits for no one (unless paused)
+    // 🖤 Track last logged progress for rate-limited logging
+    _lastLoggedProgress: -1,
+
     runTravelAnimation() {
         if (!this.currentTravel) return;
 
@@ -1538,6 +1557,19 @@ const GameWorldRenderer = {
 
             // Store progress for UI display
             travel.currentProgress = progress;
+
+            // 🖤 Rate-limited debooger logging 🦇 - every 10% progress
+            const progressPct = Math.floor(progress * 10);
+            if (progressPct > this._lastLoggedProgress) {
+                this._lastLoggedProgress = progressPct;
+                console.log(`🗺️ Travel progress: ${Math.round(progress * 100)}%`, {
+                    currentTime: currentGameTime,
+                    startTime: travel.startGameTime,
+                    elapsed,
+                    duration: travel.durationMinutes,
+                    isPaused
+                });
+            }
         } else {
             // Fallback if TimeSystem not available
             progress = 1;
@@ -1584,8 +1616,10 @@ const GameWorldRenderer = {
 
     // ✅ the journey is over... for now 🖤
     completeTravelAnimation() {
+        console.log('🗺️ Travel animation complete!');
         this.travelAnimation = null;
         this.currentTravel = null;
+        this._lastLoggedProgress = -1; // Reset progress tracking for next travel
 
         if (this.playerMarker) {
             this.playerMarker.classList.remove('traveling');
@@ -1661,8 +1695,10 @@ const GameWorldRenderer = {
 
     // 🗺️ called when you decide to leave your current misery for different misery
     onTravelStart(fromId, toId, travelTimeMinutes) {
-        console.log(`🗺️ Travel animation: ${fromId} -> ${toId}, duration: ${travelTimeMinutes} game minutes`);
+        console.log(`🗺️ GameWorldRenderer.onTravelStart: ${fromId} -> ${toId}, duration: ${travelTimeMinutes} game minutes`);
+        console.log('🗺️ Player marker exists:', !!this.playerMarker);
         this.animateTravel(fromId, toId, travelTimeMinutes);
+        console.log('🗺️ After animateTravel - currentTravel:', !!this.currentTravel);
     },
 
     // 🛑 when you chicken out or the universe intervenes

@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 // File Version: GameConfig.version.file
 // Game Version: 0.6
-// Made by Unity AI Lab - Hackall360, Sponge, GFourteen
+// Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 // ═══════════════════════════════════════════════════════════════
 // listen, this whole file is basically my 3am coding aesthetic
 // if you're reading this during normal human hours, i'm judging you
@@ -20,7 +20,7 @@ setTimeout(() => {
     console.log('🖤 game.js exports ready');
 }, 0);
 
-// 🖤 NOTE: DebugSystem is defined in debug-system.js (loaded before this file)
+// 🖤 NOTE: DeboogerSystem is defined in debooger-system.js (loaded before this file)
 // Removed duplicate declaration to prevent "Identifier already declared" error
 
 // 🖤 Escape HTML to prevent XSS attacks - dark magic for security
@@ -31,13 +31,122 @@ function escapeHtml(str) {
     })[char]);
 }
 
-// 🖤 Debug-only logging helper - only logs warnings in debug mode, silent in production
-// Note: Using gameDebugWarn to avoid conflict with button-fix.js debugWarn
-const gameDebugWarn = (msg) => {
-    if (typeof GameConfig !== 'undefined' && GameConfig.debug?.enabled) {
+// 🖤 Debooger-only logging helper - only logs warnings in debooger mode, silent in production 🦇
+// Note: Using gameDeboogerWarn to avoid conflict with button-fix.js deboogerWarn
+const gameDeboogerWarn = (msg) => {
+    if (typeof GameConfig !== 'undefined' && GameConfig.debooger?.enabled) {
         console.warn(msg);
     }
 };
+
+// 🦇 COMPACT GOLD FORMATTER - handles billions and trillions 💀
+// Use this for UI displays that need to fit large numbers
+function formatGoldCompact(amount) {
+    if (amount === undefined || amount === null) return '0';
+    const num = Math.abs(amount);
+    const sign = amount < 0 ? '-' : '';
+    if (num >= 1000000000000) return `${sign}${(num / 1000000000000).toFixed(1)}T`;
+    if (num >= 1000000000) return `${sign}${(num / 1000000000).toFixed(1)}B`;
+    if (num >= 1000000) return `${sign}${(num / 1000000).toFixed(1)}M`;
+    if (num >= 10000) return `${sign}${(num / 1000).toFixed(1)}K`;
+    return amount.toLocaleString();
+}
+window.formatGoldCompact = formatGoldCompact; // 🖤 Expose globally
+
+// 🖤 DEDUPE LOGGER - prevents console spam from repetitive messages 💀
+// Only logs when the message changes or enough time has passed
+const DedupeLogger = {
+    // Store last message for each category
+    lastMessages: {},
+    lastTimes: {},
+    // Minimum interval between identical logs (ms)
+    minInterval: 5000, // 5 seconds
+
+    // Log with deduplication - only logs if message changed or interval passed
+    log(category, message, ...args) {
+        const now = Date.now();
+        const key = category;
+        const lastMsg = this.lastMessages[key];
+        const lastTime = this.lastTimes[key] || 0;
+
+        // Skip if same message within interval
+        if (lastMsg === message && (now - lastTime) < this.minInterval) {
+            return false;
+        }
+
+        // Log and update tracking
+        console.log(message, ...args);
+        this.lastMessages[key] = message;
+        this.lastTimes[key] = now;
+        return true;
+    },
+
+    // Warn with deduplication
+    warn(category, message, ...args) {
+        const now = Date.now();
+        const key = 'warn_' + category;
+        const lastMsg = this.lastMessages[key];
+        const lastTime = this.lastTimes[key] || 0;
+
+        if (lastMsg === message && (now - lastTime) < this.minInterval) {
+            return false;
+        }
+
+        console.warn(message, ...args);
+        this.lastMessages[key] = message;
+        this.lastTimes[key] = now;
+        return true;
+    },
+
+    // Log only when value changes (for numeric values like particle counts)
+    logOnChange(category, message, value) {
+        const key = 'val_' + category;
+        const lastVal = this.lastMessages[key];
+
+        // Skip if value is the same
+        if (lastVal === value) {
+            return false;
+        }
+
+        console.log(message);
+        this.lastMessages[key] = value;
+        return true;
+    },
+
+    // Clear tracking for a category (use when context changes)
+    clear(category) {
+        delete this.lastMessages[category];
+        delete this.lastMessages['warn_' + category];
+        delete this.lastMessages['val_' + category];
+        delete this.lastTimes[category];
+        delete this.lastTimes['warn_' + category];
+    },
+
+    // Clear all tracking
+    clearAll() {
+        this.lastMessages = {};
+        this.lastTimes = {};
+    },
+
+    // Rate-limited log - logs at most once per interval regardless of message
+    // Use for things that naturally spam but you want occasional visibility
+    rateLimit(category, message, intervalMs = 10000, ...args) {
+        const now = Date.now();
+        const key = 'rate_' + category;
+        const lastTime = this.lastTimes[key] || 0;
+
+        if ((now - lastTime) < intervalMs) {
+            return false;
+        }
+
+        console.log(message, ...args);
+        this.lastTimes[key] = now;
+        return true;
+    }
+};
+
+// Make globally available
+window.DedupeLogger = DedupeLogger;
 
 // 🖤 REFACTORED: Removed global click handler that caught EVERY click
 // Instead, use targeted event delegation on specific containers
@@ -54,8 +163,8 @@ document.addEventListener('input', function(e) {
     }
 }, { passive: true });
 
-// Expose for manual debugging
-window.DebugSystem = DebugSystem;
+// 🦇 Expose for manual deboogering 💀
+window.DeboogerSystem = DeboogerSystem;
 
 // 🖤 NOTE: CurrentTaskSystem is defined in current-task-system.js (loaded before this file)
 // Removed duplicate declaration to prevent "Identifier already declared" error
@@ -1039,7 +1148,7 @@ const KeyBindings = {
             if (container) {
                 container.appendChild(overlay);
             } else {
-                gameDebugWarn('🖤 overlay-container NOT FOUND - appending to body');
+                gameDeboogerWarn('🖤 overlay-container NOT FOUND - appending to body');
                 document.body.appendChild(overlay);
             }
 
@@ -1208,7 +1317,7 @@ const KeyBindings = {
 END OF EXTRACTED KeyBindings */
 
 // ═══════════════════════════════════════════════════════════════
-// 📝 GAME LOG MANAGER - tracking everything for debugging
+// 📝 GAME LOG MANAGER - tracking everything for deboogering 🦇
 // ═══════════════════════════════════════════════════════════════
 const GameLogger = {
     logs: [],
@@ -1258,7 +1367,7 @@ const GameLogger = {
             'ERROR': '❌',
             'WARNING': '⚠️',
             'SUCCESS': '✅',
-            'DEBUG': '🔍'
+            'DEBOOGER': '🔍'
         };
         return emojis[category] || '📝';
     },
@@ -1343,7 +1452,7 @@ window.showLogs = () => GameLogger.printLogs();
 window.downloadLogs = () => GameLogger.downloadLogs();
 window.clearLogs = () => GameLogger.clear();
 
-// 🔍 DEBUG HELPER - test difficulty system manually from console
+// 🔍 DEBOOGER HELPER - test difficulty system manually from console 🦇
 window.testDifficulty = (difficulty = 'easy') => {
     console.log('🔥🔥🔥 MANUAL DIFFICULTY TEST 🔥🔥🔥');
     console.log('Testing difficulty:', difficulty);
@@ -1363,7 +1472,7 @@ window.testDifficulty = (difficulty = 'easy') => {
         if (typeof onDifficultyChange === 'function') {
             onDifficultyChange();
         } else {
-            gameDebugWarn('🖤 onDifficultyChange function not found');
+            gameDeboogerWarn('🖤 onDifficultyChange function not found');
         }
 
         // Check the gold display
@@ -1371,14 +1480,14 @@ window.testDifficulty = (difficulty = 'easy') => {
         console.log('Gold display element:', goldEl);
         console.log('Gold display text:', goldEl ? goldEl.textContent : 'NOT FOUND');
     } else {
-        gameDebugWarn(`🖤 Radio button not found for difficulty: ${difficulty}`);
+        gameDeboogerWarn(`🖤 Radio button not found for difficulty: ${difficulty}`);
     }
 
     console.log('GameLogger entries:', GameLogger.logs.length);
     console.log('Call showLogs() to see all logs');
 };
 
-// 🔍 DEBUG HELPER - test attribute system manually from console
+// 🔍 DEBOOGER HELPER - test attribute system manually from console 💀
 window.testAttribute = (attr = 'strength', direction = 'up') => {
     console.log('🔥🔥🔥 MANUAL ATTRIBUTE TEST 🔥🔥🔥');
     console.log('Testing attribute:', attr, 'direction:', direction);
@@ -1403,7 +1512,7 @@ window.testAttribute = (attr = 'strength', direction = 'up') => {
     });
 };
 
-// 🔍 DEBUG HELPER - check button states
+// 🔍 DEBOOGER HELPER - check button states 🦇
 window.checkButtons = () => {
     console.log('🔥🔥🔥 CHECKING ALL ATTRIBUTE BUTTONS 🔥🔥🔥');
     const buttons = document.querySelectorAll('.attr-btn');
@@ -1579,21 +1688,25 @@ const TimeSystem = {
             return;
         }
 
-        // Check GameWorldRenderer for pending destination
+        // 🖤 First try TravelPanelMap's onGameUnpaused (handles the full travel flow)
+        if (typeof TravelPanelMap !== 'undefined' && TravelPanelMap.currentDestination && TravelPanelMap.onGameUnpaused) {
+            TravelPanelMap.onGameUnpaused();
+            return; // TravelPanelMap handles everything, don't double-call
+        }
+
+        // 🔮 Fallback: Check GameWorldRenderer for pending destination only
         let destinationId = null;
 
         if (typeof GameWorldRenderer !== 'undefined' && GameWorldRenderer.currentDestination) {
             destinationId = GameWorldRenderer.currentDestination.id;
-        } else if (typeof TravelPanelMap !== 'undefined' && TravelPanelMap.currentDestination) {
-            destinationId = TravelPanelMap.currentDestination.id;
         }
 
-        // Got somewhere to go? lets roll
-        if (destinationId && typeof TravelSystem !== 'undefined' && TravelSystem.travelTo) {
+        // Got somewhere to go? lets roll - use startTravel not travelTo
+        if (destinationId && typeof TravelSystem !== 'undefined' && TravelSystem.startTravel) {
             // Make sure its not our current location (that would be silly)
             if (typeof game !== 'undefined' && game.currentLocation?.id !== destinationId) {
                 console.log(`🚶 Auto-starting travel to ${destinationId} - time waits for no one`);
-                TravelSystem.travelTo(destinationId);
+                TravelSystem.startTravel(destinationId);
             }
         }
     },
@@ -4581,11 +4694,11 @@ const GoldManager = {
         // Register setup gold display (character creation panel)
         const setupRegistered = this.registerDisplay('setup-gold-amount');
         if (!setupRegistered) {
-            gameDebugWarn('🖤 setup-gold-amount element not found in DOM');
+            gameDeboogerWarn('🖤 setup-gold-amount element not found in DOM');
         }
 
-        // Register player gold display (side panel - just the number)
-        const playerRegistered = this.registerDisplay('player-gold', (gold) => gold.toLocaleString());
+        // Register player gold display (side panel - just the number) 🦇
+        const playerRegistered = this.registerDisplay('player-gold', (gold) => formatGoldCompact(gold));
         if (!playerRegistered) {
             console.warn('🪙 player-gold not found (may not be visible yet)');
         }
@@ -4625,7 +4738,7 @@ if (document.readyState === 'loading') {
     console.log('🪙 Setting up GoldManager...');
     GoldManager.init(100);
     GoldManager.registerDisplay('setup-gold-amount'); // Character creation display
-    GoldManager.registerDisplay('player-gold', (gold) => gold.toLocaleString()); // Side panel display
+    GoldManager.registerDisplay('player-gold', (gold) => formatGoldCompact(gold)); // 🦇 Side panel display - compact for billions 💀
     console.log('🪙 GoldManager setup complete');
 
     // Initialize Keyboard Bindings
@@ -4652,7 +4765,7 @@ if (document.readyState === 'loading') {
     console.log('🪙 Setting up GoldManager...');
     GoldManager.init(100);
     GoldManager.registerDisplay('setup-gold-amount');
-    GoldManager.registerDisplay('player-gold', (gold) => gold.toLocaleString());
+    GoldManager.registerDisplay('player-gold', (gold) => formatGoldCompact(gold)); // 🦇 Compact for billions 💀
     console.log('🪙 GoldManager setup complete');
 
     // Initialize Keyboard Bindings
@@ -4845,7 +4958,7 @@ function setupEventListeners() {
             randomizeCharacter();
         });
     } else {
-        gameDebugWarn('🖤 randomize-character-btn element not found');
+        gameDeboogerWarn('🖤 randomize-character-btn element not found');
     }
     // 🖤 Guard character name input - may not exist on all pages
     if (elements.characterNameInput) {
@@ -4953,7 +5066,7 @@ function setupEventListeners() {
             createCharacter(e);
         });
     } else {
-        gameDebugWarn('🖤 start-game-btn element not found');
+        gameDeboogerWarn('🖤 start-game-btn element not found');
     }
     if (cancelSetupBtn) {
         EventManager.addEventListener(cancelSetupBtn, 'click', cancelGameSetup);
@@ -5093,7 +5206,7 @@ function setupEventListeners() {
         console.log('⏰ TimeMachine.setSpeed wrapped to sync game UI');
     }
 
-    // 🖤 Verify time buttons exist in DOM for debugging
+    // 🖤 Verify time buttons exist in DOM for deboogering 🦇
     console.log('⏰ Time control buttons status:', {
         pauseBtn: !!document.getElementById('pause-btn'),
         normalSpeedBtn: !!document.getElementById('normal-speed-btn'),
@@ -5159,7 +5272,7 @@ function changeState(newState) {
                 GameWorldRenderer.init();
                 console.log('GameWorldRenderer initialized - the void now has pretty dots');
             } else {
-                gameDebugWarn('🖤 GameWorldRenderer not found');
+                gameDeboogerWarn('🖤 GameWorldRenderer not found');
             }
             // 🎮 Start the GameEngine for time and travel management
             if (typeof GameEngine !== 'undefined') {
@@ -5299,12 +5412,12 @@ function setupDifficultyListeners() {
     console.log('  - Radio buttons found:', difficultyRadios.length);
 
     if (!difficultyContainer) {
-        gameDebugWarn('🖤 difficulty-selection container not found');
+        gameDeboogerWarn('🖤 difficulty-selection container not found');
         return;
     }
 
     if (difficultyRadios.length === 0) {
-        gameDebugWarn('🖤 No difficulty radio buttons found');
+        gameDeboogerWarn('🖤 No difficulty radio buttons found');
         return;
     }
 
@@ -5806,10 +5919,10 @@ function updatePerkSelection() {
             console.log('Initialized elements.selectedPerksCount');
         }
     } else {
-        gameDebugWarn('🖤 Counter element not found');
+        gameDeboogerWarn('🖤 Counter element not found');
         console.log('Looking for element with id: selected-perks-count');
-        const debugElement = document.getElementById('selected-perks-count');
-        console.log('Direct getElementById result:', debugElement);
+        const deboogerElement = document.getElementById('selected-perks-count');
+        console.log('Direct getElementById result:', deboogerElement);
         console.log('document.readyState:', document.readyState);
     }
 
@@ -5859,7 +5972,7 @@ function openPerkModal() {
     // Get modal element
     const modal = document.getElementById('perk-selection-modal');
     if (!modal) {
-        gameDebugWarn('🖤 Perk modal not found');
+        gameDeboogerWarn('🖤 Perk modal not found');
         alert('Error: Perk selection modal not found!');
         return;
     }
@@ -5870,7 +5983,7 @@ function openPerkModal() {
     }
 
     if (!elements.perksContainer) {
-        gameDebugWarn('🖤 Perks container not found');
+        gameDeboogerWarn('🖤 Perks container not found');
         alert('Error: Perks container not found!');
         return;
     }
@@ -5920,7 +6033,7 @@ function confirmPerkSelection() {
 function displaySelectedPerks() {
     const container = document.getElementById('selected-perks-display');
     if (!container) {
-        gameDebugWarn('🖤 Selected perks display container not found');
+        gameDeboogerWarn('🖤 Selected perks display container not found');
         return;
     }
 
@@ -6159,7 +6272,7 @@ function setupAttributeButtons() {
     // Find the attributes grid container
     const attributesGrid = document.querySelector('.attributes-grid');
     if (!attributesGrid) {
-        gameDebugWarn('🖤 attributes-grid container not found');
+        gameDeboogerWarn('🖤 attributes-grid container not found');
         return;
     }
 
@@ -6270,7 +6383,7 @@ function increaseAttribute(attrName) {
             attrElement.innerHTML = `<strong>${newValue}</strong>`;
             console.log(`💥 FORCED UI UPDATE: #attr-${attrName} = ${newValue}`);
         } else {
-            gameDebugWarn(`🖤 Element #attr-${attrName} not found`);
+            gameDeboogerWarn(`🖤 Element #attr-${attrName} not found`);
         }
 
         if (pointsElement) {
@@ -6280,7 +6393,7 @@ function increaseAttribute(attrName) {
             pointsElement.innerHTML = `<strong style="color: red; font-size: 24px;">${newPoints}</strong>`;
             console.log(`💥 FORCED UI UPDATE: Points = ${newPoints}`);
         } else {
-            gameDebugWarn('🖤 Element #attr-points-remaining not found');
+            gameDeboogerWarn('🖤 Element #attr-points-remaining not found');
         }
 
         calculateCharacterStats(); // Recalculate final attributes with perks
@@ -6322,7 +6435,7 @@ function decreaseAttribute(attrName) {
             attrElement.innerHTML = `<strong>${newValue}</strong>`;
             console.log(`💥 FORCED UI UPDATE: #attr-${attrName} = ${newValue}`);
         } else {
-            gameDebugWarn(`🖤 Element #attr-${attrName} not found`);
+            gameDeboogerWarn(`🖤 Element #attr-${attrName} not found`);
         }
 
         if (pointsElement) {
@@ -6332,7 +6445,7 @@ function decreaseAttribute(attrName) {
             pointsElement.innerHTML = `<strong style="color: red; font-size: 24px;">${newPoints}</strong>`;
             console.log(`💥 FORCED UI UPDATE: Points = ${newPoints}`);
         } else {
-            gameDebugWarn('🖤 Element #attr-points-remaining not found');
+            gameDeboogerWarn('🖤 Element #attr-points-remaining not found');
         }
 
         calculateCharacterStats(); // Recalculate final attributes with perks
@@ -6383,7 +6496,7 @@ function updateAttributeDisplay() {
                 attrElement.style.fontWeight = '';
             }, 300);
         } else {
-            gameDebugWarn(`🖤 Element #attr-${attr} not found`);
+            gameDeboogerWarn(`🖤 Element #attr-${attr} not found`);
         }
     }
 
@@ -6420,7 +6533,7 @@ function updateAttributeDisplay() {
             pointsElement.style.color = '';
         }, 300);
     } else {
-        gameDebugWarn('🖤 Points element not found');
+        gameDeboogerWarn('🖤 Points element not found');
     }
 
     // Update button states (based on MANUAL values, not final)
@@ -6778,7 +6891,7 @@ function onDifficultyChange() {
 
     // Update character creation state
     if (!characterCreationState) {
-        gameDebugWarn('🖤 characterCreationState is undefined');
+        gameDeboogerWarn('🖤 characterCreationState is undefined');
         return;
     }
 
@@ -6797,7 +6910,7 @@ function onDifficultyChange() {
         setupGoldElement.textContent = characterCreationState.currentGold;
         console.log('💰 FORCED setup-gold-amount to:', characterCreationState.currentGold);
     } else {
-        gameDebugWarn('🖤 setup-gold-amount element not found');
+        gameDeboogerWarn('🖤 setup-gold-amount element not found');
     }
 
     // FORCE GoldManager to update all displays
@@ -6808,14 +6921,14 @@ function onDifficultyChange() {
     console.log('═══════════════════════════════════════');
 }
 
-// 🖤 Expose functions for debugging 🖤
+// 🖤 Expose functions for deboogering 💀
 window.onDifficultyChange = onDifficultyChange;
 
 // Helper function to set difficulty from console
 window.setDifficulty = function(difficulty) {
     const validDifficulties = ['easy', 'normal', 'hard'];
     if (!validDifficulties.includes(difficulty)) {
-        gameDebugWarn('🖤 Invalid difficulty - use: easy, normal, or hard');
+        gameDeboogerWarn('🖤 Invalid difficulty - use: easy, normal, or hard');
         return;
     }
 
@@ -6838,7 +6951,7 @@ window.setDifficulty = function(difficulty) {
         // Also call directly
         onDifficultyChange();
     } else {
-        gameDebugWarn('🖤 Radio button not found');
+        gameDeboogerWarn('🖤 Radio button not found');
     }
 };
 
@@ -7124,7 +7237,7 @@ function updatePlayerInfo() {
         } else {
             elements.playerName.textContent = game.player.name;
         }
-        elements.playerGold.textContent = game.player.gold.toLocaleString();
+        elements.playerGold.textContent = formatGoldCompact(game.player.gold); // 🦇 Compact for billions 💀
 
         // Update attribute displays
         if (elements.playerStrength) elements.playerStrength.textContent = game.player.attributes.strength;
@@ -7586,39 +7699,85 @@ function populateMarketItems() {
         return;
     }
     
+    const currentLocation = GameWorld.locations[game.currentLocation.id];
+
     for (const [itemId, quantity] of Object.entries(game.player.inventory)) {
         if (quantity <= 0) continue;
-        
+
         const item = ItemDatabase.getItem(itemId);
         if (!item) continue;
-        
-        const location = GameWorld.locations[game.currentLocation.id];
-        const reputationModifier = CityReputationSystem.getPriceModifier(location.id);
+
+        const reputationModifier = CityReputationSystem.getPriceModifier(currentLocation.id);
         const baseSellPrice = Math.round(ItemDatabase.calculatePrice(itemId) * 0.7);
         const sellPrice = Math.round(baseSellPrice * reputationModifier);
-        
+
         const itemElement = document.createElement('div');
         itemElement.className = `market-item ${item.rarity} ${TradingSystem.selectedTradeItems.has(itemId) ? 'selected' : ''}`;
         itemElement.dataset.itemId = itemId;
-        
-        // 🖤 XSS fix: use data attribute instead of inline onclick
+
+        // 🖤 Click on item to add to sell cart - no separate buttons needed!
         itemElement.innerHTML = `
             <div class="item-icon">${item.icon}</div>
             <div class="item-name">${item.name}</div>
             <div class="item-quantity">×${quantity}</div>
             <div class="item-price">${sellPrice} gold</div>
             <div class="item-weight">${ItemDatabase.calculateWeight(itemId, quantity).toFixed(1)} lbs</div>
-            <button class="sell-item-btn" data-item-id="${escapeHtml(itemId)}">Sell</button>
         `;
-        // 💀 Attach sell button event listener safely
-        const sellBtn = itemElement.querySelector('.sell-item-btn');
-        if (sellBtn) sellBtn.onclick = () => sellItem(sellBtn.dataset.itemId);
+
+        // 🛒 Store data on the element for cart
+        itemElement.dataset.price = sellPrice;
+        itemElement.dataset.stock = quantity;
+        itemElement.dataset.itemName = item.name;
+        itemElement.dataset.itemIcon = item.icon;
+        itemElement.dataset.itemWeight = item.weight;
+
+        // 💀 Click anywhere on the item box to add to sell cart
+        itemElement.style.cursor = 'pointer';
+        itemElement.onclick = (e) => {
+            // Don't interfere with bulk mode selection
+            if (TradingSystem.tradeMode === 'bulk' && (e.shiftKey || e.ctrlKey || e.altKey)) return;
+
+            // 🛒 Open TradeCartPanel in SELL mode and add item
+            if (typeof TradeCartPanel !== 'undefined') {
+                const price = parseInt(itemElement.dataset.price, 10) || 0;
+                const stock = parseInt(itemElement.dataset.stock, 10) || 1;
+                const itemName = itemElement.dataset.itemName || itemId;
+                const itemIcon = itemElement.dataset.itemIcon || '📦';
+                const itemWeight = parseFloat(itemElement.dataset.itemWeight) || 1;
+
+                // Create merchant data from current location
+                const merchantData = {
+                    name: currentLocation.name + ' Market',
+                    id: currentLocation.id,
+                    type: 'market',
+                    inventory: currentLocation.marketPrices
+                };
+
+                // Ensure cart is open in SELL mode
+                if (!TradeCartPanel.isOpen) {
+                    TradeCartPanel.open(merchantData, 'sell');
+                }
+                // Add item to cart
+                TradeCartPanel.addItem(itemId, price, stock, {
+                    name: itemName,
+                    icon: itemIcon,
+                    weight: itemWeight
+                });
+
+                // Visual feedback - flash the item
+                itemElement.classList.add('added-to-cart');
+                setTimeout(() => itemElement.classList.remove('added-to-cart'), 300);
+            } else {
+                // Fallback to direct sell if TradeCartPanel not loaded
+                sellItem(itemId);
+            }
+        };
 
         // Add event listeners for bulk selection
         if (TradingSystem.tradeMode === 'bulk') {
             EventManager.addEventListener(itemElement, 'click', (e) => {
                 if (e.shiftKey || e.ctrlKey || e.altKey) return;
-                
+
                 if (TradingSystem.selectedTradeItems.has(itemId)) {
                     TradingSystem.selectedTradeItems.delete(itemId);
                     itemElement.classList.remove('selected');
@@ -7626,16 +7785,16 @@ function populateMarketItems() {
                     TradingSystem.selectedTradeItems.set(itemId, 1);
                     itemElement.classList.add('selected');
                 }
-                
+
                 TradingSystem.updateTradeSummary();
             });
-            
+
             EventManager.addEventListener(itemElement, 'contextmenu', (e) => {
                 e.preventDefault();
                 TradingSystem.updateTradePreview(itemId, 1);
             });
         }
-        
+
         sellItemsContainer.appendChild(itemElement);
     }
 }
@@ -7931,27 +8090,33 @@ function updateTransportationInfo() {
 
 function populateTransportationOptions() {
     const container = document.getElementById('transportation-options');
+    if (!container) return; // 🖤 Null check 💀
     container.innerHTML = '';
-    
+
+    let hasOptions = false; // 🦇 Track if we added anything (fix empty check)
+
     for (const [key, transport] of Object.entries(transportationOptions)) {
         // Skip if player already owns this transportation
         if (game.player.ownedTransportation.includes(key)) {
             continue;
         }
-        
+
+        hasOptions = true; // 🖤 We have at least one option
         const transportElement = document.createElement('div');
         transportElement.className = 'item';
+        // 🛡️ XSS fix: escape all user-facing data 🦇
         transportElement.innerHTML = `
-            <div class="item-name">${transport.name}</div>
-            <div class="item-price">${transport.price} gold</div>
-            <div class="item-quantity">Capacity: ${transport.carryCapacity} lbs</div>
+            <div class="item-name">${escapeHtml(transport.name)}</div>
+            <div class="item-price">${escapeHtml(String(transport.price))} gold</div>
+            <div class="item-quantity">Capacity: ${escapeHtml(String(transport.carryCapacity))} lbs</div>
         `;
-        
+
         EventManager.addEventListener(transportElement, 'click', () => purchaseTransportation(key));
         container.appendChild(transportElement);
     }
-    
-    if (container.innerHTML === '') {
+
+    // 🖤 FIXED: check hasOptions flag instead of innerHTML (which would never be empty after loop) 💀
+    if (!hasOptions) {
         container.innerHTML = '<p>You own all available transportation options!</p>';
     }
 }
@@ -8021,13 +8186,24 @@ function switchTransportation(transportId) {
 
 function calculateCurrentLoad() {
     if (!game.player || !game.player.inventory) return 0;
-    
+
     let totalWeight = 0;
+
+    // Count inventory items weight
     for (const [itemId, quantity] of Object.entries(game.player.inventory)) {
         if (itemId === 'gold') continue; // Gold doesn't count toward weight
         totalWeight += ItemDatabase.calculateWeight(itemId, quantity);
     }
-    
+
+    // Count equipped items weight - you still carry what you wear!
+    if (game.player.equipment) {
+        for (const [slotId, itemId] of Object.entries(game.player.equipment)) {
+            if (itemId) {
+                totalWeight += ItemDatabase.calculateWeight(itemId, 1);
+            }
+        }
+    }
+
     return totalWeight;
 }
 
@@ -8414,7 +8590,8 @@ function updateMarketDisplay() {
         itemElement.className = `market-item ${item.rarity} ${isSpecial ? 'special' : ''} ${TradingSystem.selectedTradeItems.has(itemId) ? 'selected' : ''}`;
         itemElement.dataset.itemId = itemId;
         
-        // 🖤 XSS fix: use data attribute instead of inline onclick
+        // 🖤 XSS fix: use data attributes
+        // 🛒 Clicking the item box adds to TradeCartPanel - no separate Buy button needed!
         itemElement.innerHTML = `
             ${trend !== 'stable' ? `<div class="item-trend ${trendClass}">${trendIcon}</div>` : ''}
             <div class="item-icon">${item.icon}</div>
@@ -8423,11 +8600,56 @@ function updateMarketDisplay() {
             <div class="item-stock">Stock: ${marketData.stock}</div>
             <div class="item-weight">${item.weight} lbs</div>
             ${demandText ? `<div class="item-demand ${demandClass}">${demandText}</div>` : ''}
-            <button class="buy-item-btn" data-item-id="${escapeHtml(itemId)}">Buy</button>
         `;
-        // 💀 Attach buy button event listener safely
-        const buyBtn = itemElement.querySelector('.buy-item-btn');
-        if (buyBtn) buyBtn.onclick = () => buyItem(buyBtn.dataset.itemId);
+
+        // 🛒 Store data on the element for cart
+        itemElement.dataset.price = marketData.price;
+        itemElement.dataset.stock = marketData.stock;
+        itemElement.dataset.itemName = item.name;
+        itemElement.dataset.itemIcon = item.icon;
+        itemElement.dataset.itemWeight = item.weight;
+
+        // 💀 Click anywhere on the item box to add to cart
+        itemElement.style.cursor = 'pointer';
+        itemElement.onclick = (e) => {
+            // Don't interfere with bulk mode selection
+            if (TradingSystem.tradeMode === 'bulk' && (e.shiftKey || e.ctrlKey || e.altKey)) return;
+
+            // 🛒 Open TradeCartPanel and add item
+            if (typeof TradeCartPanel !== 'undefined') {
+                const price = parseInt(itemElement.dataset.price, 10) || 0;
+                const stock = parseInt(itemElement.dataset.stock, 10) || 1;
+                const itemName = itemElement.dataset.itemName || itemId;
+                const itemIcon = itemElement.dataset.itemIcon || '📦';
+                const itemWeight = parseFloat(itemElement.dataset.itemWeight) || 1;
+
+                // Create merchant data from current location
+                const merchantData = {
+                    name: currentLocation.name + ' Market',
+                    id: currentLocation.id,
+                    type: 'market',
+                    inventory: currentLocation.marketPrices
+                };
+
+                // Ensure cart is open
+                if (!TradeCartPanel.isOpen) {
+                    TradeCartPanel.open(merchantData, 'buy');
+                }
+                // Add item to cart
+                TradeCartPanel.addItem(itemId, price, stock, {
+                    name: itemName,
+                    icon: itemIcon,
+                    weight: itemWeight
+                });
+
+                // Visual feedback - flash the item
+                itemElement.classList.add('added-to-cart');
+                setTimeout(() => itemElement.classList.remove('added-to-cart'), 300);
+            } else {
+                // Fallback to direct buy if TradeCartPanel not loaded
+                buyItem(itemId);
+            }
+        };
 
         // Add event listeners for bulk selection
         if (TradingSystem.tradeMode === 'bulk') {
@@ -9217,7 +9439,7 @@ function showSettings() {
         }
         SettingsPanel.show();
     } else {
-        gameDebugWarn('🖤 SettingsPanel not loaded');
+        gameDeboogerWarn('🖤 SettingsPanel not loaded');
     }
 }
 

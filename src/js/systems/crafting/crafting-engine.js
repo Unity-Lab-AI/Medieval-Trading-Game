@@ -2,7 +2,7 @@
 // 🔨 CRAFTING ENGINE - Where raw materials become hope (or despair)
 // ═══════════════════════════════════════════════════════════════
 // File Version: GameConfig.version.file
-// Made by Unity AI Lab - Hackall360, Sponge, GFourteen
+// Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 // ═══════════════════════════════════════════════════════════════
 // This file implements the ACTUAL crafting logic that was missing.
 // The recipes exist in unified-item-system.js, but nothing could
@@ -287,12 +287,14 @@ const CraftingEngine = {
 
     /**
      * Calculate bonus output based on skill level
+     * 🖤 FIXED: Capped at 50% chance max + diminishing returns 💀
      */
     calculateQualityBonus(recipe, quantity) {
         if (!recipe.skillType) return 0;
 
         const skillLevel = this.getPlayerSkillLevel(recipe.skillType);
-        const baseChance = 0.05 * skillLevel; // 5% per skill level
+        // 🦇 Diminishing returns: 3% per level, capped at 30% max chance (not 50% at lvl 10)
+        const baseChance = Math.min(0.03 * skillLevel, 0.30);
 
         let bonus = 0;
         for (let i = 0; i < quantity; i++) {
@@ -301,7 +303,9 @@ const CraftingEngine = {
             }
         }
 
-        return bonus;
+        // 🖤 Cap total bonus to 25% of original quantity - no infinite duplication 💀
+        const maxBonus = Math.floor(quantity * 0.25);
+        return Math.min(bonus, maxBonus);
     },
 
     // ═══════════════════════════════════════════════════════════

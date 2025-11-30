@@ -2,7 +2,7 @@
 // 🎨 PROPERTY UI - making virtual real estate look pretty 🖤
 // ═══════════════════════════════════════════════════════════════
 // all the UI components for property management 💀
-// File Version: GameConfig.version.file | Made by Unity AI Lab
+// File Version: GameConfig.version.file | Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 
 const PropertyUI = {
     // 🖤 Escape HTML to prevent XSS attacks - dark magic for security

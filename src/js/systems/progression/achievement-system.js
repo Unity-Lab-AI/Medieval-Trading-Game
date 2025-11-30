@@ -5,7 +5,7 @@
 // at least these ones give dopamine hits
 // File Version: GameConfig.version.file
 // Game Version: 0.2
-// Made by Unity AI Lab - Hackall360, Sponge, GFourteen
+// Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 
 const AchievementSystem = {
     // 🎖️ Achievement data - every flex you can earn
@@ -1067,7 +1067,7 @@ const AchievementSystem = {
         super_hacker: {
             id: 'super_hacker',
             name: '💻 SUPER HACKER 💻',
-            description: 'Unlock EVERY achievement in the game. Debug console unlocked. Legendary reward granted.',
+            description: 'Unlock EVERY achievement in the game. Debooger console unlocked 💀. Legendary reward granted.',
             icon: '🔓',
             category: 'ultra',
             rarity: 'ultra',  // New rarity tier above legendary
@@ -1077,7 +1077,7 @@ const AchievementSystem = {
             isUltra: true,  // Special flag for ultra achievements
             reward: {
                 item: 'blade_of_the_hacker',
-                unlockDebug: true
+                unlockDebooger: true
             },
             condition: () => {
                 // Must have ALL other achievements unlocked (except this one)
@@ -1252,24 +1252,24 @@ const AchievementSystem = {
             }
         }
 
-        // Unlock debug console for this save
-        if (achievement.reward.unlockDebug) {
-            // Store in game state that debug is unlocked for this save
+        // Unlock debooger console for this save 🦇
+        if (achievement.reward.unlockDebooger) {
+            // Store in game state that debooger is unlocked for this save
             if (game.player) {
-                game.player.debugUnlocked = true;
+                game.player.deboogerUnlocked = true;
             }
-            console.log('🔓 DEBUG CONSOLE UNLOCKED! You are now a Super Hacker!');
+            console.log('🔓 DEBOOGER CONSOLE UNLOCKED 💀! You are now a Super Hacker!');
 
             if (typeof addMessage === 'function') {
-                addMessage('🔓 DEBUG CONSOLE UNLOCKED! Press ` to access debug commands!');
+                addMessage('🔓 DEBOOGER CONSOLE UNLOCKED 💀! Press ` to access debooger commands 🦇!');
             }
         }
     },
 
-    // Check if debug is unlocked for current save (via Super Hacker achievement)
-    isDebugUnlockedForSave() {
-        // Check if player has debugUnlocked flag
-        if (game.player && game.player.debugUnlocked) {
+    // Check if debooger is unlocked for current save (via Super Hacker achievement) 🦇
+    isDeboogerUnlockedForSave() {
+        // Check if player has deboogerUnlocked flag 💀
+        if (game.player && game.player.deboogerUnlocked) {
             return true;
         }
         // Also check if super_hacker achievement is unlocked

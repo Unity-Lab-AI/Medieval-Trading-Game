@@ -1,3 +1,239 @@
+### Session Updates - 2025-11-30 - GO Workflow Full Codebase Audit 🖤💀
+
+**Status:** ✅ COMPLETE - 6 critical/high issues FIXED
+**Unity says:** "The corruption has been purged... for now." 🦇💀
+
+---
+
+### 🔴 CRITICAL - Security & Data Corruption
+
+#### EXPOSED API CREDENTIALS (config.js:172) 🚨
+- **File:** config.js:172
+- **Problem:** JSONBin API key and bin ID hardcoded in plaintext
+  ```javascript
+  apiKey: '$2a$10$kUCccykWGvahUe7zVs5f0OewVFZZ0wLvgh8N9LoclrWWI2OzcQ4FS'
+  binId: '69262a75d0ea881f400020a3'
+  ```
+- **Impact:** Anyone can access/modify leaderboard data, submit fake scores
+- **Fix:** Move to environment variables or server-side proxy
+- **Status:** [ ] PENDING
+
+#### getTotalDays() Double-Counting Bug (time-system.js:340-373)
+- **File:** time-system.js:340-373 AND time-machine.js:716-749
+- **Problem:** Days calculation incorrect for multi-year scenarios
+  - Lines 346-349 count days for all previous years
+  - Lines 351-355 subtract days from Jan 1 to start date
+  - Lines 357-361 add days from Jan 1 to current date
+  - When same year (lines 364-370), entire calculation is overwritten incorrectly
+- **Impact:** Stat decay intervals wrong, weather locking duration wrong
+- **Status:** [ ] PENDING
+
+#### XSS in Combat Log (combat-system.js:603,670-672)
+- **File:** combat-system.js:603,670-672
+- **Problem:** Combat log messages injected directly into innerHTML without sanitization
+- **Impact:** If save files shared, arbitrary script execution possible
+- **Fix:** Add escapeHtml() to all combat log entries
+- **Status:** [x] FIXED ✅ - Added escapeHtml() method and used it in both locations
+
+#### Race Condition - Rent Payment Loop (property-income.js:245-267)
+- **File:** property-income.js:245-267
+- **Problem:** Modifying array via `this.loseProperty()` while iterating with `forEach()`
+- **Impact:** Skips properties, causes unpredictable rent collection
+- **Fix:** Collect properties to remove, then remove after loop
+- **Status:** [x] FIXED ✅ - Added propertiesToRemove array, process after loop
+
+---
+
+### 🔴 CRITICAL - Gameplay Breaking Bugs
+
+#### Crafting Quality Bonus Infinite Duplication (crafting-engine.js:291-305)
+- **File:** crafting-engine.js:291-305
+- **Problem:** `calculateQualityBonus()` uses `0.05 * skillLevel` = +500% at level 10
+- **Impact:** Players can infinitely duplicate crafted items at high skill
+- **Fix:** Cap bonus at 50% or use diminishing returns formula
+- **Status:** [x] FIXED ✅ - Capped at 30% chance max + 25% of quantity cap
+
+#### Combat Race Condition (combat-system.js:257-325)
+- **File:** combat-system.js:257-325
+- **Problem:** Multiple state checks use loose equality without mutex/lock
+- **Impact:** Rapid button mashing can process damage twice
+- **Fix:** Add isProcessingAction flag
+- **Status:** [ ] PENDING
+
+#### Incomplete Faction Benefits (npc-relationships.js:454-462)
+- **File:** npc-relationships.js:454-462
+- **Problem:** `checkFactionBenefits()` has empty loop body - does nothing
+  ```javascript
+  for (const [threshold, benefit] of Object.entries(faction.benefits)) {
+      const thresholdNum = parseInt(threshold);
+      // 🎯 Did we just unlock a new tier of their favor? (tracking needs work) 📊
+  }
+  ```
+- **Impact:** Faction benefits never applied to player
+- **Fix:** Implement the benefit application logic
+- **Status:** [ ] PENDING
+
+---
+
+### 🟠 HIGH - Performance Issues
+
+#### O(n) Duplicate Detection (event-manager.js:26-30)
+- **File:** event-manager.js:26-30
+- **Problem:** forEach iterates ALL listeners on every addListener() call, no early break
+- **Impact:** Initialization becomes O(n²) as listener count grows
+- **Fix:** Use Map with composite key, or find() with early return
+- **Status:** [ ] PENDING
+
+#### Repeated DOM Queries in Game Loop (time-machine.js:770-827)
+- **File:** time-machine.js:770-827 AND game-engine.js:184-255
+- **Problem:** updateTimeDisplay() queries same elements every frame (60fps)
+  - Multiple fallback queries: getElementById → getElementById → querySelector
+- **Fix:** Cache element references on init
+- **Status:** [ ] PENDING
+
+#### Memory Leaks - Uncanceled Timers
+- **Files:**
+  - npc-manager.js:25 - `_updateInterval` only cleared in destroy()
+  - npc-chat-ui.js:1068 - setInterval in showVoiceIndicator()
+  - npc-trade.js:1007,1069,1078 - Multiple setTimeout/setInterval calls
+- **Impact:** Memory leak on page reload or component destruction
+- **Fix:** Add proper cleanup guards, clear on hide/destroy
+- **Status:** [ ] PENDING
+
+#### 15+ :has() CSS Selectors (z-index-system.css:90-157)
+- **File:** z-index-system.css:90-157
+- **Problem:** 15+ :has() selectors cause constant DOM re-evaluation
+- **Impact:** Performance degradation, especially on mobile
+- **Fix:** Replace with JavaScript state classes on body element
+- **Status:** [ ] PENDING
+
+---
+
+### 🟠 HIGH - Z-Index Chaos (npc-systems.css)
+
+#### Hardcoded Z-Index Values Ignoring System
+- **File:** npc-systems.css
+- **Lines/Values:**
+  - Line 35: `.npc-trade-window { z-index: 10000 }` → should be 1200
+  - Line 564: `.quest-log-panel { z-index: 9999 }` → should be 1000
+  - Line 1156: `.quest-overlay { z-index: 5000 }` → above modals
+  - Line 1619: `.rank-up-celebration { z-index: 100000 }` → EXTREME
+- **Impact:** Z-index system completely bypassed, stacking context broken
+- **Fix:** Replace all with CSS variables from z-index-system.css
+- **Status:** [x] FIXED ✅ - All 4 values now use var(--z-*) CSS variables
+
+---
+
+### 🟠 HIGH - Null Reference Bugs
+
+#### Transport innerHTML (game.js:8103-8114)
+- **File:** game.js:8103-8114
+- **Problem:** transport.name, transport.price used in innerHTML without escaping
+- **Also:** Line 8113 checks `container.innerHTML === ''` AFTER appendChild (always false)
+- **Impact:** XSS vector + "You own all transportation" message never shows
+- **Status:** [x] FIXED ✅ - Added escapeHtml() + hasOptions flag + null check
+
+#### Combat Victory Rewards (combat-system.js:475-478)
+- **File:** combat-system.js:475-478
+- **Problem:** `ItemDatabase.getItem()` can return null, crashes victory handler
+- **Status:** [ ] PENDING
+
+#### Game Over Stats (game-over-system.js:89-120)
+- **File:** game-over-system.js:89-120
+- **Problem:** `calculateFinalStats()` assumes game.player exists, no nested null checks
+- **Status:** [ ] PENDING
+
+#### Modal Loading Progress (modal-system.js:596)
+- **File:** modal-system.js:596
+- **Problem:** `document.getElementById('loading-overlay').querySelector()` - crashes if overlay doesn't exist
+- **Status:** [ ] PENDING
+
+---
+
+### 🟡 MEDIUM - UI Bugs
+
+#### navigateList() Undefined newIndex (ui-enhancements.js:926-938)
+- **File:** ui-enhancements.js:926-938
+- **Problem:** `newIndex = newIndex + 1` in 'right' case - newIndex is undefined
+- **Impact:** Sets newIndex to NaN, breaks keyboard navigation
+- **Fix:** Should be `newIndex = currentIndex + 1`
+- **Status:** [x] FIXED ✅ - Changed to `currentIndex + 1`
+
+#### switchTab() Null Reference (ui-enhancements.js:919,961)
+- **File:** ui-enhancements.js:919,961
+- **Problem:** `activeElement.parentElement.querySelectorAll()` without null checks
+- **Impact:** Crashes if tab switching occurs without focus
+- **Status:** [ ] PENDING
+
+#### Modal Drag Listeners Accumulate (modal-system.js:126-141)
+- **File:** modal-system.js:126-141
+- **Problem:** Global mousemove listeners created on every show() without cleanup
+- **Impact:** Duplicate listeners if modal shown/hidden repeatedly
+- **Status:** [ ] PENDING
+
+#### MutationObserver Never Disconnected (panel-manager.js:598-630)
+- **File:** panel-manager.js:598-630
+- **Problem:** MutationObserver created but never stored or disconnected
+- **Impact:** Memory leak if panels destroyed
+- **Status:** [ ] PENDING
+
+---
+
+### 🟡 MEDIUM - Security (XSS)
+
+#### Settings Panel (settings-panel.js:2647,2841,3106)
+- **Problem:** innerHTML with model names from config
+- **Status:** [ ] PENDING
+
+#### People Panel (people-panel.js:1034,1036,1049)
+- **Problem:** NPC data (sells.join(', ')) directly in innerHTML
+- **Status:** [ ] PENDING
+
+#### Save Manager (save-manager.js:1227-1229)
+- **Problem:** Save name input displayed without escaping
+- **Status:** [ ] PENDING
+
+---
+
+### 🟢 LOW - Dead Code & Cleanup
+
+#### Empty setupTravelTriggers() (game-engine.js:310-322)
+- Function exists but does nothing except log
+
+#### Intentionally Disabled Time Update (game-engine.js:58-68)
+- 60 lines of commented-out code explaining why TimeSystem.update() must NOT be called
+
+#### Debooger Always Enabled (debooger-system.js:4,8) 🐛
+- Comment says "disabled by default" but code has `enabled: true`
+
+#### Duplicate System Definitions (time-machine.js:1073-1107)
+- TimeMachine defines TimeSystem and GameEngine aliases at end
+- Older separate files still exist
+
+---
+
+### Previous Session - 2025-11-30 - Debooger Branding Complete 🐛🖤
+
+**What Changed:**
+- Updated all markdown docs to use "debooger" instead of "debug"
+- Changed "Debug Console" → "Debooger Console" 🐛
+- Changed "DebugCommandSystem" → "DeboogerCommandSystem"
+- Kept technical debugging terms (debugging code concept)
+- Added Unity's goth emojis throughout 🖤 💀 🦇 🔮 ⚰️ 🕯️
+
+**Files Updated:**
+1. ✅ Gee'sThoughts.md
+2. ✅ GameplayReadme.md
+3. ✅ todo.md (this file)
+4. ✅ Gee's Unity Thoughts.md
+5. ✅ DebuggerReadme.md
+6. ✅ NerdReadme.md
+7. ✅ .claude/masterplan.md
+8. ✅ .claude/skills/000-GO-workflow.md
+9. ✅ gameworld.md
+
+---
+
 # MEDIEVAL TRADING GAME - TODO LIST
 ## The Eternal Checklist of Doom 🖤
 
@@ -84,8 +320,8 @@
 
 #### 🟢 LOW - Dead Code (NEW)
 - [ ] **game.js:4970-5009** - startDifficultyPolling/stopDifficultyPolling never called
-- [ ] **game.js:6815-6880** - setDifficulty/testDifficultySystem debug functions in global scope
-- [ ] **npc-encounters.js:736-740** - spawnNPCEncounter/testNPCChat debug functions
+- [ ] **game.js:6815-6880** - setDifficulty/testDifficultySystem debooger functions in global scope 🐛
+- [ ] **npc-encounters.js:736-740** - spawnNPCEncounter/testNPCChat debooger functions 🐛
 - [ ] **audio-system.js:620-632, 787-814** - Disabled audio methods (early returns)
 - [ ] **browser-compatibility.js:264-328** - IE polyfills (CustomEvent, console, localStorage, sessionStorage)
 
@@ -188,7 +424,7 @@
   - Fix: User-friendly messages, not console spam
 
 #### LOW PRIORITY - Debug/Development only (KEEP as errors):
-- [ ] **debug-command-system.js** (3 errors) - Expected in debug context
+- [ ] **debooger-command-system.js** (3 errors) - Expected in debug context
 - [ ] **api-command-system.js** (2 errors) - Expected for bad commands
 - [ ] **game-world.js** (6 errors) - Init failures (legitimate errors)
 - [ ] **combat/dungeon systems** (5 errors) - Edge cases
@@ -307,7 +543,7 @@
 - `src/js/effects/animation-system.js` - Silent settings load fallback
 - `src/js/effects/visual-effects-system.js` - Silent settings load fallback
 - `src/js/effects/environmental-effects-system.js` - Silent settings load fallback
-- `src/js/debug/performance-optimizer.js` - Silent settings load fallback
+- `src/js/debooger/performance-optimizer.js` - Silent settings load fallback
 - `src/js/ui/ui-polish-system.js` - Silent settings load fallback
 - `src/js/npc/npc-voice.js` - Silent settings load fallback
 - `src/js/ui/panels/settings-panel.js` - Silent settings load fallback
@@ -326,7 +562,7 @@
 
 ### Previous Files Changed (2025-11-28 Earlier)
 - `src/js/core/game.js` - Replaced .substr() with .slice()
-- `src/js/debug/performance-optimizer.js` - Replaced 3x .substr() with .slice()
+- `src/js/debooger/performance-optimizer.js` - Replaced 3x .substr() with .slice()
 - `src/js/systems/crafting/crafting-engine.js` - Replaced .substr() with .slice()
 - `src/js/data/items/unified-item-system.js` - Replaced .substr() with .slice()
 - `src/js/systems/employee/employee-system.js` - Replaced .substr() with .slice()
@@ -419,8 +655,8 @@
 - [x] **13.7 - Vault Building** - ✅ DONE - 10k gold, 50k capacity, 90% theft protection
 - [x] **13.8 - Higher Tier Homes** - ✅ DONE - House→Cottage→Manor→Estate with crafting/workers
 
-### UI & Debug
-- [x] **13.10 - Rename Debug to "Debooger"** - ✅ DONE - Changed in index.html:1216
+### UI & Debooger 🐛🖤
+- [x] **13.10 - Rename Debug to "Debooger"** - ✅ DONE - Changed button text in index.html:1216 + all markdown docs updated 🐛
 
 - [x] **4.2 - Responsive CSS Enhancement** - ✅ DONE - Added 1440px, 1920px, 2560px, 3840px breakpoints
 

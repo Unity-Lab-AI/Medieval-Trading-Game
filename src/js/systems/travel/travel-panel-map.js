@@ -561,7 +561,10 @@ const TravelPanelMap = {
         // 🖤 Check if currently traveling - show walking person instead of tack
         const isTraveling = typeof TravelSystem !== 'undefined' && TravelSystem.playerPosition?.isTraveling;
 
-        if (!this.playerMarker) {
+        // 🖤 Check if marker exists AND is still in the DOM - render() clears innerHTML
+        if (!this.playerMarker || !this.mapElement.contains(this.playerMarker)) {
+            // Reset orphaned reference
+            this.playerMarker = null;
             this.playerMarker = document.createElement('div');
             this.playerMarker.id = 'travel-player-marker';
             this.playerMarker.innerHTML = `
@@ -1060,14 +1063,58 @@ const TravelPanelMap = {
         this.updateDestinationDisplay();
         this.render();
 
-        // 🚀 NOW START TRAVEL IMMEDIATELY - no waiting for button clicks
-        if (typeof addMessage === 'function') {
-            const destName = isDiscovered ? 'Unknown Location' : location.name;
-            addMessage(`🚶 Setting off for ${destName}...`);
+        // 🖤 CHECK IF GAME IS PAUSED - only auto-start if unpaused 💀
+        // If paused, player must unpause to begin journey (no Begin Journey button needed)
+        const isPaused = typeof TimeSystem !== 'undefined' &&
+                        (TimeSystem.isPaused || TimeSystem.currentSpeed === 'PAUSED');
+
+        if (isPaused) {
+            // Game is paused - show message and wait for unpause
+            if (typeof addMessage === 'function') {
+                const destName = isDiscovered ? 'Unknown Location' : location.name;
+                addMessage(`🎯 Destination set: ${destName}`);
+                addMessage(`⏸️ Game paused - unpause to begin journey automatically`);
+            }
+            // Register listener to auto-start when unpaused
+            this.waitingToTravel = true;
+        } else {
+            // Game is running - start travel immediately
+            if (typeof addMessage === 'function') {
+                const destName = isDiscovered ? 'Unknown Location' : location.name;
+                addMessage(`🚶 Setting off for ${destName}...`);
+            }
+            this.travelToDestination();
+        }
+    },
+
+    // 🖤 Flag to track if we're waiting to start travel when unpaused
+    waitingToTravel: false,
+
+    // 🖤 Called when game is unpaused - check if we should start travel 💀
+    onGameUnpaused() {
+        console.log('🚶 TravelPanelMap.onGameUnpaused called', {
+            waitingToTravel: this.waitingToTravel,
+            hasDestination: !!this.currentDestination,
+            travelActive: this.travelState.isActive
+        });
+
+        // Check we're not already traveling
+        if (typeof TravelSystem !== 'undefined' && TravelSystem.playerPosition?.isTraveling) {
+            console.log('🚶 Already traveling, skipping');
+            this.waitingToTravel = false;
+            return;
         }
 
-        // Start the actual travel
-        this.travelToDestination();
+        // 🖤 Start travel if we have a destination and aren't already traveling
+        // Either waitingToTravel flag is set OR we just have a destination ready
+        if (this.currentDestination && !this.travelState.isActive) {
+            if (typeof addMessage === 'function') {
+                addMessage(`🚶 Setting off for ${this.currentDestination.name}...`);
+            }
+            console.log('🚶 Starting travel to:', this.currentDestination.id);
+            this.travelToDestination();
+            this.waitingToTravel = false;
+        }
     },
 
     // 🖤 Check if player has visited a location before
@@ -1121,52 +1168,37 @@ const TravelPanelMap = {
             // Get travel info from TravelSystem for accurate multi-hop calculations
             let travelInfoHtml = '';
             let routeInfoHtml = '';
+            let travelInfo = null;
 
             if (typeof TravelSystem !== 'undefined' && TravelSystem.calculateTravelInfo) {
                 const destLocation = TravelSystem.locations[dest.id];
                 if (destLocation) {
-                    const travelInfo = TravelSystem.calculateTravelInfo(destLocation);
+                    travelInfo = TravelSystem.calculateTravelInfo(destLocation);
 
-                    // Build travel info display
+                    // Build travel summary
                     travelInfoHtml = `
                         <div class="dest-travel-info">
                             <div class="travel-stat">
                                 <span class="stat-icon">📏</span>
-                                <span class="stat-label">Distance:</span>
+                                <span class="stat-label">Total Distance:</span>
                                 <span class="stat-value">${travelInfo.distance} miles</span>
                             </div>
                             <div class="travel-stat">
                                 <span class="stat-icon">⏱️</span>
-                                <span class="stat-label">Travel Time:</span>
+                                <span class="stat-label">Total Time:</span>
                                 <span class="stat-value">${travelInfo.timeDisplay}</span>
-                            </div>
-                            <div class="travel-stat">
-                                <span class="stat-icon">🛤️</span>
-                                <span class="stat-label">Path Type:</span>
-                                <span class="stat-value">${travelInfo.pathTypeName || travelInfo.pathType}</span>
                             </div>
                             <div class="travel-stat">
                                 <span class="stat-icon">⚠️</span>
                                 <span class="stat-label">Safety:</span>
                                 <span class="stat-value ${travelInfo.safety < 50 ? 'danger' : travelInfo.safety < 75 ? 'warning' : ''}">${travelInfo.safety}%</span>
                             </div>
-                            ${travelInfo.hops > 1 ? `
-                            <div class="travel-stat">
-                                <span class="stat-icon">📍</span>
-                                <span class="stat-label">Stops:</span>
-                                <span class="stat-value">${travelInfo.hops} waypoints</span>
-                            </div>` : ''}
                         </div>
                     `;
 
-                    // Show route for multi-hop journeys
-                    if (travelInfo.routeDescription) {
-                        routeInfoHtml = `
-                            <div class="dest-route-info">
-                                <span class="route-label">🗺️ Route:</span>
-                                <span class="route-path">${travelInfo.routeDescription}</span>
-                            </div>
-                        `;
+                    // 🛤️ BUILD MULTI-HOP ROUTE DISPLAY - show each segment of the journey 💀
+                    if (travelInfo.route && travelInfo.route.length > 1) {
+                        routeInfoHtml = this.buildRouteDisplayHtml(travelInfo);
                     }
 
                     // Warning for wilderness travel
@@ -1221,6 +1253,17 @@ const TravelPanelMap = {
                 `;
             }
 
+            // 🖤 Check if game is paused - show Begin Journey button only when paused
+            const isPaused = typeof TimeSystem !== 'undefined' &&
+                            (TimeSystem.isPaused || TimeSystem.currentSpeed === 'PAUSED');
+            const pauseStatusHtml = !isReached ? `
+                <div class="travel-status-notice ${isPaused ? 'paused' : 'ready'}">
+                    ${isPaused
+                        ? '⏸️ <strong>Game Paused</strong> - Unpause to begin journey automatically'
+                        : '▶️ <strong>Traveling</strong> - Journey in progress...'}
+                </div>
+            ` : '';
+
             displayEl.innerHTML = `
                 <div class="destination-info ${reachedClass}">
                     <div class="dest-header">
@@ -1235,6 +1278,7 @@ const TravelPanelMap = {
                     </div>
                     ${isReached ? learnedInfoHtml : travelInfoHtml}
                     ${isReached ? '' : routeInfoHtml}
+                    ${pauseStatusHtml}
                 </div>
             `;
             // Hide action buttons if destination already reached
@@ -1248,15 +1292,111 @@ const TravelPanelMap = {
         }
     },
 
+    // 🛤️ Build HTML for multi-hop route display - shows each segment with path info 💀
+    buildRouteDisplayHtml(travelInfo) {
+        if (!travelInfo.route || travelInfo.route.length < 2) return '';
+
+        const locations = typeof GameWorld !== 'undefined' ? GameWorld.locations : {};
+        const currentLocId = typeof game !== 'undefined' && game.currentLocation ? game.currentLocation.id : null;
+
+        let html = '<div class="route-segments">';
+        html += '<h4>🗺️ Journey Route</h4>';
+        html += '<div class="route-path-visual">';
+
+        for (let i = 0; i < travelInfo.route.length; i++) {
+            const locId = travelInfo.route[i];
+            const loc = locations[locId] || TravelSystem?.locations?.[locId];
+            const locName = loc?.name || locId;
+            const locIcon = this.getLocationIcon(loc);
+            const isStart = i === 0;
+            const isEnd = i === travelInfo.route.length - 1;
+            const isCurrent = locId === currentLocId;
+
+            // Location node
+            html += `
+                <div class="route-node ${isStart ? 'start' : ''} ${isEnd ? 'end' : ''} ${isCurrent ? 'current' : ''}">
+                    <span class="node-icon">${locIcon}</span>
+                    <span class="node-name">${locName}</span>
+                    ${isCurrent ? '<span class="you-are-here">📍 You</span>' : ''}
+                </div>
+            `;
+
+            // Path segment (if not the last location)
+            if (i < travelInfo.route.length - 1) {
+                const nextLocId = travelInfo.route[i + 1];
+                const segment = travelInfo.segments?.find(s =>
+                    (s.from === locId && s.to === nextLocId) ||
+                    (s.to === locId && s.from === nextLocId)
+                );
+
+                // Check if path is discovered
+                const pathDiscovered = typeof TravelSystem !== 'undefined' &&
+                                       TravelSystem.isPathDiscovered?.(locId, nextLocId);
+
+                const pathType = segment?.type || 'trail';
+                const pathTypeInfo = TravelSystem?.PATH_TYPES?.[pathType] || { name: 'Trail', icon: '🛤️' };
+                const segmentTime = segment?.time ? TravelSystem.formatTime(segment.time) : '???';
+                const segmentDist = segment?.distance ? Math.round(segment.distance) : '???';
+
+                html += `
+                    <div class="route-segment ${pathDiscovered ? 'discovered' : 'undiscovered'}">
+                        <div class="segment-line"></div>
+                        <div class="segment-info">
+                            ${pathDiscovered ? `
+                                <span class="segment-type">${pathTypeInfo.name}</span>
+                                <span class="segment-details">${segmentDist} mi • ${segmentTime}</span>
+                            ` : `
+                                <span class="segment-type">Unexplored</span>
+                                <span class="segment-details">??? mi • ???</span>
+                            `}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        html += '</div></div>';
+        return html;
+    },
+
+    // Get location icon helper
+    getLocationIcon(location) {
+        if (!location) return '📍';
+        const type = location.type || 'village';
+        const icons = {
+            'city': '🏰',
+            'town': '🏘️',
+            'village': '🏠',
+            'outpost': '🏕️',
+            'dungeon': '💀',
+            'ruins': '🏚️',
+            'port': '⚓',
+            'mine': '⛏️',
+            'farm': '🌾',
+            'forest': '🌲',
+            'cave': '🕳️'
+        };
+        return icons[type] || '📍';
+    },
+
     // 🚶 Travel to destination
     travelToDestination() {
-        if (!this.currentDestination) return;
+        if (!this.currentDestination) {
+            console.warn('🖤 travelToDestination called but no destination set');
+            return;
+        }
+
+        console.log('🚶 TravelPanelMap.travelToDestination() starting travel to:', this.currentDestination.id);
 
         // Start travel - destination will be cleared when arrival completes
         if (typeof TravelSystem !== 'undefined' && TravelSystem.startTravel) {
-            TravelSystem.startTravel(this.currentDestination.id);
+            const result = TravelSystem.startTravel(this.currentDestination.id);
+            console.log('🚶 TravelSystem.startTravel result:', result, 'isTraveling:', TravelSystem.playerPosition?.isTraveling);
         } else if (typeof travelTo === 'function') {
             travelTo(this.currentDestination.id);
+        } else {
+            console.error('🖤 No travel function available!');
+            return;
         }
 
         // Start the travel UI countdown - don't clear destination yet!
@@ -1292,16 +1432,29 @@ const TravelPanelMap = {
             this.travelState.duration = TravelSystem.playerPosition.travelDuration;
         }
 
-        // Update the destination display to show travel progress
-        this.updateTravelProgressDisplay();
+        // 🖤 IMPORTANT: Wait a tick before checking travel state to avoid race condition
+        // TravelSystem.startTravel sets isTraveling=true, but we need to ensure it's done
+        // before we start polling, otherwise updateTravelProgressDisplay sees isTraveling=false
+        // and immediately calls onTravelComplete() - which is the bug that caused instant travel!
+        setTimeout(() => {
+            // Verify travel actually started
+            if (typeof TravelSystem !== 'undefined' && !TravelSystem.playerPosition.isTraveling) {
+                console.warn('🖤 Travel countdown started but TravelSystem.isTraveling is false - aborting');
+                this.travelState.isActive = false;
+                return;
+            }
 
-        // Start countdown interval
-        if (this.travelState.countdownInterval) {
-            clearInterval(this.travelState.countdownInterval);
-        }
-        this.travelState.countdownInterval = setInterval(() => {
+            // Update the destination display to show travel progress
             this.updateTravelProgressDisplay();
-        }, 250); // Update 4x per second for smooth countdown
+
+            // Start countdown interval
+            if (this.travelState.countdownInterval) {
+                clearInterval(this.travelState.countdownInterval);
+            }
+            this.travelState.countdownInterval = setInterval(() => {
+                this.updateTravelProgressDisplay();
+            }, 250); // Update 4x per second for smooth countdown
+        }, 50);
     },
 
     // 📊 Update travel progress display in destination tab

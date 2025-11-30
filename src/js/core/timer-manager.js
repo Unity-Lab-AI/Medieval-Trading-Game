@@ -115,7 +115,7 @@ const TimerManager = {
         return this.timers.size;
     },
     
-    // 🔍 Get timers for debugging - peer into the scheduled chaos
+    // 🔍 Get timers for deboogering 🦇 - peer into the scheduled chaos
     getTimers() {
         return Array.from(this.timers.entries()).map(([key, timer]) => ({
             key,

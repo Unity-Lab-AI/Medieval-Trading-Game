@@ -502,7 +502,7 @@ const PerformanceOptimizer = {
                 border-radius: 5px;
                 font-family: monospace;
                 font-size: 12px;
-                z-index: 950; /* Z-INDEX STANDARD: Debug UI */
+                z-index: 950; /* Z-INDEX STANDARD: Debooger UI 🦇 */
                 pointer-events: none;
                 transition: all 0.3s ease-in-out;
             `;
@@ -703,7 +703,7 @@ const PerformanceOptimizer = {
                 color: white;
                 padding: 20px;
                 border-radius: 10px;
-                z-index: 951; /* Z-INDEX STANDARD: Debug panel */
+                z-index: 951; /* Z-INDEX STANDARD: Debooger panel 💀 */
                 min-width: 300px;
                 box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             `;

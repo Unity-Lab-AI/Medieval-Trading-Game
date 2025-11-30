@@ -2,7 +2,7 @@
 // 🗺️ MAP RENDERER BASE - The dark foundation all maps share
 // ═══════════════════════════════════════════════════════════════════════════
 // File Version: 0.81
-// Made by Unity AI Lab - Hackall360, Sponge, GFourteen
+// Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 // ═══════════════════════════════════════════════════════════════════════════
 // Task 3.1: Merge Map Renderers
 // Both GameWorldRenderer and TravelPanelMap had ~1800 lines of duplicate code.

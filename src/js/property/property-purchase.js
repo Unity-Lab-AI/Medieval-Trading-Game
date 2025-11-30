@@ -2,7 +2,7 @@
 // 🏠 PROPERTY PURCHASE - acquiring your empire piece by piece 🖤
 // ═══════════════════════════════════════════════════════════════
 // buy, rent, or build your way to landlord status 💀
-// File Version: GameConfig.version.file | Made by Unity AI Lab
+// File Version: GameConfig.version.file | Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 
 const PropertyPurchase = {
     // 💰 Calculate property price with all modifiers ⚰️

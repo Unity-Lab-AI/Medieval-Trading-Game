@@ -441,90 +441,90 @@ test.describe('UI Elements', () => {
   });
 
   // ═══════════════════════════════════════════════════════════════
-  // 🐛 DEBUG CONSOLE TESTS - COMPREHENSIVE
+  // 🐛 DEBOOGER CONSOLE TESTS - COMPREHENSIVE 🖤
   // ═══════════════════════════════════════════════════════════════
 
-  test.describe('Debug Console', () => {
+  test.describe('Debooger Console', () => {
     test.beforeEach(async ({ page }) => {
       await page.goto('/');
       await startNewGame(page);
       await page.waitForTimeout(500);
     });
 
-    test('Debooger toggle button exists and is visible', async ({ page }) => {
-      const debugBtn = await page.locator('#toggle-debug-console');
-      await expect(debugBtn).toBeVisible();
+    test('Debooger toggle button exists and is visible 🖤', async ({ page }) => {
+      const deboogerBtn = await page.locator('#toggle-debooger-console');
+      await expect(deboogerBtn).toBeVisible();
     });
 
-    test('Debug console element exists in DOM', async ({ page }) => {
-      const console = await page.locator('#debug-console');
+    test('Debooger console element exists in DOM 💀', async ({ page }) => {
+      const console = await page.locator('#debooger-console');
       expect(await console.count()).toBeGreaterThan(0);
     });
 
-    test('Debug console opens when toggle clicked', async ({ page }) => {
-      await page.click('#toggle-debug-console');
+    test('Debooger console opens when toggle clicked 🦇', async ({ page }) => {
+      await page.click('#toggle-debooger-console');
       await page.waitForTimeout(300);
 
       const consoleVisible = await page.evaluate(() => {
-        const console = document.getElementById('debug-console');
+        const console = document.getElementById('debooger-console');
         return console && console.style.display === 'flex';
       });
 
       expect(consoleVisible).toBe(true);
     });
 
-    test('Debug console content container exists', async ({ page }) => {
-      const content = await page.locator('#debug-console-content');
+    test('Debooger console content container exists 🔮', async ({ page }) => {
+      const content = await page.locator('#debooger-console-content');
       expect(await content.count()).toBeGreaterThan(0);
     });
 
-    test('Debug command input exists', async ({ page }) => {
-      const input = await page.locator('#debug-command-input');
+    test('Debooger command input exists ⚰️', async ({ page }) => {
+      const input = await page.locator('#debooger-command-input');
       expect(await input.count()).toBeGreaterThan(0);
     });
 
-    test('Debug command execute button exists', async ({ page }) => {
-      const executeBtn = await page.locator('#debug-command-execute');
+    test('Debooger command execute button exists 🕯️', async ({ page }) => {
+      const executeBtn = await page.locator('#debooger-command-execute');
       expect(await executeBtn.count()).toBeGreaterThan(0);
     });
 
-    test('Debug command help button exists', async ({ page }) => {
-      const helpBtn = await page.locator('#debug-command-help');
+    test('Debooger command help button exists 🖤', async ({ page }) => {
+      const helpBtn = await page.locator('#debooger-command-help');
       expect(await helpBtn.count()).toBeGreaterThan(0);
     });
 
-    test('Debug command container exists', async ({ page }) => {
-      const container = await page.locator('#debug-command-container');
+    test('Debooger command container exists 💀', async ({ page }) => {
+      const container = await page.locator('#debooger-command-container');
       expect(await container.count()).toBeGreaterThan(0);
     });
 
-    test('Debug console accepts and executes commands', async ({ page }) => {
-      await page.click('#toggle-debug-console');
+    test('Debooger console accepts and executes commands 🦇', async ({ page }) => {
+      await page.click('#toggle-debooger-console');
       await page.waitForTimeout(500);
 
-      const input = await page.locator('#debug-command-input');
+      const input = await page.locator('#debooger-command-input');
       if (await input.isVisible()) {
         await input.fill('help');
         await page.keyboard.press('Enter');
         await page.waitForTimeout(300);
 
-        // Verify console output was generated
-        const content = await page.locator('#debug-console-content');
+        // Verify console output was generated 🔮
+        const content = await page.locator('#debooger-console-content');
         const text = await content.textContent();
         expect(text.length).toBeGreaterThan(0);
       }
     });
 
-    test('Debug console can be closed', async ({ page }) => {
-      await page.click('#toggle-debug-console');
+    test('Debooger console can be closed ⚰️', async ({ page }) => {
+      await page.click('#toggle-debooger-console');
       await page.waitForTimeout(300);
 
       // Click close button or toggle again
-      await page.click('#toggle-debug-console');
+      await page.click('#toggle-debooger-console');
       await page.waitForTimeout(300);
 
       const consoleHidden = await page.evaluate(() => {
-        const console = document.getElementById('debug-console');
+        const console = document.getElementById('debooger-console');
         return console && console.style.display === 'none';
       });
 

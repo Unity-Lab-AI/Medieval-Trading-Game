@@ -205,7 +205,8 @@ const QuestSystem = {
         main_rumors: {
             id: 'main_rumors',
             name: 'Whispers of Darkness',
-            description: 'Strange rumors speak of darkness gathering in the north. Travel to Ironforge City and speak with the guard captain.',
+            // 🖤 REBALANCED: First go SOUTH to Sunhaven, not north to Ironforge!
+            description: 'Strange rumors speak of darkness in the realm. Travel to Sunhaven in the south and speak with the harbor master about strange shipments.',
             giver: 'elder',
             giverName: 'Elder Morin',
             location: 'greendale',
@@ -214,44 +215,74 @@ const QuestSystem = {
             chainOrder: 2,
             difficulty: 'easy',
             objectives: [
-                { type: 'visit', location: 'ironforge_city', completed: false, description: 'Travel to Ironforge City' },
-                { type: 'talk', npc: 'guard', completed: false, description: 'Speak with Guard Captain' }
+                { type: 'visit', location: 'sunhaven', completed: false, description: 'Travel to Sunhaven (south)' },
+                { type: 'talk', npc: 'merchant', completed: false, description: 'Speak with Harbor Master' }
             ],
             rewards: { gold: 50, reputation: 15, experience: 40 },
             timeLimit: null,
             repeatable: false,
             prerequisite: 'main_prologue',
+            nextQuest: 'main_eastern_clues',
+            dialogue: {
+                offer: "Dark rumors reach my ears. Strange shipments pass through Sunhaven to the south. Travel there - the harbor master may know more.",
+                progress: "Have you reached Sunhaven yet? The southern coast holds secrets.",
+                complete: "What did the harbor master say? The trail leads east..."
+            }
+        },
+
+        // 🦇 NEW QUEST: Follow clues to the Eastern zone
+        main_eastern_clues: {
+            id: 'main_eastern_clues',
+            name: 'Eastern Whispers',
+            description: 'The trail leads to Jade Harbor in the east. Find the smuggler who knows about the dark shipments.',
+            giver: 'merchant',
+            giverName: 'Harbor Master Rosa',
+            location: 'sunhaven',
+            type: 'main',
+            chain: 'shadow_rising',
+            chainOrder: 3,
+            difficulty: 'medium',
+            objectives: [
+                { type: 'visit', location: 'smugglers_cove', completed: false, description: 'Find Smuggler\'s Cove (via coastal_cave back path or 1000g toll)' },
+                { type: 'talk', npc: 'merchant', completed: false, description: 'Speak with the smuggler contact' }
+            ],
+            rewards: { gold: 150, reputation: 20, experience: 75 },
+            timeLimit: null,
+            repeatable: false,
+            prerequisite: 'main_rumors',
             nextQuest: 'main_investigation',
             dialogue: {
-                offer: "Dark rumors reach my ears. Something stirs in the Shadow Tower to the north. Travel to Ironforge City - their guard captain may know more.",
-                progress: "Have you reached Ironforge City yet? Time may be running short.",
-                complete: "What did the captain say? The darkness grows... we must act."
+                offer: "Dark cargo passes through here, bound for the east. Seek Smuggler's Cove - you can reach it through the coastal caves if you can't afford the eastern toll.",
+                progress: "The smugglers are secretive. Approach carefully.",
+                complete: "So the darkness flows north from here... to Ironforge. You'll need gold to pay the northern toll - 10,000 gold."
             }
         },
 
         main_investigation: {
             id: 'main_investigation',
             name: 'Into the Shadows',
-            description: 'Investigate the abandoned mines near Ironforge City. Find evidence of dark activity.',
-            giver: 'guard',
-            giverName: 'Captain Aldric',
-            location: 'ironforge_city',
+            // 💀 This quest requires 10,000g northern toll OR the player to have saved up from trading
+            description: 'The trail leads to Ironforge City in the north. Investigate the abandoned mines and find evidence of dark activity. (Requires 10,000g passage fee)',
+            giver: 'merchant',
+            giverName: 'The Smuggler',
+            location: 'smugglers_cove',
             type: 'main',
             chain: 'shadow_rising',
-            chainOrder: 3,
+            chainOrder: 4,
             difficulty: 'medium',
             objectives: [
+                { type: 'visit', location: 'ironforge_city', completed: false, description: 'Travel to Ironforge City (10,000g toll)' },
                 { type: 'explore', dungeon: 'abandoned_mines', rooms: 5, current: 0, description: 'Explore 5 rooms of the mines' },
                 { type: 'collect', item: 'shadow_essence', count: 1, current: 0, description: 'Find evidence of dark magic' }
             ],
-            rewards: { gold: 100, items: { potion: 3 }, reputation: 20, experience: 75 },
+            rewards: { gold: 500, items: { potion: 5 }, reputation: 30, experience: 150 },
             givesQuestItem: 'shadow_essence',
             timeLimit: null,
             repeatable: false,
-            prerequisite: 'main_rumors',
+            prerequisite: 'main_eastern_clues',
             nextQuest: 'main_preparation',
             dialogue: {
-                offer: "The elder sent you? Good. We've seen dark figures near the old mines. Investigate - and bring back proof of what lurks there.",
+                offer: "The dark cargo came from Ironforge's old mines. Something evil stirs there. You'll need 10,000 gold to pass the northern toll - time to start trading seriously.",
                 progress: "Be careful in those mines. Dark things dwell in the deep places.",
                 complete: "Shadow essence... by the gods. This confirms our fears. The dark wizard Malachar has returned."
             }
@@ -266,7 +297,7 @@ const QuestSystem = {
             location: 'ironforge_city',
             type: 'main',
             chain: 'shadow_rising',
-            chainOrder: 4,
+            chainOrder: 5, // 💀 Updated chain order
             difficulty: 'medium',
             objectives: [
                 { type: 'collect', item: 'iron_ore', count: 15, current: 0, description: 'Gather 15 iron ore' },
@@ -274,43 +305,72 @@ const QuestSystem = {
                 { type: 'talk', npc: 'blacksmith', completed: false, description: 'Deliver ore to blacksmith' },
                 { type: 'talk', npc: 'apothecary', completed: false, description: 'Deliver herbs to apothecary' }
             ],
-            rewards: { gold: 150, items: { sword: 1, potion: 5 }, reputation: 25, experience: 100 },
+            rewards: { gold: 300, items: { sword: 1, potion: 5 }, reputation: 25, experience: 100 },
             timeLimit: null,
             repeatable: false,
             prerequisite: 'main_investigation',
-            nextQuest: 'main_shadow_key',
+            nextQuest: 'main_western_approach',
             dialogue: {
                 offer: "We must prepare. The blacksmith needs ore for weapons, the apothecary needs herbs for medicine. Gather these supplies - war is coming.",
                 progress: "Do you have the supplies? Every moment we delay, Malachar grows stronger.",
-                complete: "Excellent work. The blacksmith forged you a blade. Take these potions too. You'll need them."
+                complete: "Excellent work. The blacksmith forged you a blade. But the Shadow Tower lies in the Western Wilds... you'll need 50,000 gold."
+            }
+        },
+
+        // ⚰️ NEW QUEST: Western approach - the final toll gate
+        main_western_approach: {
+            id: 'main_western_approach',
+            name: 'The Western Gate',
+            description: 'The Shadow Tower lies in the Western Wilds. Amass 50,000 gold to pay the passage fee, or find another way through trading and exploration.',
+            giver: 'guard',
+            giverName: 'Captain Aldric',
+            location: 'ironforge_city',
+            type: 'main',
+            chain: 'shadow_rising',
+            chainOrder: 6,
+            difficulty: 'hard',
+            objectives: [
+                { type: 'gold', amount: 50000, current: 0, description: 'Amass 50,000 gold for western passage' },
+                { type: 'visit', location: 'western_outpost', completed: false, description: 'Reach Western Watch outpost' }
+            ],
+            rewards: { gold: 1000, reputation: 40, experience: 200 },
+            timeLimit: null,
+            repeatable: false,
+            prerequisite: 'main_preparation',
+            nextQuest: 'main_shadow_key',
+            dialogue: {
+                offer: "The Shadow Tower lies beyond the Western Watch. The toll is steep - 50,000 gold. Trade wisely, or you'll never reach Malachar.",
+                progress: "Have you gathered the gold? The western frontier is expensive to cross.",
+                complete: "You've amassed a fortune. Now pay the toll and find the Shadow Key."
             }
         },
 
         main_shadow_key: {
             id: 'main_shadow_key',
             name: 'The Shadow Key',
-            description: 'Find the Shadow Key hidden in the Crystal Cave. Without it, the inner sanctum of the Shadow Tower cannot be breached.',
-            giver: 'elder',
-            giverName: 'Elder Morin',
-            location: 'greendale',
+            // ⚰️ Shadow Tower is in the Western Wilds (50k toll zone)
+            description: 'Find the Shadow Key hidden in the Crystal Cave of the Western Wilds. Without it, the inner sanctum of the Shadow Tower cannot be breached.',
+            giver: 'guard',
+            giverName: 'Frontier Captain',
+            location: 'western_outpost',
             type: 'main',
             chain: 'shadow_rising',
-            chainOrder: 5,
+            chainOrder: 7,
             difficulty: 'hard',
             objectives: [
-                { type: 'visit', location: 'crystal_cave', completed: false, description: 'Enter the Crystal Cave' },
-                { type: 'explore', dungeon: 'crystal_cave', rooms: 8, current: 0, description: 'Navigate the cave depths' },
+                { type: 'visit', location: 'druid_grove', completed: false, description: 'Consult the druids about the key' },
+                { type: 'explore', dungeon: 'forest_dungeon', rooms: 8, current: 0, description: 'Navigate the Overgrown Crypt' },
                 { type: 'collect', item: 'shadow_key', count: 1, current: 0, description: 'Retrieve the Shadow Key' }
             ],
-            rewards: { gold: 200, items: { crystal_heart: 1 }, reputation: 30, experience: 150 },
+            rewards: { gold: 2000, items: { crystal_heart: 1 }, reputation: 50, experience: 300 },
             givesQuestItem: 'shadow_key',
             timeLimit: null,
             repeatable: false,
-            prerequisite: 'main_preparation',
+            prerequisite: 'main_western_approach',
             nextQuest: 'main_tower_assault',
             dialogue: {
-                offer: "Ancient texts speak of a Shadow Key, hidden deep in the Crystal Cave. Without it, Malachar's sanctum is impenetrable. You must find it.",
-                progress: "The Crystal Cave is treacherous. Many have entered, few returned. Be cautious.",
+                offer: "The Shadow Key is hidden in the Overgrown Crypt. The druids of the grove may know more. Find it, or the Shadow Tower remains sealed.",
+                progress: "The crypt is treacherous. Many have entered, few returned. Be cautious.",
                 complete: "The Shadow Key! You've done what countless others could not. Now... only the final battle remains."
             }
         },
@@ -318,29 +378,30 @@ const QuestSystem = {
         main_tower_assault: {
             id: 'main_tower_assault',
             name: 'The Shadow Tower',
-            description: 'Assault the Shadow Tower and defeat the dark wizard Malachar once and for all.',
-            giver: 'elder',
-            giverName: 'Elder Morin',
-            location: 'greendale',
+            // ⚰️ Final quest - in the Western Wilds endgame zone
+            description: 'Assault the Shadow Tower in the depths of the Western Wilds and defeat the dark wizard Malachar once and for all.',
+            giver: 'guard',
+            giverName: 'Frontier Captain',
+            location: 'western_outpost',
             type: 'main',
             chain: 'shadow_rising',
-            chainOrder: 6,
+            chainOrder: 8,
             difficulty: 'legendary',
             objectives: [
-                { type: 'visit', location: 'shadow_tower', completed: false, description: 'Enter the Shadow Tower' },
-                { type: 'explore', dungeon: 'shadow_tower', rooms: 10, current: 0, description: 'Climb to the top' },
+                { type: 'visit', location: 'shadow_dungeon', completed: false, description: 'Enter the Shadow Dungeon' },
+                { type: 'explore', dungeon: 'shadow_dungeon', rooms: 10, current: 0, description: 'Descend to the depths' },
                 { type: 'defeat', enemy: 'malachar', count: 1, current: 0, description: 'Defeat Malachar' },
                 { type: 'collect', item: 'blade_of_virtue', count: 1, current: 0, description: 'Claim the Blade of Virtue' }
             ],
-            rewards: { gold: 1000, items: { blade_of_virtue: 1, dark_staff: 1 }, reputation: 100, experience: 500 },
+            rewards: { gold: 10000, items: { blade_of_virtue: 1, dark_staff: 1 }, reputation: 100, experience: 1000 },
             givesQuestItem: 'blade_of_virtue',
             timeLimit: null,
             repeatable: false,
             prerequisite: 'main_shadow_key',
             nextQuest: null,
             dialogue: {
-                offer: "The time has come. Take the Shadow Key, climb the tower, and end Malachar's reign of terror. The realm is counting on you.",
-                progress: "Steel your resolve. Malachar awaits at the tower's peak.",
+                offer: "The time has come. Take the Shadow Key, descend into the Shadow Dungeon, and end Malachar's reign of terror. The realm is counting on you.",
+                progress: "Steel your resolve. Malachar awaits in the dungeon's depths.",
                 complete: "You've done it... Malachar is defeated! You are the savior of the realm! The Blade of Virtue is yours by right."
             }
         },

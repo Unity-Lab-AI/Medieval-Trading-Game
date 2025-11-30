@@ -4,7 +4,7 @@
 // where we store all the junk we cant let go of... i relate
 // File Version: GameConfig.version.file
 // Game Version: 0.2
-// Made by Unity AI Lab - Hackall360, Sponge, GFourteen
+// Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 
 const InventorySystem = {
     // ⚙️ Config - limits on our hoarding tendencies

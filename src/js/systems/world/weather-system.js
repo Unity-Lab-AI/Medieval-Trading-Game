@@ -2,7 +2,7 @@
 // 🌦️ WEATHER SYSTEM - Because traders suffer in any climate
 // ═══════════════════════════════════════════════════════════════
 // File Version: GameConfig.version.file
-// Made by Unity AI Lab - Hackall360, Sponge, GFourteen
+// Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 // ═══════════════════════════════════════════════════════════════
 // Dynamic weather that affects travel speed, market prices,
 // NPC moods, and creates atmospheric visual effects.
@@ -1003,7 +1003,10 @@ const WeatherSystem = {
         const isRain = weather.id === 'rain' || weather.id === 'storm';
         const isSnow = weather.id === 'snow' || weather.id === 'blizzard' || weather.id === 'thundersnow';
 
-        console.log(`🌦️ Creating ${particleCount} particles for ${weather.id}`);
+        // 🖤 Use DedupeLogger to prevent console spam - only log when particle count changes
+        if (typeof DedupeLogger !== 'undefined') {
+            DedupeLogger.logOnChange('weather_particles', `🌦️ Creating ${particleCount} particles for ${weather.id}`, `${weather.id}_${particleCount}`);
+        }
 
         for (let i = 0; i < particleCount; i++) {
             const particle = document.createElement('div');
@@ -1864,7 +1867,7 @@ const WeatherSystem = {
     },
 
     // ═══════════════════════════════════════════════════════════════
-    // DEBUG / CHEAT
+    // DEBOOGER / CHEAT 🦇
     // ═══════════════════════════════════════════════════════════════
     setWeather(weatherId) {
         if (this.weatherTypes[weatherId]) {

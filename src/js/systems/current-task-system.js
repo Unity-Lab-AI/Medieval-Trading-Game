@@ -2,7 +2,7 @@
 // 🎯 CURRENT TASK SYSTEM - what are you even doing with your life? 🖤
 // ═══════════════════════════════════════════════════════════════
 // tracks player's current activity for UI display 💀
-// File Version: GameConfig.version.file | Made by Unity AI Lab
+// File Version: GameConfig.version.file | Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 
 const CurrentTaskSystem = {
     // 🖤 Current task state ⚰️

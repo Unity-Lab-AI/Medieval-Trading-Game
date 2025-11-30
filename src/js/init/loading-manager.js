@@ -114,7 +114,7 @@ const LoadingManager = {
             console.warn('🖤 LoadingManager: Check error:', e.message);
         }
 
-        // 🖤 Debug logging every 5 seconds
+        // 🖤 Debooger logging 🦇 every 5 seconds
         const elapsed = Date.now() - this.startTime;
         if (elapsed > 5000 && elapsed % 5000 < 100) {
             console.log('🖤 LoadingManager: Still waiting...', {
@@ -197,9 +197,9 @@ const LoadingManager = {
         }, 500);
     },
 
-    // 🔧 Debug helper
-    debugStatus() {
-        console.log('🖤 LoadingManager Debug:');
+    // 🔧 Debooger helper 💀
+    deboogerStatus() {
+        console.log('🖤 LoadingManager Debooger 🖤:');
         console.log(`  Progress: ${this.progress.toFixed(1)}%`);
         console.log(`  Target: ${this.targetProgress.toFixed(1)}%`);
         console.log(`  Ready: ${this.isReady}`);

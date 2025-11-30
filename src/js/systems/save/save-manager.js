@@ -2,7 +2,7 @@
 // 💾 UNIFIED SAVE MANAGER - One system to save them all
 // ═══════════════════════════════════════════════════════════════
 // File Version: GameConfig.version.file
-// Made by Unity AI Lab - Hackall360, Sponge, GFourteen
+// Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 // ═══════════════════════════════════════════════════════════════
 // MERGED FROM: save-load-system.js, save-load-ui.js, save-ui-system.js
 // This consolidates 3 separate save systems into ONE.

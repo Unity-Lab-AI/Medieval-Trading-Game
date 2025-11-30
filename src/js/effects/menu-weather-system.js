@@ -2,7 +2,7 @@
 // 🌦️ MENU WEATHER SYSTEM - seasonal magic on the main menu
 // ═══════════════════════════════════════════════════════════════
 // File Version: GameConfig.version.file
-// Made by Unity AI Lab - Hackall360, Sponge, GFourteen
+// Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 // ═══════════════════════════════════════════════════════════════
 // Random seasonal effects that greet players differently each visit
 // Storm with lightning, winter snow, autumn leaves, spring petals, summer dust
@@ -24,7 +24,7 @@ const MenuWeatherSystem = {
         autumn: { weight: 20, name: 'Autumn Winds' },     // Falling leaves
         spring: { weight: 18, name: 'Spring Blossoms' },  // Cherry petals
         summer: { weight: 11, name: 'Summer Dusk' },      // Dust motes + sun rays
-        apocalypse: { weight: 0, name: 'The Dark Convergence' } // ☄️ Meteors & doom (debug only)
+        apocalypse: { weight: 0, name: 'The Dark Convergence' } // ☄️ Meteors & doom (debooger only 🦇)
     },
 
     // 🎲 Select random season based on weights

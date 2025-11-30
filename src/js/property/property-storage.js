@@ -2,7 +2,7 @@
 // 📦 PROPERTY STORAGE - hoarding made easy 🖤
 // ═══════════════════════════════════════════════════════════════
 // universal storage system for all your precious loot 💀
-// File Version: GameConfig.version.file | Made by Unity AI Lab
+// File Version: GameConfig.version.file | Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 
 const PropertyStorage = {
     // 🖤 Escape HTML to prevent XSS attacks - dark magic for security

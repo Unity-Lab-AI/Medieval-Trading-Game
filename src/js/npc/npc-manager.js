@@ -2,7 +2,7 @@
 // 👤 NPC MANAGER - central coordination for all our digital souls 🖤
 // ═══════════════════════════════════════════════════════════════
 // the puppet master pulling the strings of virtual existence 💀
-// File Version: GameConfig.version.file | Made by Unity AI Lab
+// File Version: GameConfig.version.file | Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 
 const NPCManager = {
     // 📋 NPC Registry - all NPCs in the game world ⚰️

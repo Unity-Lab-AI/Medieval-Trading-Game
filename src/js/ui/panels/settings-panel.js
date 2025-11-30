@@ -2875,9 +2875,9 @@ const SettingsPanel = {
                     <div class="about-version">Version unknown (config not loaded)</div>
                     <div class="about-studio">
                         <span class="studio-label">Created by</span>
-                        <span class="studio-name">Unity AI Lab</span>
+                        <span class="studio-name">Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com</span>
                     </div>
-                    <div class="about-copyright">© 2025 Unity AI Lab. all rights reserved.</div>
+                    <div class="about-copyright">© 2025 Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com. all rights reserved.</div>
                 </div>
             `;
         }
@@ -3587,7 +3587,7 @@ const SettingsPanel = {
                 key.includes('MarketSaturation') ||
                 key.includes('CityEvents') ||
                 key.includes('CityReputation') ||
-                key.includes('debug') ||
+                key.includes('debooger') ||
                 key.includes('temp')
             )) {
                 keysToRemove.push(key);

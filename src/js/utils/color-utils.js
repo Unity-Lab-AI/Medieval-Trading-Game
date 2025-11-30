@@ -2,7 +2,7 @@
 // 🎨 COLOR UTILITIES - Painting the darkness
 // ═══════════════════════════════════════════════════════════════
 // File Version: GameConfig.version.file
-// Made by Unity AI Lab - Hackall360, Sponge, GFourteen
+// Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 // ═══════════════════════════════════════════════════════════════
 // This file consolidates all color manipulation functions that were
 // duplicated across 3+ files (game-world-renderer.js, travel-panel-map.js,

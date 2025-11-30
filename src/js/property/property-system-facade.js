@@ -2,7 +2,7 @@
 // 🏠 PROPERTY SYSTEM FACADE - unified interface to modular chaos 🖤
 // ═══════════════════════════════════════════════════════════════
 // backward compatibility layer for the split property modules 💀
-// File Version: GameConfig.version.file | Made by Unity AI Lab
+// File Version: GameConfig.version.file | Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 
 const PropertySystem = {
     // 🏘️ Property types - delegate to PropertyTypes ⚰️

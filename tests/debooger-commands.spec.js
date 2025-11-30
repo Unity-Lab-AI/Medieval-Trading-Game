@@ -4,36 +4,36 @@ const config = require('./config/test-config');
 const {
   waitForGameLoad,
   startNewGame,
-  openDebugConsole,
-  runDebugCommand,
-  getDebugOutput,
+  openDeboogerConsole,
+  runDeboogerCommand,
+  getDeboogerOutput,
   getPlayerGold,
   getPlayerStats,
   setupConsoleCapture,
 } = require('./helpers/test-helpers');
 
 /**
- * 🖤 DEBUG COMMAND TESTS - Unity's Dark Awakening 💀
- * Tests ALL cheat/debug commands via the in-game debugger
- * Verifies ACTUAL state changes, not just command execution
- * Tests invalid input handling and error messages
+ * 🖤 DEBOOGER COMMAND TESTS - Unity's Dark Awakening 💀
+ * Tests ALL cheat/debooger commands via the in-game debooger 🦇
+ * Verifies ACTUAL state changes, not just command execution 🔮
+ * Tests invalid input handling and error messages ⚰️
  */
 
-test.describe('Debug Commands', () => {
+test.describe('Debooger Commands', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await startNewGame(page);
-    await openDebugConsole(page);
+    await openDeboogerConsole(page);
   });
 
   // ═══════════════════════════════════════════════════════════════
   // 💰 GOLD COMMANDS
   // ═══════════════════════════════════════════════════════════════
 
-  test.describe('Gold Commands', () => {
+  test.describe('Gold Commands 💰', () => {
     test('geecashnow - adds exactly 1000 gold', async ({ page }) => {
       const initialGold = await getPlayerGold(page);
-      await runDebugCommand(page, 'geecashnow');
+      await runDeboogerCommand(page, 'geecashnow');
       await page.waitForTimeout(500);
 
       const newGold = await getPlayerGold(page);
@@ -45,7 +45,7 @@ test.describe('Debug Commands', () => {
 
     test('givegold - adds specified amount', async ({ page }) => {
       const initialGold = await getPlayerGold(page);
-      await runDebugCommand(page, 'givegold 500');
+      await runDeboogerCommand(page, 'givegold 500');
       await page.waitForTimeout(500);
 
       const newGold = await getPlayerGold(page);
@@ -54,7 +54,7 @@ test.describe('Debug Commands', () => {
 
     test('givegold - handles large amounts', async ({ page }) => {
       const initialGold = await getPlayerGold(page);
-      await runDebugCommand(page, 'givegold 999999');
+      await runDeboogerCommand(page, 'givegold 999999');
       await page.waitForTimeout(500);
 
       const newGold = await getPlayerGold(page);
@@ -63,7 +63,7 @@ test.describe('Debug Commands', () => {
 
     test('givegold - defaults to 100 when no amount specified', async ({ page }) => {
       const initialGold = await getPlayerGold(page);
-      await runDebugCommand(page, 'givegold');
+      await runDeboogerCommand(page, 'givegold');
       await page.waitForTimeout(500);
 
       const newGold = await getPlayerGold(page);
@@ -71,7 +71,7 @@ test.describe('Debug Commands', () => {
     });
 
     test('setgold - sets gold to exact amount', async ({ page }) => {
-      await runDebugCommand(page, 'setgold 9999');
+      await runDeboogerCommand(page, 'setgold 9999');
       await page.waitForTimeout(500);
 
       const gold = await getPlayerGold(page);
@@ -79,7 +79,7 @@ test.describe('Debug Commands', () => {
     });
 
     test('setgold - can set gold to zero', async ({ page }) => {
-      await runDebugCommand(page, 'setgold 0');
+      await runDeboogerCommand(page, 'setgold 0');
       await page.waitForTimeout(500);
 
       const gold = await getPlayerGold(page);
@@ -88,7 +88,7 @@ test.describe('Debug Commands', () => {
     });
 
     test('setgold - defaults to 1000 when no amount specified', async ({ page }) => {
-      await runDebugCommand(page, 'setgold');
+      await runDeboogerCommand(page, 'setgold');
       await page.waitForTimeout(500);
 
       const gold = await getPlayerGold(page);
@@ -96,13 +96,13 @@ test.describe('Debug Commands', () => {
     });
 
     test('showgold - displays current gold amount', async ({ page }) => {
-      await runDebugCommand(page, 'setgold 5555');
+      await runDeboogerCommand(page, 'setgold 5555');
       await page.waitForTimeout(300);
 
       const consoleMessages = [];
       page.on('console', msg => consoleMessages.push(msg.text()));
 
-      await runDebugCommand(page, 'showgold');
+      await runDeboogerCommand(page, 'showgold');
       await page.waitForTimeout(300);
 
       // Verify gold is displayed in console
@@ -115,12 +115,12 @@ test.describe('Debug Commands', () => {
   // 📦 ITEM COMMANDS
   // ═══════════════════════════════════════════════════════════════
 
-  test.describe('Item Commands', () => {
+  test.describe('Item Commands 📦', () => {
     test('listitems - shows all item IDs', async ({ page }) => {
       const consoleMessages = [];
       page.on('console', msg => consoleMessages.push(msg.text()));
 
-      await runDebugCommand(page, 'listitems');
+      await runDeboogerCommand(page, 'listitems');
       await page.waitForTimeout(300);
 
       // Check that ItemDatabase has items
@@ -140,7 +140,7 @@ test.describe('Debug Commands', () => {
     });
 
     test('giveitem - adds item to inventory with correct quantity', async ({ page }) => {
-      await runDebugCommand(page, 'giveitem bread 5');
+      await runDeboogerCommand(page, 'giveitem bread 5');
       await page.waitForTimeout(500);
 
       const breadCount = await page.evaluate(() => {
@@ -154,7 +154,7 @@ test.describe('Debug Commands', () => {
     });
 
     test('giveitem - defaults to quantity 1 when not specified', async ({ page }) => {
-      await runDebugCommand(page, 'giveitem sword');
+      await runDeboogerCommand(page, 'giveitem sword');
       await page.waitForTimeout(500);
 
       const swordCount = await page.evaluate(() => {
@@ -168,9 +168,9 @@ test.describe('Debug Commands', () => {
     });
 
     test('giveitem - can stack items', async ({ page }) => {
-      await runDebugCommand(page, 'giveitem bread 5');
+      await runDeboogerCommand(page, 'giveitem bread 5');
       await page.waitForTimeout(300);
-      await runDebugCommand(page, 'giveitem bread 3');
+      await runDeboogerCommand(page, 'giveitem bread 3');
       await page.waitForTimeout(500);
 
       const breadCount = await page.evaluate(() => {
@@ -187,7 +187,7 @@ test.describe('Debug Commands', () => {
       const consoleMessages = [];
       page.on('console', msg => consoleMessages.push(msg.text()));
 
-      await runDebugCommand(page, 'giveitem nonexistent_item 10');
+      await runDeboogerCommand(page, 'giveitem nonexistent_item 10');
       await page.waitForTimeout(500);
 
       // Should still add to inventory (adds custom items)
@@ -209,7 +209,7 @@ test.describe('Debug Commands', () => {
         }
       });
 
-      await runDebugCommand(page, 'giveitem');
+      await runDeboogerCommand(page, 'giveitem');
       await page.waitForTimeout(500);
 
       const usageMessage = consoleMessages.find(msg => msg.includes('Usage') || msg.includes('giveitem'));
@@ -218,15 +218,15 @@ test.describe('Debug Commands', () => {
 
     test('clearinventory - empties inventory but preserves gold', async ({ page }) => {
       // Give items
-      await runDebugCommand(page, 'giveitem bread 10');
+      await runDeboogerCommand(page, 'giveitem bread 10');
       await page.waitForTimeout(200);
-      await runDebugCommand(page, 'giveitem sword 5');
+      await runDeboogerCommand(page, 'giveitem sword 5');
       await page.waitForTimeout(200);
-      await runDebugCommand(page, 'setgold 1000');
+      await runDeboogerCommand(page, 'setgold 1000');
       await page.waitForTimeout(300);
 
       // Clear inventory
-      await runDebugCommand(page, 'clearinventory');
+      await runDeboogerCommand(page, 'clearinventory');
       await page.waitForTimeout(500);
 
       const result = await page.evaluate(() => {
@@ -244,7 +244,7 @@ test.describe('Debug Commands', () => {
     });
 
     test('clearinventory - works on empty inventory', async ({ page }) => {
-      await runDebugCommand(page, 'clearinventory');
+      await runDeboogerCommand(page, 'clearinventory');
       await page.waitForTimeout(500);
 
       const inventoryEmpty = await page.evaluate(() => {
@@ -263,13 +263,13 @@ test.describe('Debug Commands', () => {
   // ❤️ STAT COMMANDS
   // ═══════════════════════════════════════════════════════════════
 
-  test.describe('Stat Commands', () => {
+  test.describe('Stat Commands ❤️', () => {
     test('heal - fully restores health stat', async ({ page }) => {
       // Damage player first
-      await runDebugCommand(page, 'setstat health 10');
+      await runDeboogerCommand(page, 'setstat health 10');
       await page.waitForTimeout(300);
 
-      await runDebugCommand(page, 'heal');
+      await runDeboogerCommand(page, 'heal');
       await page.waitForTimeout(500);
 
       const stats = await getPlayerStats(page);
@@ -277,10 +277,10 @@ test.describe('Debug Commands', () => {
     });
 
     test('heal - restores hunger to 100', async ({ page }) => {
-      await runDebugCommand(page, 'setstat hunger 5');
+      await runDeboogerCommand(page, 'setstat hunger 5');
       await page.waitForTimeout(300);
 
-      await runDebugCommand(page, 'heal');
+      await runDeboogerCommand(page, 'heal');
       await page.waitForTimeout(500);
 
       const stats = await getPlayerStats(page);
@@ -288,10 +288,10 @@ test.describe('Debug Commands', () => {
     });
 
     test('heal - restores thirst to 100', async ({ page }) => {
-      await runDebugCommand(page, 'setstat thirst 10');
+      await runDeboogerCommand(page, 'setstat thirst 10');
       await page.waitForTimeout(300);
 
-      await runDebugCommand(page, 'heal');
+      await runDeboogerCommand(page, 'heal');
       await page.waitForTimeout(500);
 
       const stats = await getPlayerStats(page);
@@ -299,10 +299,10 @@ test.describe('Debug Commands', () => {
     });
 
     test('heal - sets fatigue to 0', async ({ page }) => {
-      await runDebugCommand(page, 'setstat fatigue 80');
+      await runDeboogerCommand(page, 'setstat fatigue 80');
       await page.waitForTimeout(300);
 
-      await runDebugCommand(page, 'heal');
+      await runDeboogerCommand(page, 'heal');
       await page.waitForTimeout(500);
 
       const stats = await getPlayerStats(page);
@@ -310,10 +310,10 @@ test.describe('Debug Commands', () => {
     });
 
     test('heal - restores happiness to 100', async ({ page }) => {
-      await runDebugCommand(page, 'setstat happiness 20');
+      await runDeboogerCommand(page, 'setstat happiness 20');
       await page.waitForTimeout(300);
 
-      await runDebugCommand(page, 'heal');
+      await runDeboogerCommand(page, 'heal');
       await page.waitForTimeout(500);
 
       const stats = await getPlayerStats(page);
@@ -321,7 +321,7 @@ test.describe('Debug Commands', () => {
     });
 
     test('setstat - sets health to specific value', async ({ page }) => {
-      await runDebugCommand(page, 'setstat health 50');
+      await runDeboogerCommand(page, 'setstat health 50');
       await page.waitForTimeout(500);
 
       const stats = await getPlayerStats(page);
@@ -329,7 +329,7 @@ test.describe('Debug Commands', () => {
     });
 
     test('setstat - sets hunger to specific value', async ({ page }) => {
-      await runDebugCommand(page, 'setstat hunger 75');
+      await runDeboogerCommand(page, 'setstat hunger 75');
       await page.waitForTimeout(500);
 
       const stats = await getPlayerStats(page);
@@ -337,7 +337,7 @@ test.describe('Debug Commands', () => {
     });
 
     test('setstat - sets thirst to specific value', async ({ page }) => {
-      await runDebugCommand(page, 'setstat thirst 33');
+      await runDeboogerCommand(page, 'setstat thirst 33');
       await page.waitForTimeout(500);
 
       const stats = await getPlayerStats(page);
@@ -345,7 +345,7 @@ test.describe('Debug Commands', () => {
     });
 
     test('setstat - can set stats to 0', async ({ page }) => {
-      await runDebugCommand(page, 'setstat hunger 0');
+      await runDeboogerCommand(page, 'setstat hunger 0');
       await page.waitForTimeout(500);
 
       const stats = await getPlayerStats(page);
@@ -356,7 +356,7 @@ test.describe('Debug Commands', () => {
       const consoleMessages = [];
       page.on('console', msg => consoleMessages.push(msg.text()));
 
-      await runDebugCommand(page, 'setstat');
+      await runDeboogerCommand(page, 'setstat');
       await page.waitForTimeout(300);
 
       const usageMessage = consoleMessages.find(msg => msg.includes('Usage'));
@@ -364,7 +364,7 @@ test.describe('Debug Commands', () => {
     });
 
     test('setstat - handles invalid stat name', async ({ page }) => {
-      await runDebugCommand(page, 'setstat invalidstat 50');
+      await runDeboogerCommand(page, 'setstat invalidstat 50');
       await page.waitForTimeout(500);
 
       // Should set it anyway (no validation)
@@ -383,12 +383,12 @@ test.describe('Debug Commands', () => {
   // 🌍 WORLD COMMANDS
   // ═══════════════════════════════════════════════════════════════
 
-  test.describe('World Commands', () => {
+  test.describe('World Commands 🌍', () => {
     test('listlocations - shows all 30+ locations', async ({ page }) => {
       const consoleMessages = [];
       page.on('console', msg => consoleMessages.push(msg.text()));
 
-      await runDebugCommand(page, 'listlocations');
+      await runDeboogerCommand(page, 'listlocations');
       await page.waitForTimeout(300);
 
       const locationCount = await page.evaluate(() => {
@@ -410,7 +410,7 @@ test.describe('Debug Commands', () => {
     });
 
     test('teleport - changes player location to specified city', async ({ page }) => {
-      await runDebugCommand(page, 'teleport millbrook');
+      await runDeboogerCommand(page, 'teleport millbrook');
       await page.waitForTimeout(500);
 
       const location = await page.evaluate(() => {
@@ -427,13 +427,13 @@ test.describe('Debug Commands', () => {
     });
 
     test('teleport - can teleport to different locations', async ({ page }) => {
-      await runDebugCommand(page, 'teleport haven');
+      await runDeboogerCommand(page, 'teleport haven');
       await page.waitForTimeout(500);
 
       const location1 = await page.evaluate(() => game?.currentLocation || null);
       expect(location1).toBe('haven');
 
-      await runDebugCommand(page, 'teleport frostpeak');
+      await runDeboogerCommand(page, 'teleport frostpeak');
       await page.waitForTimeout(500);
 
       const location2 = await page.evaluate(() => game?.currentLocation || null);
@@ -444,7 +444,7 @@ test.describe('Debug Commands', () => {
       const consoleMessages = [];
       page.on('console', msg => consoleMessages.push(msg.text()));
 
-      await runDebugCommand(page, 'teleport');
+      await runDeboogerCommand(page, 'teleport');
       await page.waitForTimeout(300);
 
       const usageMessage = consoleMessages.find(msg => msg.includes('Usage'));
@@ -452,7 +452,7 @@ test.describe('Debug Commands', () => {
     });
 
     test('revealmap - reveals all locations on map', async ({ page }) => {
-      await runDebugCommand(page, 'revealmap');
+      await runDeboogerCommand(page, 'revealmap');
       await page.waitForTimeout(500);
 
       const visitedCount = await page.evaluate(() => {
@@ -468,11 +468,11 @@ test.describe('Debug Commands', () => {
 
     test('hidemap - resets map to starting visibility', async ({ page }) => {
       // Reveal all first
-      await runDebugCommand(page, 'revealmap');
+      await runDeboogerCommand(page, 'revealmap');
       await page.waitForTimeout(300);
 
       // Then hide
-      await runDebugCommand(page, 'hidemap');
+      await runDeboogerCommand(page, 'hidemap');
       await page.waitForTimeout(500);
 
       const visitedLocations = await page.evaluate(() => {
@@ -491,12 +491,12 @@ test.describe('Debug Commands', () => {
   // 🏆 ACHIEVEMENT COMMANDS
   // ═══════════════════════════════════════════════════════════════
 
-  test.describe('Achievement Commands', () => {
+  test.describe('Achievement Commands 🏆', () => {
     test('listachievements - shows all 72 achievements', async ({ page }) => {
       const consoleMessages = [];
       page.on('console', msg => consoleMessages.push(msg.text()));
 
-      await runDebugCommand(page, 'listachievements');
+      await runDeboogerCommand(page, 'listachievements');
       await page.waitForTimeout(300);
 
       const achievementCount = await page.evaluate(() => {
@@ -515,7 +515,7 @@ test.describe('Debug Commands', () => {
     });
 
     test('unlockachievement - unlocks specific achievement', async ({ page }) => {
-      await runDebugCommand(page, 'unlockachievement first_steps');
+      await runDeboogerCommand(page, 'unlockachievement first_steps');
       await page.waitForTimeout(500);
 
       const isUnlocked = await page.evaluate(() => {
@@ -531,9 +531,9 @@ test.describe('Debug Commands', () => {
     });
 
     test('unlockachievement - can unlock multiple achievements', async ({ page }) => {
-      await runDebugCommand(page, 'unlockachievement first_steps');
+      await runDeboogerCommand(page, 'unlockachievement first_steps');
       await page.waitForTimeout(300);
-      await runDebugCommand(page, 'unlockachievement first_trade');
+      await runDeboogerCommand(page, 'unlockachievement first_trade');
       await page.waitForTimeout(500);
 
       const unlockedCount = await page.evaluate(() => {
@@ -551,7 +551,7 @@ test.describe('Debug Commands', () => {
       const consoleMessages = [];
       page.on('console', msg => consoleMessages.push(msg.text()));
 
-      await runDebugCommand(page, 'unlockachievement');
+      await runDeboogerCommand(page, 'unlockachievement');
       await page.waitForTimeout(300);
 
       const usageMessage = consoleMessages.find(msg => msg.includes('Usage'));
@@ -559,7 +559,7 @@ test.describe('Debug Commands', () => {
     });
 
     test('testachievement - unlocks 3 random achievements and shows popup', async ({ page }) => {
-      await runDebugCommand(page, 'testachievement');
+      await runDeboogerCommand(page, 'testachievement');
       await page.waitForTimeout(1000);
 
       const unlockedCount = await page.evaluate(() => {
@@ -575,8 +575,8 @@ test.describe('Debug Commands', () => {
 
     test('resetachievements - clears achievements', async ({ page }) => {
       // Unlock some achievements first
-      await runDebugCommand(page, 'unlockachievement first_steps');
-      await runDebugCommand(page, 'unlockachievement first_trade');
+      await runDeboogerCommand(page, 'unlockachievement first_steps');
+      await runDeboogerCommand(page, 'unlockachievement first_trade');
       await page.waitForTimeout(300);
 
       const beforeCount = await page.evaluate(() => {
@@ -587,7 +587,7 @@ test.describe('Debug Commands', () => {
       });
 
       // Reset all
-      await runDebugCommand(page, 'resetachievements');
+      await runDeboogerCommand(page, 'resetachievements');
       await page.waitForTimeout(500);
 
       const afterCount = await page.evaluate(() => {
@@ -602,7 +602,7 @@ test.describe('Debug Commands', () => {
     });
 
     test('unlockall - unlocks all achievements including Super Hacker', async ({ page }) => {
-      await runDebugCommand(page, 'unlockall');
+      await runDeboogerCommand(page, 'unlockall');
       await page.waitForTimeout(1000);
 
       const result = await page.evaluate(() => {
@@ -625,12 +625,12 @@ test.describe('Debug Commands', () => {
   // 🎭 ENCOUNTER COMMANDS
   // ═══════════════════════════════════════════════════════════════
 
-  test.describe('Encounter Commands', () => {
+  test.describe('Encounter Commands 🎭', () => {
     test('encounter - spawns random encounter', async ({ page }) => {
       const consoleMessages = [];
       page.on('console', msg => consoleMessages.push(msg.text()));
 
-      await runDebugCommand(page, 'encounter');
+      await runDeboogerCommand(page, 'encounter');
       await page.waitForTimeout(1000);
 
       // Check if encounter spawned via console message
@@ -642,7 +642,7 @@ test.describe('Debug Commands', () => {
       const consoleMessages = [];
       page.on('console', msg => consoleMessages.push(msg.text()));
 
-      await runDebugCommand(page, 'trader');
+      await runDeboogerCommand(page, 'trader');
       await page.waitForTimeout(1000);
 
       const traderMessage = consoleMessages.find(msg => msg.includes('trader') || msg.includes('Spawned'));
@@ -653,7 +653,7 @@ test.describe('Debug Commands', () => {
       const consoleMessages = [];
       page.on('console', msg => consoleMessages.push(msg.text()));
 
-      await runDebugCommand(page, 'merchant');
+      await runDeboogerCommand(page, 'merchant');
       await page.waitForTimeout(1000);
 
       const merchantMessage = consoleMessages.find(msg => msg.includes('merchant') || msg.includes('Spawned'));
@@ -664,7 +664,7 @@ test.describe('Debug Commands', () => {
       const consoleMessages = [];
       page.on('console', msg => consoleMessages.push(msg.text()));
 
-      await runDebugCommand(page, 'smuggler');
+      await runDeboogerCommand(page, 'smuggler');
       await page.waitForTimeout(1000);
 
       const smugglerMessage = consoleMessages.find(msg => msg.includes('smuggler') || msg.includes('Spawned'));
@@ -675,7 +675,7 @@ test.describe('Debug Commands', () => {
       const consoleMessages = [];
       page.on('console', msg => consoleMessages.push(msg.text()));
 
-      await runDebugCommand(page, 'listnpctypes');
+      await runDeboogerCommand(page, 'listnpctypes');
       await page.waitForTimeout(300);
 
       // Verify output shows NPC types
@@ -690,18 +690,18 @@ test.describe('Debug Commands', () => {
   // 🔧 UTILITY COMMANDS
   // ═══════════════════════════════════════════════════════════════
 
-  test.describe('Utility Commands', () => {
+  test.describe('Utility Commands 🔧', () => {
     test('help - shows all commands with descriptions', async ({ page }) => {
       const consoleMessages = [];
       page.on('console', msg => consoleMessages.push(msg.text()));
 
-      await runDebugCommand(page, 'help');
+      await runDeboogerCommand(page, 'help');
       await page.waitForTimeout(300);
 
       // Verify command count
       const commandCount = await page.evaluate(() => {
-        if (typeof DebugCommandSystem !== 'undefined' && DebugCommandSystem.commands) {
-          return Object.keys(DebugCommandSystem.commands).length;
+        if (typeof DeboogerCommandSystem !== 'undefined' && DeboogerCommandSystem.commands) {
+          return Object.keys(DeboogerCommandSystem.commands).length;
         }
         return 0;
       });
@@ -713,18 +713,18 @@ test.describe('Debug Commands', () => {
       expect(helpMessage).toBeTruthy();
     });
 
-    test('clear - clears debug console completely', async ({ page }) => {
+    test('clear - clears debooger console completely', async ({ page }) => {
       // Add output first
-      await runDebugCommand(page, 'help');
-      await runDebugCommand(page, 'showgold');
+      await runDeboogerCommand(page, 'help');
+      await runDeboogerCommand(page, 'showgold');
       await page.waitForTimeout(300);
 
       // Then clear
-      await runDebugCommand(page, 'clear');
+      await runDeboogerCommand(page, 'clear');
       await page.waitForTimeout(300);
 
       const childCount = await page.evaluate(() => {
-        const el = document.getElementById('debug-console-content');
+        const el = document.getElementById('debooger-console-content');
         return el ? el.children.length : 0;
       });
 
@@ -735,7 +735,7 @@ test.describe('Debug Commands', () => {
       const consoleMessages = [];
       page.on('console', msg => consoleMessages.push(msg.text()));
 
-      await runDebugCommand(page, 'gamestate');
+      await runDeboogerCommand(page, 'gamestate');
       await page.waitForTimeout(300);
 
       // Verify game state object exists
@@ -754,7 +754,7 @@ test.describe('Debug Commands', () => {
       const consoleMessages = [];
       page.on('console', msg => consoleMessages.push(msg.text()));
 
-      await runDebugCommand(page, 'verifyeconomy');
+      await runDeboogerCommand(page, 'verifyeconomy');
       await page.waitForTimeout(300);
 
       // Verify economy system exists
@@ -770,7 +770,7 @@ test.describe('Debug Commands', () => {
   // 📜 QUEST COMMANDS - NEW TESTS
   // ═══════════════════════════════════════════════════════════════
 
-  test.describe('Quest Commands', () => {
+  test.describe('Quest Commands 📜', () => {
     test('Quest system exists in game', async ({ page }) => {
       const hasQuestSystem = await page.evaluate(() => {
         return typeof QuestSystem !== 'undefined';
@@ -779,9 +779,9 @@ test.describe('Debug Commands', () => {
       expect(hasQuestSystem).toBe(true);
     });
 
-    test('Quest commands are available via debug system', async ({ page }) => {
+    test('Quest commands are available via debooger system 🦇', async ({ page }) => {
       const questCommandsExist = await page.evaluate(() => {
-        if (typeof DebugCommandSystem !== 'undefined' && DebugCommandSystem.commands) {
+        if (typeof DeboogerCommandSystem !== 'undefined' && DeboogerCommandSystem.commands) {
           // Check for quest-related API commands
           return typeof QuestSystem !== 'undefined';
         }
@@ -811,12 +811,12 @@ test.describe('Debug Commands', () => {
   // 🖤 COMMAND ERROR HANDLING - INVALID INPUT TESTS
   // ═══════════════════════════════════════════════════════════════
 
-  test.describe('Invalid Input Handling', () => {
+  test.describe('Invalid Input Handling 🖤', () => {
     test('Unknown command shows error message', async ({ page }) => {
       const consoleMessages = [];
       page.on('console', msg => consoleMessages.push(msg.text()));
 
-      await runDebugCommand(page, 'thiscommanddoesnotexist');
+      await runDeboogerCommand(page, 'thiscommanddoesnotexist');
       await page.waitForTimeout(300);
 
       const errorMessage = consoleMessages.find(msg => msg.includes('Unknown command'));
@@ -827,7 +827,7 @@ test.describe('Debug Commands', () => {
       const consoleMessages = [];
       page.on('console', msg => consoleMessages.push(msg.text()));
 
-      await runDebugCommand(page, '');
+      await runDeboogerCommand(page, '');
       await page.waitForTimeout(300);
 
       // Should not execute anything
@@ -838,7 +838,7 @@ test.describe('Debug Commands', () => {
     test('Command with invalid number argument handles gracefully', async ({ page }) => {
       const initialGold = await getPlayerGold(page);
 
-      await runDebugCommand(page, 'givegold notanumber');
+      await runDeboogerCommand(page, 'givegold notanumber');
       await page.waitForTimeout(500);
 
       const newGold = await getPlayerGold(page);
@@ -848,7 +848,7 @@ test.describe('Debug Commands', () => {
     });
 
     test('Negative numbers are handled by commands', async ({ page }) => {
-      await runDebugCommand(page, 'setgold -100');
+      await runDeboogerCommand(page, 'setgold -100');
       await page.waitForTimeout(500);
 
       const gold = await getPlayerGold(page);
@@ -862,12 +862,12 @@ test.describe('Debug Commands', () => {
   // 🖤 COMMAND OUTPUT MESSAGE TESTS
   // ═══════════════════════════════════════════════════════════════
 
-  test.describe('Command Output Messages', () => {
+  test.describe('Command Output Messages 💀', () => {
     test('Commands log execution to console', async ({ page }) => {
       const consoleMessages = [];
       page.on('console', msg => consoleMessages.push(msg.text()));
 
-      await runDebugCommand(page, 'geecashnow');
+      await runDeboogerCommand(page, 'geecashnow');
       await page.waitForTimeout(300);
 
       // Should have execution message
@@ -879,7 +879,7 @@ test.describe('Debug Commands', () => {
       const consoleMessages = [];
       page.on('console', msg => consoleMessages.push(msg.text()));
 
-      await runDebugCommand(page, 'setgold 5000');
+      await runDeboogerCommand(page, 'setgold 5000');
       await page.waitForTimeout(300);
 
       const resultMessage = consoleMessages.find(msg => msg.includes('5000') || msg.includes('set'));
@@ -890,7 +890,7 @@ test.describe('Debug Commands', () => {
       const consoleMessages = [];
       page.on('console', msg => consoleMessages.push(msg.text()));
 
-      await runDebugCommand(page, 'giveitem');
+      await runDeboogerCommand(page, 'giveitem');
       await page.waitForTimeout(300);
 
       const usageMessage = consoleMessages.find(msg => msg.includes('Usage') && msg.includes('giveitem'));

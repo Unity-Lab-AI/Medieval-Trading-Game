@@ -2,7 +2,7 @@
 // 💰 PROPERTY INCOME - making money while you sleep 🖤
 // ═══════════════════════════════════════════════════════════════
 // passive income, maintenance, and the harsh reality of taxes 💀
-// File Version: GameConfig.version.file | Made by Unity AI Lab
+// File Version: GameConfig.version.file | Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 
 const PropertyIncome = {
     // 💵 Calculate income for a single property ⚰️
@@ -237,10 +237,12 @@ const PropertyIncome = {
     },
 
     // 📝 Process rent payments 🌙
+    // 🖤 Fixed race condition - collect properties to remove AFTER iteration 💀
     processRentPayments() {
         if (!game.player.ownedProperties) return;
 
         const currentTime = TimeSystem.getTotalMinutes();
+        const propertiesToRemove = []; // 🦇 Collect IDs first, remove after loop
 
         game.player.ownedProperties.forEach(property => {
             if (property.isRented && property.rentDueTime) {
@@ -260,11 +262,14 @@ const PropertyIncome = {
                         if (typeof addMessage === 'function') {
                             addMessage(`❌ Couldn't pay rent for ${propertyType?.name}! Property lost.`, 'danger');
                         }
-                        this.loseProperty(property.id);
+                        propertiesToRemove.push(property.id); // 🖤 Mark for removal, don't modify yet
                     }
                 }
             }
         });
+
+        // 💀 Now safely remove all marked properties after iteration complete
+        propertiesToRemove.forEach(id => this.loseProperty(id));
     },
 
     // 💔 Lose a property 🔮

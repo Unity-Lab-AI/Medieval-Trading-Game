@@ -2,7 +2,7 @@
 // 🖤 BOOTSTRAP.JS - The birth of the game from the void
 // ═══════════════════════════════════════════════════════════════
 // File Version: GameConfig.version.file
-// Made by Unity AI Lab - Hackall360, Sponge, GFourteen
+// Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 // ═══════════════════════════════════════════════════════════════
 // This file orchestrates the initialization of all game systems
 // in the correct order to prevent race conditions and ensure
@@ -83,10 +83,10 @@ const Bootstrap = {
             'AudioManager',       // Sound and music
         ],
 
-        // Phase 8: Debug (only if enabled)
-        DEBUG: [
-            'DebugSystem',        // Debug console
-            'PerformanceMonitor', // FPS/memory tracking
+        // Phase 8: Debooger 🖤💀 (only if enabled)
+        DEBOOGER: [
+            'DeboogerSystem',        // Debooger console 🔮
+            'PerformanceMonitor', // FPS/memory tracking 🦇
         ]
     },
 
@@ -112,9 +112,9 @@ const Bootstrap = {
             await this.initPhase('UI', 'Painting the interface...');
             await this.initPhase('PERSISTENCE', 'Binding to localStorage...');
 
-            // Debug phase - only if enabled
-            if (typeof GameConfig !== 'undefined' && GameConfig.debug?.enabled) {
-                await this.initPhase('DEBUG', 'Enabling dark rituals...');
+            // Debooger phase 🖤💀 - only if enabled
+            if (typeof GameConfig !== 'undefined' && GameConfig.debooger?.enabled) {
+                await this.initPhase('DEBOOGER', 'Summoning the dark debooger from beyond the veil... 🔮⚰️🕯️');
             }
 
             // Final setup

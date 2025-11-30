@@ -17,7 +17,7 @@ const APICommandSystem = {
     commandQueue: [],
     currentContext: null,
     lastExecutedCommand: null,
-    debugMode: false,
+    deboogerMode: false,
 
     // ═══════════════════════════════════════════════════════════════
     // 🚀 INITIALIZATION - wake up the command processor
@@ -69,7 +69,7 @@ const APICommandSystem = {
                 index: match.index
             });
 
-            if (this.debugMode) {
+            if (this.deboogerMode) {
                 console.log(`🔍 Found command: ${commandName}`, params);
             }
         }
@@ -148,7 +148,7 @@ const APICommandSystem = {
 
         // Execute the handler
         try {
-            if (this.debugMode) {
+            if (this.deboogerMode) {
                 console.log(`🤖 Executing: ${name}(${params.join(', ')})`);
             }
 
@@ -224,7 +224,7 @@ const APICommandSystem = {
             return;
         }
         this.handlers[name] = handler;
-        if (this.debugMode) {
+        if (this.deboogerMode) {
             console.log(`🤖 Registered handler: ${name}`);
         }
     },
@@ -1079,19 +1079,19 @@ const APICommandSystem = {
     },
 
     /**
-     * Enable debug mode
+     * Enable debooger mode 🦇
      */
-    enableDebug() {
-        this.debugMode = true;
-        console.log('🤖 APICommandSystem debug mode enabled');
+    enableDebooger() {
+        this.deboogerMode = true;
+        console.log('🤖 APICommandSystem debooger mode 🦇 enabled 🖤💀');
     },
 
     /**
-     * Disable debug mode
+     * Disable debooger mode 🦇
      */
-    disableDebug() {
-        this.debugMode = false;
-        console.log('🤖 APICommandSystem debug mode disabled');
+    disableDebooger() {
+        this.deboogerMode = false;
+        console.log('🤖 APICommandSystem debooger mode 🦇 disabled 🔮⚰️');
     },
 
     /**
@@ -1103,7 +1103,7 @@ const APICommandSystem = {
             handlersCount: Object.keys(this.handlers).length,
             handlers: Object.keys(this.handlers),
             lastCommand: this.lastExecutedCommand,
-            debugMode: this.debugMode
+            deboogerMode: this.deboogerMode
         };
     }
 };

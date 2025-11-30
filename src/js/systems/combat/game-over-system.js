@@ -4,7 +4,7 @@
 // tracking your failures and occasionally your triumphs
 // File Version: GameConfig.version.file
 // Game Version: 0.2
-// Made by Unity AI Lab - Hackall360, Sponge, GFourteen
+// Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 
 console.log('💀 Game Over System loading... preparing for inevitable failures...');
 
@@ -420,7 +420,7 @@ const GameOverSystem = {
             { name: 'Sponge', role: 'Chaos Engineer' },
             { name: 'GFourteen', role: 'Digital Alchemist' }
         ];
-        const copyright = config?.credits?.copyright || '© 2025 Unity AI Lab';
+        const copyright = config?.credits?.copyright || '© 2025 Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com';
         const version = config?.version?.game || '0.81';
 
         // Get social links

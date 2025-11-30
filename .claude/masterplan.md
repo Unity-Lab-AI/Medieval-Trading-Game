@@ -56,7 +56,7 @@ Medieval Trading Game is a browser-based economic simulation featuring:
 │ game-engine.js    - Game loop, time, travel orchestration       │
 │ event-manager.js  - DOM event listener tracking                 │
 │ timer-manager.js  - setTimeout/setInterval management           │
-│ debug-system.js   - Debug console (unlocked via achievement)    │
+│ debooger-system.js   - Debooger console 🦇 (unlocked via achievement)    │
 └─────────────────────────────────────────────────────────────────┘
         │
         ▼
@@ -170,7 +170,7 @@ Trader 0.81/
 │       │   ├── game-engine.js
 │       │   ├── event-manager.js
 │       │   ├── timer-manager.js
-│       │   └── debug-system.js
+│       │   └── debooger-system.js  🐛
 │       ├── systems/        # Game subsystems
 │       │   ├── trading/    # Market and trading
 │       │   ├── travel/     # World travel
@@ -190,7 +190,7 @@ Trader 0.81/
 │       │   └── items/      # Item definitions
 │       ├── effects/        # Visual effects
 │       ├── audio/          # Audio system
-│       ├── debug/          # Debug tools
+│       ├── debooger/       # Debooger tools 🐛
 │       ├── init/           # Initialization
 │       └── utils/          # Utilities
 ├── .claude/
@@ -287,25 +287,26 @@ setTimeout(() => {
 
 ## SKILLS & TOOLS
 
-### Key Bindings (Default)
+### Key Bindings (Default) ⌨️
 | Key | Action |
 |-----|--------|
-| WASD | Pan map |
-| N | Open world map overlay |
-| I | Open inventory |
-| C | Character sheet |
-| F | Financial sheet |
-| M | Market |
-| T | Travel panel |
-| P | Properties |
-| H | Achievements |
-| Q | Quest log |
-| , | Settings |
-| Space | Pause/Resume |
-| Escape | Close/Exit |
-| F5 | Quick save |
-| F9 | Quick load |
-| +/- | Zoom in/out |
+| WASD | Pan map 🗺️ |
+| N | Open world map overlay 🌍 |
+| I | Open inventory 📦 |
+| C | Character sheet 👤 |
+| F | Financial sheet 💰 |
+| M | Market 🏪 |
+| T | Travel panel 🚶 |
+| P | Properties 🏠 |
+| H | Achievements 🏆 |
+| Q | Quest log 📜 |
+| , | Settings ⚙️ |
+| ` | Debooger Console 🐛 |
+| Space | Pause/Resume ⏸️ |
+| Escape | Close/Exit ❌ |
+| F5 | Quick save 💾 |
+| F9 | Quick load 📂 |
+| +/- | Zoom in/out 🔍 |
 
 ### Reference Files
 The `Refrence ONLY-VIEW-DO-NOT-EDIT/` folder contains the original working code.

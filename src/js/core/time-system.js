@@ -2,7 +2,7 @@
 // 🖤 TIME SYSTEM - The Relentless March of Existence
 // ═══════════════════════════════════════════════════════════════
 // File Version: 0.81
-// Made by Unity AI Lab - Hackall360, Sponge, GFourteen
+// Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 // ═══════════════════════════════════════════════════════════════
 // Now with ACTUAL Gregorian calendar because medieval accuracy matters
 // Start date: April 1st, 1111 - a date as dark as our code
@@ -216,7 +216,13 @@ const TimeSystem = {
             return;
         }
 
-        // 🔮 Check GameWorldRenderer for pending destination
+        // 🖤 Notify TravelPanelMap that game is unpaused - it handles auto-start travel 💀
+        if (typeof TravelPanelMap !== 'undefined' && TravelPanelMap.onGameUnpaused) {
+            TravelPanelMap.onGameUnpaused();
+            return; // TravelPanelMap handles everything
+        }
+
+        // 🔮 Fallback: Check GameWorldRenderer for pending destination
         let destinationId = null;
 
         if (typeof GameWorldRenderer !== 'undefined' && GameWorldRenderer.currentDestination) {
@@ -226,11 +232,11 @@ const TimeSystem = {
         }
 
         // 🗡️ Got somewhere to go? let's roll
-        if (destinationId && typeof TravelSystem !== 'undefined' && TravelSystem.travelTo) {
+        if (destinationId && typeof TravelSystem !== 'undefined' && TravelSystem.startTravel) {
             // 🦇 Make sure it's not our current location (that would be silly)
             if (typeof game !== 'undefined' && game.currentLocation?.id !== destinationId) {
                 console.log(`🚶 Auto-starting travel to ${destinationId} - time waits for no one`);
-                TravelSystem.travelTo(destinationId);
+                TravelSystem.startTravel(destinationId);
             }
         }
     },

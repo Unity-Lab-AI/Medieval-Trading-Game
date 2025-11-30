@@ -2,7 +2,7 @@
 // 🗺️ GAME WORLD SYSTEM - The Realm Where Dreams Die and Gold Lives
 // ═══════════════════════════════════════════════════════════════
 // File Version: 0.81
-// Made by Unity AI Lab - Hackall360, Sponge, GFourteen
+// Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 // ═══════════════════════════════════════════════════════════════
 // 🖤 Extracted from game.js - now the world has its own dark domain
 // 🦇 Contains: regions, locations, travel, markets, tools

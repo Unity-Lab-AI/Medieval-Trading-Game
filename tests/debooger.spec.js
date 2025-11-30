@@ -1,7 +1,8 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
 
-test('debug - check console for errors', async ({ page }) => {
+// 🖤 DEBOOGER - check console for errors 💀
+test('debooger - check console for errors', async ({ page }) => {
   const consoleMessages = [];
   const consoleErrors = [];
 
@@ -41,6 +42,6 @@ test('debug - check console for errors', async ({ page }) => {
   console.log('Console errors:', consoleErrors);
   console.log('All console messages:', consoleMessages.slice(-50));
 
-  // Output for debugging
+  // 🦇 Output for deboogering 💀
   expect(windowState).toBeTruthy();
 });

@@ -8,7 +8,7 @@
 ═══════════════════════════════════════════════════════════════════════
 ```
 
-> **Developed by a 25-year-old female edgy emo goth coder who smokes** 🚬
+> **Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com**
 > *Written at 3am while questioning the meaning of virtual economies*
 
 ---
@@ -166,16 +166,28 @@ The kingdom consists of **6 regions** radiating from the Royal Capital, featurin
 
 *See `gameworldprompt.md` for AI image generation prompts to create custom backdrops.*
 
-### Regions
+### Regions & Zone Progression
 
-| Region | Description | Gold Required |
-|--------|-------------|---------------|
-| **Riverlands** (Starter) | Peaceful realm for new merchants | Free |
-| **Northern Highlands** | Cold, harsh - valuable furs and iron | 500g |
-| **Eastern Kingdoms** | Rich - exotic spices and silks | 750g |
-| **Western Marches** | Wild frontiers, ancient ruins | 600g |
-| **Southern Trade Routes** | Prosperous merchant cities | 1,000g |
-| **Royal Capital** | Heart of the kingdom, rare treasures | 2,000g |
+The realm is divided into zones with **gatehouse tolls** controlling access. Plan your trading empire carefully!
+
+| Region | Description | Passage Fee | Progression |
+|--------|-------------|-------------|-------------|
+| **Riverlands** (Starter) | Peaceful realm for new merchants | Free | 🏠 Start here |
+| **Royal Capital** | Heart of the kingdom, rare treasures | Free | 👑 Always open |
+| **Southern Coast** (Glendale) | Coastal cities, wine, fish | **FREE** | 🌴 Natural expansion |
+| **Eastern Kingdoms** | Rich - exotic spices and silks | **1,000g** | 🌅 Early-mid game |
+| **Northern Highlands** | Cold, harsh - valuable furs and iron | **10,000g** | ❄️ Mid game |
+| **Western Wilds** | Wild frontiers, ancient ruins, endgame | **50,000g** | 🏔️ Late game |
+
+**🦇 The Back Path (Free Eastern Access):**
+Can't afford the 1,000g eastern toll? Sneak through the south!
+`Starter → Greendale → Sunhaven → Coastal Cave → Smuggler's Cove (Eastern zone!)`
+
+**💀 Main Quest Progression:**
+The story guides you through zones naturally:
+1. Starter → South (FREE) → East (back path or 1k) → North (10k) → West (50k)
+2. Trade and build wealth between each zone gate
+3. Final boss awaits in the Western Wilds (Shadow Dungeon)
 
 ### Location Types
 

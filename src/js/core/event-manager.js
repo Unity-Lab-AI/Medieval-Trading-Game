@@ -118,7 +118,7 @@ const EventManager = {
         return this.listeners.size;
     },
     
-    // 🔍 Get listeners for debugging - peer into the network of attachments
+    // 🔍 Get listeners for deboogering 🦇 - peer into the network of attachments
     getListeners() {
         return Array.from(this.listeners.entries()).map(([key, listener]) => ({
             key,

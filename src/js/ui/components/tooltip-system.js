@@ -4,7 +4,7 @@
 // hover over things and learn their secrets... no tutorial needed
 // File Version: GameConfig.version.file
 // Game Version: 0.2
-// Made by Unity AI Lab - Hackall360, Sponge, GFourteen
+// Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 
 console.log('💬 Tooltip System loading... preparing to explain everything...');
 

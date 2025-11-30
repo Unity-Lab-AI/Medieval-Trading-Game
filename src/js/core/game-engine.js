@@ -13,8 +13,8 @@ const GameEngine = {
     lastFrameTime: 0,
     animationFrameId: null,
 
-    // 🔍 Debug mode - for when you need to see the matrix
-    debug: false,
+    // 🦇 Debooger mode 🦇
+    debooger: false,
 
     // 🖤 Wake up the engine from its eternal slumber
     init() {

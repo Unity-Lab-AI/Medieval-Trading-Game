@@ -96,7 +96,7 @@ Trader 83/
 │       │   ├── time-system.js    # Gregorian calendar (April 1111)
 │       │   ├── event-manager.js  # Custom event system
 │       │   ├── timer-manager.js  # setTimeout/setInterval wrapper
-│       │   └── debug-system.js   # Console capture
+│       │   └── debooger-system.js   # Console capture
 │       │
 │       ├── data/                 # Static game data
 │       │   ├── game-world.js     # Locations and world map
@@ -140,8 +140,8 @@ Trader 83/
 │       ├── audio/                # Sound and music
 │       │   └── audio-system.js
 │       │
-│       ├── debug/                # Debug tools
-│       │   ├── debug-command-system.js  # Cheat codes
+│       ├── debooger/            # Debooger tools 🐛
+│       │   ├── debooger-command-system.js  # Cheat codes 💀
 │       │   └── performance-optimizer.js
 │       │
 │       ├── init/                 # Initialization
@@ -1066,39 +1066,39 @@ SettingsPanel.clearAllData() {
 
 ---
 
-## 🐛 DEBUG & DEVELOPMENT
+## 🐛 DEBOOGER & DEVELOPMENT 🖤
 
-> 🐛 **For complete debug command documentation, see [DebuggerReadme.md](DebuggerReadme.md)**
+> 🐛 **For complete debooger command documentation, see [DebuggerReadme.md](DebuggerReadme.md)**
 
-### Debug System Files
+### Debooger System Files 📁
 
 | File | Purpose |
 |------|---------|
-| `src/js/core/debug-system.js` | Debug console UI and log capture |
-| `src/js/debug/debug-command-system.js` | Command registration and execution |
+| `src/js/core/debooger-system.js` | Debooger console UI and log capture 🐛 |
+| `src/js/debooger/debooger-command-system.js` | Command registration and execution 🔮 |
 
-### Debug Config (config.js)
+### Debooger Config (config.js) ⚙️
 
 ```javascript
 const GameConfig = {
-    debug: {
-        enabled: true,              // true = debug works, false = locked
-        showConsoleWarnings: true   // Show warnings when locked
+    debooger: {
+        enabled: true,              // true = debooger works, false = locked 🔒
+        showConsoleWarnings: true   // Show warnings when locked ⚠️
     }
 };
 ```
 
-### Debug Access Methods
+### Debooger Access Methods 🔓
 
-1. **Developer Mode:** `GameConfig.debug.enabled = true`
-2. **Super Hacker Achievement:** Unlock ALL achievements for permanent debug access
+1. **Developer Mode:** `GameConfig.debooger.enabled = true` 💀
+2. **Super Hacker Achievement:** Unlock ALL achievements for permanent debooger access 🏆
 
-### Key Debug Functions
+### Key Debooger Functions 🔮
 
 ```javascript
-DebugCommandSystem.isDebugEnabled()  // Check if debug is available
-DebugCommandSystem.executeCommand()   // Run a debug command
-AchievementSystem.isDebugUnlockedForSave()  // Check achievement unlock
+DeboogerCommandSystem.isDeboogerEnabled()  // Check if debooger is available 🐛
+DeboogerCommandSystem.executeCommand()     // Run a debooger command 💀
+AchievementSystem.isDeboogerUnlockedForSave()  // Check achievement unlock 🏆
 ```
 
 > 🎮 For gameplay info, see [GameplayReadme.md](GameplayReadme.md)

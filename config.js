@@ -19,13 +19,13 @@ const GameConfig = {
     },
 
     // ═══════════════════════════════════════════════════════════════
-    // 🔧 DEBUG CONFIG - for developers and chaos agents
+    // 🔧 DEBOOGER CONFIG - for developers and chaos agents
     // ═══════════════════════════════════════════════════════════════
-    // set debugEnabled to false for production builds
-    // this locks out all debug commands so players can't wreck the leaderboards
-    debug: {
-        enabled: true,         // true = debug commands work, false = locked out
-        showConsoleWarnings: true,  // show "debug disabled" warnings in console
+    // set deboogerEnabled to false for production builds
+    // this locks out all debooger commands so players can't wreck the leaderboards
+    debooger: {
+        enabled: true,         // true = debooger commands work, false = locked out
+        showConsoleWarnings: true,  // show "debooger disabled" warnings in console
     },
 
     // ═══════════════════════════════════════════════════════════════
@@ -42,14 +42,14 @@ const GameConfig = {
     // 👥 CREDITS - the souls who sacrificed their sanity
     // ═══════════════════════════════════════════════════════════════
     credits: {
-        studio: 'Unity AI Lab',
+        studio: 'Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com',
         developers: [
             { name: 'Hackall360', role: 'Lead Code Necromancer' },
             { name: 'Sponge', role: 'Chaos Engineer' },
             { name: 'GFourteen', role: 'Digital Alchemist' }
         ],
         year: '2022',
-        copyright: '© 2022 Unity AI Lab. all rights reserved. souls sold separately.'
+        copyright: '© 2022 Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com. all rights reserved. souls sold separately.'
     },
 
     // ═══════════════════════════════════════════════════════════════
@@ -954,8 +954,8 @@ const GameConfig = {
         // false = skip this test suite (it passed locally, save CI minutes)
         testSuites: {
             newGame: true,           // 🎮 new-game.spec.js - New Game Flow
-            debugCommands: true,     // 🐛 debug-commands.spec.js - Debug Commands
-            debug: true,             // 🔍 debug.spec.js - Console Error Check
+            deboogerCommands: true,     // 🐛 debooger-commands.spec.js - Debooger Commands
+            debooger: true,             // 🔍 debooger.spec.js - Console Error Check
             panels: true,            // 📋 panels.spec.js - Panel Tests
             features: true,          // 🎯 features.spec.js - Feature Tests
             settings: true,          // ⚙️ settings.spec.js - Settings Tests
@@ -966,8 +966,8 @@ const GameConfig = {
         // 📊 Test suite metadata (for workflow generation)
         suiteInfo: {
             newGame: { file: 'new-game.spec.js', emoji: '🎮', name: 'New Game Flow' },
-            debugCommands: { file: 'debug-commands.spec.js', emoji: '🐛', name: 'Debug Commands' },
-            debug: { file: 'debug.spec.js', emoji: '🔍', name: 'Console Errors' },
+            deboogerCommands: { file: 'debooger-commands.spec.js', emoji: '🐛', name: 'Debooger Commands' },
+            debooger: { file: 'debooger.spec.js', emoji: '🔍', name: 'Console Errors' },
             panels: { file: 'panels.spec.js', emoji: '📋', name: 'Panel Tests' },
             features: { file: 'features.spec.js', emoji: '🎯', name: 'Feature Tests' },
             settings: { file: 'settings.spec.js', emoji: '⚙️', name: 'Settings Tests' },

@@ -5,7 +5,7 @@
 // because even trading games deserve aesthetic love
 // File Version: GameConfig.version.file
 // Game Version: 0.2
-// Made by Unity AI Lab - Hackall360, Sponge, GFourteen
+// Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 
 // ⌨️ Keyboard Shortcuts - for the power users among us
 const KeyboardShortcuts = {
@@ -70,8 +70,8 @@ const KeyboardShortcuts = {
         'v': () => toggleColorblindMode(),
         'V': () => toggleColorblindMode(),
         
-        // Debug shortcuts (development only)
-        'F12': () => toggleDebugMode(),
+        // Debooger shortcuts 🦇 (development only)
+        'F12': () => toggleDeboogerMode(),
         'F11': () => exportGameData()
     },
     
@@ -934,7 +934,7 @@ const KeyboardShortcuts = {
                 newIndex = currentIndex - 1;
                 break;
             case 'right':
-                newIndex = newIndex + 1;
+                newIndex = currentIndex + 1; // 🖤 FIXED: was using undefined newIndex 💀
                 break;
         }
         
@@ -1145,10 +1145,10 @@ const KeyboardShortcuts = {
         addMessage('Redo action not yet implemented');
     },
     
-    // Debug functions
-    toggleDebugMode() {
-        document.body.classList.toggle('debug-mode');
-        addMessage('Debug mode ' + (document.body.classList.contains('debug-mode') ? 'enabled' : 'disabled'));
+    // 🖤 Debooger functions 💀 - Unity's dark diagnostic realm ⚰️
+    toggleDeboogerMode() {
+        document.body.classList.toggle('debooger-mode');
+        addMessage('Debooger mode ' + (document.body.classList.contains('debooger-mode') ? 'enabled' : 'disabled'));
     },
     
     exportGameData() {

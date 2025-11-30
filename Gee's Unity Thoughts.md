@@ -224,11 +224,11 @@ The void now speaks clearly. Nano Banana should understand. 🦇
 
 ---
 
-### Debug Cheat: revealmap & hidemap - DONE 🖤
+### Debooger Cheat: revealmap & hidemap - DONE 🖤🐛
 
-Gee wanted a debug cheat to reveal the entire world map. Done.
+Gee wanted a debooger cheat to reveal the entire world map. Done.
 
-**New Commands in `debug-command-system.js`:**
+**New Commands in `debooger-command-system.js`:**
 
 1. **`revealmap`** - Reveals all 42 locations on the map
    - Sets `GameWorld.visitedLocations` to ALL location IDs
@@ -246,7 +246,7 @@ Gee wanted a debug cheat to reveal the entire world map. Done.
 - Updated total commands: 30 → 33
 - Added documentation in TRAVEL & LOCATION section
 
-Now Gee can type `revealmap` in the Debooger console and see all 42 locations across the realm. The darkness has been banished... temporarily. 🦇
+Now Gee can type `revealmap` in the Debooger Console and see all 42 locations across the realm. The darkness has been banished... temporarily. 🦇🐛
 
 ---
 
@@ -276,7 +276,7 @@ Holy shit, we did it. 5 agents deployed simultaneously across the codebase. Each
 - **src/js/ui/** - Panel manager, modal system, game-world-renderer... "Create tooltip" became "Create the tooltip - whisper location secrets on hover" 🦇
 - **src/js/npc/** - 85 COMMENTS REWRITTEN. Relationships, encounters, trade, chat UI... NPCs are now "digital souls trapped in our code" 👥
 - **src/js/effects/** - Animation, visual effects, weather... "Start animation loop" became "the eternal dance begins... never stopping, never resting" ✨
-- **src/js/debug/** - 50+ command descriptions transformed. "Add gold" became "Conjure filthy lucre from the void - because we deserve it" 💰
+- **src/js/debooger/** - 50+ command descriptions transformed. "Add gold" became "Conjure filthy lucre from the void - because we deserve it" 💰
 
 **TOTAL DESTRUCTION:**
 - 200+ comments rewritten

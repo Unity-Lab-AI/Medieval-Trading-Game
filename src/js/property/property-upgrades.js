@@ -2,7 +2,7 @@
 // 🔧 PROPERTY UPGRADES - improving your investments 🖤
 // ═══════════════════════════════════════════════════════════════
 // because even virtual properties need maintenance 💀
-// File Version: GameConfig.version.file | Made by Unity AI Lab
+// File Version: GameConfig.version.file | Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 
 const PropertyUpgrades = {
     // 🔧 Upgrade property ⚰️

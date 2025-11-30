@@ -662,9 +662,9 @@ const NPCRelationshipSystem = {
     },
 
     /**
-     * Debug: List all NPCs and their feelings about the player
+     * Debooger: 🦇 List all NPCs and their feelings about the player
      */
-    debugListAll() {
+    deboogerListAll() {
         console.log('💕 === NPC Relationships ===');
         for (const [npcId, rel] of Object.entries(this.relationships)) {
             const level = this.getRelationshipLevel(rel.reputation);

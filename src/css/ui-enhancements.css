@@ -1245,12 +1245,12 @@ textarea:focus {
     height: 100%;
 }
 
-/* Debug mode styles */
-.debug-mode .panel {
+/* 🦇 Debooger mode styles 💀 */
+.debooger-mode .panel {
     border: 1px dashed var(--accent, #2196f3);
 }
 
-.debug-mode .panel::before {
+.debooger-mode .panel::before {
     content: attr(data-panel-name);
     position: absolute;
     top: -20px;

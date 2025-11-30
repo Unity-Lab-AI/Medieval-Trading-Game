@@ -9,9 +9,9 @@
 
 console.log('🔧 Summoning button repair spirits...');
 
-// 🖤 Debug-only logging helper - silent in production
-const debugWarn = (msg) => {
-    if (typeof GameConfig !== 'undefined' && GameConfig.debug?.enabled) {
+// 🖤💀 Debooger-only logging helper - silent in production 🦇
+const deboogerWarn = (msg) => {
+    if (typeof GameConfig !== 'undefined' && GameConfig.debooger?.enabled) {
         console.warn(msg);
     }
 };
@@ -55,7 +55,7 @@ function initializeButtonListeners() {
         if (typeof openMarket === 'function') {
             openMarket();
         } else {
-            debugWarn('🔧 openMarket function not found');
+            deboogerWarn('🔧 openMarket function not found');
         }
     });
     
@@ -64,7 +64,7 @@ function initializeButtonListeners() {
         if (typeof openTravel === 'function') {
             openTravel();
         } else {
-            debugWarn('🔧 openTravel function not found');
+            deboogerWarn('🔧 openTravel function not found');
         }
     });
     
@@ -73,7 +73,7 @@ function initializeButtonListeners() {
         if (typeof openTransportation === 'function') {
             openTransportation();
         } else {
-            debugWarn('🔧 openTransportation function not found');
+            deboogerWarn('🔧 openTransportation function not found');
         }
     });
 
@@ -83,7 +83,7 @@ function initializeButtonListeners() {
         if (typeof openTransportation === 'function') {
             openTransportation();
         } else {
-            debugWarn('🔧 openTransportation function not found');
+            deboogerWarn('🔧 openTransportation function not found');
         }
     }, true); // true = optional
     
@@ -92,7 +92,7 @@ function initializeButtonListeners() {
         if (typeof openInventory === 'function') {
             openInventory();
         } else {
-            debugWarn('🔧 openInventory function not found');
+            deboogerWarn('🔧 openInventory function not found');
         }
     });
     
@@ -102,7 +102,7 @@ function initializeButtonListeners() {
         if (typeof saveGame === 'function') {
             saveGame();
         } else {
-            debugWarn('🔧 saveGame function not found');
+            deboogerWarn('🔧 saveGame function not found');
         }
     }, true); // true = optional
     
@@ -111,7 +111,7 @@ function initializeButtonListeners() {
         if (typeof toggleMenu === 'function') {
             toggleMenu();
         } else {
-            debugWarn('🔧 toggleMenu function not found');
+            deboogerWarn('🔧 toggleMenu function not found');
         }
     });
     
@@ -122,7 +122,7 @@ function initializeButtonListeners() {
         if (typeof createCharacter === 'function') {
             createCharacter(e);
         } else {
-            debugWarn('🔧 createCharacter function not found');
+            deboogerWarn('🔧 createCharacter function not found');
         }
     }, true); // true = optional, form submit handles this
 
@@ -131,7 +131,7 @@ function initializeButtonListeners() {
         if (typeof randomizeCharacter === 'function') {
             randomizeCharacter();
         } else {
-            debugWarn('🔧 randomizeCharacter function not found');
+            deboogerWarn('🔧 randomizeCharacter function not found');
         }
     });
     
@@ -141,7 +141,7 @@ function initializeButtonListeners() {
         if (typeof closeMarket === 'function') {
             closeMarket();
         } else {
-            debugWarn('🔧 closeMarket function not found');
+            deboogerWarn('🔧 closeMarket function not found');
         }
     });
     
@@ -150,7 +150,7 @@ function initializeButtonListeners() {
         if (typeof closeInventory === 'function') {
             closeInventory();
         } else {
-            debugWarn('🔧 closeInventory function not found');
+            deboogerWarn('🔧 closeInventory function not found');
         }
     });
     
@@ -159,7 +159,7 @@ function initializeButtonListeners() {
         if (typeof closeTravel === 'function') {
             closeTravel();
         } else {
-            debugWarn('🔧 closeTravel function not found');
+            deboogerWarn('🔧 closeTravel function not found');
         }
     });
     
@@ -168,7 +168,7 @@ function initializeButtonListeners() {
         if (typeof closeTransportation === 'function') {
             closeTransportation();
         } else {
-            debugWarn('🔧 closeTransportation function not found');
+            deboogerWarn('🔧 closeTransportation function not found');
         }
     });
     
@@ -178,7 +178,7 @@ function initializeButtonListeners() {
         if (typeof TimeSystem !== 'undefined' && TimeSystem.setSpeed) {
             TimeSystem.setSpeed('PAUSED');
         } else {
-            debugWarn('🔧 TimeSystem.setSpeed not found');
+            deboogerWarn('🔧 TimeSystem.setSpeed not found');
         }
     });
 
@@ -187,7 +187,7 @@ function initializeButtonListeners() {
         if (typeof TimeSystem !== 'undefined' && TimeSystem.setSpeed) {
             TimeSystem.setSpeed('NORMAL');
         } else {
-            debugWarn('🔧 TimeSystem.setSpeed not found');
+            deboogerWarn('🔧 TimeSystem.setSpeed not found');
         }
     });
 
@@ -196,7 +196,7 @@ function initializeButtonListeners() {
         if (typeof TimeSystem !== 'undefined' && TimeSystem.setSpeed) {
             TimeSystem.setSpeed('FAST');
         } else {
-            debugWarn('🔧 TimeSystem.setSpeed not found');
+            deboogerWarn('🔧 TimeSystem.setSpeed not found');
         }
     });
 
@@ -205,7 +205,7 @@ function initializeButtonListeners() {
         if (typeof TimeSystem !== 'undefined' && TimeSystem.setSpeed) {
             TimeSystem.setSpeed('VERY_FAST');
         } else {
-            debugWarn('🔧 TimeSystem.setSpeed not found');
+            deboogerWarn('🔧 TimeSystem.setSpeed not found');
         }
     });
     
@@ -215,7 +215,7 @@ function initializeButtonListeners() {
         if (typeof GameWorldRenderer !== 'undefined' && GameWorldRenderer.centerOnPlayer) {
             GameWorldRenderer.centerOnPlayer();
         } else {
-            debugWarn('🔧 GameWorldRenderer.centerOnPlayer not found');
+            deboogerWarn('🔧 GameWorldRenderer.centerOnPlayer not found');
         }
     });
     
@@ -246,7 +246,7 @@ function fixFormSubmissions() {
             if (typeof createCharacter === 'function') {
                 createCharacter(e);
             } else {
-                debugWarn('🔧 createCharacter function not found');
+                deboogerWarn('🔧 createCharacter function not found');
             }
         });
         console.log('✓ Fixed character form submission');
@@ -263,7 +263,7 @@ function fixTabSwitching() {
             if (typeof switchTab === 'function') {
                 switchTab(tabName);
             } else {
-                debugWarn('🔧 switchTab function not found');
+                deboogerWarn('🔧 switchTab function not found');
             }
         });
     });

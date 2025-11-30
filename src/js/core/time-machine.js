@@ -2,7 +2,7 @@
 // ⏰ THE TIME MACHINE - All of existence, unified in one dark engine
 // ═══════════════════════════════════════════════════════════════
 // File Version: 0.81
-// Made by Unity AI Lab - Hackall360, Sponge, GFourteen
+// Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 // ═══════════════════════════════════════════════════════════════
 // 🖤 This is THE source of all time in the game
 // 🦇 No more scattered time logic - everything flows through here
@@ -439,25 +439,33 @@ const TimeMachine = {
 
     // 🚶 Check for pending travel destination
     checkAndStartPendingTravel() {
+        console.log('🚶 checkAndStartPendingTravel called');
+
         // 💀 Don't start if already traveling
         if (typeof TravelSystem !== 'undefined' && TravelSystem.playerPosition?.isTraveling) {
+            console.log('🚶 Already traveling, skipping');
             return;
         }
 
-        // 🔮 Check for pending destination
+        // 🖤 First try TravelPanelMap's onGameUnpaused (handles the full travel flow)
+        if (typeof TravelPanelMap !== 'undefined' && TravelPanelMap.currentDestination && TravelPanelMap.onGameUnpaused) {
+            console.log('🚶 Delegating to TravelPanelMap.onGameUnpaused');
+            TravelPanelMap.onGameUnpaused();
+            return; // TravelPanelMap handles everything, don't double-call
+        }
+
+        // 🔮 Fallback: Check for pending destination in GameWorldRenderer only
         let destinationId = null;
 
         if (typeof GameWorldRenderer !== 'undefined' && GameWorldRenderer.currentDestination) {
             destinationId = GameWorldRenderer.currentDestination.id;
-        } else if (typeof TravelPanelMap !== 'undefined' && TravelPanelMap.currentDestination) {
-            destinationId = TravelPanelMap.currentDestination.id;
         }
 
         // 🗡️ Start travel if destination exists and isn't current location
-        if (destinationId && typeof TravelSystem !== 'undefined' && TravelSystem.travelTo) {
+        if (destinationId && typeof TravelSystem !== 'undefined' && TravelSystem.startTravel) {
             if (typeof game !== 'undefined' && game.currentLocation?.id !== destinationId) {
-                console.log(`🚶 Auto-starting travel to ${destinationId}`);
-                TravelSystem.travelTo(destinationId);
+                console.log(`🚶 Auto-starting travel to ${destinationId} (fallback)`);
+                TravelSystem.startTravel(destinationId);
             }
         }
     },

@@ -2,7 +2,7 @@
 // ⚔️ COMBAT SYSTEM - When trading isn't an option
 // ═══════════════════════════════════════════════════════════════
 // File Version: GameConfig.version.file
-// Made by Unity AI Lab - Hackall360, Sponge, GFourteen
+// Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 // ═══════════════════════════════════════════════════════════════
 // A complete combat resolution system for encounters, robberies,
 // dungeon fights, and random events. Calculates damage, applies
@@ -10,6 +10,18 @@
 // ═══════════════════════════════════════════════════════════════
 
 const CombatSystem = {
+    // ═══════════════════════════════════════════════════════════════
+    // UTILITIES - Security first, bitches 🖤💀
+    // ═══════════════════════════════════════════════════════════════
+
+    // 🛡️ Escape HTML to prevent XSS - Unity says "sanitize or die" 🦇
+    escapeHtml(text) {
+        if (text == null) return '';
+        const div = document.createElement('div');
+        div.textContent = String(text);
+        return div.innerHTML;
+    },
+
     // ═══════════════════════════════════════════════════════════════
     // CONFIGURATION
     // ═══════════════════════════════════════════════════════════════
@@ -600,7 +612,7 @@ const CombatSystem = {
                 </div>
 
                 <div class="combat-log" id="combat-log-display">
-                    ${this.combatLog.map(msg => `<div class="log-entry">${msg}</div>`).join('')}
+                    ${this.combatLog.map(msg => `<div class="log-entry">${this.escapeHtml(msg)}</div>`).join('')}
                 </div>
 
                 <div class="combat-actions" id="combat-actions">
@@ -664,11 +676,11 @@ const CombatSystem = {
             roundText.textContent = `Round ${combat.round}`;
         }
 
-        // Update combat log
+        // Update combat log - 🛡️ Sanitized against XSS 🦇
         const logDisplay = document.getElementById('combat-log-display');
         if (logDisplay) {
             logDisplay.innerHTML = this.combatLog.map(msg =>
-                `<div class="log-entry">${msg}</div>`
+                `<div class="log-entry">${this.escapeHtml(msg)}</div>`
             ).join('');
             logDisplay.scrollTop = logDisplay.scrollHeight;
         }

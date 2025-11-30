@@ -452,8 +452,11 @@ const EquipmentSystem = {
             const itemId = this.getEquipped(slotId);
             const item = itemId ? ItemDatabase?.items?.[itemId] : null;
 
+            // 💀 Click equipped item to unequip - no button needed
             html += `
-                <div class="equipment-slot-box ${itemId ? 'equipped' : 'empty'}" data-slot="${slotId}">
+                <div class="equipment-slot-box ${itemId ? 'equipped clickable-unequip' : 'empty'}"
+                     data-slot="${slotId}"
+                     ${itemId ? `onclick="EquipmentSystem.unequip('${slotId}')" style="cursor: pointer;" title="Click to unequip"` : ''}>
                     <div class="slot-header">
                         <span class="slot-icon">${slot.icon}</span>
                         <span class="slot-name">${slot.name}</span>
@@ -466,11 +469,6 @@ const EquipmentSystem = {
                         ` : `
                             <span class="empty-slot">Empty</span>
                         `}
-                    </div>
-                    <div class="slot-actions">
-                        ${itemId ? `
-                            <button class="equip-btn unequip" onclick="EquipmentSystem.unequip('${slotId}')">Unequip</button>
-                        ` : ''}
                     </div>
                 </div>
             `;

@@ -2264,8 +2264,8 @@ const UnifiedItemSystem = {
         return report;
     },
 
-    // Debug helper - print item chain
-    debugItemChain(itemId) {
+    // Debooger helper 💀 - print item chain
+    deboogerItemChain(itemId) {
         const chain = this.getItemChain(itemId);
         console.log(`\n🔗 Item Chain for '${itemId}':`);
 

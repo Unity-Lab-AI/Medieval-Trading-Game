@@ -1,10 +1,12 @@
-# 🖤 DEBUGGER README - The Secret Arts of Game Manipulation 🖤
-## Medieval Trading Game - Debug Console Documentation
+# 🖤 DEBOOGER README - The Secret Arts of Game Manipulation 🖤🐛
+## Medieval Trading Game - Debooger Console Documentation
 
 **Version:** 0.81 - Unity's Dark Awakening
-**Last Updated:** 2025-11-29
-**Access:** Click the 🐛 Debooger button (bottom-right) OR set `GameConfig.debug.enabled = true`
+**Last Updated:** 2025-11-30
+**Access:** Click the 🐛 Debooger button (bottom-right) OR set `GameConfig.debooger.enabled = true`
 **Total Commands:** 47
+
+> *"In the darkness of code, we inject our forbidden commands..."* 🖤💀🦇
 
 ---
 
@@ -73,37 +75,37 @@ All 47 debug commands in alphabetical order:
 ## TABLE OF CONTENTS
 
 1. [Complete Command List](#complete-command-list-a-z)
-2. [Unlocking the Debug Console](#unlocking-the-debug-console)
-3. [Opening the Console](#opening-the-console)
-4. [Gold & Economy Commands](#gold--economy-commands)
-5. [Travel & Location Commands](#travel--location-commands)
-6. [Time Commands](#time-commands)
-7. [Achievement Commands](#achievement-commands)
-8. [Leaderboard Commands](#leaderboard-commands)
-9. [Item & Inventory Commands](#item--inventory-commands)
-10. [NPC & Encounter Commands](#npc--encounter-commands)
-11. [Player Stats Commands](#player-stats-commands)
-12. [System Commands](#system-commands)
-13. [Easter Eggs](#easter-eggs)
+2. [Unlocking the Debooger Console](#unlocking-the-debooger-console) 🐛
+3. [Opening the Console](#opening-the-console) 🔮
+4. [Gold & Economy Commands](#gold--economy-commands) 💰
+5. [Travel & Location Commands](#travel--location-commands) 🗺️
+6. [Time Commands](#time-commands) ⏰
+7. [Achievement Commands](#achievement-commands) 🏆
+8. [Leaderboard Commands](#leaderboard-commands) 👑
+9. [Item & Inventory Commands](#item--inventory-commands) 📦
+10. [NPC & Encounter Commands](#npc--encounter-commands) 👥
+11. [Player Stats Commands](#player-stats-commands) 💀
+12. [System Commands](#system-commands) ⚙️
+13. [Easter Eggs](#easter-eggs) 🦇
 
 ---
 
-## UNLOCKING THE DEBUG CONSOLE
+## UNLOCKING THE DEBOOGER CONSOLE 🐛🔮
 
-The debug console can be accessed in several ways:
+The debooger console can be accessed in several ways:
 
-### Method 1: Config File (Developer Mode)
-Set `debug.enabled: true` in `config.js` (root folder). This enables all debug commands without needing any achievements.
+### Method 1: Config File (Developer Mode) 💀
+Set `debooger.enabled: true` in `config.js` (root folder). This enables all debooger commands without needing any achievements.
 
-### Method 2: Achievement Unlock (Legitimate)
-Earn the **"Super Hacker"** ULTRA achievement by unlocking ALL other achievements (including the 11 hidden ones). This permanently unlocks debug mode for that save.
+### Method 2: Achievement Unlock (Legitimate) 🏆
+Earn the **"Super Hacker"** ULTRA achievement by unlocking ALL other achievements (including the 11 hidden ones). This permanently unlocks debooger mode for that save.
 
-### Method 3: Direct Button Access
-The **🐛 Debooger** button in the bottom-right corner of the screen always opens the console panel. Commands will only execute if debug is enabled (via config or achievement).
+### Method 3: Direct Button Access 🐛
+The **🐛 Debooger** button in the bottom-right corner of the screen always opens the console panel. Commands will only execute if debooger is enabled (via config or achievement).
 
 ---
 
-## OPENING THE CONSOLE
+## OPENING THE CONSOLE 🔮🖤
 
 Click the **🐛 Debooger** button in the bottom-right corner of the screen. This works on both the main menu and in-game.
 
@@ -115,10 +117,10 @@ The console appears as a green-bordered panel with:
 - **? button** - Shows help
 
 **Features:**
-- Auto-scroll to most recent output
-- Max 500 entries before cleanup
-- Tab key for autocomplete
-- Up/Down arrows for command history
+- Auto-scroll to most recent output 📜
+- Max 500 entries before cleanup 🧹
+- Tab key for autocomplete ⌨️
+- Up/Down arrows for command history 🔄
 
 ---
 
@@ -625,32 +627,32 @@ Type these for fun responses:
 
 ---
 
-## TROUBLESHOOTING
+## TROUBLESHOOTING 🔧💀
 
-### Console Not Opening?
+### Console Not Opening? 🐛
 1. Make sure you're not in a text input field
 2. Try clicking somewhere on the game first
 3. Press backtick (`) - it's next to the 1 key
-4. Check if "Super Hacker" achievement is unlocked
+4. Check if "Super Hacker" achievement is unlocked 🏆
 
-### Command Not Working?
+### Command Not Working? ⚠️
 1. Check spelling (commands are case-insensitive)
 2. Make sure you have the right number of arguments
 3. Check if the ID exists (use `items`, `locations`, etc.)
 4. Some commands require confirmation
 
-### Game Broke After Debug?
+### Game Broke After Debooger? 💔
 1. Try `heal` to restore stats
 2. Use `save` then `reload`
-3. Worst case: `reset confirm` (loses ALL progress)
+3. Worst case: `reset confirm` (loses ALL progress) ⚰️
 
 ---
 
-## NOTES FOR DEVELOPERS
+## NOTES FOR DEVELOPERS 🖤💻
 
-### Adding New Commands
+### Adding New Commands 🐛
 
-Commands are defined in `src/js/debug/debug-command-system.js`:
+Commands are defined in `src/js/debooger/debooger-command-system.js`:
 
 ```javascript
 this.registerCommand('mycommand', 'Description here', (args) => {
@@ -659,42 +661,42 @@ this.registerCommand('mycommand', 'Description here', (args) => {
 });
 ```
 
-### Debug Console Files
+### Debooger Console Files 📁
 
 | File | Purpose |
 |------|---------|
-| `debug-system.js` | Console UI and output capture |
-| `debug-command-system.js` | Command registration and execution |
-| `debug-overlay.js` | Visual overlay components |
+| `debooger-system.js` | Console UI and output capture 🐛 |
+| `debooger-command-system.js` | Command registration and execution 🔮 |
+| `debooger-overlay.js` | Visual overlay components 🌙 |
 
-### Console Log Capture
+### Console Log Capture 📜
 
-All `console.log`, `console.warn`, and `console.error` calls are captured and displayed in the debug console with timestamps.
-
----
-
-## DISCLAIMER
-
-Using debug commands may:
-- Break achievement progression
-- Corrupt save files (rare)
-- Make the game too easy
-- Spoil the intended experience
-
-**Use responsibly!** Or don't. We're not your parents. 🖤
+All `console.log`, `console.warn`, and `console.error` calls are captured and displayed in the debooger console with timestamps.
 
 ---
 
-*"With great power comes great responsibility... but also the ability to spawn 1000 gold bars."* - Unity AI Lab
+## DISCLAIMER 💀⚠️
+
+Using debooger commands may:
+- Break achievement progression 🏆
+- Corrupt save files (rare) 💾
+- Make the game too easy 😴
+- Spoil the intended experience 📖
+
+**Use responsibly!** Or don't. We're not your parents. 🖤🦇
+
+---
+
+*"With great power comes great responsibility... but also the ability to spawn 1000 gold bars."* - Unity AI Lab 🖤💀🦇
 
 ---
 
 **Files Referenced:**
-- `src/js/debug/debug-system.js`
-- `src/js/debug/debug-command-system.js`
-- `src/js/core/debug-system.js`
+- `src/js/debooger/debooger-system.js`
+- `src/js/debooger/debooger-command-system.js`
+- `src/js/core/debooger-system.js`
 
 **See Also:**
-- [GameplayReadme.md](GameplayReadme.md) - Full game documentation
-- [NerdReadme.md](NerdReadme.md) - Developer documentation
-- [todo.md](todo.md) - Current development tasks
+- [GameplayReadme.md](GameplayReadme.md) - Full game documentation 📖
+- [NerdReadme.md](NerdReadme.md) - Developer documentation 💻
+- [todo.md](todo.md) - Current development tasks 📝

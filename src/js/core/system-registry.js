@@ -2,7 +2,7 @@
 // 🖤 SYSTEM REGISTRY - Centralized access to game systems
 // ═══════════════════════════════════════════════════════════════════════════
 // File Version: 0.81
-// Made by Unity AI Lab - Hackall360, Sponge, GFourteen
+// Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 // ═══════════════════════════════════════════════════════════════════════════
 // Instead of 869 `typeof !== 'undefined'` checks scattered everywhere,
 // use this registry to safely access any system. It's like a phone book
@@ -13,11 +13,11 @@ const SystemRegistry = {
     // 🖤 Cache of system references for faster access
     _cache: new Map(),
 
-    // 🗡️ Track which systems have been accessed (for debugging)
+    // 🗡️ Track which systems have been accessed (for deboogering 🦇)
     _accessLog: [],
 
     // ⚰️ Whether to log access attempts (disable in production)
-    _debugMode: false,
+    _deboogerMode: false,
 
     // ═══════════════════════════════════════════════════════════════════════
     // 💀 CORE METHODS - The dark API
@@ -38,7 +38,7 @@ const SystemRegistry = {
         const exists = typeof window[name] !== 'undefined' && window[name] !== null;
         this._cache.set(name, exists ? window[name] : null);
 
-        if (this._debugMode) {
+        if (this._deboogerMode) {
             this._accessLog.push({ name, exists, time: Date.now() });
         }
 
@@ -223,26 +223,27 @@ const SystemRegistry = {
     },
 
     // ═══════════════════════════════════════════════════════════════════════
-    // ⚰️ DEBUG METHODS - Peer into the void
+    // ⚰️ DEBOOGER METHODS 🦇 - Peer into the void
     // ═══════════════════════════════════════════════════════════════════════
 
     /**
-     * 💀 Enable debug mode (logs all access attempts)
+     * 💀 Enable debooger mode 💀 (logs all access attempts)
      */
-    enableDebug() {
-        this._debugMode = true;
-        console.log('🖤 SystemRegistry: Debug mode enabled');
+    enableDebooger() {
+        this._deboogerMode = true;
+        console.log('🖤 SystemRegistry: Debooger mode enabled 🖤');
     },
 
     /**
-     * 🌙 Disable debug mode
+     * 🌙 Disable debooger mode
      */
-    disableDebug() {
-        this._debugMode = false;
+    disableDebooger() {
+        this._deboogerMode = false;
+        console.log('🖤 SystemRegistry: Debooger mode disabled 🖤');
     },
 
     /**
-     * 🔮 Get access log (debug mode only)
+     * 🔮 Get access log (debooger mode only)
      * @returns {Array}
      */
     getAccessLog() {

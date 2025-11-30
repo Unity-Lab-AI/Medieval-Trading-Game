@@ -2,7 +2,7 @@
 // 🖤 GAME FLOW TESTS - Complete game flow testing from startup to death
 // ═══════════════════════════════════════════════════════════════
 // Tests the complete lifecycle of a game session
-// Made by Unity 🖤 Agent F
+// Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 // ═══════════════════════════════════════════════════════════════
 
 const { test, expect } = require('@playwright/test');
@@ -10,8 +10,8 @@ const config = require('./config/test-config');
 const {
   waitForGameLoad,
   startNewGame,
-  openDebugConsole,
-  runDebugCommand,
+  openDeboogerConsole,
+  runDeboogerCommand,
   getPlayerGold,
   getPlayerStats,
   setupConsoleCapture,
@@ -536,8 +536,8 @@ test.describe('Save/Load Game Flow', () => {
     });
 
     // Modify gold
-    await openDebugConsole(page);
-    await runDebugCommand(page, 'gold 500');
+    await openDeboogerConsole(page);
+    await runDeboogerCommand(page, 'gold 500');
     await page.waitForTimeout(500);
 
     const goldAfterChange = await getPlayerGold(page);
@@ -573,8 +573,8 @@ test.describe('Save/Load Game Flow', () => {
 
   test('save includes player state correctly', async ({ page }) => {
     // Modify player state
-    await openDebugConsole(page);
-    await runDebugCommand(page, 'gold 999');
+    await openDeboogerConsole(page);
+    await runDeboogerCommand(page, 'gold 999');
     await page.waitForTimeout(300);
 
     const goldBefore = await getPlayerGold(page);
@@ -652,8 +652,8 @@ test.describe('Quit to Main Menu', () => {
 
   test('game state is cleaned up on quit', async ({ page }) => {
     // Modify game state
-    await openDebugConsole(page);
-    await runDebugCommand(page, 'gold 999');
+    await openDeboogerConsole(page);
+    await runDeboogerCommand(page, 'gold 999');
     await page.waitForTimeout(300);
 
     // Quit
@@ -706,17 +706,17 @@ test.describe('Game Over Conditions', () => {
   });
 
   test('death by starvation triggers game over', async ({ page }) => {
-    await openDebugConsole(page);
+    await openDeboogerConsole(page);
 
     // Set health and hunger to critical levels
-    await runDebugCommand(page, 'setstat health 1');
+    await runDeboogerCommand(page, 'setstat health 1');
     await page.waitForTimeout(300);
 
-    await runDebugCommand(page, 'setstat hunger 0');
+    await runDeboogerCommand(page, 'setstat hunger 0');
     await page.waitForTimeout(300);
 
     // Kill player
-    await runDebugCommand(page, 'setstat health 0');
+    await runDeboogerCommand(page, 'setstat health 0');
     await page.waitForTimeout(1000);
 
     // Game over overlay should appear
@@ -730,8 +730,8 @@ test.describe('Game Over Conditions', () => {
 
   test('game over screen displays final stats', async ({ page }) => {
     // Trigger game over
-    await openDebugConsole(page);
-    await runDebugCommand(page, 'setstat health 0');
+    await openDeboogerConsole(page);
+    await runDeboogerCommand(page, 'setstat health 0');
     await page.waitForTimeout(1000);
 
     // Check for stats grid
@@ -745,8 +745,8 @@ test.describe('Game Over Conditions', () => {
 
   test('game over screen has action buttons', async ({ page }) => {
     // Trigger game over
-    await openDebugConsole(page);
-    await runDebugCommand(page, 'setstat health 0');
+    await openDeboogerConsole(page);
+    await runDeboogerCommand(page, 'setstat health 0');
     await page.waitForTimeout(1000);
 
     // Check for action buttons
@@ -761,8 +761,8 @@ test.describe('Game Over Conditions', () => {
 
   test('can restart game from game over screen', async ({ page }) => {
     // Trigger game over
-    await openDebugConsole(page);
-    await runDebugCommand(page, 'setstat health 0');
+    await openDeboogerConsole(page);
+    await runDeboogerCommand(page, 'setstat health 0');
     await page.waitForTimeout(1000);
 
     // Click Try Again button
@@ -785,8 +785,8 @@ test.describe('Game Over Conditions', () => {
 
   test('can return to main menu from game over', async ({ page }) => {
     // Trigger game over
-    await openDebugConsole(page);
-    await runDebugCommand(page, 'setstat health 0');
+    await openDeboogerConsole(page);
+    await runDeboogerCommand(page, 'setstat health 0');
     await page.waitForTimeout(1000);
 
     // Click Main Menu button
@@ -802,10 +802,10 @@ test.describe('Game Over Conditions', () => {
 
   test('death cause is tracked correctly', async ({ page }) => {
     // Trigger starvation death
-    await openDebugConsole(page);
-    await runDebugCommand(page, 'setstat hunger 0');
+    await openDeboogerConsole(page);
+    await runDeboogerCommand(page, 'setstat hunger 0');
     await page.waitForTimeout(300);
-    await runDebugCommand(page, 'setstat health 0');
+    await runDeboogerCommand(page, 'setstat health 0');
     await page.waitForTimeout(1000);
 
     // Check death cause in game over screen
@@ -850,8 +850,8 @@ test.describe('Complete Game Cycle', () => {
     expect(gameStarted).toBe(true);
 
     // STEP 4: Play game (modify state)
-    await openDebugConsole(page);
-    await runDebugCommand(page, 'gold 777');
+    await openDeboogerConsole(page);
+    await runDeboogerCommand(page, 'gold 777');
     await page.waitForTimeout(500);
 
     const goldAfterPlay = await getPlayerGold(page);
@@ -862,7 +862,7 @@ test.describe('Complete Game Cycle', () => {
     await page.waitForTimeout(500);
 
     // STEP 6: Modify state again
-    await runDebugCommand(page, 'gold 123');
+    await runDeboogerCommand(page, 'gold 123');
     await page.waitForTimeout(500);
 
     // STEP 7: Load saved game

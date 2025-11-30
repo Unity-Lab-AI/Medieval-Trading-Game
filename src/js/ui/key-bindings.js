@@ -2,7 +2,7 @@
 // ⌨️ KEY BINDINGS - your keyboard is your weapon 🖤
 // ═══════════════════════════════════════════════════════════════
 // global keyboard shortcuts and rebinding system 💀
-// File Version: GameConfig.version.file | Made by Unity AI Lab
+// File Version: GameConfig.version.file | Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 
 const KeyBindings = {
     // 🎮 Get defaults from GameConfig (or use fallbacks if config not loaded) ⚰️

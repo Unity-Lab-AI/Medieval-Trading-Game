@@ -3,7 +3,7 @@
  * Toggle which test suites run with simple true/false flags
  *
  * Set any to false to skip those tests
- * ALL DISABLED FOR PRODUCTION - enable to debug/test
+ * ALL DISABLED FOR PRODUCTION - enable to debooger/test
  */
 
 module.exports = {
@@ -25,11 +25,11 @@ module.exports = {
   gameFlowTests: false,
 
   // ═══════════════════════════════════════════════════════════════
-  // 🐛 DEBUG & CHEAT COMMAND TESTS
+  // 🐛 DEBOOGER & CHEAT COMMAND TESTS 🖤
   // ═══════════════════════════════════════════════════════════════
 
-  // Test all debug/cheat commands via the in-game debugger
-  debugCommandTests: false,
+  // Test all debooger/cheat commands via the in-game debooger 💀
+  deboogerCommandTests: false,
 
   // Test gold manipulation commands (gold, addgold)
   goldCommands: false,

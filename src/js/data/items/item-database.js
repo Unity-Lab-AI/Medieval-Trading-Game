@@ -1745,7 +1745,7 @@ const ItemDatabase = {
                 speed: 25,
                 strength: 25
             },
-            lore: 'Forged in the fires of a thousand debug sessions, this blade cuts through code and flesh alike. Only those who have proven themselves worthy by mastering every challenge may wield it.',
+            lore: 'Forged in the fires of a thousand debooger sessions 💀, this blade cuts through code and flesh alike. Only those who have proven themselves worthy by mastering every challenge may wield it.',
             visualEffect: 'glitch'  // Special visual effect when equipped
         },
 

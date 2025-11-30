@@ -2,7 +2,7 @@
 // 🌅 DAY/NIGHT CYCLE - Time waits for no merchant
 // ═══════════════════════════════════════════════════════════════
 // File Version: GameConfig.version.file
-// Made by Unity AI Lab - Hackall360, Sponge, GFourteen
+// Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 // ═══════════════════════════════════════════════════════════════
 // Visual day/night cycle that affects the game's atmosphere,
 // shop availability, NPC schedules, and danger levels.
@@ -467,7 +467,7 @@ const DayNightCycle = {
     },
 
     // ═══════════════════════════════════════════════════════════════
-    // DEBUG
+    // DEBOOGER 🦇
     // ═══════════════════════════════════════════════════════════════
     setPhase(phaseId) {
         if (this.phases[phaseId]) {

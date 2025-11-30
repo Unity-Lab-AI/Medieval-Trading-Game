@@ -2,7 +2,7 @@
 // 🏠 PROPERTY TYPES - the blueprint of ownership 🖤
 // ═══════════════════════════════════════════════════════════════
 // all the different flavors of virtual real estate 💀
-// File Version: GameConfig.version.file | Made by Unity AI Lab
+// File Version: GameConfig.version.file | Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 
 const PropertyTypes = {
     // 🏘️ Property types - various flavors of ownership ⚰️

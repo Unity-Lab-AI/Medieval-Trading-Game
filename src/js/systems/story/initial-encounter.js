@@ -320,7 +320,7 @@ const InitialEncounterSystem = {
 };
 
 // ═══════════════════════════════════════════════════════════════
-// 🌍 GLOBAL ACCESS - for testing and debug commands
+// 🌍 GLOBAL ACCESS - for testing and debooger commands 🦇
 // ═══════════════════════════════════════════════════════════════
 window.InitialEncounterSystem = InitialEncounterSystem;
 window.testInitialEncounter = function(name) {

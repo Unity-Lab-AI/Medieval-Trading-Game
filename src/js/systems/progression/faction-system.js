@@ -2,7 +2,7 @@
 // 🏛️ FACTION SYSTEM - Choose your allies wisely
 // ═══════════════════════════════════════════════════════════════
 // File Version: GameConfig.version.file
-// Made by Unity AI Lab - Hackall360, Sponge, GFourteen
+// Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 // ═══════════════════════════════════════════════════════════════
 // Faction reputation affects prices, access to special items,
 // quest availability, and NPC reactions throughout the game.
@@ -816,7 +816,7 @@ const FactionSystem = {
     },
 
     // ═══════════════════════════════════════════════════════════════
-    // 🐛 DEBUG & CHEATS - for testing, not for casuals 🖤
+    // 🐛 DEBOOGER & CHEATS 🦇 - for testing, not for casuals 🖤
     // ═══════════════════════════════════════════════════════════════
     setReputation(factionId, amount) {
         if (this.factions[factionId]) {

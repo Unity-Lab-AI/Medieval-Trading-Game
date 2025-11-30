@@ -474,9 +474,20 @@ const NPCTradeWindow = {
                 Math.ceil(price * (1 - this.currentDiscount / 100)) :
                 Math.floor(price * 0.5); // Sell at half price
 
-            // 🖤 Using data attributes for safety - no eval injection today, Satan
+            // 🛒 Get item data for cart
+            const itemData = typeof ItemDatabase !== 'undefined' ? ItemDatabase.getItem(itemId) : null;
+
+            // 🖤 Click on the item box to add to cart - no separate buttons needed!
             return `
-                <div class="inventory-item" data-item="${this.escapeHtml(itemId)}" data-side="${this.escapeHtml(side)}">
+                <div class="inventory-item clickable-item"
+                     data-item="${this.escapeHtml(itemId)}"
+                     data-side="${this.escapeHtml(side)}"
+                     data-action="${side === 'npc' ? 'buy' : 'sell'}"
+                     data-price="${displayPrice}"
+                     data-stock="${qty}"
+                     data-item-name="${this.escapeHtml(itemData?.name || this.formatItemName(itemId))}"
+                     data-item-icon="${this.escapeHtml(itemData?.icon || this.getItemIcon(itemId))}"
+                     data-item-weight="${itemData?.weight || 1}">
                     <span class="item-icon">${this.getItemIcon(itemId)}</span>
                     <span class="item-name">${this.formatItemName(itemId)}</span>
                     <span class="item-qty">x${qty}</span>
@@ -1282,6 +1293,39 @@ const NPCTradeWindow = {
                     const amount = robberyBtn.dataset.robberyAmount ?
                         parseInt(robberyBtn.dataset.robberyAmount, 10) : undefined;
                     this.handleRobbery(action, amount);
+                    return;
+                }
+
+                // 🛒 Click on inventory item - opens TradeCartPanel
+                const clickableItem = target.closest('.clickable-item');
+                if (clickableItem) {
+                    const action = clickableItem.dataset.action;
+                    const itemId = clickableItem.dataset.item;
+                    const price = parseInt(clickableItem.dataset.price, 10) || 0;
+                    const stock = parseInt(clickableItem.dataset.stock, 10) || 1;
+                    const itemName = clickableItem.dataset.itemName || itemId;
+                    const itemIcon = clickableItem.dataset.itemIcon || '📦';
+                    const itemWeight = parseFloat(clickableItem.dataset.itemWeight) || 1;
+
+                    // 🛒 Open TradeCartPanel and add item
+                    if (typeof TradeCartPanel !== 'undefined') {
+                        // Ensure cart is open with current merchant
+                        if (!TradeCartPanel.isOpen) {
+                            TradeCartPanel.open(this.currentNPC, action);
+                        }
+                        // Add item to cart
+                        TradeCartPanel.addItem(itemId, price, stock, {
+                            name: itemName,
+                            icon: itemIcon,
+                            weight: itemWeight
+                        });
+                        // Visual feedback
+                        clickableItem.classList.add('added-to-cart');
+                        setTimeout(() => clickableItem.classList.remove('added-to-cart'), 300);
+                    } else {
+                        // Fallback to old behavior
+                        this.addToOffer(itemId, clickableItem.dataset.side);
+                    }
                     return;
                 }
             });

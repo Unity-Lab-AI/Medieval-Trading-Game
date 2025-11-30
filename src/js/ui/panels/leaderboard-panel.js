@@ -43,7 +43,7 @@ const GlobalLeaderboardSystem = {
         // Then check for any user overrides in localStorage
         this.loadConfig();
 
-        // Log final config state (show partial key for debugging)
+        // Log final config state (show partial key for deboogering 🦇)
         const keyPreview = this.config.API_KEY ?
             this.config.API_KEY.substring(0, 15) + '...' + this.config.API_KEY.substring(this.config.API_KEY.length - 10) :
             'MISSING';
@@ -257,9 +257,9 @@ const GlobalLeaderboardSystem = {
             const url = `https://api.jsonbin.io/v3/b/${this.config.BIN_ID}/latest`;
             console.log('🏆 Fetch URL:', url);
 
-            // Debug: log the exact key being used (first/last chars only for security)
+            // 🦇 Debooger: log the exact key being used (first/last chars only for security) 💀
             const keyLen = this.config.API_KEY ? this.config.API_KEY.length : 0;
-            console.log('🏆 API Key length:', keyLen);
+            console.log('🏆 Debooger: 💀 API Key length:', keyLen);
             console.log('🏆 API Key starts with:', this.config.API_KEY ? this.config.API_KEY.substring(0, 5) : 'N/A');
 
             const response = await fetch(url, {
@@ -914,7 +914,7 @@ window.testJSONBin = async function() {
 
     console.log('🧪 Testing JSONBin API...');
     console.log('🧪 Bin ID:', binId);
-    console.log('🧪 API Key length:', apiKey.length);
+    console.log('🧪 debooger: 🦇 API Key length:', apiKey.length);
 
     try {
         // Test READ
@@ -969,7 +969,7 @@ window.resetLeaderboard = async function() {
                    GameConfig?.leaderboard?.jsonbin?.apiKey ||
                    localStorage.getItem('jsonbin_key');
 
-    console.log('🧹 Reset leaderboard debug:');
+    console.log('🧹 Reset leaderboard debooger: 🦇');
     console.log('  BIN_ID from GlobalLeaderboardSystem:', GlobalLeaderboardSystem?.config?.BIN_ID);
     console.log('  BIN_ID from GameConfig:', GameConfig?.leaderboard?.jsonbin?.binId);
     console.log('  Using BIN_ID:', binId);
@@ -1032,7 +1032,7 @@ window.resetLeaderboard = async function() {
             return false;
         }
     } catch (error) {
-        // 🦇 Network error during reset - report to console for debugging
+        // 🦇 Network error during reset - report to console for deboogering 💀
         console.warn('❌ Error resetting leaderboard:', error.message);
         return false;
     }

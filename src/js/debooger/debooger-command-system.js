@@ -9,7 +9,7 @@
 
 console.log('🎮 Debooger Command System loading...');
 
-const DebugCommandSystem = {
+const DeboogerCommandSystem = {
     // 🖤 Is the command input currently focused? Reality bends to our will
     isInputFocused: false,
 
@@ -41,9 +41,9 @@ const DebugCommandSystem = {
 
     // 🔧 Wire up event listeners for command input - binding reality to our interface
     wireUpCommandInput() {
-        const input = document.getElementById('debug-command-input');
-        const executeBtn = document.getElementById('debug-command-execute');
-        const helpBtn = document.getElementById('debug-command-help');
+        const input = document.getElementById('debooger-command-input');
+        const executeBtn = document.getElementById('debooger-command-execute');
+        const helpBtn = document.getElementById('debooger-command-help');
 
         if (!input) {
             console.warn('🎮 Command input not found, will retry... patience, darkness requires it');
@@ -101,7 +101,7 @@ const DebugCommandSystem = {
 
     // ⬆️⬇️ Navigate command history - time travel through your cheating past 🦇
     navigateHistory(direction) {
-        const input = document.getElementById('debug-command-input');
+        const input = document.getElementById('debooger-command-input');
         if (!input || this.commandHistory.length === 0) return;
 
         this.historyIndex += direction;
@@ -120,7 +120,7 @@ const DebugCommandSystem = {
 
     // 🔮 Autocomplete command names - lazy typing for the morally flexible
     autocomplete() {
-        const input = document.getElementById('debug-command-input');
+        const input = document.getElementById('debooger-command-input');
         if (!input) return;
 
         const partial = input.value.toLowerCase().trim();
@@ -139,7 +139,7 @@ const DebugCommandSystem = {
 
     // ⚡ Execute the current command in the input - reality bends NOW 💀
     executeCurrentCommand() {
-        const input = document.getElementById('debug-command-input');
+        const input = document.getElementById('debooger-command-input');
         if (!input) return;
 
         const commandText = input.value.trim();
@@ -159,17 +159,17 @@ const DebugCommandSystem = {
         this.execute(commandText);
     },
 
-    // 🔒 Check if debug commands are enabled - are we worthy of this power?
-    isDebugEnabled() {
+    // 🔒 Check if debooger commands are enabled - are we worthy of this power?
+    isDeboogerEnabled() {
         // ⚙️ Config takes priority - config says yes? Reality says yes 🖤
-        if (typeof GameConfig !== 'undefined' && GameConfig.debug) {
-            if (GameConfig.debug.enabled === true) {
+        if (typeof GameConfig !== 'undefined' && GameConfig.debooger) {
+            if (GameConfig.debooger.enabled === true) {
                 return true; // Config override - godmode enabled
             }
         }
 
         // 🏆 If config disabled, check if unlocked via Super Hacker achievement - earned power
-        if (typeof AchievementSystem !== 'undefined' && AchievementSystem.isDebugUnlockedForSave()) {
+        if (typeof AchievementSystem !== 'undefined' && AchievementSystem.isDeboogerUnlockedForSave()) {
             return true;
         }
 
@@ -185,14 +185,14 @@ const DebugCommandSystem = {
     async execute(commandText) {
         console.log(`🎮 > ${commandText}`);
 
-        // 🔐 Check if debug is locked out - gatekeeping the power
-        if (!this.isDebugEnabled()) {
+        // 🔐 Check if debooger is locked out - gatekeeping the dark power 🦇
+        if (!this.isDeboogerEnabled()) {
             // 📖 Allow only 'help' command when locked out - mortals can read, not act
             const cmdLower = commandText.trim().toLowerCase();
             if (cmdLower !== 'help' && !cmdLower.startsWith('help')) {
-                console.warn('🔒 Debug commands are DISABLED. Set GameConfig.debug.enabled = true to unlock.');
-                if (typeof GameConfig !== 'undefined' && GameConfig.debug?.showConsoleWarnings) {
-                    console.log('🔒 This is a production build - debug commands are locked out.');
+                console.warn('🔒 Debooger commands are DISABLED 💀 Set GameConfig.debooger.enabled = true to unlock the darkness.');
+                if (typeof GameConfig !== 'undefined' && GameConfig.debooger?.showConsoleWarnings) {
+                    console.log('🔒 Production build vibes - debooger is sealed away 🦇');
                 }
                 return;
             }
@@ -213,7 +213,7 @@ const DebugCommandSystem = {
                     console.log(`🎮 Result: ${result}`);
                 }
             } catch (error) {
-                // 🦇 Debug command failed - even gods stumble
+                // 🦇 Debooger command crashed - even dark lords stumble 💀
                 console.warn(`🎮 Command failed: ${error.message}`);
             }
         } else {
@@ -233,7 +233,7 @@ const DebugCommandSystem = {
 
     // 📖 Show help - revealing the forbidden knowledge
     showHelp() {
-        const isEnabled = this.isDebugEnabled();
+        const isEnabled = this.isDeboogerEnabled();
 
         console.log('═══════════════════════════════════════════════════');
         console.log('🎮 DEBOOGER COMMAND SYSTEM - Available Commands:');
@@ -255,7 +255,7 @@ const DebugCommandSystem = {
         console.log('  - Press Up/Down to navigate history');
         console.log('  - Press Tab to autocomplete');
         if (!isEnabled) {
-            console.log('🔒 Debooger is DISABLED. Set GameConfig.debug.enabled = true');
+            console.log('🔒 Debooger is DISABLED. Set GameConfig.debooger.enabled = true');
         }
         console.log('═══════════════════════════════════════════════════');
     },
@@ -269,7 +269,7 @@ const DebugCommandSystem = {
 
         // 🧹 Clear console - wipe away the evidence of our sins
         this.registerCommand('clear', 'Clear the Debooger console - fresh slate for chaos', () => {
-            const content = document.getElementById('debug-console-content');
+            const content = document.getElementById('debooger-console-content');
             if (content) content.innerHTML = '';
             console.log('🎮 Debooger console cleared');
         });
@@ -883,7 +883,7 @@ const DebugCommandSystem = {
         });
 
         // ═══════════════════════════════════════════════════════════════
-        // 🔧 DEBUG UTILITIES
+        // 🔧 DEBOOGER UTILITIES 🦇
         // ═══════════════════════════════════════════════════════════════
 
         // gamestate - Show current game state
@@ -1035,9 +1035,9 @@ const DebugCommandSystem = {
             AchievementSystem.checkAchievements();
 
             console.log('═══════════════════════════════════════════════════');
-            console.log(`🏆 Unlocked ${unlockCount} achievements!`);
-            console.log('💻 Super Hacker should now be unlocked!');
-            console.log('🔓 Debug commands will remain available on this save!');
+            console.log(`🏆 Unlocked ${unlockCount} achievements! 💀`);
+            console.log('💻 Super Hacker should now be unlocked! 🦇');
+            console.log('🔓 Debooger commands will remain available on this save! 🖤');
             console.log('🗡️ Check your inventory for the Blade of the Hacker!');
             console.log('═══════════════════════════════════════════════════');
 
@@ -1418,16 +1418,16 @@ const UniversalGoldManager = {
 };
 
 // Expose globally
-window.DebugCommandSystem = DebugCommandSystem;
+window.DeboogerCommandSystem = DeboogerCommandSystem;
 window.UniversalGoldManager = UniversalGoldManager;
 
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(() => DebugCommandSystem.init(), 500);
+        setTimeout(() => DeboogerCommandSystem.init(), 500);
     });
 } else {
-    setTimeout(() => DebugCommandSystem.init(), 500);
+    setTimeout(() => DeboogerCommandSystem.init(), 500);
 }
 
 console.log('🎮 Debooger Command System loaded!');

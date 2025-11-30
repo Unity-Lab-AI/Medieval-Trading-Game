@@ -4,8 +4,8 @@ const config = require('./config/test-config');
 const {
   waitForGameLoad,
   startNewGame,
-  openDebugConsole,
-  runDebugCommand,
+  openDeboogerConsole,
+  runDeboogerCommand,
   togglePanelWithKey,
   getPlayerGold,
   isPanelVisible,
@@ -452,8 +452,8 @@ test.describe('Save/Load System', () => {
   test('Save persists player data', async ({ page }) => {
     // 🖤 Test that save actually stores data (load is complex due to UI)
     // Set up unique state
-    await openDebugConsole(page);
-    await runDebugCommand(page, 'setgold 12345');
+    await openDeboogerConsole(page);
+    await runDeboogerCommand(page, 'setgold 12345');
     await page.keyboard.press('Escape');
     await page.waitForTimeout(300);
 
@@ -497,8 +497,8 @@ test.describe('Save/Load System', () => {
     // 🖤 Full round-trip test: Save game -> Change state -> Load game -> Verify state restored
 
     // Step 1: Set up a unique game state with specific gold
-    await openDebugConsole(page);
-    await runDebugCommand(page, 'setgold 77777');
+    await openDeboogerConsole(page);
+    await runDeboogerCommand(page, 'setgold 77777');
     await page.keyboard.press('Escape');
     await page.waitForTimeout(300);
 

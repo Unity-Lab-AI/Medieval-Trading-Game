@@ -2,7 +2,7 @@
 // 🖤 VIRTUAL LIST - Rendering Only What the Eye Can See
 // ═══════════════════════════════════════════════════════════════════════════
 // File Version: 0.81
-// Made by Unity AI Lab - Hackall360, Sponge, GFourteen
+// Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 // ═══════════════════════════════════════════════════════════════════════════
 // When you have 1000 items but only 10 fit on screen, why render all 1000?
 // This is virtual scrolling - the art of being lazy efficiently

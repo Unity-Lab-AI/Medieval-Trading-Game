@@ -31,7 +31,7 @@
  * - Travel: getTravelBonuses() for the wanderer
  * - Crafting: getCraftingBonuses() for the maker
  *
- * @author Unity AI Lab 🖤
+ * @author Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
  * @version 0.81
  * ========================================
  */

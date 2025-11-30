@@ -49,6 +49,12 @@ const TravelSystem = {
     // points of interest - allegedly interesting, probably disappointing
     pointsOfInterest: [],
 
+    // 🛤️ DISCOVERED PATHS - roads you've walked, secrets you've learned 💀
+    // Paths are stored as "fromId->toId" keys (sorted alphabetically for consistency)
+    // Only discovered paths show travel time, distance, and path type info in tooltips
+    discoveredPaths: new Set(),
+    DISCOVERED_PATHS_KEY: 'trader-claude-discovered-paths',
+
     // travel history - everywhere we've been, nowhere we belong
     travelHistory: [],
 
@@ -70,10 +76,128 @@ const TravelSystem = {
         this.generateWorldMap();
         this.setupEventListeners();
         this.updatePlayerPosition();
+        // Load discovered paths from localStorage
+        this.loadDiscoveredPaths();
         // center the map before we know where tf we are (relatable)
         this.centerMapOnWorld();
         this.render();
         console.log('🗺️ TravelSystem risen from the void with', Object.keys(this.locations).length, 'places to haunt');
+        console.log('🛤️ Discovered paths loaded:', this.discoveredPaths.size);
+    },
+
+    // 🛤️ PATH DISCOVERY SYSTEM - only show path info after you've walked the road 💀
+    // ═══════════════════════════════════════════════════════════════
+
+    // Generate consistent path key (alphabetically sorted for bidirectional paths)
+    getPathKey(fromId, toId) {
+        return [fromId, toId].sort().join('->');
+    },
+
+    // Check if a path has been discovered
+    isPathDiscovered(fromId, toId) {
+        return this.discoveredPaths.has(this.getPathKey(fromId, toId));
+    },
+
+    // Mark a path as discovered and save
+    discoverPath(fromId, toId) {
+        const key = this.getPathKey(fromId, toId);
+        if (!this.discoveredPaths.has(key)) {
+            this.discoveredPaths.add(key);
+            this.saveDiscoveredPaths();
+            const fromLoc = this.locations[fromId];
+            const toLoc = this.locations[toId];
+            console.log(`🛤️ New path discovered: ${fromLoc?.name || fromId} <-> ${toLoc?.name || toId}`);
+            return true; // New discovery
+        }
+        return false; // Already known
+    },
+
+    // Discover all paths in a route
+    discoverRouteWalked(route) {
+        if (!route || route.length < 2) return [];
+        const newlyDiscovered = [];
+        for (let i = 0; i < route.length - 1; i++) {
+            if (this.discoverPath(route[i], route[i + 1])) {
+                newlyDiscovered.push({ from: route[i], to: route[i + 1] });
+            }
+        }
+        return newlyDiscovered;
+    },
+
+    // Save discovered paths to localStorage
+    saveDiscoveredPaths() {
+        try {
+            const pathsArray = Array.from(this.discoveredPaths);
+            localStorage.setItem(this.DISCOVERED_PATHS_KEY, JSON.stringify(pathsArray));
+        } catch (e) {
+            console.warn('🛤️ Failed to save discovered paths:', e);
+        }
+    },
+
+    // Load discovered paths from localStorage
+    loadDiscoveredPaths() {
+        try {
+            const saved = localStorage.getItem(this.DISCOVERED_PATHS_KEY);
+            if (saved) {
+                const pathsArray = JSON.parse(saved);
+                this.discoveredPaths = new Set(pathsArray);
+            }
+        } catch (e) {
+            console.warn('🛤️ Failed to load discovered paths:', e);
+            this.discoveredPaths = new Set();
+        }
+    },
+
+    // Get path info - returns full info if discovered, limited info if not
+    getPathInfo(fromId, toId) {
+        const discovered = this.isPathDiscovered(fromId, toId);
+        const pathData = this.getPathBetween(fromId, toId);
+
+        if (!pathData) {
+            return {
+                discovered: false,
+                type: 'unknown',
+                typeDisplay: '???',
+                distance: '???',
+                safety: '???',
+                travelTime: '???'
+            };
+        }
+
+        if (!discovered) {
+            return {
+                discovered: false,
+                type: 'unknown',
+                typeDisplay: 'Unexplored Path',
+                distance: '???',
+                safety: '???',
+                travelTime: '??? (explore to learn)',
+                exists: true
+            };
+        }
+
+        // Full info for discovered paths
+        const pathTypeInfo = this.PATH_TYPES[pathData.type] || this.PATH_TYPES.trail;
+        return {
+            discovered: true,
+            type: pathData.type,
+            typeDisplay: pathTypeInfo.name,
+            distance: `${Math.round(pathData.distance || 5)} miles`,
+            safety: `${Math.round((pathData.safety || 0.7) * 100)}%`,
+            travelTime: this.estimatePathTravelTime(pathData),
+            quality: pathData.quality || 'fair'
+        };
+    },
+
+    // Estimate travel time for a single path segment
+    estimatePathTravelTime(pathData) {
+        const transport = game.player?.transportation || 'backpack';
+        const transportData = typeof transportationOptions !== 'undefined' ? transportationOptions[transport] : null;
+        const baseSpeed = transportData?.speed || this.getTransportSpeed(transport);
+        const pathTypeInfo = this.PATH_TYPES[pathData.type] || this.PATH_TYPES.trail;
+        const effectiveSpeed = baseSpeed * pathTypeInfo.speedMultiplier;
+        const timeHours = (pathData.distance || 5) / effectiveSpeed;
+        return this.formatTime(timeHours);
     },
 
     // tick tock, another moment closer to oblivion
@@ -1655,6 +1779,27 @@ const TravelSystem = {
             travelInfo.timeDisplay = '30 minutes';
         }
 
+        // 🖤 CHECK FOR UNEXPLORED LOCATIONS IN PATH - can't travel through the unknown! 💀
+        // Players must explore each location in order - no skipping through unvisited areas
+        if (travelInfo.route && travelInfo.route.length > 2) {
+            const visitedLocations = typeof GameWorld !== 'undefined' && Array.isArray(GameWorld.visitedLocations)
+                ? GameWorld.visitedLocations
+                : [];
+
+            // Check intermediate locations (not start or end)
+            const intermediateLocations = travelInfo.route.slice(1, -1);
+            for (const locId of intermediateLocations) {
+                if (!visitedLocations.includes(locId)) {
+                    const blockedLoc = this.locations[locId];
+                    const blockedName = blockedLoc ? blockedLoc.name : locId;
+                    addMessage(`⚠️ Cannot travel through unexplored territory!`);
+                    addMessage(`📍 You must first visit "${blockedName}" before passing through.`);
+                    console.warn('🖤 Travel blocked - unexplored location in path:', locId);
+                    return false;
+                }
+            }
+        }
+
         // Start travel - embrace the journey, or whatever
         this.playerPosition.isTraveling = true;
         this.playerPosition.destination = destination;
@@ -1744,7 +1889,7 @@ const TravelSystem = {
         const oldProgress = this.playerPosition.travelProgress;
         this.playerPosition.travelProgress = Math.min(1.0, elapsed / duration);
 
-        // debug log every ~10% progress (for the curious and the damned)
+        // debooger log 💀 every ~10% progress (for the curious and the damned)
         const progressPct = Math.floor(this.playerPosition.travelProgress * 100);
         const oldProgressPct = Math.floor(oldProgress * 100);
         if (progressPct > oldProgressPct && progressPct % 10 === 0) {
@@ -1895,6 +2040,21 @@ const TravelSystem = {
             duration: this.playerPosition.travelDuration,
             timestamp: TimeSystem.getTotalMinutes()
         });
+
+        // 🛤️ DISCOVER PATHS - mark all paths in the route as discovered 💀
+        // Players now know travel times, distances, and path types for roads they've walked
+        const route = this.playerPosition.route;
+        if (route && route.length >= 2) {
+            const newlyDiscovered = this.discoverRouteWalked(route);
+            if (newlyDiscovered.length > 0) {
+                addMessage(`🛤️ Discovered ${newlyDiscovered.length} new path${newlyDiscovered.length > 1 ? 's' : ''}! Road information now available.`);
+            }
+        } else if (currentLoc && destination) {
+            // Direct travel - discover single path
+            if (this.discoverPath(currentLoc.id, destination.id)) {
+                addMessage(`🛤️ Path discovered! You now know the road from ${currentLoc.name} to ${destination.name}.`);
+            }
+        }
 
         // Update game state
         game.currentLocation = {
@@ -2547,19 +2707,33 @@ const TravelSystem = {
 
     // Get current location
     getCurrentLocation() {
+        // 🖤 First check TravelSystem's playerPosition.currentLocation
         if (this.playerPosition.currentLocation) {
-            return this.locations[this.playerPosition.currentLocation] ||
+            const loc = this.locations[this.playerPosition.currentLocation] ||
                    this.resourceNodes.find(n => n.id === this.playerPosition.currentLocation) ||
                    this.pointsOfInterest.find(p => p.id === this.playerPosition.currentLocation);
+            if (loc) return loc;
         }
-        
-        // Find nearest location
+
+        // 🖤 CRITICAL: Also check game.currentLocation - this is often set but playerPosition isn't synced
+        if (typeof game !== 'undefined' && game.currentLocation?.id) {
+            const loc = this.locations[game.currentLocation.id] ||
+                   this.resourceNodes.find(n => n.id === game.currentLocation.id) ||
+                   this.pointsOfInterest.find(p => p.id === game.currentLocation.id);
+            if (loc) {
+                // Sync playerPosition with game.currentLocation
+                this.playerPosition.currentLocation = game.currentLocation.id;
+                return loc;
+            }
+        }
+
+        // Find nearest location as fallback
         let nearestLocation = null;
         let minDistance = Infinity;
-        
+
         for (const [id, location] of Object.entries(this.locations)) {
             const distance = Math.sqrt(
-                Math.pow(this.playerPosition.x - location.x, 2) + 
+                Math.pow(this.playerPosition.x - location.x, 2) +
                 Math.pow(this.playerPosition.y - location.y, 2)
             );
             if (distance < minDistance && distance < 50) {
@@ -2567,7 +2741,7 @@ const TravelSystem = {
                 nearestLocation = location;
             }
         }
-        
+
         return nearestLocation;
     },
 

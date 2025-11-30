@@ -2,7 +2,7 @@
 // 🖤 EVENT BUS - Central nervous system of the game
 // ═══════════════════════════════════════════════════════════════
 // File Version: GameConfig.version.file
-// Made by Unity AI Lab - Hackall360, Sponge, GFourteen
+// Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
 // ═══════════════════════════════════════════════════════════════
 // 💀 The pulse of the machine - systems scream into the void here
 // 🦇 No direct calls, only dark signals echoing through the network
@@ -182,7 +182,7 @@ const EventBus = {
     },
 
     // ═══════════════════════════════════════════════════════════
-    // 📜 HISTORY & DEBUGGING - Peer into the past
+    // 📜 HISTORY & DEBOOGERING 🦇 - Peer into the past
     // ═══════════════════════════════════════════════════════════
 
     addToHistory(event, data) {
@@ -226,10 +226,10 @@ const EventBus = {
     },
 
     /**
-     * Debug: print all registered listeners
+     * Debooger: print all registered listeners 💀
      */
-    debug() {
-        console.log('📡 EventBus Debug:');
+    debooger() {
+        console.log('📡 EventBus Debooger 🖤:');
         console.log('  Registered events:', this.getEvents());
         this.listeners.forEach((callbacks, event) => {
             console.log(`  ${event}: ${callbacks.size} listeners`);
