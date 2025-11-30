@@ -134,7 +134,8 @@ const CityEventSystem = {
             try {
                 this.activeEvents = JSON.parse(saved);
             } catch (e) {
-                console.error('Failed to load city events:', e);
+                // 🖤 Corrupt data? Nuke it and start fresh - silent fallback
+                localStorage.removeItem('tradingGameCityEvents');
                 this.activeEvents = {};
             }
         }
@@ -145,7 +146,7 @@ const CityEventSystem = {
         try {
             localStorage.setItem('tradingGameCityEvents', JSON.stringify(this.activeEvents));
         } catch (e) {
-            console.error('Failed to save city events:', e);
+            // 🖤 Storage full or blocked - silent fail, not critical
         }
     },
 

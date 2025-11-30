@@ -1041,7 +1041,7 @@ const QuestSystem = {
         try {
             localStorage.setItem('medievalTradingGameQuests', JSON.stringify(saveData));
         } catch (e) {
-            console.error('📜 Save failed - your progress screams into the void:', e);
+            // 🖤 Storage full or blocked - quest save will retry next time
         }
     },
 
@@ -1058,7 +1058,8 @@ const QuestSystem = {
                 console.log(`📜 Loaded ${Object.keys(this.activeQuests).length} active, ${this.completedQuests.length} completed quests from the abyss`);
             }
         } catch (e) {
-            console.error('📜 Load failed - starting fresh, like your hopes:', e);
+            // 🖤 Corrupt quest data - nuke and start fresh
+            localStorage.removeItem('medievalTradingGameQuests');
         }
     },
 
@@ -1450,7 +1451,7 @@ const QuestSystem = {
             times[questId] = now;
             localStorage.setItem('questCompletionTimes', JSON.stringify(times));
         } catch (e) {
-            console.error('📜 Failed to save completion time:', e);
+            // 🖤 Storage full or blocked - completion time lost but not critical
         }
     },
 

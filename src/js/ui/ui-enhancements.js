@@ -448,7 +448,8 @@ const KeyboardShortcuts = {
                     game.loadState(parsedData);
                     this.showNotification('Game loaded successfully!', 'success');
                 } catch (parseError) {
-                    console.error('Failed to parse save data:', parseError);
+                    // 🖤 Corrupt save - nuke it and tell the user
+                    localStorage.removeItem('tradingGameQuickSave');
                     this.showNotification('Save data is corrupted!', 'error');
                 }
             } else {
@@ -1092,7 +1093,8 @@ const KeyboardShortcuts = {
             }
             SettingsPanel.show();
         } else {
-            console.error('SettingsPanel not loaded');
+            // 🖤 SettingsPanel not loaded yet - silent fail, user can try again
+            console.warn('⚙️ SettingsPanel not ready yet');
         }
     },
     

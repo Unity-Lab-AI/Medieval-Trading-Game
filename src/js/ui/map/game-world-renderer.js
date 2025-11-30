@@ -74,7 +74,8 @@ const GameWorldRenderer = {
 
         this.container = document.getElementById('map-container');
         if (!this.container) {
-            console.error('🗺️ Map container not found!');
+            // 🖤 Map container not in DOM yet - will retry when called again
+            console.warn('🗺️ Map container not found - will retry');
             return false;
         }
 

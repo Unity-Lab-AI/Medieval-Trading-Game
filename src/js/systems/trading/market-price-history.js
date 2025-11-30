@@ -26,7 +26,8 @@ const MarketPriceHistory = {
             try {
                 this.priceHistory = JSON.parse(saved);
             } catch (e) {
-                console.error('Failed to load price history:', e);
+                // 🖤 Corrupt data? Nuke it and start fresh - silent fallback
+                localStorage.removeItem('tradingGamePriceHistory');
                 this.priceHistory = {};
             }
         }
@@ -37,7 +38,7 @@ const MarketPriceHistory = {
         try {
             localStorage.setItem('tradingGamePriceHistory', JSON.stringify(this.priceHistory));
         } catch (e) {
-            console.error('Failed to save price history:', e);
+            // 🖤 Storage full or blocked - silent fail, not critical
         }
     },
     

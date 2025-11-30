@@ -258,7 +258,8 @@ const GameOverSystem = {
                     addMessage('Your score didn\'t make the top 100 champions...');
                 }
             } catch (error) {
-                console.error('Failed to submit to Hall of Champions:', error);
+                // 🖤 Network error - silent fail, not critical for game over flow
+                console.warn('⚠️ Hall of Champions submit failed:', error.message);
             }
         }
     },
@@ -613,7 +614,8 @@ async function refreshLeaderboardPanel() {
         }
 
     } catch (error) {
-        console.error('Failed to load Hall of Champions:', error);
+        // 🖤 Network error - show user-friendly message instead
+        console.warn('⚠️ Hall of Champions load failed:', error.message);
         content.innerHTML = `
             <div class="leaderboard-empty">
                 <div class="leaderboard-empty-icon">⚠️</div>

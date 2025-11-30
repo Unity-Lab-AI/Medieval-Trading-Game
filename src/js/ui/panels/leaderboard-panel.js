@@ -955,7 +955,8 @@ window.testJSONBin = async function() {
             console.log('❌ READ failed. Check bin ID and API key.');
         }
     } catch (error) {
-        console.error('🧪 Test error:', error);
+        // 🖤 Test function - only used by devs
+        console.warn('🧪 Test error:', error);
     }
 };
 

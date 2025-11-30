@@ -871,7 +871,7 @@ const PeoplePanel = {
                 this.updateQuestItems();
             }
         } catch (e) {
-            console.error('👥 PeoplePanel: Response error:', e);
+            // 🖤 API error - NPC gracefully deflects with in-character response
             const messages = document.getElementById('people-chat-messages');
             const typing = messages?.querySelector('.typing-indicator');
             if (typing) typing.remove();

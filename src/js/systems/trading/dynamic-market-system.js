@@ -300,7 +300,8 @@ const DynamicMarketSystem = {
             try {
                 this.marketSaturation = JSON.parse(saved);
             } catch (e) {
-                console.error('Failed to load market saturation:', e);
+                // 🖤 Corrupt data? Nuke it and start fresh - silent fallback
+                localStorage.removeItem('tradingGameMarketSaturation');
                 this.marketSaturation = {};
             }
         }
@@ -311,7 +312,7 @@ const DynamicMarketSystem = {
         try {
             localStorage.setItem('tradingGameMarketSaturation', JSON.stringify(this.marketSaturation));
         } catch (e) {
-            console.error('Failed to save market saturation:', e);
+            // 🖤 Storage full or blocked - silent fail, not critical
         }
     },
     

@@ -34,7 +34,8 @@ const CityReputationSystem = {
             try {
                 this.cityReputation = JSON.parse(saved);
             } catch (e) {
-                console.error('Failed to load city reputation:', e);
+                // 🖤 Corrupt data? Nuke it and start fresh - silent fallback
+                localStorage.removeItem('tradingGameCityReputation');
                 this.cityReputation = {};
             }
         }
@@ -45,7 +46,7 @@ const CityReputationSystem = {
         try {
             localStorage.setItem('tradingGameCityReputation', JSON.stringify(this.cityReputation));
         } catch (e) {
-            console.error('Failed to save city reputation:', e);
+            // 🖤 Storage full or blocked - silent fail, not critical
         }
     },
 
