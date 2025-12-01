@@ -292,67 +292,69 @@ const ImmersiveExperienceIntegration = {
     
     // 💅 Setup UI polish integration - making interfaces feel alive
     setupUIPolishIntegration() {
-        // Panel transitions
+        // Panel transitions - 🖤 Guard against missing UIPolishSystem methods 💀
         EventManager.addEventListener(document, 'panelOpen', (e) => {
             const panel = document.getElementById(e.detail.panelId);
-            if (panel) {
+            if (panel && typeof UIPolishSystem !== 'undefined' && UIPolishSystem.fadeIn) {
                 UIPolishSystem.fadeIn(panel);
             }
         });
-        
+
         EventManager.addEventListener(document, 'panelClose', (e) => {
             const panel = document.getElementById(e.detail.panelId);
-            if (panel) {
+            if (panel && typeof UIPolishSystem !== 'undefined' && UIPolishSystem.fadeOut) {
                 UIPolishSystem.fadeOut(panel);
             }
         });
         
-        // Button interactions
+        // Button interactions - 🖤 Guard all UIPolishSystem calls 💀
         EventManager.addEventListener(document, 'buttonClick', (e) => {
-            if (e.target) {
+            if (e.target && typeof UIPolishSystem !== 'undefined' && UIPolishSystem.animateButtonPress) {
                 UIPolishSystem.animateButtonPress(e.target);
             }
         });
-        
+
         // Progress bar updates
         EventManager.addEventListener(document, 'progressUpdate', (e) => {
             const progressBar = document.getElementById(e.detail.progressBarId);
-            if (progressBar) {
+            if (progressBar && typeof UIPolishSystem !== 'undefined' && UIPolishSystem.animateProgressBar) {
                 UIPolishSystem.animateProgressBar(
-                    progressBar, 
-                    e.detail.currentValue, 
+                    progressBar,
+                    e.detail.currentValue,
                     e.detail.targetValue
                 );
             }
         });
-        
+
         // Text scrolling
         EventManager.addEventListener(document, 'textScroll', (e) => {
             const textElement = document.getElementById(e.detail.textElementId);
-            if (textElement) {
+            if (textElement && typeof UIPolishSystem !== 'undefined' && UIPolishSystem.animateTextScroll) {
                 UIPolishSystem.animateTextScroll(textElement, e.detail.text);
             }
         });
-        
+
         // Icon animations
         EventManager.addEventListener(document, 'iconAnimate', (e) => {
             const icon = document.getElementById(e.detail.iconId);
-            if (icon) {
+            if (icon && typeof UIPolishSystem !== 'undefined' && UIPolishSystem.animateIcon) {
                 UIPolishSystem.animateIcon(icon, e.detail.animationType);
             }
         });
-        
+
         // Highlighting
         EventManager.addEventListener(document, 'highlightElement', (e) => {
             const element = document.getElementById(e.detail.elementId);
-            if (element) {
+            if (element && typeof UIPolishSystem !== 'undefined' && UIPolishSystem.highlightElement) {
                 UIPolishSystem.highlightElement(element, e.detail.options);
             }
         });
-        
+
         // Notifications
         EventManager.addEventListener(document, 'showNotification', (e) => {
-            UIPolishSystem.showNotification(e.detail.message, e.detail.type, e.detail.duration);
+            if (typeof UIPolishSystem !== 'undefined' && UIPolishSystem.showNotification) {
+                UIPolishSystem.showNotification(e.detail.message, e.detail.type, e.detail.duration);
+            }
         });
     },
     

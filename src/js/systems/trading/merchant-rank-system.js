@@ -246,6 +246,8 @@ const MerchantRankSystem = {
         console.log('👑 MerchantRankSystem awakening... time to judge your worth');
         this.updateRank();
         this.setupEventListeners();
+        // 🖤 Update player name display with title on init
+        this.updateAllNameDisplays();
         return this;
     },
 
@@ -322,7 +324,19 @@ const MerchantRankSystem = {
         const wealth = this.calculateTotalWealth();
         const newRank = this.getRankForWealth(wealth);
 
-        if (!this.currentRank || this.currentRank.id !== newRank.id) {
+        // 🖤 Ranks are PERMANENT - only allow promotions, never demotions
+        if (!this.currentRank) {
+            // First time setting rank
+            this.currentRank = newRank;
+            if (typeof game !== 'undefined' && game.player) {
+                game.player.merchantRank = newRank.id;
+                game.player.merchantRankLevel = newRank.level;
+            }
+            return { changed: true, previousRank: null, newRank };
+        }
+
+        // Only update if new rank is HIGHER than current
+        if (newRank.level > this.currentRank.level) {
             const previousRank = this.currentRank;
             this.currentRank = newRank;
 
@@ -346,32 +360,24 @@ const MerchantRankSystem = {
     checkForRankUp() {
         const result = this.updateRank();
 
+        // 🖤 Ranks are PERMANENT - only promotions happen, never demotions
         if (result.changed && result.previousRank) {
-            const isPromotion = result.newRank.level > result.previousRank.level;
-
-            if (isPromotion) {
-                // rank up notification
-                if (typeof addMessage === 'function') {
-                    addMessage(`👑 RANK UP! You are now ${result.newRank.title}!`, 'success');
-                    addMessage(`${result.newRank.icon} ${result.newRank.description}`, 'info');
-                }
-
-                // unlock achievement
-                if (typeof AchievementSystem !== 'undefined' && result.newRank.achievement) {
-                    AchievementSystem.unlock(result.newRank.achievement.id);
-                }
-
-                // show celebration (if we have one)
-                this.celebrateRankUp(result.newRank);
-
-                // update all name displays
-                this.updateAllNameDisplays();
-            } else {
-                // rank down - harsh but fair
-                if (typeof addMessage === 'function') {
-                    addMessage(`📉 You've fallen to ${result.newRank.title}...`, 'warning');
-                }
+            // rank up notification
+            if (typeof addMessage === 'function') {
+                addMessage(`👑 RANK UP! You are now ${result.newRank.title}!`, 'success');
+                addMessage(`${result.newRank.icon} ${result.newRank.description}`, 'info');
             }
+
+            // unlock achievement
+            if (typeof AchievementSystem !== 'undefined' && AchievementSystem.unlockAchievement && result.newRank.achievement) {
+                AchievementSystem.unlockAchievement(result.newRank.achievement.id);
+            }
+
+            // show celebration (if we have one)
+            this.celebrateRankUp(result.newRank);
+
+            // update all name displays
+            this.updateAllNameDisplays();
         }
 
         return result;

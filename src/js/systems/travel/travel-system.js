@@ -1442,6 +1442,35 @@ const TravelSystem = {
             }
         }
 
+        // 🖤 Apply weather and seasonal speed modifiers from TimeMachine/WeatherSystem 💀
+        // These systems are the source of truth for ALL time calculations
+        let weatherSpeedMod = 1.0;
+        let seasonalSpeedMod = 1.0;
+
+        // Get weather modifier
+        if (typeof WeatherSystem !== 'undefined' && WeatherSystem.getTravelSpeedModifier) {
+            weatherSpeedMod = WeatherSystem.getTravelSpeedModifier() || 1.0;
+        }
+
+        // 🖤 Get seasonal modifier from TimeMachine - using getSeasonData() not getCurrentSeason() 💀
+        if (typeof TimeMachine !== 'undefined' && TimeMachine.getSeasonData) {
+            const seasonData = TimeMachine.getSeasonData();
+            if (seasonData && seasonData.effects && seasonData.effects.travelSpeed) {
+                seasonalSpeedMod = seasonData.effects.travelSpeed;
+            }
+        }
+
+        // Get game event modifier
+        const eventSpeedMod = game?.travelSpeedModifier || 1.0;
+
+        // Combined modifier (lower = slower = longer travel time)
+        const combinedSpeedMod = weatherSpeedMod * seasonalSpeedMod * eventSpeedMod;
+
+        // Apply modifier to travel time (slower speed = more time)
+        if (combinedSpeedMod > 0 && combinedSpeedMod !== 1.0) {
+            totalTimeHours = totalTimeHours / combinedSpeedMod;
+        }
+
         // 🦇 FIX: Cap max travel time at 6 hours - no path should take longer
         const MAX_TRAVEL_HOURS = 6;
         totalTimeHours = Math.min(totalTimeHours, MAX_TRAVEL_HOURS);
@@ -1473,7 +1502,12 @@ const TravelSystem = {
             route: path.route || [currentLoc.id, destination.id],
             routeDescription: routeDescription,
             segments: segmentTimes,
-            isWilderness: path.isWilderness || false
+            isWilderness: path.isWilderness || false,
+            // 🖤 Include modifiers for transparency 💀
+            weatherSpeedMod: weatherSpeedMod,
+            seasonalSpeedMod: seasonalSpeedMod,
+            eventSpeedMod: eventSpeedMod,
+            combinedSpeedMod: combinedSpeedMod
         };
     },
 
@@ -1556,6 +1590,7 @@ const TravelSystem = {
 
         // Priority queue (using array with sorting - not optimal but works)
         const openSet = [startId];
+        const closedSet = new Set(); // 🖤 Track visited nodes to prevent infinite loops 💀
         const cameFrom = {};
         const gScore = { [startId]: 0 };
         const fScore = { [startId]: this.heuristicDistance(startId, goalId) };
@@ -1564,6 +1599,10 @@ const TravelSystem = {
             // Get node with lowest fScore
             openSet.sort((a, b) => (fScore[a] || Infinity) - (fScore[b] || Infinity));
             const current = openSet.shift();
+
+            // 🖤 Skip if already processed - prevents infinite loop with bidirectional paths 💀
+            if (closedSet.has(current)) continue;
+            closedSet.add(current);
 
             if (current === goalId) {
                 // Reconstruct path
@@ -1581,7 +1620,8 @@ const TravelSystem = {
             const neighbors = currentLoc?.connections || [];
 
             for (const neighborId of neighbors) {
-                if (!locations[neighborId]) continue;
+                // 🖤 Skip already visited nodes and invalid locations 💀
+                if (!locations[neighborId] || closedSet.has(neighborId)) continue;
 
                 // Calculate cost to reach neighbor
                 const pathSegment = this.getPathBetween(current, neighborId);
@@ -1824,7 +1864,12 @@ const TravelSystem = {
             duration: this.playerPosition.travelDuration,
             estimatedArrival: this.playerPosition.travelStartTime + this.playerPosition.travelDuration,
             hops: travelInfo.hops,
-            route: travelInfo.route
+            route: travelInfo.route,
+            // 🖤 Speed modifiers from TimeMachine/WeatherSystem 💀
+            weatherMod: travelInfo.weatherSpeedMod,
+            seasonMod: travelInfo.seasonalSpeedMod,
+            eventMod: travelInfo.eventSpeedMod,
+            combinedMod: travelInfo.combinedSpeedMod
         });
 
         // Build travel message based on route complexity
@@ -2056,7 +2101,8 @@ const TravelSystem = {
             if (newlyDiscovered.length > 0) {
                 addMessage(`🛤️ Discovered ${newlyDiscovered.length} new path${newlyDiscovered.length > 1 ? 's' : ''}! Road information now available.`);
             }
-        } else if (currentLoc && destination) {
+        } else if (currentLoc && currentLoc.id && destination && destination.id) {
+            // 🖤 Guard against null currentLoc.id - prevents crash 💀
             // Direct travel - discover single path
             if (this.discoverPath(currentLoc.id, destination.id)) {
                 addMessage(`🛤️ Path discovered! You now know the road from ${currentLoc.name} to ${destination.name}.`);
@@ -2087,30 +2133,49 @@ const TravelSystem = {
             AchievementSystem.trackJourney(distance);
         }
 
-        // Record arrival in location history and update player marker
-        if (typeof GameWorldRenderer !== 'undefined') {
-            const isFirstVisit = typeof GameWorld !== 'undefined' &&
-                !GameWorld.visitedLocations?.includes(destination.id);
-            GameWorldRenderer.recordLocationVisit(destination.id, {
-                isFirstVisit: isFirstVisit
-            });
-            // Mark destination as reached (grayed out) instead of clearing
-            // This keeps a log so players can retrace their paths
-            GameWorldRenderer.markDestinationReached();
-            GameWorldRenderer.updateHistoryPanel();
+        // 🖤 Wrap arrival sequence in try/catch - arrival MUST complete even if UI fails 💀
+        try {
+            // Record arrival in location history and update player marker
+            if (typeof GameWorldRenderer !== 'undefined') {
+                const isFirstVisit = typeof GameWorld !== 'undefined' &&
+                    !GameWorld.visitedLocations?.includes(destination.id);
+                if (GameWorldRenderer.recordLocationVisit) {
+                    GameWorldRenderer.recordLocationVisit(destination.id, {
+                        isFirstVisit: isFirstVisit
+                    });
+                }
+                // Mark destination as reached (grayed out) instead of clearing
+                // This keeps a log so players can retrace their paths
+                if (GameWorldRenderer.markDestinationReached) {
+                    GameWorldRenderer.markDestinationReached();
+                }
+                if (GameWorldRenderer.updateHistoryPanel) {
+                    GameWorldRenderer.updateHistoryPanel();
+                }
 
-            // Ensure the player marker is positioned exactly at the destination
-            // and showing the "arrived" state (hovering above the location)
-            GameWorldRenderer.completeTravelAnimation();
-            GameWorldRenderer.updatePlayerMarker();
+                // Ensure the player marker is positioned exactly at the destination
+                // and showing the "arrived" state (hovering above the location)
+                if (GameWorldRenderer.completeTravelAnimation) {
+                    GameWorldRenderer.completeTravelAnimation();
+                }
+                if (GameWorldRenderer.updatePlayerMarker) {
+                    GameWorldRenderer.updatePlayerMarker();
+                }
+            }
+        } catch (err) {
+            console.warn('🖤 GameWorldRenderer arrival error (non-fatal):', err.message);
         }
 
-        // Trigger location-specific events
+        // Trigger location-specific events (already has try/catch inside)
         this.triggerLocationEvents(destination);
 
         // 🖤 DISPATCH LOCATION CHANGE EVENT - let ALL panels know we've moved 💀
         // Market, People, Location panel - everyone needs to update their souls
-        this.dispatchLocationChangeEvent(destination);
+        try {
+            this.dispatchLocationChangeEvent(destination);
+        } catch (err) {
+            console.warn('🖤 dispatchLocationChangeEvent error (non-fatal):', err.message);
+        }
 
         // Update UI
         this.updateTravelUI();
@@ -2126,6 +2191,30 @@ const TravelSystem = {
         } else if (typeof TimeSystem !== 'undefined' && game.settings?.pauseOnArrival) {
             // Fallback to old behavior if toggle doesn't exist
             TimeSystem.setSpeed('PAUSED');
+        }
+    },
+
+    // ❌ Cancel ongoing travel - delegate to TravelPanelMap which handles the turn-around logic 🖤💀
+    cancelTravel() {
+        // 🖤 TravelPanelMap has the full logic for turning around and heading back 💀
+        if (typeof TravelPanelMap !== 'undefined' && TravelPanelMap.cancelTravel) {
+            TravelPanelMap.cancelTravel();
+            return;
+        }
+
+        // 🖤 Fallback if TravelPanelMap not available - just stop travel 💀
+        if (this.playerPosition.isTraveling) {
+            const startLoc = this.playerPosition.currentLocation;
+
+            this.playerPosition.isTraveling = false;
+            this.playerPosition.destination = null;
+            this.playerPosition.travelProgress = 0;
+
+            if (typeof addMessage === 'function') {
+                addMessage('🛑 Journey cancelled');
+            }
+
+            this.updateTravelUI();
         }
     },
 
@@ -2573,19 +2662,32 @@ const TravelSystem = {
 
     // Trigger location-specific events
     triggerLocationEvents(location) {
-        // Check for property ownership in this location
-        const properties = PropertySystem.getPlayerProperties().filter(p => p.location === location.id);
-        if (properties.length > 0) {
-            addMessage(`You own ${properties.length} propert${properties.length === 1 ? 'y' : 'ies'} in this location.`);
-        }
-        
-        // Check for employees in this location
-        const employees = EmployeeSystem.getPlayerEmployees().filter(e => {
-            const prop = PropertySystem.getProperty(e.assignedProperty);
-            return prop && prop.location === location.id;
-        });
-        if (employees.length > 0) {
-            addMessage(`${employees.length} employee${employees.length === 1 ? '' : 's'} working in this location.`);
+        // 🖤 Guard against undefined systems - prevents crash on arrival 💀
+        if (!location || !location.id) return;
+
+        try {
+            // Check for property ownership in this location
+            if (typeof PropertySystem !== 'undefined' && PropertySystem.getPlayerProperties) {
+                const properties = PropertySystem.getPlayerProperties().filter(p => p && p.location === location.id);
+                if (properties.length > 0) {
+                    addMessage(`You own ${properties.length} propert${properties.length === 1 ? 'y' : 'ies'} in this location.`);
+                }
+            }
+
+            // Check for employees in this location
+            if (typeof EmployeeSystem !== 'undefined' && EmployeeSystem.getPlayerEmployees &&
+                typeof PropertySystem !== 'undefined' && PropertySystem.getProperty) {
+                const employees = EmployeeSystem.getPlayerEmployees().filter(e => {
+                    if (!e || !e.assignedProperty) return false;
+                    const prop = PropertySystem.getProperty(e.assignedProperty);
+                    return prop && prop.location === location.id;
+                });
+                if (employees.length > 0) {
+                    addMessage(`${employees.length} employee${employees.length === 1 ? '' : 's'} working in this location.`);
+                }
+            }
+        } catch (err) {
+            console.warn('🖤 triggerLocationEvents error (non-fatal):', err.message);
         }
     },
 
@@ -2627,7 +2729,7 @@ const TravelSystem = {
             locationNameEl.textContent = destination.name;
         }
         const locationTypeEl = document.getElementById('current-location-type');
-        if (locationTypeEl) {
+        if (locationTypeEl && destination.type) {
             locationTypeEl.textContent = destination.type.charAt(0).toUpperCase() + destination.type.slice(1);
         }
 
@@ -2651,28 +2753,74 @@ const TravelSystem = {
     },
 
     // Update travel UI
+    // 🖤 FIX: Don't destroy the entire travel panel - update only the destination display area 💀
+    // This allows the panel tabs and structure to remain intact during travel
     updateTravelUI() {
-        const travelPanel = document.getElementById('travel-panel');
-        if (!travelPanel) return;
-        
+        // 🖤 Prefer TravelPanelMap's display update if available - it's more sophisticated 💀
+        if (typeof TravelPanelMap !== 'undefined' && TravelPanelMap.updateTravelProgressDisplay) {
+            TravelPanelMap.updateTravelProgressDisplay();
+            return;
+        }
+
+        // 🖤 Fallback: Update ONLY the destination display, NOT the entire panel 💀
+        const displayEl = document.getElementById('current-destination-display');
+        if (!displayEl) return;
+
         if (this.playerPosition.isTraveling) {
+            const dest = this.playerPosition.destination;
+            if (!dest) return;
+
             const progress = Math.round(this.playerPosition.travelProgress * 100);
             const remainingTime = this.formatTime(
                 (this.playerPosition.travelDuration * (1 - this.playerPosition.travelProgress)) / 60
             );
-            
-            travelPanel.innerHTML = `
-                <div class="travel-progress">
-                    <h3>Traveling to ${this.playerPosition.destination.name}</h3>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: ${progress}%"></div>
+
+            displayEl.innerHTML = `
+                <div class="travel-in-progress">
+                    <div class="travel-status-header">
+                        <span class="travel-icon">🚶</span>
+                        <h3>Traveling to ${dest.name}</h3>
                     </div>
-                    <p>Progress: ${progress}%</p>
-                    <p>Time remaining: ${remainingTime}</p>
+                    <div class="travel-progress-container">
+                        <div class="travel-progress-bar">
+                            <div class="travel-progress-fill" style="width: ${progress}%">
+                                <span class="travel-progress-marker">🚶</span>
+                            </div>
+                        </div>
+                        <div class="travel-progress-labels">
+                            <span class="progress-start">📍 Start</span>
+                            <span class="progress-percent">${progress}%</span>
+                            <span class="progress-end">🎯 ${dest.name}</span>
+                        </div>
+                    </div>
+                    <div class="travel-time-info">
+                        <span>⏱️ Time Remaining: ${remainingTime}</span>
+                    </div>
+                    <div class="travel-actions-during">
+                        <button class="travel-btn-danger" onclick="TravelSystem.cancelTravel()">✕ Cancel Journey</button>
+                    </div>
                 </div>
             `;
+
+            // 🖤 Switch to the Destination tab to show progress 💀
+            const destTab = document.getElementById('destination-tab');
+            const destBtn = document.querySelector('[data-travel-tab="destination"]');
+            if (destTab && destBtn) {
+                // Activate destination tab
+                document.querySelectorAll('.travel-tab-content').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.travel-tab-btn').forEach(b => b.classList.remove('active'));
+                destTab.classList.add('active');
+                destBtn.classList.add('active');
+            }
         } else {
-            this.updateDestinationsList();
+            // 🖤 Not traveling - show "No Destination" message 💀
+            displayEl.innerHTML = `
+                <div class="no-destination">
+                    <span class="no-dest-icon">🎯</span>
+                    <h3>No Destination Set</h3>
+                    <p>Click on a location in the Locations tab or Map to set a destination.</p>
+                </div>
+            `;
         }
     },
 
@@ -2747,6 +2895,14 @@ const TravelSystem = {
                 minDistance = distance;
                 nearestLocation = location;
             }
+        }
+
+        // 🖤 If no location found, return starting location to prevent null crashes 💀
+        if (!nearestLocation && this.locations) {
+            // Try to find starting location or first available location
+            nearestLocation = this.locations['driftwood_crossing'] ||
+                             this.locations['village_square'] ||
+                             Object.values(this.locations)[0] || null;
         }
 
         return nearestLocation;
