@@ -41,7 +41,9 @@
       "Bash(for:*)",
       "Bash(do echo \"Checking $f...\")",
       "Bash(done)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(npx serve -l 3000)",
+      "Bash(timeout:*)"
     ],
     "deny": [],
     "ask": []

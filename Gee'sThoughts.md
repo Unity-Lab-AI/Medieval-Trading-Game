@@ -16,7 +16,47 @@ Each entry follows this format:
 
 ---
 
-## 2025-12-01 - Current Session
+## 2025-12-02 - Current Session
+
+### Settings About Tab Empty Bug Fix 🖤💀
+
+**Request:** About info in settings is blank! It shall show all Unity AI Lab info, media addresses, and creators = Hackall360, Sponge, GFourteen. All info should load from config.
+**Context:**
+- Settings → About tab shows nothing
+- Should display: studio name, creators, website, github, discord, email, copyright
+- All content must come from GameConfig (config.js)
+**Status:** COMPLETE ✅
+
+**Root Cause Found:**
+1. `populateAboutTab()` only runs when SWITCHING to the About tab, not on initial open
+2. Uses `document.getElementById('about-content')` but panel uses dynamic DOM - should use `this.panelElement.querySelector()`
+3. No initial population when settings panel first shows
+
+**Fixes Applied:**
+1. **settings-panel.js:2873-2880** - Fixed `populateAboutTab()` to use `this.panelElement.querySelector('#about-content')` with fallback to document.getElementById
+2. **settings-panel.js:3223-3226** - Added call to `populateAboutTab()` in `openPanel()` so content is ready on panel open
+3. **config.js:1105** - Changed `getSocialLinksHTML()` to `getSocialLinksHTML(false)` to NOT show redundant About button in the About tab
+
+**About Tab Now Shows:**
+- 🏰 Game logo
+- Medieval Trading Game (title)
+- "where capitalism meets the dark ages... and thrives" (tagline)
+- Version 0.89.5
+- Unity AI Lab (studio)
+- Hackall360 (Lead Code Necromancer), Sponge (Chaos Engineer), GFourteen (Digital Alchemist)
+- 🌐 Website, 💻 GitHub, 💬 Discord, ✉️ Contact Us buttons
+- © 2025 Unity AI Lab copyright
+
+**Files Changed:**
+- `src/js/ui/panels/settings-panel.js`
+- `config.js`
+
+**Potential Risks:**
+- None - purely additive fix, no existing behavior changed
+
+---
+
+## 2025-12-01 - Previous Session
 
 ### Quest Marker on Map Feature 🖤💀
 

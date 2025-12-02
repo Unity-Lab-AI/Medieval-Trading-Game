@@ -1086,7 +1086,7 @@ const GameConfig = {
         return linksHTML;
     },
 
-    // the about section - our digital tombstone
+    // 🖤 the about section - our digital tombstone (for settings panel About tab) 💀
     getAboutHTML() {
         return `
             <div class="about-section">
@@ -1102,7 +1102,7 @@ const GameConfig = {
                     <h4>the fucking legends</h4>
                     ${this.getDevelopersHTML()}
                 </div>
-                ${this.getSocialLinksHTML()}
+                ${this.getSocialLinksHTML(false)}
                 <div class="about-copyright">${this.credits.copyright}</div>
             </div>
         `;

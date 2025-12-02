@@ -2869,9 +2869,14 @@ const SettingsPanel = {
         return div.innerHTML;
     },
 
-    // populate about tab - display who to blame for this mess
+    // 🖤 populate about tab - display who to blame for this mess 💀
     populateAboutTab() {
-        const aboutContent = document.getElementById('about-content');
+        // 🖤 Use panelElement.querySelector for dynamic panel DOM - not document.getElementById
+        let aboutContent = this.panelElement?.querySelector('#about-content');
+        // 🦇 Fallback to document search if panel not available
+        if (!aboutContent) {
+            aboutContent = document.getElementById('about-content');
+        }
         if (!aboutContent) return;
 
         if (typeof GameConfig !== 'undefined') {
@@ -3213,6 +3218,11 @@ const SettingsPanel = {
         // 🖤 Pre-populate keybindings UI in case Controls tab is visible or will be clicked
         setTimeout(() => {
             this.refreshKeyBindingsUI();
+        }, 50);
+
+        // 🖤 Pre-populate About tab with GameConfig data - the fucking legends need to be shown 💀
+        setTimeout(() => {
+            this.populateAboutTab();
         }, 50);
 
         // ⏱️ Load autosave interval from SaveManager
