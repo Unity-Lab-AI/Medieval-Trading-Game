@@ -575,61 +575,15 @@ const SettingsPanel = {
                             </div>
                         </div>
 
-                        <!-- 🏆 Leaderboard Tab - configure your path to eternal glory -->
+                        <!-- 🏆 Scores Tab - Hall of Champions Top 100 -->
                         <div class="settings-tab-content" data-tab="leaderboard">
-                            <h3>🏆 Global Leaderboard Configuration</h3>
-                            <p class="settings-description">connect to the eternal hall of champions. your legacy, broadcast to all who dare play.</p>
+                            <h3>🏆 Hall of Champions</h3>
+                            <p class="settings-description">the eternal record of those who dared to trade... and died trying.</p>
 
                             <div class="settings-group">
-                                <div class="setting-item">
-                                    <label for="leaderboard-backend">Backend Service</label>
-                                    <select id="leaderboard-backend">
-                                        <option value="local">Local Only (offline)</option>
-                                        <option value="jsonbin">JSONBin.io (free cloud)</option>
-                                        <option value="gist">GitHub Gist</option>
-                                    </select>
+                                <div id="settings-leaderboard-full" class="leaderboard-full-list">
+                                    <p class="loading-text">summoning the fallen...</p>
                                 </div>
-
-                                <div id="jsonbin-config" class="leaderboard-config-section" style="display: none;">
-                                    <h4>JSONBin.io Configuration</h4>
-                                    <p class="config-help">1. Go to <a href="https://jsonbin.io" target="_blank">jsonbin.io</a> and create a free account</p>
-                                    <p class="config-help">2. Create a new bin with content: <code>{"leaderboard":[]}</code></p>
-                                    <p class="config-help">3. Copy your Bin ID and Master Key below</p>
-                                    <div class="setting-item">
-                                        <label for="jsonbin-id">Bin ID</label>
-                                        <input type="text" id="jsonbin-id" placeholder="e.g., 6756abcd1234ef567890">
-                                    </div>
-                                    <div class="setting-item">
-                                        <label for="jsonbin-key">API Key (Master Key)</label>
-                                        <input type="password" id="jsonbin-key" placeholder="$2a$10$...">
-                                    </div>
-                                </div>
-
-                                <div id="gist-config" class="leaderboard-config-section" style="display: none;">
-                                    <h4>GitHub Gist Configuration</h4>
-                                    <p class="config-help">1. Create a public Gist at <a href="https://gist.github.com" target="_blank">gist.github.com</a></p>
-                                    <p class="config-help">2. Add a file named "leaderboard.json" with: <code>{"leaderboard":[]}</code></p>
-                                    <p class="config-help">3. Get your Gist ID from the URL</p>
-                                    <div class="setting-item">
-                                        <label for="gist-id">Gist ID</label>
-                                        <input type="text" id="gist-id" placeholder="e.g., abc123def456...">
-                                    </div>
-                                    <p class="config-note">Note: Reading is public, but submitting scores requires authentication (coming soon).</p>
-                                </div>
-
-                                <div class="setting-item">
-                                    <button id="save-leaderboard-btn" class="settings-action-btn primary">💾 Save Configuration</button>
-                                </div>
-
-                                <div id="leaderboard-status" class="leaderboard-status"></div>
-                            </div>
-
-                            <div class="settings-group">
-                                <h4>Current Leaderboard</h4>
-                                <div id="settings-leaderboard-preview" class="leaderboard-preview">
-                                    <p>loading champions...</p>
-                                </div>
-                                <p class="settings-hint">🏆 refreshes when you view the Hall of Champions</p>
                             </div>
                         </div>
 
@@ -1243,119 +1197,99 @@ const SettingsPanel = {
                 }
             }
 
-            /* 🏆 leaderboard tab styles - hall of glory configuration */
-            .leaderboard-config-section {
-                margin-top: 15px;
-                padding: 15px;
-                background: rgba(0, 0, 0, 0.3);
-                border-radius: 8px;
-                border-left: 3px solid #4fc3f7;
-            }
-
-            .leaderboard-config-section h4 {
-                color: #4fc3f7;
-                margin-bottom: 10px;
-            }
-
-            .config-help {
-                color: #888;
-                font-size: 0.85rem;
-                margin: 5px 0;
-            }
-
-            .config-help a {
-                color: #4fc3f7;
-            }
-
-            .config-help code {
-                background: rgba(0, 0, 0, 0.4);
-                padding: 2px 6px;
-                border-radius: 4px;
-                font-family: monospace;
-                color: #81c784;
-            }
-
-            .config-note {
-                color: #ff9800;
-                font-size: 0.8rem;
-                font-style: italic;
-                margin-top: 10px;
-            }
-
-            .leaderboard-status {
-                padding: 10px;
-                border-radius: 6px;
-                margin-top: 10px;
-                font-size: 0.9rem;
-            }
-
-            .leaderboard-status.success {
-                background: rgba(76, 175, 80, 0.2);
-                color: #81c784;
-                border: 1px solid #4caf50;
-            }
-
-            .leaderboard-status.error {
-                background: rgba(244, 67, 54, 0.2);
-                color: #ef5350;
-                border: 1px solid #f44336;
-            }
-
-            .leaderboard-status.info {
-                background: rgba(79, 195, 247, 0.2);
-                color: #4fc3f7;
-                border: 1px solid #29b6f6;
-            }
-
-            .leaderboard-preview {
-                max-height: 200px;
+            /* 🏆 Scores tab styles - Hall of Champions Top 100 💀 */
+            .leaderboard-full-list {
+                max-height: 500px;
                 overflow-y: auto;
                 background: rgba(0, 0, 0, 0.3);
                 border-radius: 8px;
                 padding: 10px;
             }
 
-            .leaderboard-preview .empty {
+            .leaderboard-full-list .empty,
+            .leaderboard-full-list .loading-text {
                 color: #666;
                 font-style: italic;
                 text-align: center;
+                padding: 20px;
             }
 
-            .preview-entry {
+            .leaderboard-full-list .leaderboard-entry {
                 display: flex;
                 align-items: center;
-                gap: 10px;
-                padding: 8px;
-                margin-bottom: 5px;
+                gap: 12px;
+                padding: 10px 12px;
+                margin-bottom: 6px;
+                background: rgba(0, 0, 0, 0.2);
+                border-radius: 6px;
+                transition: background 0.2s;
+            }
+
+            .leaderboard-full-list .leaderboard-entry:hover {
+                background: rgba(0, 0, 0, 0.4);
+            }
+
+            .leaderboard-full-list .leaderboard-entry.rank-1 {
+                background: rgba(255, 215, 0, 0.2);
+                border-left: 3px solid #ffd700;
+            }
+
+            .leaderboard-full-list .leaderboard-entry.rank-2 {
+                background: rgba(192, 192, 192, 0.15);
+                border-left: 3px solid #c0c0c0;
+            }
+
+            .leaderboard-full-list .leaderboard-entry.rank-3 {
+                background: rgba(205, 127, 50, 0.15);
+                border-left: 3px solid #cd7f32;
+            }
+
+            .leaderboard-full-list .rank {
+                font-size: 1.1rem;
+                min-width: 40px;
+                text-align: center;
+            }
+
+            .leaderboard-full-list .entry-info {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                gap: 2px;
+            }
+
+            .leaderboard-full-list .name {
+                color: #e0e0e0;
+                font-weight: bold;
+            }
+
+            .leaderboard-full-list .details {
+                color: #888;
+                font-size: 0.8rem;
+            }
+
+            .leaderboard-full-list .score {
+                color: #ffd700;
+                font-weight: bold;
+                font-size: 0.95rem;
+            }
+
+            /* 🦇 Custom scrollbar for the leaderboard */
+            .leaderboard-full-list::-webkit-scrollbar {
+                width: 8px;
+            }
+
+            .leaderboard-full-list::-webkit-scrollbar-track {
                 background: rgba(0, 0, 0, 0.2);
                 border-radius: 4px;
             }
 
-            .preview-entry.rank-1 {
-                background: rgba(255, 215, 0, 0.15);
+            .leaderboard-full-list::-webkit-scrollbar-thumb {
+                background: rgba(255, 215, 0, 0.3);
+                border-radius: 4px;
             }
 
-            .preview-entry.rank-2 {
-                background: rgba(192, 192, 192, 0.1);
-            }
-
-            .preview-entry.rank-3 {
-                background: rgba(205, 127, 50, 0.1);
-            }
-
-            .preview-entry .rank {
-                font-size: 1.2rem;
-                min-width: 30px;
-            }
-
-            .preview-entry .name {
-                flex: 1;
-                color: #4fc3f7;
-            }
-
-            .preview-entry .score {
-                color: #ffd700;
-                font-weight: bold;
+            .leaderboard-full-list::-webkit-scrollbar-thumb:hover {
+                background: rgba(255, 215, 0, 0.5);
             }
 
             .settings-action-btn {
@@ -1704,18 +1638,8 @@ const SettingsPanel = {
             clearAllBtn.addEventListener('click', () => this.clearAllData());
         }
 
-        // 🏆 Leaderboard tab controls
-        const leaderboardBackend = this.panelElement.querySelector('#leaderboard-backend');
-        if (leaderboardBackend) {
-            leaderboardBackend.addEventListener('change', (e) => this.updateLeaderboardConfigUI(e.target.value));
-        }
-
-        const saveLeaderboardBtn = this.panelElement.querySelector('#save-leaderboard-btn');
-        if (saveLeaderboardBtn) {
-            saveLeaderboardBtn.addEventListener('click', () => this.saveLeaderboardConfig());
-        }
-
-        // 🖤 Refresh button REMOVED - prevents API spam to JSONBin 💀
+        // 🏆 Scores tab - NO controls needed, just displays cached leaderboard 💀
+        // All backend config removed - JSONBin is the ONLY backend, hardcoded in config.js
 
         // 🎙️ AI Voice tab controls - where NPCs get their voices
         this.setupAIVoiceControls();
@@ -2701,131 +2625,46 @@ const SettingsPanel = {
         }
     },
 
-    // 🏆 Populate leaderboard tab - configure your path to glory
+    // 🏆 Populate leaderboard tab - show the top 100 champions, no config bullshit 💀
     populateLeaderboardTab() {
-        // Load current config
-        if (typeof GlobalLeaderboardSystem !== 'undefined') {
-            const config = GlobalLeaderboardSystem.config;
+        const container = document.getElementById('settings-leaderboard-full');
+        if (!container) return;
 
-            // Check if configured via GameConfig
-            const isConfiguredInGameConfig = typeof GameConfig !== 'undefined' &&
-                GameConfig.leaderboard &&
-                GameConfig.leaderboard.enabled &&
-                ((GameConfig.leaderboard.jsonbin?.binId && GameConfig.leaderboard.jsonbin?.apiKey) ||
-                 GameConfig.leaderboard.gist?.gistId);
-
-            // Set backend selector
-            const backendSelect = document.getElementById('leaderboard-backend');
-            if (backendSelect) {
-                backendSelect.value = config.backend || 'local';
-                this.updateLeaderboardConfigUI(config.backend);
-
-                // Disable if configured in GameConfig
-                if (isConfiguredInGameConfig) {
-                    backendSelect.disabled = true;
-                }
-            }
-
-            // Set JSONBin values
-            const jsonbinId = document.getElementById('jsonbin-id');
-            const jsonbinKey = document.getElementById('jsonbin-key');
-            if (jsonbinId) {
-                jsonbinId.value = config.BIN_ID || '';
-                if (isConfiguredInGameConfig && config.backend === 'jsonbin') {
-                    jsonbinId.disabled = true;
-                    jsonbinId.placeholder = 'Configured in config.js';
-                }
-            }
-            if (jsonbinKey) {
-                jsonbinKey.value = config.API_KEY ? '••••••••••••••••' : '';
-                if (isConfiguredInGameConfig && config.backend === 'jsonbin') {
-                    jsonbinKey.disabled = true;
-                    jsonbinKey.placeholder = 'Configured in config.js';
-                }
-            }
-
-            // Set Gist values
-            const gistId = document.getElementById('gist-id');
-            if (gistId) {
-                gistId.value = config.GIST_ID || '';
-                if (isConfiguredInGameConfig && config.backend === 'gist') {
-                    gistId.disabled = true;
-                    gistId.placeholder = 'Configured in config.js';
-                }
-            }
-
-            // Show status if configured via GameConfig
-            if (isConfiguredInGameConfig) {
-                this.showLeaderboardStatus(`✅ global leaderboard configured in config.js (${config.backend})`, 'success');
-            }
-
-            // Refresh leaderboard preview
-            this.refreshLeaderboardPreview();
-        }
-    },
-
-    // Update config UI based on backend selection
-    updateLeaderboardConfigUI(backend) {
-        const jsonbinConfig = document.getElementById('jsonbin-config');
-        const gistConfig = document.getElementById('gist-config');
-
-        if (jsonbinConfig) jsonbinConfig.style.display = backend === 'jsonbin' ? 'block' : 'none';
-        if (gistConfig) gistConfig.style.display = backend === 'gist' ? 'block' : 'none';
-    },
-
-    // Save leaderboard configuration
-    saveLeaderboardConfig() {
-        if (typeof GlobalLeaderboardSystem === 'undefined') return;
-
-        const backend = document.getElementById('leaderboard-backend')?.value || 'local';
-        const binId = document.getElementById('jsonbin-id')?.value || '';
-        const apiKey = document.getElementById('jsonbin-key')?.value || '';
-        const gistId = document.getElementById('gist-id')?.value || '';
-
-        GlobalLeaderboardSystem.configure({
-            backend: backend,
-            BIN_ID: binId,
-            API_KEY: apiKey,
-            GIST_ID: gistId
-        });
-
-        this.showLeaderboardStatus('✅ configuration saved! your legacy awaits.', 'success');
-    },
-
-    // Show status message
-    showLeaderboardStatus(message, type = 'info') {
-        const status = document.getElementById('leaderboard-status');
-        if (status) {
-            status.textContent = message;
-            status.className = `leaderboard-status ${type}`;
-        }
-    },
-
-    // Refresh leaderboard preview in settings
-    refreshLeaderboardPreview() {
-        const preview = document.getElementById('settings-leaderboard-preview');
-        if (!preview || typeof GlobalLeaderboardSystem === 'undefined') return;
-
-        const leaderboard = GlobalLeaderboardSystem.leaderboard.slice(0, 5);
-
-        if (leaderboard.length === 0) {
-            preview.innerHTML = '<p class="empty">no champions yet... be the first to claim glory.</p>';
+        if (typeof GlobalLeaderboardSystem === 'undefined') {
+            container.innerHTML = '<p class="empty">leaderboard system not loaded...</p>';
             return;
         }
 
-        preview.innerHTML = leaderboard.map((entry, i) => {
+        // 🖤 Get cached leaderboard (top 100) - NO API CALL, just use what we have 💀
+        const leaderboard = GlobalLeaderboardSystem.leaderboard.slice(0, 100);
+
+        if (leaderboard.length === 0) {
+            container.innerHTML = '<p class="empty">no champions have risen yet... be the first to claim eternal glory.</p>';
+            return;
+        }
+
+        // 🦇 Render the full top 100 list
+        container.innerHTML = leaderboard.map((entry, i) => {
             const rank = i + 1;
             const icon = rank === 1 ? '👑' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
+            const rankClass = rank <= 3 ? `rank-${rank}` : '';
+            const status = entry.causeOfDeath ? '💀' : '🏃';
+            const cause = entry.causeOfDeath ? this.escapeHtml(entry.causeOfDeath) : 'still breathing';
+
             return `
-                <div class="preview-entry rank-${rank}">
+                <div class="leaderboard-entry ${rankClass}">
                     <span class="rank">${icon}</span>
-                    <span class="name">${this.escapeHtml(entry.playerName)}</span>
+                    <div class="entry-info">
+                        <span class="name">${this.escapeHtml(entry.playerName)}</span>
+                        <span class="details">${status} ${cause} • Day ${entry.daysSurvived || '?'}</span>
+                    </div>
                     <span class="score">💰 ${entry.score.toLocaleString()}</span>
                 </div>
             `;
         }).join('');
     },
 
+    // 🖤 Escape HTML to prevent XSS 💀
     escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;

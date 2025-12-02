@@ -108,6 +108,40 @@ Each entry follows this format:
 
 ---
 
+### Nuke Backend Selection - Scores Tab Shows ONLY Top 100 🖤💀
+
+**Request:**
+1. Remove backend dropdown (Local/JSONBin/Gist) - ONLY JSONBin, hardcoded
+2. Scores tab should ONLY show top 100 leaderboard (cached from initial load)
+3. No configuration options - just the fucking leaderboard
+**Context:** Users don't need to see or touch backend settings. JSONBin is THE backend. Period.
+**Status:** COMPLETE ✅
+
+**Fixes Applied:**
+1. **settings-panel.js:578-588** - Replaced entire Scores tab HTML with clean Hall of Champions display
+   - Removed: Backend dropdown, JSONBin config fields, Gist config fields, Save button, status area
+   - Added: Simple `#settings-leaderboard-full` container for top 100 list
+2. **settings-panel.js:1661-1662** - Removed all event listeners for backend controls
+3. **settings-panel.js:2658-2695** - Rewrote `populateLeaderboardTab()` to render top 100 from cache
+   - NO API CALLS - just displays what was loaded on game start
+   - Shows rank, player name, cause of death, days survived, score
+4. **settings-panel.js:1200-1293** - Replaced old config CSS with clean leaderboard styles
+   - Removed: `.leaderboard-config-section`, `.config-help`, `.leaderboard-status`, `.preview-entry`
+   - Added: `.leaderboard-full-list` with proper scrolling, hover states, rank highlighting
+
+**What Users See Now:**
+- Settings → Scores tab: Just the Hall of Champions top 100
+- No config options, no dropdowns, no buttons to spam
+- Data is cached from initial game load - no additional API calls
+
+**Files Changed:**
+- `src/js/ui/panels/settings-panel.js`
+
+**Potential Risks:**
+- None - simplified UI, removed user-facing config that was never needed
+
+---
+
 ### Settings About Tab Empty Bug Fix 🖤💀
 
 **Request:** About info in settings is blank! It shall show all Unity AI Lab info, media addresses, and creators = Hackall360, Sponge, GFourteen. All info should load from config.
