@@ -17,10 +17,6 @@ const RandomEventPanel = {
     eventIcons: {
         market_boom: '📈',
         market_crash: '📉',
-        merchant_arrival: '🐫',
-        foreign_merchant: '🐫',
-        merchant_caravan: '🚃',
-        weekly_market: '🏪',
         travel_complete: '🏁',
         lucky_find: '🍀',
         treasure_found: '💎',
@@ -39,11 +35,8 @@ const RandomEventPanel = {
     eventColors: {
         market_boom: '#4ade80',      // green - good
         market_crash: '#f87171',     // red - bad
-        merchant_arrival: '#fbbf24', // gold - opportunity
-        merchant_caravan: '#fbbf24',
-        weekly_market: '#60a5fa',    // blue - neutral good
         lucky_find: '#a855f7',       // purple - rare
-        treasure_found: '#fbbf24',
+        treasure_found: '#fbbf24',   // gold - valuable
         bandit_encounter: '#ef4444', // red - danger
         festival: '#ec4899',         // pink - celebration
         plague: '#6b7280',           // gray - doom

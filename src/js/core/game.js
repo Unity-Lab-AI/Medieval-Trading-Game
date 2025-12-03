@@ -1687,15 +1687,7 @@ const EventSystem = {
             chance: 0.01
         });
         
-        this.addEventType('merchant_arrival', {
-            name: 'Foreign Merchant',
-            description: 'A merchant from distant kingdoms has arrived with exotic goods.',
-            effects: { newItems: true },
-            duration: 720, // 12 hours (rare event, should last longer)
-            chance: 0.005, // 0.5% - rare event
-            silent: true // 🖤 Don't show popup, just log to message panel 💀
-        });
-
+        // 🖤 REMOVED: merchant_arrival - was fake event with no actual NPC or goods 💀
         // 🖤 REMOVED: rain_storm and clear_skies events - WeatherSystem controls all weather now 💀
         // Travel event
         this.addEventType('travel_complete', {
@@ -1706,24 +1698,8 @@ const EventSystem = {
             chance: 0
         });
         
-        // Market events - these are triggered by specific game logic, not random chance
-        this.addEventType('weekly_market', {
-            name: 'Weekly Market Day',
-            description: 'The weekly gathering of merchants with rare goods from distant lands!',
-            effects: { newItems: true, priceBonus: 0.1 },
-            duration: 720, // 12 hours
-            chance: 0, // Triggered by day-of-week check, not random
-            silent: true // 🖤 Just log to message panel 💀
-        });
-
-        this.addEventType('merchant_caravan', {
-            name: 'Merchant Caravan',
-            description: 'A grand merchant caravan has arrived with exotic goods from the east.',
-            effects: { newItems: true, rareItems: true },
-            duration: 720, // 12 hours
-            chance: 0, // Triggered by specific conditions
-            silent: true // 🖤 Just log to message panel 💀
-        });
+        // 🖤 REMOVED: weekly_market, merchant_caravan - were fake events with no real implementation 💀
+        // TODO: If we want traveling merchants, build actual NPC spawning system
 
         // 🍀 Lucky events - trigger lucky achievements!
         this.addEventType('lucky_find', {
