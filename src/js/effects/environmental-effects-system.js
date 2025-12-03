@@ -249,6 +249,7 @@ const EnvironmentalEffectsSystem = {
         // weather container - where the tears fall
         this.weatherContainer = document.createElement('div');
         this.weatherContainer.id = 'weather-container';
+        // 🖤 PERMANENT FIX: Environmental effects at layer 1-4, BELOW map UI (10+) 💀
         this.weatherContainer.style.cssText = `
             position: fixed;
             top: 0;
@@ -256,11 +257,11 @@ const EnvironmentalEffectsSystem = {
             width: 100%;
             height: 100%;
             pointer-events: none;
-            z-index: 70; /* Z-INDEX STANDARD: Weather effects */
+            z-index: var(--z-weather-overlay, 2); /* 🖤 Layer 2 - BELOW map locations/paths 💀 */
             overflow: hidden;
         `;
         document.body.appendChild(this.weatherContainer);
-        
+
         // lighting container - mood lighting for the mood
         this.lightingContainer = document.createElement('div');
         this.lightingContainer.id = 'lighting-container';
@@ -271,12 +272,12 @@ const EnvironmentalEffectsSystem = {
             width: 100%;
             height: 100%;
             pointer-events: none;
-            z-index: 65; /* Z-INDEX STANDARD: Lighting effects */
+            z-index: 1; /* 🖤 Layer 1 - BELOW weather, BELOW map UI 💀 */
             mix-blend-mode: multiply;
             opacity: 0.8;
         `;
         document.body.appendChild(this.lightingContainer);
-        
+
         // atmosphere container - the existential dread layer
         this.atmosphereContainer = document.createElement('div');
         this.atmosphereContainer.id = 'atmosphere-container';
@@ -287,7 +288,7 @@ const EnvironmentalEffectsSystem = {
             width: 100%;
             height: 100%;
             pointer-events: none;
-            z-index: 60; /* Z-INDEX STANDARD: Atmosphere effects */
+            z-index: 4; /* 🖤 Layer 4 - ABOVE weather but BELOW map UI (10+) 💀 */
             mix-blend-mode: screen;
             opacity: 0.3;
         `;

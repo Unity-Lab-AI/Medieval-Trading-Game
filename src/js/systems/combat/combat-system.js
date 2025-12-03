@@ -52,7 +52,7 @@ const CombatSystem = {
             defense: 3,
             speed: 5,
             goldDrop: { min: 5, max: 25 },
-            loot: ['rusty_sword', 'leather_scraps', 'bandage'],
+            loot: ['rusty_sword', 'leather_scraps', 'bandages'],
             xpReward: 15
         },
         wolf: {

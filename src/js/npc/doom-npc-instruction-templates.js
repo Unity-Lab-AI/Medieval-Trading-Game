@@ -177,6 +177,46 @@ Say ONE sentence about what materials you need (survival items only), then inclu
 Example: "A weapon? Bring me iron, leather, and food for the forge fire. {openCrafting}"`;
     },
 
+    // CHAT/CONVERSATION in the doom (with quest context)
+    _buildDoomChatInstruction(spec, context) {
+        const demeanor = this.demeanors[spec.demeanor] || this.demeanors.broken;
+
+        // Build doom quest context
+        let questContext = '';
+        if (context.availableQuests && context.availableQuests.length > 0) {
+            const questNames = context.availableQuests.map(q => `"${q.name}"`).join(', ');
+            questContext += `\nQUESTS YOU CAN OFFER: ${questNames}. To offer a quest, include {startQuest:questId} in your response.`;
+        }
+        if (context.activeQuests && context.activeQuests.length > 0) {
+            const activeInfo = context.activeQuests.map(q => `"${q.name}" (${q.progress || 'in progress'})`).join(', ');
+            questContext += `\nACTIVE QUESTS: ${activeInfo}. Acknowledge their struggle but offer no false hope.`;
+        }
+        if (context.completableQuests && context.completableQuests.length > 0) {
+            const completeInfo = context.completableQuests.map(q => `"${q.name}" - {completeQuest:${q.id}}`).join(', ');
+            questContext += `\nCOMPLETABLE QUESTS: ${completeInfo}. Include the command to complete them. Reward with grim acknowledgment.`;
+        }
+
+        // Build doom-appropriate response
+        return `${this._doomContext}
+You are ${spec.title || spec.type} in ${context.locationName || 'the doom'}. ${demeanor}
+
+The player is speaking with you. Respond in character - traumatized, desperate, broken by the doom.
+Keep responses SHORT - one to three sentences maximum. Every word costs energy you don't have.
+${questContext}
+
+AVAILABLE COMMANDS (use when appropriate):
+- {openMarket} - Open the barter panel for survival goods
+- {startQuest:questId} - Start a desperate quest
+- {completeQuest:questId} - Complete a quest and give grim thanks
+- {openHealing} - Offer scarce medical attention
+- {openCrafting} - Open crafting for survival gear
+- {openRest} - Offer shelter for the night
+
+Respond to: "${context.playerMessage || 'The player speaks.'}"
+
+Remember: Gold is worthless. Hope is dead. Survival is all that matters.`;
+    },
+
     // ═══════════════════════════════════════════════════════════════
     // 💀 NPC TYPE SPECIFIC DOOM TEMPLATES
     // ═══════════════════════════════════════════════════════════════
@@ -328,6 +368,10 @@ Example: "A weapon? Bring me iron, leather, and food for the forge fire. {openCr
             case 'crafting':
             case 'craft':
                 return this._buildDoomCraftingInstruction(spec, context);
+            case 'chat':
+            case 'conversation':
+            case 'talk':
+                return this._buildDoomChatInstruction(spec, context);
             default:
                 return this._buildDoomGreetingInstruction(spec, context);
         }

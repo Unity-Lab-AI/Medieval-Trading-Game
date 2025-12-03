@@ -31,6 +31,16 @@ class VirtualList {
      * @param {Function} options.renderItem - Function(item, index) => HTML string
      * @param {number} [options.overscan=3] - Extra items to render above/below viewport
      * @param {string} [options.itemClass='virtual-item'] - CSS class for items
+     *
+     * ⚠️ XSS SECURITY WARNING ⚠️
+     * The renderItem callback returns raw HTML that is inserted via innerHTML.
+     * CALLERS ARE RESPONSIBLE for escaping user-generated content!
+     *
+     * Use escapeHtmlVirtual() (exported from this file) to sanitize:
+     *   renderItem: (item) => `<div>${escapeHtmlVirtual(item.name)}</div>`
+     *
+     * NEVER do this with user data:
+     *   renderItem: (item) => `<div>${item.userInput}</div>`  // XSS VULNERABLE!
      */
     constructor(options) {
         // 🗡️ Required params

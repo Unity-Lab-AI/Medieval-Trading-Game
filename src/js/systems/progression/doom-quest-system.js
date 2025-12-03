@@ -597,16 +597,88 @@ const DoomQuestSystem = {
         // Register quests first if not done
         this.registerDoomQuests();
 
-        // Start the intro quest
-        const result = QuestSystem.startQuest('doom_arrival');
-        if (result.success) {
+        // 🖤💀 Start the intro quest - use assignQuest, not startQuest!
+        const result = QuestSystem.assignQuest('doom_arrival');
+        if (result && result.success) {
             QuestSystem.trackQuest('doom_arrival');
             if (typeof addMessage === 'function') {
                 addMessage('💀 New Quest: Through the Veil', 'warning');
                 addMessage('The Ferryman has given you a task. Find survivors in this ruined world.', 'info');
             }
+            return true;
         }
-        return result.success;
+        return false;
+    },
+
+    // 🖤 Get quest context for NPC instruction templates (API TTS)
+    getQuestContextForNPC(npcType, locationId) {
+        const context = {
+            availableQuests: [],
+            activeQuests: [],
+            completableQuests: [],
+            hasQuests: false
+        };
+
+        if (!this.isInDoomWorld()) return context;
+
+        const allDoomQuests = { ...this.mainQuests, ...this.sideQuests };
+
+        Object.values(allDoomQuests).forEach(quest => {
+            // Quests this NPC can give
+            if (quest.giver === npcType && this._meetsPrerequisites(quest)) {
+                if (typeof QuestSystem !== 'undefined') {
+                    const isActive = QuestSystem.activeQuests?.[quest.id];
+                    const isCompleted = QuestSystem.completedQuests?.includes(quest.id);
+                    if (!isActive && !isCompleted) {
+                        context.availableQuests.push({
+                            id: quest.id,
+                            name: quest.name,
+                            description: quest.description,
+                            type: quest.type,
+                            difficulty: quest.difficulty
+                        });
+                    }
+                }
+            }
+
+            // Active quests from this NPC
+            if (quest.giver === npcType) {
+                if (typeof QuestSystem !== 'undefined') {
+                    const activeQuest = QuestSystem.activeQuests?.[quest.id];
+                    if (activeQuest) {
+                        const objectives = activeQuest.objectives || quest.objectives || [];
+                        const completed = objectives.filter(o => o.completed).length;
+                        const total = objectives.length;
+                        context.activeQuests.push({
+                            id: quest.id,
+                            name: quest.name,
+                            progress: `${completed}/${total} objectives complete`,
+                            objectives: objectives
+                        });
+                    }
+                }
+            }
+
+            // Quests completable at this NPC
+            if (quest.turnInNpc === npcType) {
+                if (typeof QuestSystem !== 'undefined') {
+                    const activeQuest = QuestSystem.activeQuests?.[quest.id];
+                    if (activeQuest && QuestSystem.areObjectivesComplete?.(quest.id)) {
+                        context.completableQuests.push({
+                            id: quest.id,
+                            name: quest.name,
+                            rewards: quest.rewards
+                        });
+                    }
+                }
+            }
+        });
+
+        context.hasQuests = context.availableQuests.length > 0 ||
+                           context.activeQuests.length > 0 ||
+                           context.completableQuests.length > 0;
+
+        return context;
     }
 };
 

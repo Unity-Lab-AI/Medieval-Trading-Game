@@ -185,6 +185,15 @@ const Bootstrap = {
     async finalSetup() {
         this.updateLoadingMessage('Final preparations...');
 
+        // 🖤💀 Hide debooger button if disabled in config - no cheating for players!
+        if (typeof GameConfig === 'undefined' || !GameConfig.debooger?.enabled) {
+            const deboogerBtn = document.getElementById('toggle-debooger-console');
+            const deboogerConsole = document.getElementById('debooger-console');
+            if (deboogerBtn) deboogerBtn.style.display = 'none';
+            if (deboogerConsole) deboogerConsole.style.display = 'none';
+            console.log('🔒 Debooger disabled - button hidden for production');
+        }
+
         // Start the game engine if it exists
         if (typeof GameEngine !== 'undefined' && typeof GameEngine.start === 'function') {
             GameEngine.start();

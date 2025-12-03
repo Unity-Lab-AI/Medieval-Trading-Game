@@ -469,7 +469,18 @@ const NPCTradeWindow = {
             return '<div class="empty-inventory">No items</div>';
         }
 
-        return Object.entries(inventory).map(([itemId, data]) => {
+        // 🖤 Filter out sell-only items from NPC side - trash loot ain't for sale 💀
+        const filteredEntries = Object.entries(inventory).filter(([itemId, data]) => {
+            if (side !== 'npc') return true; // Player can sell anything
+            const item = typeof ItemDatabase !== 'undefined' ? ItemDatabase.getItem(itemId) : null;
+            return !item?.sellOnly; // Skip items marked as sell-only
+        });
+
+        if (filteredEntries.length === 0) {
+            return '<div class="empty-inventory">No items</div>';
+        }
+
+        return filteredEntries.map(([itemId, data]) => {
             const qty = typeof data === 'number' ? data : data.quantity || 1;
             const price = this.getItemPrice(itemId);
             const displayPrice = side === 'npc' ?

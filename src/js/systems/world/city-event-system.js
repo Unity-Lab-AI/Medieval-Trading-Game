@@ -202,6 +202,49 @@ const CityEventSystem = {
         // Notify player
         addMessage(`📢 Event in ${cityId}: ${event.name}`);
         addMessage(event.description);
+
+        // 🖤 Town crier voice announcement (if player is in this city)
+        if (game.currentLocation && game.currentLocation.id === cityId) {
+            this.playTownCrierAnnouncement(event, cityId);
+        }
+    },
+
+    // 🖤 Play town crier voice announcement for city events
+    async playTownCrierAnnouncement(event, cityId) {
+        // Only play if voice is enabled
+        if (typeof NPCVoiceChatSystem === 'undefined' || !NPCVoiceChatSystem.settings?.voiceEnabled) {
+            return;
+        }
+
+        // Town crier NPC template
+        const townCrier = {
+            id: 'town_crier',
+            name: 'Town Crier',
+            type: 'crier',
+            voice: 'alloy',
+            personality: 'dramatic',
+            speakingStyle: 'loud and theatrical',
+            voiceInstructions: 'Speak loudly and dramatically, as if shouting announcements in a town square. Be theatrical and attention-grabbing.',
+            greetings: ['Hear ye, hear ye!', 'Attend, good citizens!', 'News from the realm!']
+        };
+
+        try {
+            const response = await NPCVoiceChatSystem.generateNPCResponse(
+                townCrier,
+                `You are a town crier announcing important news to the citizens. The event is: "${event.name}" - ${event.description}. Announce this in a dramatic, theatrical way in ONE or TWO sentences. Start with "Hear ye!" or similar.`,
+                [],
+                { action: 'announcement', context: 'city_event', eventType: event.type, cityId: cityId }
+            );
+
+            if (response && response.text) {
+                // Small delay so text notification appears first
+                setTimeout(() => {
+                    NPCVoiceChatSystem.playVoice(response.text, townCrier.voice || 'alloy');
+                }, 500);
+            }
+        } catch (e) {
+            console.warn('📢 Town crier announcement failed:', e);
+        }
     },
 
     // Apply event effects

@@ -8,7 +8,7 @@
 ═══════════════════════════════════════════════════════════════════════
 ```
 
-> **Version:** 0.89 | **Unity AI Lab** by Hackall360 Sponge GFourteen
+> **Version:** 0.90.00 | **Unity AI Lab** by Hackall360 Sponge GFourteen
 > *www.unityailab.com*
 > *Written at 3am while questioning the meaning of virtual economies*
 
@@ -39,7 +39,7 @@
 - [Keyboard Shortcuts](#️-keyboard-shortcuts)
 - [Game Settings](#️-game-settings)
 
-### Achievements (57 Total!)
+### Achievements (115 Total!)
 - [Achievements Overview](#-achievements)
   - [Wealth Achievements](#wealth-achievements-4)
   - [Trading Achievements](#trading-achievements-4)
@@ -77,13 +77,16 @@ Medieval Trading Game is a browser-based economic simulation where you play as a
 4. **Repeat Until Rich** - Or until you starve. Whichever comes first.
 
 **Features:**
-- 🗺️ **30+ Locations** - Cities, towns, villages, mines, forests, ports, and mysterious ruins
-- 📦 **200+ Items** - From basic food to legendary dragon scales
+- 🗺️ **42 Locations** - Cities, towns, villages, mines, forests, caves, ports, and dungeons
+- 📦 **200+ Items** - From basic food to legendary dragon scales (including 30+ dungeon loot items)
 - 🏠 **Property System** - Buy houses, shops, farms, mines, and taverns
 - 👥 **Employee System** - Hire workers to generate passive income
 - 🔨 **Crafting** - Turn raw materials into valuable goods
-- 🏆 **57 Achievements** - Including 10 hidden ones for the dedicated
+- 🏆 **115 Achievements** - Including 15 hidden ones for the dedicated
 - 💀 **Survival Mechanics** - Health, hunger, thirst, and the ever-present specter of death
+- 🎯 **100+ Quests** - 5-act main story, 14 side chains, 15 Doom World quests
+- ⚔️ **Combat System** - Choice-based stat rolls with 13 enemy types and 8 dungeon bosses
+- 🌑 **Doom World** - Apocalyptic alternate dimension with inverted economy
 
 ---
 

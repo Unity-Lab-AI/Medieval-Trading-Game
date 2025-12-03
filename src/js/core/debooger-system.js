@@ -9,23 +9,41 @@
 // disabled by default for performance, enable when you need to suffer
 
 const DeboogerSystem = {
-    enabled: true,  // ON by default - for the Super Hacker achievement
+    enabled: false,  // 🖤💀 NOW respects GameConfig - check on init
     maxEntries: 500, // prevent memory bloat like my todo list at 3am
     _initialized: false,
     _originalLog: null,
     _originalWarn: null,
     _originalError: null,
 
-    // initialize Debooger system - ON by default for Super Hacker achievement
+    // initialize Debooger system - NOW CHECKS CONFIG FIRST
     init() {
-        // always setup console capture - Debooger is on by default now
-        // because watching console logs in a UI panel is fucking cool
-        this.setupConsoleCapture();
-        console.log('🐛 Debooger system enabled by default - Super Hacker mode!');
+        // 🖤💀 Check GameConfig.debooger.enabled FIRST - production builds stay locked
+        var deboogerBtn = document.getElementById('toggle-debooger-console');
+        var deboogerPanel = document.getElementById('debooger-console');
+
+        if (typeof GameConfig !== 'undefined' && GameConfig.debooger && GameConfig.debooger.enabled === true) {
+            this.enabled = true;
+            this.setupConsoleCapture();
+            // 🔓 Show the button for developers
+            if (deboogerBtn) deboogerBtn.style.display = 'block';
+            console.log('🐛 Debooger system enabled - Super Hacker mode!');
+        } else {
+            this.enabled = false;
+            // 🔒 Hide the button and console panel for production
+            if (deboogerBtn) deboogerBtn.style.display = 'none';
+            if (deboogerPanel) deboogerPanel.style.display = 'none';
+            console.log('🔒 Debooger system DISABLED by config');
+        }
     },
 
-    // 🔓 Enable Debooger manually 🗡️
+    // 🔓 Enable Debooger manually 🗡️ - BUT CONFIG IS STILL THE MASTER 🖤💀
     enable() {
+        // 🔒 Config override - if config says NO, manual enable is DENIED 🦇
+        if (typeof GameConfig !== 'undefined' && GameConfig.debooger && GameConfig.debooger.enabled === false) {
+            console.log('🔒 Cannot enable - GameConfig.debooger.enabled = false is ABSOLUTE');
+            return;
+        }
         this.enabled = true;
         this.setupConsoleCapture();
         console.log('🐛 Debooger system manually enabled');
@@ -93,14 +111,18 @@ const DeboogerSystem = {
 // 🌙 expose to global scope 🦇
 window.DeboogerSystem = DeboogerSystem;
 
-// 🖤 AUTO-INIT - Debooger system initializes itself on load
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
+// 🔒 ONLY auto-init if debooger is enabled in config
+if (typeof GameConfig !== 'undefined' && GameConfig.debooger && GameConfig.debooger.enabled === true) {
+    // 🖤 AUTO-INIT - Debooger system initializes itself on load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            DeboogerSystem.init();
+        });
+    } else {
+        // DOM already loaded, init now
         DeboogerSystem.init();
-    });
+    }
+    console.log('🐛 Debooger System loaded!');
 } else {
-    // DOM already loaded, init now
-    DeboogerSystem.init();
+    console.log('🔒 Debooger System DISABLED by config - not initializing');
 }
-
-console.log('🐛 Debooger System loaded!');

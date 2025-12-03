@@ -21,10 +21,11 @@ const GameConfig = {
     // ═══════════════════════════════════════════════════════════════
     // 🔧 DEBOOGER CONFIG - for developers and chaos agents
     // ═══════════════════════════════════════════════════════════════
-    // set deboogerEnabled to false for production builds
+    // set enabled to false for production builds
     // this locks out all debooger commands so players can't wreck the leaderboards
     debooger: {
-        enabled: true,         // true = debooger commands work, false = locked out
+        enabled: false,        // true = debooger commands work, false = locked out
+        allowAchievementUnlock: false, // true = Super Hacker achievement can unlock debooger, false = no unlock ever
         showConsoleWarnings: true,  // show "debooger disabled" warnings in console
     },
 

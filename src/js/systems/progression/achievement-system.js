@@ -1642,23 +1642,41 @@ const AchievementSystem = {
             }
         }
 
-        // Unlock debooger console for this save 🦇
+        // Unlock debooger console for this save 🦇 - BUT ONLY IF CONFIG ALLOWS IT 🖤💀
         if (achievement.reward.unlockDebooger) {
-            // Store in game state that debooger is unlocked for this save
-            if (game.player) {
-                game.player.deboogerUnlocked = true;
-            }
-            console.log('🔓 DEBOOGER CONSOLE UNLOCKED 💀! You are now a Super Hacker!');
+            // 🔒 CONFIG IS THE MASTER - check both enabled AND allowAchievementUnlock
+            const deboogerConfig = (typeof GameConfig !== 'undefined' && GameConfig.debooger) ? GameConfig.debooger : null;
+            const canUnlock = deboogerConfig && deboogerConfig.enabled === true && deboogerConfig.allowAchievementUnlock === true;
 
-            if (typeof addMessage === 'function') {
-                addMessage('🔓 DEBOOGER CONSOLE UNLOCKED 💀! Press ` to access debooger commands 🦇!');
+            if (!canUnlock) {
+                console.log('🔒 Super Hacker achievement earned, but debooger unlock is DISABLED by config');
+                if (typeof addMessage === 'function') {
+                    addMessage('🏆 Super Hacker achievement earned! (Debooger disabled in this build)');
+                }
+            } else {
+                // Config allows debooger AND achievement unlock - proceed
+                if (game.player) {
+                    game.player.deboogerUnlocked = true;
+                }
+                console.log('🔓 DEBOOGER CONSOLE UNLOCKED 💀! You are now a Super Hacker!');
+
+                if (typeof addMessage === 'function') {
+                    addMessage('🔓 DEBOOGER CONSOLE UNLOCKED 💀! Press ` to access debooger commands 🦇!');
+                }
             }
         }
     },
 
     // Check if debooger is unlocked for current save (via Super Hacker achievement) 🦇
+    // 🖤💀 NOW RESPECTS CONFIG - if config says NO, this ALWAYS returns false 🔒
     isDeboogerUnlockedForSave() {
-        // Check if player has deboogerUnlocked flag 💀
+        // 🔒 CONFIG IS THE MASTER - need BOTH enabled AND allowAchievementUnlock
+        const deboogerConfig = (typeof GameConfig !== 'undefined' && GameConfig.debooger) ? GameConfig.debooger : null;
+        if (!deboogerConfig || deboogerConfig.enabled !== true || deboogerConfig.allowAchievementUnlock !== true) {
+            return false;
+        }
+
+        // Config allows debooger + achievement unlock - check if player earned it
         if (game.player && game.player.deboogerUnlocked) {
             return true;
         }

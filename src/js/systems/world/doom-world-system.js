@@ -304,12 +304,84 @@ const DoomWorldSystem = {
             title: 'Ferryman of Worlds',
             description: 'A cloaked figure stands beside a shimmering portal. His face is hidden, but you sense ancient power.',
             portrait: 'boatman',
+            voice: 'ash', // 🖤💀 Deep, mysterious voice for the Boatman
+            personality: 'mysterious',
+            speakingStyle: 'cryptic',
+            voiceInstructions: 'Speak slowly and ominously. Your voice echoes as if from beyond the veil. Pause between sentences.',
             isSpecial: true,
             canTrade: false,
             canChat: true,
             hasPortal: true,
-            actions: this.isActive ? ['chat', 'portal_normal'] : ['chat', 'portal_doom']
+            actions: this.isActive ? ['chat', 'portal_normal'] : ['chat', 'portal_doom'],
+            greetings: [
+                "Another soul seeks passage... the portal awaits.",
+                "I've ferried many across... few return unchanged.",
+                "The veil between worlds grows thin. Will you cross?",
+                "Coin means nothing here. Only courage matters."
+            ]
         };
+    },
+
+    // 🖤💀 Play Boatman voice with API TTS
+    async playBoatmanVoice(action = 'greeting') {
+        const boatman = this.getBoatmanNPC();
+
+        try {
+            if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.settings?.voiceEnabled) {
+                const instruction = this.getBoatmanInstruction(action);
+                const destination = this.isActive ? 'the normal world' : 'the Doom World';
+
+                const response = await NPCVoiceChatSystem.generateNPCResponse(
+                    boatman,
+                    action === 'portal'
+                        ? `The player is about to step through the portal to ${destination}. Give a brief, ominous farewell.`
+                        : `Greet the player who approaches the portal. Offer passage to ${destination}. Be cryptic and mysterious.`,
+                    [],
+                    {
+                        action: action,
+                        context: 'boatman_portal',
+                        destination: destination
+                    }
+                );
+
+                if (response && response.text) {
+                    NPCVoiceChatSystem.playVoice(response.text, boatman.voice || 'ash');
+                    return response.text;
+                }
+            }
+        } catch (e) {
+            console.warn('⛵ Boatman voice failed, using fallback:', e);
+        }
+
+        // Fallback to hardcoded greeting
+        const fallback = boatman.greetings[Math.floor(Math.random() * boatman.greetings.length)];
+        return fallback;
+    },
+
+    // 🖤💀 Play arrival voice when entering doom world
+    async playDoomArrivalVoice() {
+        try {
+            if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.settings?.voiceEnabled) {
+                const response = await NPCVoiceChatSystem.generateNPCResponse(
+                    {
+                        type: 'narrator',
+                        name: 'The Void',
+                        voice: 'ash',
+                        personality: 'ominous',
+                        speakingStyle: 'dramatic'
+                    },
+                    'Describe the player arriving in the Doom World - a dark, corrupted version of the realm. Be brief but atmospheric. Mention the changed sky, the despair, the danger.',
+                    [],
+                    { action: 'narration', context: 'doom_arrival' }
+                );
+
+                if (response && response.text) {
+                    NPCVoiceChatSystem.playVoice(response.text, 'ash');
+                }
+            }
+        } catch (e) {
+            console.warn('💀 Doom arrival voice failed:', e);
+        }
     },
 
     // ═══════════════════════════════════════════════════════════════
@@ -364,6 +436,11 @@ const DoomWorldSystem = {
             game.addMessage('💀 The world twists and darkens. You have entered the Doom World.', 'danger');
             game.addMessage('⚠️ Gold is nearly worthless here. Survival items are the true currency.', 'warning');
         }
+
+        // 🖤💀 Play doom arrival narration with API TTS
+        setTimeout(() => {
+            this.playDoomArrivalVoice();
+        }, 1500); // Delay for dramatic effect after portal
 
         // 🖤 Update quest log to now show doom quests
         if (typeof QuestSystem !== 'undefined') {
@@ -440,6 +517,9 @@ const DoomWorldSystem = {
         root.style.setProperty('--doom-text', '#8b0000');
         root.style.setProperty('--doom-accent', '#ff4444');
 
+        // 🖤💀 INJECT DOOM INDICATOR INTO TOP-BAR-WIDGETS (next to time widget)
+        this._showDoomIndicator();
+
         // 🖤 Update DoomWorldConfig if available
         if (typeof DoomWorldConfig !== 'undefined') {
             DoomWorldConfig.activate();
@@ -456,11 +536,48 @@ const DoomWorldSystem = {
         root.style.removeProperty('--doom-text');
         root.style.removeProperty('--doom-accent');
 
+        // 🖤💀 REMOVE DOOM INDICATOR FROM TOP-BAR-WIDGETS
+        this._hideDoomIndicator();
+
         if (typeof DoomWorldConfig !== 'undefined') {
             DoomWorldConfig.deactivate();
         }
 
         console.log('💀 Doom effects removed');
+    },
+
+    // 🖤💀 SHOW DOOM INDICATOR - Injects into top-bar-widgets (left of time widget) 💀
+    _showDoomIndicator() {
+        // Don't duplicate
+        if (document.getElementById('doom-world-indicator')) return;
+
+        const widgetsContainer = document.getElementById('top-bar-widgets');
+        if (!widgetsContainer) {
+            console.warn('💀 Could not find top-bar-widgets to inject doom indicator');
+            return;
+        }
+
+        // 🖤 Create the indicator element matching other top-bar-indicator widgets
+        const indicator = document.createElement('div');
+        indicator.id = 'doom-world-indicator';
+        indicator.className = 'top-bar-indicator';
+        indicator.innerHTML = `
+            <span class="indicator-icon">💀</span>
+            <span class="indicator-text">DOOM WORLD</span>
+        `;
+
+        // 🖤 Prepend to put it FIRST (left of all other widgets including time)
+        widgetsContainer.prepend(indicator);
+        console.log('💀 Doom indicator injected into top-bar-widgets');
+    },
+
+    // 🖤💀 HIDE DOOM INDICATOR - Removes from DOM 💀
+    _hideDoomIndicator() {
+        const indicator = document.getElementById('doom-world-indicator');
+        if (indicator) {
+            indicator.remove();
+            console.log('💀 Doom indicator removed from top-bar-widgets');
+        }
     },
 
     // ═══════════════════════════════════════════════════════════════

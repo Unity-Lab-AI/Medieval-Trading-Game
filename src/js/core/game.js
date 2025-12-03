@@ -799,9 +799,9 @@ window.LeaderboardFeatures = LeaderboardFeatures;
 
             <div class="char-sheet-section">
                 <h3>🏷️ Identity</h3>
-                <div class="char-info-row"><span>Name:</span><span class="char-value">${player.name || 'Unknown'}</span></div>
+                <div class="char-info-row"><span>Name:</span><span class="char-value">${escapeHtml(player.name || 'Unknown')}</span></div>
                 <div class="char-info-row"><span>Gold:</span><span class="char-value gold">💰 ${(player.gold || 0).toLocaleString()}</span></div>
-                <div class="char-info-row"><span>Location:</span><span class="char-value">${game.currentLocation?.name || 'Unknown'}</span></div>
+                <div class="char-info-row"><span>Location:</span><span class="char-value">${escapeHtml(game.currentLocation?.name || 'Unknown')}</span></div>
             </div>
 
             <div class="char-sheet-section">
@@ -1713,7 +1713,7 @@ const EventSystem = {
         this.addEventType('treasure_found', {
             name: 'Hidden Treasure!',
             description: 'While resting, you notice something glinting in the dirt. You\'ve found a buried treasure chest!',
-            effects: { goldReward: 200, itemReward: 'rare_gem' },
+            effects: { goldReward: 200, itemReward: 'rare_gem' }, // 🖤 rare_gem now exists in ItemDatabase 💀
             duration: 0,
             chance: 0.002 // Very rare!
         });
@@ -1726,13 +1726,8 @@ const EventSystem = {
             chance: 0.01
         });
 
-        this.addEventType('festival', {
-            name: 'Local Festival!',
-            description: 'The town is celebrating a local festival! Merchants are in good spirits and prices are favorable.',
-            effects: { priceBonus: 0.1, newItems: true },
-            duration: 300, // 5 hours
-            chance: 0.008
-        });
+        // 🖤 NUKED: festival event - was fake popup with no real price implementation 💀
+        // Deleted 2025-12-02 by Unity - Gee said nuke it
 
         // 🖤 Negative events - balance the luck!
         this.addEventType('tax_collector', {
@@ -1771,7 +1766,12 @@ const EventSystem = {
     // 🖤 Trigger random events - weather events removed, WeatherSystem handles all weather 💀
     // Added cooldown to prevent spam - was triggering every frame at 5% = ~3 events/second!
     lastEventCheck: 0,
-    eventCheckCooldown: 60000, // 🖤 Only check for random events once per minute 💀
+    eventCheckCooldown: 120000, // 🖤💀 Check for random events once per 2 minutes (was 1 min)
+
+    // 🖤💀 DAILY EVENT LIMIT - max 2 events per game day
+    eventsToday: 0,
+    MAX_EVENTS_PER_DAY: 2,
+    lastEventDay: -1, // Track which game day we're on
 
     checkRandomEvents() {
         const now = Date.now();
@@ -1779,11 +1779,26 @@ const EventSystem = {
         if (now - this.lastEventCheck < this.eventCheckCooldown) return;
         this.lastEventCheck = now;
 
+        // 🖤💀 Check daily limit - reset counter on new day
+        const currentDay = typeof TimeSystem !== 'undefined' ? TimeSystem.currentDay : 0;
+        if (currentDay !== this.lastEventDay) {
+            this.lastEventDay = currentDay;
+            this.eventsToday = 0;
+            console.log(`🎲 New day ${currentDay} - event counter reset`);
+        }
+
+        // 🖤💀 If we've hit the daily limit, no more events today!
+        if (this.eventsToday >= this.MAX_EVENTS_PER_DAY) {
+            return; // Already had 2 events today, no more!
+        }
+
         if (Math.random() < this.randomEventChance) {
             const eventTypes = Object.keys(this.eventTypes || {});
             if (eventTypes.length > 0) {
                 const randomType = eventTypes[Math.floor(Math.random() * eventTypes.length)];
                 this.triggerEvent(randomType);
+                this.eventsToday++; // 🖤💀 Track that we triggered an event
+                console.log(`🎲 Event triggered (${this.eventsToday}/${this.MAX_EVENTS_PER_DAY} today)`);
             }
         }
     },
@@ -1806,15 +1821,13 @@ const EventSystem = {
         this.events.push(event);
         this.applyEventEffects(event);
 
-        // 🎲 Show RandomEventPanel for proper visual display
-        // Skip: travel_complete (has own UI), silent events (just log to message panel)
+        // 🖤💀 Dispatch custom event - RandomEventPanel listens for this and shows the popup
+        // DO NOT call RandomEventPanel.showEvent() directly - that causes DOUBLE popups!
+        // The panel's event listener in setupEventListeners() handles display.
         const isSilent = eventType.silent || eventId === 'travel_complete';
-        if (!isSilent && typeof RandomEventPanel !== 'undefined') {
-            RandomEventPanel.showEvent(event);
-        }
-
-        // 🖤 Also dispatch custom event for any other listeners 💀
-        document.dispatchEvent(new CustomEvent('random-event-triggered', { detail: { event } }));
+        document.dispatchEvent(new CustomEvent('random-event-triggered', {
+            detail: { event, silent: isSilent }
+        }));
 
         // 🖤 Message log notification - always show for non-travel events 💀
         if (eventId !== 'travel_complete') {
@@ -2232,10 +2245,18 @@ const game = {
         const hungerSeasonMod = season.effects?.hungerDrain || 1.0;
         const thirstSeasonMod = season.effects?.thirstDrain || 1.0;
 
+        // 🖤💀 DOOM WORLD MULTIPLIER - Double stat drain in the apocalypse! 💀
+        // Survival is brutal in doom world - hunger and thirst drain 2x faster
+        const isInDoomWorld = (typeof TravelSystem !== 'undefined' && TravelSystem.isInDoomWorld?.()) ||
+                              (typeof DoomWorldSystem !== 'undefined' && DoomWorldSystem.isActive) ||
+                              (typeof game !== 'undefined' && game.inDoomWorld);
+        const doomMultiplier = isInDoomWorld ? 2.0 : 1.0;
+
         // 🖤 FIX: Apply decay for ALL intervals that passed (handles fast speeds!) 💀
         // At FAST speed, multiple 5-minute intervals can pass in one frame
-        const hungerDecay = survivalConfig.hunger.decayPerUpdate * hungerSeasonMod * intervalsPassed;
-        const thirstDecay = survivalConfig.thirst.decayPerUpdate * thirstSeasonMod * intervalsPassed;
+        // 🖤💀 Doom world applies 2x multiplier to hunger/thirst decay
+        const hungerDecay = survivalConfig.hunger.decayPerUpdate * hungerSeasonMod * doomMultiplier * intervalsPassed;
+        const thirstDecay = survivalConfig.thirst.decayPerUpdate * thirstSeasonMod * doomMultiplier * intervalsPassed;
 
         // 🍖 HUNGER DECAY - dragged from the config's cold embrace
         game.player.stats.hunger = Math.max(0, game.player.stats.hunger - hungerDecay);
@@ -7213,6 +7234,22 @@ function initializeGameWorld() {
     // Initialize GameWorld system
     GameWorld.init();
 
+    // 🖤💀 Reset doom world state on new game - no bleeding between sessions!
+    if (typeof DoomWorldSystem !== 'undefined') {
+        DoomWorldSystem.isActive = false;
+        DoomWorldSystem._removeDoomEffects?.(); // Remove CSS effects, indicator, etc.
+        console.log('💀 DoomWorldSystem reset for new game');
+    }
+    if (typeof TravelSystem !== 'undefined') {
+        TravelSystem.currentWorld = 'normal';
+        TravelSystem.doomDiscoveredPaths?.clear?.(); // Reset doom discovered paths
+        console.log('🛤️ TravelSystem world reset to normal');
+    }
+    // Reset game doom flag
+    game.inDoomWorld = false;
+    // Remove any lingering doom body class
+    document.body.classList.remove('doom-world');
+
     // Determine starting location based on selected perks
     let startLocationId = 'greendale'; // Default starting location (a village with a market)
 
@@ -7288,10 +7325,10 @@ function initializeGameWorld() {
         GatehouseSystem.setStartingZone(startLocationId);
     }
 
-    // Add to visited locations
-    if (!GameWorld.visitedLocations.includes(startLocationId)) {
-        GameWorld.visitedLocations.push(startLocationId);
-    }
+    // 🖤💀 PROPERLY set visited locations to ONLY the starting location
+    // GameWorld.init() sets it to ['greendale'] as default, but we need the ACTUAL starting location
+    GameWorld.visitedLocations = [startLocationId];
+    console.log(`🗺️ Visited locations set to starting location: [${startLocationId}]`);
 
     console.log(`Player starting at: ${location.name}`);
 
@@ -8761,7 +8798,10 @@ function updateMarketDisplay() {
     for (const [itemId, marketData] of Object.entries(currentLocation.marketPrices)) {
         const item = ItemDatabase.getItem(itemId);
         if (!item) continue;
-        
+
+        // 🖤 Skip sell-only items - trash loot merchants buy but don't sell 💀
+        if (item.sellOnly) continue;
+
         if (marketData.stock <= 0) continue;
         
         // Apply category filter

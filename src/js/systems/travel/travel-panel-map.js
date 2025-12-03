@@ -304,9 +304,14 @@ const TravelPanelMap = {
         const visibility = {};
         const locations = (typeof GameWorld !== 'undefined' && GameWorld.locations) ? GameWorld.locations : {};
 
+        // 🖤💀 Get visited locations - use world-aware helper for doom/normal world separation!
         let visited = [];
-        if (typeof GameWorld !== 'undefined' && Array.isArray(GameWorld.visitedLocations)) {
-            visited = GameWorld.visitedLocations;
+        if (typeof GameWorld !== 'undefined') {
+            if (typeof GameWorld.getActiveVisitedLocations === 'function') {
+                visited = GameWorld.getActiveVisitedLocations();
+            } else if (Array.isArray(GameWorld.visitedLocations)) {
+                visited = GameWorld.visitedLocations;
+            }
         }
 
         if (visited.length === 0 && typeof game !== 'undefined' && game.currentLocation && game.currentLocation.id) {
@@ -410,11 +415,14 @@ const TravelPanelMap = {
             top: 0;
             left: 0;
             pointer-events: none;
-            z-index: 20; /* 🖤 ABOVE weather (15) so path lines are always visible 💀 */
+            z-index: 20; /* 🖤 ABOVE weather (2-3) - path lines always visible 💀 */
         `;
 
         const locations = GameWorld.locations || {};
-        const visited = GameWorld.visitedLocations || [];
+        // 🖤💀 Use world-aware visited locations for doom/normal separation!
+        const visited = (typeof GameWorld.getActiveVisitedLocations === 'function')
+            ? GameWorld.getActiveVisitedLocations()
+            : (GameWorld.visitedLocations || []);
         const drawnConnections = new Set();
 
         Object.values(locations).forEach(location => {
@@ -506,7 +514,7 @@ const TravelPanelMap = {
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
             box-shadow: ${boxShadowStyle};
-            z-index: 25; /* 🖤 ABOVE weather overlay (z-index 15) so locations stay visible in snow/fog 💀 */
+            z-index: 25; /* 🖤 ABOVE weather (2-3) - locations visible in all conditions 💀 */
             opacity: ${opacity};
             ${hasBonanzaEffect ? 'animation: bonanza-pulse-mini 1.5s ease-in-out infinite;' : ''}
         `;
@@ -528,7 +536,7 @@ const TravelPanelMap = {
                 padding: 1px 3px;
                 border-radius: 6px;
                 border: 1px solid #c084fc;
-                z-index: 30; /* 🖤 ABOVE locations (25) and weather (15) 💀 */
+                z-index: 30; /* 🖤 ABOVE locations (25) - badges visible 💀 */
                 pointer-events: none;
             `;
             el.appendChild(bonanzaBadge);
@@ -557,7 +565,7 @@ const TravelPanelMap = {
             text-shadow: 1px 1px 2px #000, -1px -1px 2px #000, 0 0 4px #000;
             white-space: nowrap;
             pointer-events: none;
-            z-index: 28; /* 🖤 ABOVE weather overlay (15) so location names are readable 💀 */
+            z-index: 28; /* 🖤 ABOVE weather (2-3) - labels always readable 💀 */
         `;
         this.mapElement.appendChild(label);
     },
@@ -979,6 +987,25 @@ const TravelPanelMap = {
         const isCurrentLocation = game && game.currentLocation && game.currentLocation.id === location.id;
         const isDestination = this.currentDestination && this.currentDestination.id === location.id;
 
+        // 🖤💀 Get tracked quest info for this location
+        let questInfo = '';
+        if (typeof QuestSystem !== 'undefined' && QuestSystem.getQuestInfoForLocation) {
+            const quest = QuestSystem.getQuestInfoForLocation(location.id);
+            if (quest) {
+                const isDoomQuest = quest.isDoom || quest.questId?.startsWith('doom_');
+                const bgColor = isDoomQuest ? 'rgba(255, 140, 0, 0.15)' : 'rgba(255, 215, 0, 0.15)';
+                const borderColor = isDoomQuest ? '#ff8c00' : '#ffd700';
+                const textColor = isDoomQuest ? '#ff8c00' : '#ffd700';
+                const subTextColor = isDoomQuest ? '#ffb347' : '#ffeb3b';
+                questInfo = `
+                    <div style="margin-top: 6px; padding: 6px; background: ${bgColor}; border-radius: 4px; border-left: 3px solid ${borderColor};">
+                        <div style="color: ${textColor}; font-weight: bold; font-size: 11px;">🎯 ${quest.questName}</div>
+                        ${quest.objective ? `<div style="color: ${subTextColor}; font-size: 10px;">${quest.objective}</div>` : ''}
+                    </div>
+                `;
+            }
+        }
+
         if (isDiscovered) {
             this.tooltipElement.innerHTML = `
                 <div style="font-size: 15px; font-weight: bold; margin-bottom: 5px; color: #888;">
@@ -987,6 +1014,7 @@ const TravelPanelMap = {
                 <div style="color: #666; font-size: 11px; margin-bottom: 5px;">
                     Unexplored territory
                 </div>
+                ${questInfo}
                 <div style="color: #ff9800; margin-top: 5px; font-size: 12px;">🎯 Click to set as destination</div>
             `;
         } else {
@@ -1013,6 +1041,7 @@ const TravelPanelMap = {
                     ${location.description || 'No description available.'}
                 </div>
                 ${gateInfo}
+                ${questInfo}
                 ${statusLine}
             `;
         }

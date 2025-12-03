@@ -12,6 +12,9 @@ const RandomEventPanel = {
     isOpen: false,
     currentEvent: null,
     eventQueue: [], // 🦇 Queue events if multiple trigger at once
+    eventAcknowledged: false, // 🖤 Track if player has acknowledged the event 💀
+    isDragging: false,
+    dragOffset: { x: 0, y: 0 },
 
     // 🎭 EVENT ICONS - matching event types to visual flair
     eventIcons: {
@@ -311,6 +314,25 @@ const RandomEventPanel = {
                 border-color: rgba(168, 85, 247, 0.5);
                 box-shadow: 0 0 30px rgba(168, 85, 247, 0.2);
             }
+
+            /* 🖤 Shake animation when trying to close without acknowledging 💀 */
+            @keyframes panelShake {
+                0%, 100% { transform: translate(-50%, -50%); }
+                20% { transform: translate(calc(-50% - 10px), -50%); }
+                40% { transform: translate(calc(-50% + 10px), -50%); }
+                60% { transform: translate(calc(-50% - 5px), -50%); }
+                80% { transform: translate(calc(-50% + 5px), -50%); }
+            }
+
+            /* 🦇 Make header look draggable */
+            .event-header {
+                cursor: grab;
+                user-select: none;
+            }
+
+            .event-header:active {
+                cursor: grabbing;
+            }
         `;
 
         document.head.appendChild(styles);
@@ -318,19 +340,93 @@ const RandomEventPanel = {
 
     // 🎧 EVENT LISTENERS
     setupEventListeners() {
-        // 🖤 Close button
+        // 🖤 Close button - ONLY works if event is acknowledged 💀
         document.addEventListener('click', (e) => {
             if (e.target.matches(`[data-close-overlay="${this.panelId}"]`)) {
-                this.close();
+                if (this.eventAcknowledged) {
+                    this.close();
+                } else {
+                    console.log('🎲 RandomEventPanel: Cannot close until event is acknowledged! 💀');
+                    // 🦇 Shake the panel to indicate it can't be closed
+                    const panel = document.getElementById(this.panelId);
+                    if (panel) {
+                        panel.style.animation = 'none';
+                        panel.offsetHeight; // Force reflow
+                        panel.style.animation = 'panelShake 0.3s ease';
+                    }
+                }
             }
         });
 
         // 🦇 Listen for random events from EventSystem
         document.addEventListener('random-event-triggered', (e) => {
             if (e.detail && e.detail.event) {
+                // 🖤💀 Skip silent events (they only log to message panel, no popup)
+                if (e.detail.silent) {
+                    console.log('🎲 RandomEventPanel: Silent event, no popup');
+                    return;
+                }
                 this.showEvent(e.detail.event);
             }
         });
+
+        // 🖤 DRAGGABLE: Mouse events for dragging 💀
+        document.addEventListener('mousedown', (e) => this.startDrag(e));
+        document.addEventListener('mousemove', (e) => this.drag(e));
+        document.addEventListener('mouseup', () => this.endDrag());
+    },
+
+    // 🖤 START DRAG - only from header 💀
+    startDrag(e) {
+        const panel = document.getElementById(this.panelId);
+        if (!panel || !this.isOpen) return;
+
+        // Only drag from the header
+        const header = panel.querySelector('.event-header');
+        if (!header || !header.contains(e.target)) return;
+
+        this.isDragging = true;
+        const rect = panel.getBoundingClientRect();
+        this.dragOffset = {
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top
+        };
+
+        panel.style.cursor = 'grabbing';
+        header.style.cursor = 'grabbing';
+        e.preventDefault();
+    },
+
+    // 🦇 DRAG - move panel with mouse
+    drag(e) {
+        if (!this.isDragging) return;
+
+        const panel = document.getElementById(this.panelId);
+        if (!panel) return;
+
+        const x = e.clientX - this.dragOffset.x;
+        const y = e.clientY - this.dragOffset.y;
+
+        // Keep panel within viewport bounds
+        const maxX = window.innerWidth - panel.offsetWidth;
+        const maxY = window.innerHeight - panel.offsetHeight;
+
+        panel.style.left = `${Math.max(0, Math.min(x, maxX))}px`;
+        panel.style.top = `${Math.max(0, Math.min(y, maxY))}px`;
+        panel.style.transform = 'none'; // Remove centering transform while dragging
+    },
+
+    // 💀 END DRAG
+    endDrag() {
+        if (!this.isDragging) return;
+
+        this.isDragging = false;
+        const panel = document.getElementById(this.panelId);
+        if (panel) {
+            panel.style.cursor = '';
+            const header = panel.querySelector('.event-header');
+            if (header) header.style.cursor = 'grab';
+        }
     },
 
     // 🎲 SHOW EVENT - main display method
@@ -499,14 +595,19 @@ const RandomEventPanel = {
         }
     },
 
-    // ✅ ACKNOWLEDGE EVENT
+    // ✅ ACKNOWLEDGE EVENT - marks event as acknowledged and closes panel 💀
     acknowledgeEvent() {
-        this.close();
+        // 🖤 Mark event as acknowledged 💀
+        this.eventAcknowledged = true;
+        this.updateCloseButtonVisibility();
 
         // 🦇 Track for achievements
         if (typeof AchievementSystem !== 'undefined') {
             AchievementSystem.stats.eventsWitnessed = (AchievementSystem.stats.eventsWitnessed || 0) + 1;
         }
+
+        // 🖤 Now close the panel 💀
+        this.close();
     },
 
     // 📂 OPEN PANEL
@@ -514,15 +615,48 @@ const RandomEventPanel = {
         const panel = document.getElementById(this.panelId);
         if (!panel) return;
 
+        // 🖤 Reset acknowledged state - event must be acknowledged before closing 💀
+        this.eventAcknowledged = false;
+        this.updateCloseButtonVisibility();
+
         panel.classList.remove('hidden');
         this.isOpen = true;
+
+        // 🖤 CENTER THE PANEL ON SCREEN 💀
+        panel.style.position = 'fixed';
+        panel.style.left = '50%';
+        panel.style.top = '50%';
+        panel.style.transform = 'translate(-50%, -50%)';
+        panel.style.zIndex = '9999'; // Make sure it's on top
+
+        // 🦇 Make header look draggable
+        const header = panel.querySelector('.event-header');
+        if (header) header.style.cursor = 'grab';
 
         // 🖤 Use panel manager if available
         if (typeof PanelManager !== 'undefined' && PanelManager.showOverlay) {
             PanelManager.showOverlay(this.panelId);
         }
 
-        console.log('🎲 RandomEventPanel: Opened -', this.currentEvent?.name);
+        console.log('🎲 RandomEventPanel: Opened (centered) -', this.currentEvent?.name);
+    },
+
+    // 🖤 UPDATE CLOSE BUTTON VISIBILITY 💀
+    updateCloseButtonVisibility() {
+        const panel = document.getElementById(this.panelId);
+        if (!panel) return;
+
+        const closeBtn = panel.querySelector('.panel-close-x');
+        if (closeBtn) {
+            if (this.eventAcknowledged) {
+                closeBtn.style.display = 'block';
+                closeBtn.style.opacity = '1';
+                closeBtn.style.cursor = 'pointer';
+            } else {
+                // 🦇 Hide the X button until event is acknowledged
+                closeBtn.style.display = 'none';
+            }
+        }
     },
 
     // 📕 CLOSE PANEL

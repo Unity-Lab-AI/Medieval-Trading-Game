@@ -296,21 +296,49 @@ const InitialEncounterSystem = {
     },
 
     // 🎭 STRANGER ENCOUNTER - the mysterious figure speaks
-    // 🖤 Player accepts quest FIRST, then gets tutorial option as a separate Yes/No choice 💀
-    showStrangerEncounter(playerName) {
+    // 🖤💀 Now with API TTS! The first voice players hear sets the tone! 💀
+    async showStrangerEncounter(playerName) {
         const stranger = this.mysteriousStranger;
         const greeting = stranger.greetings[Math.floor(Math.random() * stranger.greetings.length)];
+
+        // 🖤💀 Generate API dialogue for the stranger - this is the FIRST voice players hear!
+        let strangerDialogue = this._getDefaultStrangerDialogue(playerName, greeting);
+        let useAPIVoice = false;
+
+        try {
+            if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.settings?.voiceEnabled) {
+                console.log('🎭 Generating hooded stranger dialogue via API...');
+
+                const response = await NPCVoiceChatSystem.generateNPCResponse(
+                    stranger,
+                    `The player ${playerName} has just arrived in this world. Give them a cryptic, ominous introduction about the darkness gathering and Malachar's return. Tell them to seek Elder Morin. Be mysterious and prophetic.`,
+                    [], // No chat history - first encounter
+                    {
+                        action: 'introduction',
+                        context: 'first_encounter',
+                        playerName: playerName,
+                        isFirstVoice: true // 🖤 Flag for special handling
+                    }
+                );
+
+                if (response && response.text) {
+                    strangerDialogue = response.text;
+                    useAPIVoice = true;
+                    console.log('🎭 API dialogue generated successfully!');
+                }
+            }
+        } catch (e) {
+            console.warn('🎭 API dialogue failed, using fallback:', e);
+            // Keep default dialogue
+        }
 
         if (typeof ModalSystem !== 'undefined') {
             ModalSystem.show({
                 title: '🎭 The Hooded Stranger',
                 content: `
                     <p style="margin-bottom: 1rem; color: #a0a0c0;">A figure in a dark cloak steps forward from the shadows. You cannot see their face beneath the hood, but you sense ancient eyes studying you.</p>
-                    <p style="font-style: italic; color: #c0a0ff; font-size: 1.1em; margin-bottom: 1rem;">"${greeting}"</p>
-                    <p style="margin-bottom: 1rem;">The stranger's voice is like wind through dead leaves.</p>
-                    <p style="font-style: italic; color: #c0a0ff; font-size: 1.1em; margin-bottom: 1rem;">"Listen well, ${playerName}... Darkness gathers in the north. The Shadow Tower, long dormant, stirs once more. The wizard Malachar... he has returned."</p>
-                    <p style="color: #f0a0a0; margin-bottom: 1rem;">The stranger pauses, and for a moment you feel a chill run down your spine.</p>
-                    <p style="font-style: italic; color: #c0a0ff; font-size: 1.1em;">"You are more than a simple trader, young one. Fate has brought you here for a reason. Seek out Elder Morin in this village. He will guide your first steps on this path."</p>
+                    <p style="font-style: italic; color: #c0a0ff; font-size: 1.1em; margin-bottom: 1rem; line-height: 1.6;">"${strangerDialogue}"</p>
+                    <p style="color: #f0a0a0; margin-top: 1rem;">The stranger's voice fades like mist in morning light...</p>
                 `,
                 closeable: false, // 🖤 Must accept quest - no escape from destiny
                 buttons: [
@@ -325,7 +353,19 @@ const InitialEncounterSystem = {
                     }
                 ]
             });
+
+            // 🖤💀 Play TTS AFTER modal is shown so player can read along
+            if (useAPIVoice && typeof NPCVoiceChatSystem !== 'undefined') {
+                setTimeout(() => {
+                    NPCVoiceChatSystem.playVoice(strangerDialogue, stranger.voice || 'onyx');
+                }, 500); // Small delay for modal to render
+            }
         }
+    },
+
+    // 🖤💀 Fallback dialogue if API fails
+    _getDefaultStrangerDialogue(playerName, greeting) {
+        return `${greeting} Listen well, ${playerName}... Darkness gathers in the north. The Shadow Tower, long dormant, stirs once more. The wizard Malachar... he has returned. You are more than a simple trader, young one. Fate has brought you here for a reason. Seek out Elder Morin in this village. He will guide your first steps on this path.`;
     },
 
     // 🖤 Accept quest and show quest panel (tutorial already shown at game start) 💀

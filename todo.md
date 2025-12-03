@@ -44,7 +44,7 @@
 - [x] **trading-system.js:276** - Escape HTML in trade history (XSS) ✅ FIXED (added _escapeHTML() + escaped all user data)
 - [x] **time-system.js:55** - Fix currentSpeed/isPaused contradiction ✅ FIXED (initial state now both PAUSED)
 - [x] **time-machine.js:367** - Fix season weather lock race condition ✅ FIXED (added getTotalMinutes guard + timestamp fallback)
-- [ ] **timer-manager.js** - Document ALL timing must use TimerManager
+- [x] **timer-manager.js** - Document ALL timing must use TimerManager ✅ FIXED (added usage documentation header)
 - [x] **system-registry.js:152** - Add explicit errors for missing game/player ✅ FIXED (added requireGame() + requirePlayer() methods)
 - [x] **api-command-system.js:54** - Fix global regex lastIndex state ✅ VERIFIED (already has lastIndex=0 reset at line 74)
 - [x] **achievement-system.js** - Defensive array init for null checks ✅ FIXED (added Array.isArray check for dungeonVisitLog + object fallback)
@@ -66,16 +66,16 @@
 
 ### Future Work
 - [ ] **save-manager.js:172** - Schema validation
-- [ ] **leaderboard-panel.js:154-155** - JSON.parse validation
+- [x] **leaderboard-panel.js:154-155** - JSON.parse validation ✅ FIXED (added try-catch + structure validation)
 
 ---
 
 ## 🟡 MEDIUM SEVERITY - 19 remaining (22 fixed/verified)
 
 ### 🆕 AGENT AUDIT FINDINGS (2025-12-01)
-- [ ] **virtual-list.js** - Custom renderItem() callbacks can inject raw HTML without escaping - document XSS responsibility or add wrapper
-- [ ] **npc-chat-ui.js** - Verify dialogue content from API/data is escaped before innerHTML display
-- [ ] **panel-manager.js:354** - makeToolbarDraggable() adds listeners but doesn't store refs - can't clean up on destroy
+- [x] **virtual-list.js** - Custom renderItem() callbacks can inject raw HTML without escaping ✅ FIXED (added XSS warning documentation + escapeHtmlVirtual usage example)
+- [x] **npc-chat-ui.js** - Verify dialogue content from API/data is escaped before innerHTML display ✅ VERIFIED (formatNPCMessage calls escapeHtml() at line 1010, player messages escaped at line 897)
+- [x] **panel-manager.js:354** - makeToolbarDraggable() adds listeners but doesn't store refs ✅ ALREADY FIXED (has _toolbarDragHandlers + cleanup in disconnectObserver)
 
 ### Performance & Logic
 - [x] **tooltip-system.js** - Cache JSON.parse tooltip data ✅ FIXED (added WeakMap _tooltipCache)
@@ -108,7 +108,7 @@
 - [ ] **api-command-system.js** - Pass context as param
 - [ ] **bootstrap.js** - Add module severity levels
 - [x] **people-panel.js** - Stop voice on window unload ✅ FIXED (added beforeunload listener to call NPCVoiceChatSystem.stopVoicePlayback())
-- [ ] **people-panel.js** - Sanitize NPC API responses (XSS)
+- [x] **people-panel.js** - Sanitize NPC API responses (XSS) ✅ FIXED (addChatMessage uses textContent, added escapeHtml to NPC card name/title/description)
 - [x] **draggable-panels.js** - Guard flag for duplicate listeners (ALREADY HANDLED - line 180-183 uses cloneNode to prevent duplicates)
 - [x] **draggable-panels.js** - Window unload for MutationObserver (ALREADY FIXED - line 304 has beforeunload listener)
 - [x] **modal-system.js** - Use textContent for user data (DESIGN NOTE: Callers are responsible for escaping content. Modal titles/content are developer-provided HTML, not raw user input)
@@ -142,12 +142,12 @@
 ### Property System
 - [x] **property-income.js:19,30,85** - Hardcoded multipliers should be config ✅ FIXED (added config object with levelIncomeMultiplier, taxRate, etc.)
 - [x] **property-storage.js:47-51** - Fallback weight calculation wrong (VERIFIED OK - default of 1 weight per item is reasonable when ItemDatabase unavailable)
-- [ ] **property-ui.js** - innerHTML without escaping dynamic values
+- [x] **property-ui.js** - innerHTML without escaping dynamic values ✅ FIXED (added escapeHtml to propertyType.name, location.name in createPropertyElement + showPropertyDetails)
 
 ### Security (Medium)
-- [ ] **game.js:251,337,452,896,929,1144,1194** - innerHTML with player.name (XSS)
-- [ ] **npc-trade.js:179,387,391,394,397,400,403,406** - render functions may have XSS
-- [ ] **property-storage.js:344,367,383,434,491,518** - Item names could be XSS
+- [x] **game.js:251,337,452,896,929,1144,1194** - innerHTML with player.name (XSS) ✅ FIXED (line 802 player.name + location.name now escaped - other lines are data objects, not innerHTML)
+- [x] **npc-trade.js:179,387,391,394,397,400,403,406** - render functions may have XSS ✅ VERIFIED (escapeHtml exists at line 804 and is used extensively throughout all render functions)
+- [x] **property-storage.js:344,367,383,434,491,518** - Item names could be XSS ✅ FIXED (added safeItemName = escapeHtml(itemName) in all 3 render locations)
 
 ---
 
@@ -162,9 +162,9 @@
 - [x] **achievement-system.js** - Use stat snapshot vs closures (BY DESIGN - closures correctly read CURRENT stats)
 - [ ] **Multiple files** - Standardize ?? vs || for null checks
 - [x] **npc-chat-ui.js** - Replace inline onclick (NOT NEEDED - no inline onclick found)
-- [ ] **people-panel.js** - Replace inline onclick (3 instances)
-- [ ] **inventory-panel.js** - Replace inline onclick (4 instances)
-- [ ] **equipment-panel.js** - Replace inline onclick (1 instance)
+- [x] **people-panel.js** - Replace inline onclick (3 instances) ✅ FIXED (converted to data-action + event delegation)
+- [x] **inventory-panel.js** - Replace inline onclick (4 instances) ✅ FIXED (converted to data-action + event delegation)
+- [x] **equipment-panel.js** - Replace inline onclick (1 instance) ✅ FIXED (converted to data-action + event delegation)
 - [x] **npc-trade.js** - Optimize escapeHtml() with Map ✅ FIXED
 
 ### Other Low Priority (Non-Issues)

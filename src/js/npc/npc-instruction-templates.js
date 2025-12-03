@@ -89,6 +89,7 @@ const NPCInstructionTemplates = {
     ACTIONS: {
         GREETING: 'greeting',
         FAREWELL: 'farewell',
+        CHAT: 'chat',  // 🖤💀 General chat with full quest context
         BROWSE_GOODS: 'browse_goods',
         BUY: 'buy',
         SELL: 'sell',
@@ -192,6 +193,8 @@ const NPCInstructionTemplates = {
                 return this._buildGreetingInstruction(spec, fullContext);
             case this.ACTIONS.FAREWELL:
                 return this._buildFarewellInstruction(spec, fullContext);
+            case this.ACTIONS.CHAT:
+                return this._buildChatInstruction(spec, fullContext);
             case this.ACTIONS.BROWSE_GOODS:
                 return this._buildBrowseGoodsInstruction(spec, fullContext);
             case this.ACTIONS.BUY:
@@ -233,6 +236,58 @@ const NPCInstructionTemplates = {
     // 🖤 FAREWELL - ending conversation 💀
     _buildFarewellInstruction(spec, context) {
         return `You are a ${spec.type}. Say ONE short farewell sentence in character. Example: "${spec.farewells?.[0] || 'Goodbye.'}"`;
+    },
+
+    // 🖤💀 CHAT - Full conversation with quest context! 💀
+    _buildChatInstruction(spec, context) {
+        const npcName = context.npc?.name || spec.type;
+        const npcType = spec.type;
+        const location = context.location?.name || 'this place';
+
+        // 🖤 Build quest context from QuestSystem
+        let questContext = '';
+        if (typeof QuestSystem !== 'undefined') {
+            const locationId = context.location?.id || game?.currentLocation?.id;
+            questContext = QuestSystem.getQuestContextForNPC?.(npcType, locationId) || '';
+        }
+
+        // 🖤 Build comprehensive instruction with full quest info
+        let instruction = `You are ${npcName}, a ${npcType} in ${location}.
+
+CHARACTER:
+- Personality: ${spec.personality || 'friendly'}
+- Speaking Style: ${spec.speakingStyle || 'natural'}
+- Background: ${spec.background || ''}
+${spec.worldKnowledge ? `- World Knowledge: ${spec.worldKnowledge}` : ''}
+
+VOICE INSTRUCTIONS:
+${spec.voiceInstructions || 'Speak naturally and in character.'}
+
+${questContext}
+
+RESPONSE RULES:
+1. Stay completely in character at ALL times
+2. Keep responses to 2-3 sentences. Be concise but informative.
+3. Never break character or mention being an AI
+4. If player asks about quests, use the QUEST SYSTEM section above
+5. Use quest commands like {assignQuest:questId} or {completeQuest:questId} when appropriate
+6. CRITICAL: For quest NPCs, prioritize quest dialogue over generic chat
+7. If you have quests available, mention them naturally in conversation
+8. Commands go in curly braces and are invisible to player - weave them naturally
+
+AVAILABLE COMMANDS:
+- {assignQuest:questId} - Give a quest to the player
+- {completeQuest:questId} - Complete a quest and give rewards
+- {checkQuest:questId} - Check player's quest progress
+- {takeQuestItem:itemId} - Take a quest item from player
+- {takeCollection:itemName,count} - Take collected items from player
+- {openMarket} - Open trade/shop window
+
+The player says: "${context.message || ''}"
+
+Respond in character:`;
+
+        return instruction;
     },
 
     // 🖤 BROWSE GOODS - player wants to see what you sell 💀

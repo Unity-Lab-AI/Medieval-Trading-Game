@@ -432,7 +432,7 @@ const DayNightCycle = {
                 width: 100%;
                 height: 100%;
                 pointer-events: none;
-                z-index: var(--z-day-night-overlay, 12) !important; /* 🦇 BELOW weather (15), BELOW map markers (25+) */
+                z-index: var(--z-day-night-overlay, 3) !important; /* 🖤 PERMANENT FIX: Day/night at layer 3, BELOW map UI (10+) 💀 */
                 transition: background 5s ease, opacity 5s ease;
                 border-radius: inherit;
             }

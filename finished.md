@@ -2,7 +2,7 @@
 
 **Purpose:** Archive of ALL completed work from todo.md. This file is the graveyard where fixed bugs and completed features rest in peace.
 
-**Last Updated:** 2025-12-01
+**Last Updated:** 2025-12-02
 
 ---
 
@@ -14,12 +14,91 @@
 | 🟠 HIGH | 19+ | 28 |
 | 🟡 MEDIUM | 11 | 45 |
 | 🟢 LOW | 18 | 26 |
-| 🆕 FEATURES | 2 | - |
-| **TOTAL** | **55+** | **107** |
+| 🆕 FEATURES | 5 | - |
+| **TOTAL** | **60+** | **107** |
 
 ---
 
 ## 🆕 NEW FEATURES - COMPLETED ✅
+
+### Nuked Festival Event (2025-12-02) 🖤💀
+- [x] **Deleted festival event** - Was showing annoying popup about "better prices"
+
+**File Modified:**
+- `src/js/core/game.js` - Removed festival event at line 1729
+
+---
+
+### PERMANENT Z-Index Weather Fix (2025-12-02) 🖤💀⚡
+- [x] **Fixed weather-system.js:1462** - Changed fallback from 15 to 2
+- [x] **Fixed day-night-cycle.js:435** - Changed fallback from 12 to 3
+- [x] **Fixed environmental-effects-system.js:259,274,290** - Changed hardcoded 60/65/70 to proper layers 1-4
+- [x] **Updated travel-panel-map.js comments** - Corrected weather layer references from 15 to 2-3
+
+**Root Cause:** JavaScript inline styles had wrong z-index fallback values (15, 12, 60-70) that overrode the CSS variables (which were correctly set to 2-3). Weather was rendering ABOVE map locations/paths.
+
+**Permanent Fix:** All weather/environmental effects now use:
+- Layer 1: Lighting effects
+- Layer 2: Weather overlay (rain, snow, fog)
+- Layer 3: Day/night overlay
+- Layer 4: Atmosphere effects
+- Layers 10-30: Map UI (paths, locations, labels) - ALWAYS ABOVE weather
+
+**Files Modified:**
+- `src/js/systems/world/weather-system.js` - Line 1462
+- `src/js/systems/world/day-night-cycle.js` - Line 435
+- `src/js/effects/environmental-effects-system.js` - Lines 259, 274, 290
+- `src/js/systems/travel/travel-panel-map.js` - Updated comments
+
+---
+
+### Massive README Restructure (2025-12-02) 🖤💀📚
+- [x] **Moved all readmes to `/readmes/` folder**
+- [x] **Created root README.md** for GitHub display
+- [x] **Updated 000-GO-workflow.md** with new readme paths
+- [x] **Rewrote 001-ARCHITECT.md** with accurate game data from 5-agent analysis
+- [x] **Fixed documentation discrepancies:**
+  - Achievements: 57 → 115 (correct)
+  - Locations: 30+ → 42 (correct)
+  - Quests: vague → 100+ detailed
+- [x] **Updated all readme versions to 0.90.00**
+
+**Files Modified:**
+- `.claude/skills/000-GO-workflow.md` - Updated readme paths
+- `.claude/skills/001-ARCHITECT.md` - Complete rewrite (400 lines)
+- `README.md` - Created for GitHub
+- `readmes/NerdReadme.md` - Version + file structure
+- `readmes/GameplayReadme.md` - Feature counts
+- `readmes/DebuggerReadme.md` - Version + date
+
+---
+
+### Dungeon Loot System (2025-12-02) 🖤💀
+- [x] **Added DUNGEON_LOOT category** to ItemDatabase
+- [x] **Added TREASURE category** to ItemDatabase
+- [x] **Added 30+ new items** with sellOnly flag
+- [x] **Merchants don't sell trash loot** - sellOnly filter in game.js and npc-trade.js
+- [x] **Fixed combat loot** - bandage → bandages
+
+**Files Modified:**
+- `src/js/data/items/item-database.js` - 30+ new items
+- `src/js/core/game.js` - sellOnly filter in updateMarketDisplay()
+- `src/js/npc/npc-trade.js` - sellOnly filter in renderInventoryItems()
+- `src/js/systems/combat/combat-system.js` - Fixed bandage → bandages
+
+---
+
+### Fake Events Purge (2025-12-02) 🖤💀
+- [x] **Deleted merchant_arrival event** - Had no real implementation
+- [x] **Deleted weekly_market event** - Had no real implementation
+- [x] **Deleted merchant_caravan event** - Had no real implementation
+- [x] **Removed fake newItems from festival** - Was misleading
+
+**Files Modified:**
+- `src/js/core/game.js` - Removed fake events
+- `src/js/ui/panels/random-event-panel.js` - Removed fake event icons/colors
+
+---
 
 ### Quest Markers on Map (2025-12-01)
 - [x] **Golden quest marker** - Shows 🎯 marker at quest target location

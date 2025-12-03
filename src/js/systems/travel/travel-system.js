@@ -1357,9 +1357,27 @@ const TravelSystem = {
         let content = `<div class="map-tooltip">`;
         content += `<h3>${location.name}</h3>`;
         content += `<p class="location-type">${location.type.charAt(0).toUpperCase() + location.type.slice(1)}</p>`;
-        
+
         if (location.description) {
             content += `<p class="description">${location.description}</p>`;
+        }
+
+        // 🖤💀 Add tracked quest info if this location is a quest target
+        if (typeof QuestSystem !== 'undefined' && QuestSystem.getQuestInfoForLocation) {
+            const quest = QuestSystem.getQuestInfoForLocation(location.id);
+            if (quest) {
+                const isDoomQuest = quest.isDoom || quest.questId?.startsWith('doom_');
+                const bgColor = isDoomQuest ? 'rgba(255, 140, 0, 0.2)' : 'rgba(255, 215, 0, 0.2)';
+                const borderColor = isDoomQuest ? '#ff8c00' : '#ffd700';
+                const textColor = isDoomQuest ? '#ff8c00' : '#ffd700';
+                const subTextColor = isDoomQuest ? '#ffb347' : '#ffeb3b';
+                content += `
+                    <div style="margin: 8px 0; padding: 8px; background: ${bgColor}; border-radius: 6px; border-left: 3px solid ${borderColor};">
+                        <p style="color: ${textColor}; font-weight: bold; margin: 0 0 4px 0;">🎯 ${quest.questName}</p>
+                        ${quest.objective ? `<p style="color: ${subTextColor}; font-size: 11px; margin: 0;">${quest.objective}</p>` : ''}
+                    </div>
+                `;
+            }
         }
         
         // dump location-specific details (if anyone cares)
@@ -2233,17 +2251,24 @@ const TravelSystem = {
             description: destination.description || ''
         };
 
-        // 🖤 CRITICAL: Mark location as VISITED/EXPLORED so tooltips and panels update 💀
-        // This was missing - locations weren't being added to visitedLocations on arrival!
-        // Check first visit BEFORE adding to array so we know if this is discovery
-        const wasFirstVisit = typeof GameWorld !== 'undefined' &&
-            Array.isArray(GameWorld.visitedLocations) &&
-            !GameWorld.visitedLocations.includes(destination.id);
+        // 🖤💀 CRITICAL: Mark location as VISITED/EXPLORED so tooltips and panels update 💀
+        // Uses world-aware helper for doom/normal world separation!
+        let wasFirstVisit = false;
+        if (typeof GameWorld !== 'undefined') {
+            if (typeof GameWorld.markLocationVisited === 'function') {
+                // Use world-aware method (adds to doomVisitedLocations or visitedLocations based on current world)
+                wasFirstVisit = GameWorld.markLocationVisited(destination.id);
+            } else if (Array.isArray(GameWorld.visitedLocations) && !GameWorld.visitedLocations.includes(destination.id)) {
+                // Fallback to direct array access
+                wasFirstVisit = true;
+                GameWorld.visitedLocations.push(destination.id);
+            }
+        }
 
         if (wasFirstVisit) {
-            GameWorld.visitedLocations.push(destination.id);
             addMessage(`📍 First time exploring ${destination.name}!`);
-            console.log('🖤 Location discovered:', destination.id, '- Total visited:', GameWorld.visitedLocations.length);
+            const activeVisited = GameWorld?.getActiveVisitedLocations?.() || GameWorld?.visitedLocations || [];
+            console.log('🖤 Location discovered:', destination.id, '- Total visited:', activeVisited.length);
         }
 
         // 🔔 RING THE BELL OF ARRIVAL - let the realm know we survived

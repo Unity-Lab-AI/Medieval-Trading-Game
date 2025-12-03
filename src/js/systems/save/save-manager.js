@@ -286,7 +286,8 @@ const SaveManager = {
                 } : null,
                 worldState: typeof GameWorld !== 'undefined' ? {
                     unlockedRegions: GameWorld.unlockedRegions || ['starter'],
-                    visitedLocations: GameWorld.visitedLocations || []
+                    visitedLocations: GameWorld.visitedLocations || [],
+                    doomVisitedLocations: GameWorld.doomVisitedLocations || [] // 🖤💀 Separate doom world progress!
                 } : null,
                 questState: typeof QuestSystem !== 'undefined' ? {
                     activeQuests: QuestSystem.activeQuests || {},
@@ -547,6 +548,7 @@ const SaveManager = {
         if (gameData.worldState && typeof GameWorld !== 'undefined') {
             GameWorld.unlockedRegions = gameData.worldState.unlockedRegions || ['starter'];
             GameWorld.visitedLocations = gameData.worldState.visitedLocations || [];
+            GameWorld.doomVisitedLocations = gameData.worldState.doomVisitedLocations || []; // 🖤💀 Separate doom world progress!
         }
 
         if (gameData.questState && typeof QuestSystem !== 'undefined') {

@@ -24,6 +24,15 @@ const WeatherSystem = {
     // 🖤 Minimum weather durations in REAL seconds (not affected by game speed)
     MIN_WEATHER_DURATION_SECONDS: 60,   // 💀 At least 1 real minute per weather
     MAX_WEATHER_DURATION_SECONDS: 300,  // 🦇 Up to 5 real minutes per weather
+
+    // 🖤💀 BAD WEATHER PROTECTION - prevents endless storms/blizzards
+    // Bad weather = rain, storm, blizzard, thundersnow, heatwave
+    // After MAX bad weather cycles, FORCE good weather for MIN good cycles
+    badWeatherStreak: 0,           // How many bad weather periods in a row
+    goodWeatherStreak: 0,          // How many good weather periods in a row
+    MAX_BAD_WEATHER_STREAK: 2,     // Max 2 bad weather periods (~10 min real time = ~1 game day)
+    MIN_GOOD_WEATHER_AFTER_BAD: 3, // Force 3 good weather periods after bad streak
+    forcingGoodWeather: false,     // Currently forcing good weather?
     lastWeatherCheck: 0, // Prevent multiple checks per frame
 
     // Weather progression map - what weather can escalate/de-escalate to
@@ -683,27 +692,76 @@ const WeatherSystem = {
         }
     },
 
+    // 🖤💀 Check if weather type is considered "bad" (affects travel/stamina negatively)
+    isBadWeather(weatherId) {
+        return ['rain', 'storm', 'blizzard', 'thundersnow', 'heatwave', 'snow'].includes(weatherId);
+    },
+
+    // 🖤💀 Check if weather type is considered "good" (neutral or positive)
+    isGoodWeather(weatherId) {
+        return ['clear', 'cloudy', 'windy', 'fog'].includes(weatherId);
+    },
+
     // 🖤 Get next weather using progression system for natural flow
     getNextWeatherFromProgression() {
         const progression = this.weatherProgression[this.currentWeather];
         const season = this.getCurrentSeason();
+
+        // 🖤💀 ANTI-ENDLESS-BAD-WEATHER: If we're forcing good weather, only return good weather!
+        if (this.forcingGoodWeather) {
+            this.goodWeatherStreak++;
+            console.log(`🌤️ Forcing good weather (${this.goodWeatherStreak}/${this.MIN_GOOD_WEATHER_AFTER_BAD})`);
+
+            // After enough good weather, stop forcing
+            if (this.goodWeatherStreak >= this.MIN_GOOD_WEATHER_AFTER_BAD) {
+                this.forcingGoodWeather = false;
+                this.goodWeatherStreak = 0;
+                console.log('🌤️ Good weather streak complete - normal weather resumes');
+            }
+
+            // Return only good weather options
+            const goodOptions = ['clear', 'cloudy', 'windy'];
+            // Prefer clear weather
+            if (Math.random() < 0.5) return 'clear';
+            return goodOptions[Math.floor(Math.random() * goodOptions.length)];
+        }
+
+        // 🖤💀 Track bad weather streaks
+        if (this.isBadWeather(this.currentWeather)) {
+            this.badWeatherStreak++;
+            this.goodWeatherStreak = 0;
+            console.log(`⛈️ Bad weather streak: ${this.badWeatherStreak}/${this.MAX_BAD_WEATHER_STREAK}`);
+
+            // If we've had too much bad weather, force good weather!
+            if (this.badWeatherStreak >= this.MAX_BAD_WEATHER_STREAK) {
+                console.log('☀️ BAD WEATHER LIMIT REACHED - Forcing good weather!');
+                this.forcingGoodWeather = true;
+                this.badWeatherStreak = 0;
+                this.goodWeatherStreak = 0;
+                // Immediately return clear weather
+                return 'clear';
+            }
+        } else {
+            // Reset bad weather streak on good weather
+            this.badWeatherStreak = 0;
+        }
 
         // If no progression defined, fall back to random seasonal
         if (!progression) {
             return this.selectWeatherForSeason();
         }
 
-        // 20% chance weather just clears up completely (mercy!)
-        if (Math.random() < 0.2 && this.currentWeather !== 'clear') {
+        // 30% chance weather just clears up completely (mercy!) - increased from 20%
+        if (Math.random() < 0.3 && this.currentWeather !== 'clear') {
             return 'clear';
         }
 
         // Decide: escalate (get worse), de-escalate (get better), or random
         const roll = Math.random();
 
-        // Severe weather more likely to de-escalate
+        // 🖤💀 Severe weather MUCH more likely to de-escalate (was 0.6, now 0.75)
         const isSevere = ['storm', 'blizzard', 'thundersnow', 'heatwave'].includes(this.currentWeather);
-        const deescalateChance = isSevere ? 0.6 : 0.4;
+        const deescalateChance = isSevere ? 0.75 : 0.5; // Increased from 0.6/0.4
 
         if (roll < deescalateChance && progression.deescalate.length > 0) {
             // De-escalate - weather gets better
@@ -714,8 +772,8 @@ const WeatherSystem = {
             if (options.length > 0) {
                 return options[Math.floor(Math.random() * options.length)];
             }
-        } else if (roll < deescalateChance + 0.25 && progression.escalate.length > 0) {
-            // Escalate - weather gets worse
+        } else if (roll < deescalateChance + 0.15 && progression.escalate.length > 0) {
+            // 🖤💀 Escalate chance REDUCED from 0.25 to 0.15 - weather gets worse less often
             const options = progression.escalate.filter(w => {
                 const wt = this.weatherTypes[w];
                 if (!wt) return false;
@@ -1459,7 +1517,7 @@ const WeatherSystem = {
                 width: 100%;
                 height: 100%;
                 pointer-events: none;
-                z-index: var(--z-weather-overlay, 15) !important; /* 🦇 Use CSS variable, BELOW all panels */
+                z-index: var(--z-weather-overlay, 2) !important; /* 🖤 PERMANENT FIX: Weather at layer 2, BELOW map UI (10+) 💀 */
                 transition: background 2s ease, opacity 2s ease;
                 border-radius: inherit; /* Match container's border-radius */
                 isolation: isolate; /* 🖤 Prevent backdrop-filter from bleeding outside */
@@ -1867,7 +1925,11 @@ const WeatherSystem = {
             currentWeather: this.currentWeather,
             currentIntensity: this.currentIntensity,
             // 🖤 Save remaining seconds, not absolute timestamp
-            remainingSeconds: Math.max(0, Math.floor((this.weatherEndTime - now) / 1000))
+            remainingSeconds: Math.max(0, Math.floor((this.weatherEndTime - now) / 1000)),
+            // 🖤💀 Save bad weather protection state
+            badWeatherStreak: this.badWeatherStreak,
+            goodWeatherStreak: this.goodWeatherStreak,
+            forcingGoodWeather: this.forcingGoodWeather
         };
     },
 
@@ -1878,6 +1940,10 @@ const WeatherSystem = {
             // 🖤 Restore end time from saved remaining seconds
             const remainingSeconds = state.remainingSeconds || 60;
             this.weatherEndTime = Date.now() + (remainingSeconds * 1000);
+            // 🖤💀 Restore bad weather protection state
+            this.badWeatherStreak = state.badWeatherStreak || 0;
+            this.goodWeatherStreak = state.goodWeatherStreak || 0;
+            this.forcingGoodWeather = state.forcingGoodWeather || false;
             this.updateVisuals();
         }
     },

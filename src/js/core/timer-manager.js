@@ -8,6 +8,30 @@
 // ═══════════════════════════════════════════════════════════════
 // centralized timer management - because memory leaks are scarier than ghosts
 // tick tock goes the existential clock - we document every scheduled doom
+//
+// ⚠️ CRITICAL: ALL TIMERS IN THIS CODEBASE MUST USE TimerManager! ⚠️
+//
+// DO NOT USE:                      USE INSTEAD:
+// setTimeout(fn, delay)    →       TimerManager.setTimeout(fn, delay)
+// setInterval(fn, delay)   →       TimerManager.setInterval(fn, delay)
+// clearTimeout(id)         →       TimerManager.clearTimeout(key)
+// clearInterval(id)        →       TimerManager.clearTimeout(key)
+//
+// WHY: Raw setTimeout/setInterval cause memory leaks when not tracked.
+// TimerManager tracks all timers and cleans them up on page unload,
+// preventing zombie timers from haunting the garbage collector.
+//
+// EXAMPLE USAGE:
+//   const timerKey = TimerManager.setTimeout(() => doThing(), 1000);
+//   // Later, to cancel:
+//   TimerManager.clearTimeout(timerKey);
+//
+// For intervals:
+//   const intervalKey = TimerManager.setInterval(() => pollThing(), 5000);
+//   // Later, to stop:
+//   TimerManager.clearTimeout(intervalKey);  // Works for both types
+//
+// ═══════════════════════════════════════════════════════════════
 
 const TimerManager = {
     // store all active timers - time bombs of scheduled chaos ticking in the shadows

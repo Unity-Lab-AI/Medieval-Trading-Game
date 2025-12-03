@@ -342,9 +342,10 @@ const PropertyStorage = {
             // 🖤 Using data attributes to prevent XSS - no inline onclick
             const safePropertyId = this.escapeHtml(propertyId);
             const safeItemId = this.escapeHtml(itemId);
+            const safeItemName = this.escapeHtml(itemName);
             itemElement.innerHTML = `
                 <div class="storage-item-icon">${itemIcon}</div>
-                <div class="storage-item-name">${itemName}</div>
+                <div class="storage-item-name">${safeItemName}</div>
                 <div class="storage-item-quantity">×${quantity}</div>
                 <button class="storage-item-btn" data-action="take" data-property="${safePropertyId}" data-item="${safeItemId}" data-qty="1">Take 1</button>
                 <button class="storage-item-btn" data-action="take" data-property="${safePropertyId}" data-item="${safeItemId}" data-qty="${Math.min(10, quantity)}">Take 10</button>
@@ -432,9 +433,10 @@ const PropertyStorage = {
             // 🖤 Using data attributes to prevent XSS - no inline onclick
             const safePropertyId = this.escapeHtml(propertyId);
             const safeItemId = this.escapeHtml(itemId);
+            const safeItemName = this.escapeHtml(itemName);
             itemElement.innerHTML = `
                 <div class="transfer-item-icon">${itemIcon}</div>
-                <div class="transfer-item-name">${itemName}</div>
+                <div class="transfer-item-name">${safeItemName}</div>
                 <div class="transfer-item-quantity">×${quantity}</div>
                 <button class="transfer-btn" data-action="store" data-property="${safePropertyId}" data-item="${safeItemId}" data-qty="1">Store 1</button>
                 <button class="transfer-btn" data-action="store" data-property="${safePropertyId}" data-item="${safeItemId}" data-qty="${Math.min(10, quantity)}">Store 10</button>
@@ -516,9 +518,10 @@ const PropertyStorage = {
             const safeFromId = this.escapeHtml(fromPropertyId);
             const safeToId = this.escapeHtml(toPropertyId);
             const safeItemId = this.escapeHtml(itemId);
+            const safeItemName = this.escapeHtml(itemName);
             itemElement.innerHTML = `
                 <div class="transfer-item-icon">${itemIcon}</div>
-                <div class="transfer-item-name">${itemName}</div>
+                <div class="transfer-item-name">${safeItemName}</div>
                 <div class="transfer-item-quantity">×${quantity}</div>
                 <button class="transfer-btn" data-action="transfer" data-from="${safeFromId}" data-to="${safeToId}" data-item="${safeItemId}" data-qty="1">Transfer 1</button>
                 <button class="transfer-btn" data-action="transfer" data-from="${safeFromId}" data-to="${safeToId}" data-item="${safeItemId}" data-qty="${Math.min(10, quantity)}">Transfer 10</button>

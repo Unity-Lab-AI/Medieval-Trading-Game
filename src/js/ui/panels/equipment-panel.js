@@ -103,6 +103,17 @@ const EquipmentSystem = {
         // migrate legacy equipment
         this.migrateLegacyEquipment();
 
+        // 🖤💀 Event delegation for unequip actions - no more inline onclick garbage
+        document.addEventListener('click', (e) => {
+            const target = e.target.closest('[data-action="unequip-slot"]');
+            if (target) {
+                const slotId = target.dataset.slotId;
+                if (slotId) {
+                    this.unequip(slotId);
+                }
+            }
+        });
+
         console.log('⚔️ EquipmentSystem ready to adorn your mortal shell');
     },
 
@@ -456,7 +467,7 @@ const EquipmentSystem = {
             html += `
                 <div class="equipment-slot-box ${itemId ? 'equipped clickable-unequip' : 'empty'}"
                      data-slot="${slotId}"
-                     ${itemId ? `onclick="EquipmentSystem.unequip('${slotId}')" style="cursor: pointer;" title="Click to unequip"` : ''}>
+                     ${itemId ? `data-action="unequip-slot" data-slot-id="${slotId}" style="cursor: pointer;" title="Click to unequip"` : ''}>
                     <div class="slot-header">
                         <span class="slot-icon">${slot.icon}</span>
                         <span class="slot-name">${slot.name}</span>

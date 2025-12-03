@@ -52,8 +52,8 @@ const PropertyUI = {
         element.innerHTML = `
             <div class="property-header">
                 <span class="property-icon">${propertyType.icon}</span>
-                <span class="property-name">${propertyType.name}</span>
-                <span class="property-location">${location ? location.name : 'Unknown'}</span>
+                <span class="property-name">${this.escapeHtml(propertyType.name)}</span>
+                <span class="property-location">${this.escapeHtml(location ? location.name : 'Unknown')}</span>
             </div>
             <div class="property-stats">
                 <div class="property-stat">
@@ -115,18 +115,20 @@ const PropertyUI = {
 
         const workQueue = PropertySystem.getWorkQueue(propertyId);
 
-        // 🖤 Escape propertyId to prevent XSS
+        // 🖤 Escape all dynamic content to prevent XSS
         const safePropertyId = this.escapeHtml(propertyId);
+        const safePropertyName = this.escapeHtml(propertyType.name);
+        const safeLocationName = this.escapeHtml(location ? location.name : 'Unknown');
         const detailsHtml = `
             <div class="property-details-modal" data-property-id="${safePropertyId}">
                 <div class="modal-header">
-                    <h2>${propertyType.icon} ${propertyType.name}</h2>
+                    <h2>${propertyType.icon} ${safePropertyName}</h2>
                     <button class="close-btn" data-action="close">✕</button>
                 </div>
                 <div class="modal-content">
                     <div class="property-details">
                         <div class="property-details-header">
-                            <h3>${propertyType.icon} ${propertyType.name} Details</h3>
+                            <h3>${propertyType.icon} ${safePropertyName} Details</h3>
                             <div class="mini-actions">
                                 <button class="mini-action-btn" data-action="upgrades" title="Upgrades">🔧</button>
                                 <button class="mini-action-btn" data-action="repair" title="Repair">🔨</button>
@@ -137,7 +139,7 @@ const PropertyUI = {
                         <div class="property-info">
                             <div class="info-row">
                                 <span class="info-label">Location:</span>
-                                <span class="info-value">${location ? location.name : 'Unknown'}</span>
+                                <span class="info-value">${safeLocationName}</span>
                             </div>
                             <div class="info-row">
                                 <span class="info-label">Level:</span>

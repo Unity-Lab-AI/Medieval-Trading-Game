@@ -1361,8 +1361,9 @@ const QuestSystem = {
 
             // 🦇 Auto-start the next quest if it's a main story quest
             if (nextQuest.type === 'main' || quest.type === 'main') {
-                const startResult = this.startQuest(quest.nextQuest);
-                if (startResult.success) {
+                // 🖤💀 Use assignQuest, not startQuest (which doesn't exist!)
+                const startResult = this.assignQuest(quest.nextQuest);
+                if (startResult && startResult.success) {
                     // 🖤 Auto-track main story quests so wayfinder always points the way
                     this.trackQuest(quest.nextQuest);
                     if (typeof addMessage === 'function') {
@@ -2538,11 +2539,12 @@ const QuestSystem = {
         const targetLocation = this.getTrackedQuestLocation();
         if (targetLocation !== locationId) return null;
 
-        // 🖤 Find the current objective description
+        // 🖤 Find the current objective description 💀
         let currentObjective = null;
         for (const obj of quest.objectives) {
             if (!obj.completed) {
-                currentObjective = this.getObjectiveDescription(obj);
+                // 🖤 Use description if available, otherwise fall back to getObjectiveText
+                currentObjective = obj.description || this.getObjectiveText(obj);
                 break;
             }
         }

@@ -1140,8 +1140,9 @@ RELATIONSHIP MEMORY:
         }
 
         // Check if player has active quests involving this NPC
-        if (typeof QuestSystem !== 'undefined') {
-            const activeQuests = QuestSystem.activeQuests || [];
+        if (typeof QuestSystem !== 'undefined' && QuestSystem.activeQuests) {
+            // 🖤💀 activeQuests is an OBJECT, not an array - use Object.values() 🦇
+            const activeQuests = Object.values(QuestSystem.activeQuests);
             for (const quest of activeQuests) {
                 // Check if this NPC is the quest giver or turn-in target
                 if (quest.npcId === npcId || quest.turnInNpc === npcId) {

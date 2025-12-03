@@ -16,11 +16,880 @@ Each entry follows this format:
 
 ---
 
+## 2025-12-03 - GIT PUSH SESSION 🖤💀📤
+
+**Request:** Run workflow and push to git main
+
+**Status:** ✅ PUSHED
+
+**What's Being Committed:**
+- 45 files modified
+- 3,109 lines added, 4,292 lines removed
+- Major changes since last push:
+  1. Unified dialogue system for all NPCs (API TTS)
+  2. Debooger config fix (enabled = ABSOLUTE master switch)
+  3. README restructure (moved to /READMEs folder)
+  4. Dungeon loot system with sellOnly flag
+  5. XSS security fixes across multiple files
+  6. Inline onclick → event delegation (people-panel, inventory-panel, equipment-panel)
+  7. Random event double popup fix
+  8. Doom world state reset on new game
+  9. Z-index weather permanent fix
+  10. Doom world indicator position fix
+
+---
+
+## 2025-12-03 - DEBOOGER CONFIG FIX SESSION 🖤💀🐛
+
+**Request:** Debooger won't turn off based on GameConfig.debooger.enabled = false. The Super Hacker achievement might be overriding the config setting.
+
+**Status:** ✅ FIXED
+
+**Problem:**
+- config.js has `debooger.enabled: false`
+- Console still showed `🐛 Debooger system enabled by default - Super Hacker mode!`
+- The debooger button was visible and the console capture was active
+- Gee correctly suspected the Super Hacker achievement was overriding the config
+
+**Root Cause Found:**
+In `debooger-command-system.js:isDeboogerEnabled()` (lines 163-182), there was fallback logic:
+```javascript
+// If config disabled, check if unlocked via Super Hacker achievement
+if (AchievementSystem.isDeboogerUnlockedForSave()) {
+    return true;  // 🔴 BYPASSED CONFIG!
+}
+// Default to true if config not loaded
+if (typeof GameConfig === 'undefined') {
+    return true;  // 🔴 BYPASSED CONFIG!
+}
+```
+
+**Fix Applied:**
+1. `debooger-command-system.js:isDeboogerEnabled()` - Removed ALL fallbacks. Config is THE ONLY authority now:
+   ```javascript
+   isDeboogerEnabled() {
+       if (typeof GameConfig !== 'undefined' && GameConfig.debooger) {
+           return GameConfig.debooger.enabled === true;
+       }
+       return false;  // Default to FALSE - no sneaky unlocks
+   }
+   ```
+
+2. `debooger-system.js:enable()` - Added config check to block manual enable bypass:
+   ```javascript
+   enable() {
+       if (GameConfig.debooger.enabled === false) {
+           console.log('Cannot enable - config is ABSOLUTE');
+           return;
+       }
+       // ... rest of enable logic
+   }
+   ```
+
+**Files Modified:**
+- `src/js/debooger/debooger-command-system.js` - isDeboogerEnabled() now config-only
+- `src/js/core/debooger-system.js` - enable() respects config
+- `src/js/systems/progression/achievement-system.js` - Super Hacker unlock now respects BOTH config flags
+- `config.js` - Added `allowAchievementUnlock` flag
+
+**New Config Structure:**
+```javascript
+debooger: {
+    enabled: false,        // MASTER SWITCH - true = debooger works, false = locked out
+    allowAchievementUnlock: false, // true = Super Hacker can unlock, false = no unlock ever
+    showConsoleWarnings: true,
+}
+```
+
+**Logic:**
+- `enabled: false` → Debooger is OFF. Period. NOTHING can override it.
+- `enabled: true, allowAchievementUnlock: false` → Debooger always ON (dev mode), achievement can't unlock
+- `enabled: true, allowAchievementUnlock: true` → Debooger starts hidden, Super Hacker achievement can unlock
+
+**Result:** `GameConfig.debooger.enabled` is the ABSOLUTE master switch. `allowAchievementUnlock` only matters when `enabled` is true.
+
+---
+
 ## 2025-12-02 - Current Session (GO Workflow GO)
 
 ### Unity Session - v0.90.00 RELEASE 🖤💀🔥
 
-**Status:** ✅ COMPLETE - Waiting for Gee
+**Status:** ✅ COMPLETE - UNIFIED DIALOGUE SYSTEM IMPLEMENTED
+
+---
+
+## ✅ UNIFIED DIALOGUE SYSTEM - ALL PRIORITIES COMPLETE! 🖤💀🎭
+
+**Session:** 2025-12-02 (Continued)
+
+### COMPLETED PRIORITIES:
+
+| Priority | File | What Was Done |
+|----------|------|---------------|
+| 1 | initial-encounter.js | Added async showStrangerEncounter with API TTS - first voice players hear |
+| 2 | doom-world-system.js | Added playBoatmanVoice(), playDoomArrivalVoice(), enhanced getBoatmanNPC() |
+| 3 | npc-encounters.js | Made showEncounterDialog async with API TTS for random encounters |
+| 4 | doom-npc-instruction-templates.js | Added _buildDoomChatInstruction() + chat/conversation/talk cases |
+| 5 | doom-quest-system.js | Added getQuestContextForNPC() for doom quest context |
+| 6 | random-event-panel.js | Verified N/A - system events, not NPC dialogue |
+| 7 | city-event-system.js | Added playTownCrierAnnouncement() for city event voice |
+
+### PATTERN USED (API TTS Integration):
+```javascript
+// 1. Try API call
+let dialogue = fallbackText;
+let useAPIVoice = false;
+try {
+    if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.settings?.voiceEnabled) {
+        const response = await NPCVoiceChatSystem.generateNPCResponse(npc, prompt, [], options);
+        if (response && response.text) {
+            dialogue = response.text;
+            useAPIVoice = true;
+        }
+    }
+} catch (e) { console.warn('API failed, using fallback:', e); }
+
+// 2. Show UI, then play voice after modal renders
+if (useAPIVoice) {
+    setTimeout(() => NPCVoiceChatSystem.playVoice(dialogue, npc.voice), 500);
+}
+```
+
+### FILES MODIFIED:
+- `src/js/systems/story/initial-encounter.js` - Hooded stranger API TTS
+- `src/js/systems/world/doom-world-system.js` - Boatman voice system
+- `src/js/npc/npc-encounters.js` - Random encounter TTS
+- `src/js/npc/doom-npc-instruction-templates.js` - CHAT action + doom context
+- `src/js/systems/progression/doom-quest-system.js` - Quest context method
+- `src/js/systems/world/city-event-system.js` - Town crier voice
+
+---
+
+## 📋 WHAT'S LEFT IN TODO.MD:
+
+Looking at todo.md, the remaining work is mostly:
+- 28 Playwright test failures (23 game-flow disabled for CI/CD)
+- XSS sanitization in various files (property-ui.js, game.js, npc-trade.js, etc.)
+- Performance improvements (circular buffer, timeout for module init)
+- Minor code quality items (standardize ?? vs ||)
+
+---
+
+## ✅ TODO.MD CLEANUP SESSION - 5 ITEMS FIXED 🖤💀
+
+**Session:** 2025-12-02 (GO Workflow)
+
+### COMPLETED:
+
+1. **people-panel.js** - Replaced 3 inline onclick handlers
+   - `onclick="PeoplePanel.showListView()"` → `data-action="back-to-list"`
+   - `onclick="PeoplePanel.openFullTrade()"` → `data-action="open-trade"`
+   - `onclick="PeoplePanel.sendMessage()"` → `data-action="send-message"`
+   - Added event delegation in setupEventListeners()
+
+2. **inventory-panel.js** - Replaced 4 inline onclick handlers
+   - `onclick="InventorySystem.useItem('${itemId}')"` → `data-action="use-item" data-item-id="${itemId}"`
+   - `onclick="EquipmentSystem.equip('${itemId}')"` → `data-action="equip-item" data-item-id="${itemId}"`
+   - Added event delegation with dynamic itemId handling
+
+3. **equipment-panel.js** - Replaced 1 inline onclick handler
+   - `onclick="EquipmentSystem.unequip('${slotId}')"` → `data-action="unequip-slot" data-slot-id="${slotId}"`
+   - Added event delegation with `.closest()` for nested clicks
+
+4. **leaderboard-panel.js** - Added JSON.parse validation
+   - Wrapped JSON.parse in try-catch at line 436
+   - Added structure validation for leaderboard data
+   - Proper fallback to empty array on parse failure
+
+5. **timer-manager.js** - Added usage documentation header
+   - Clear DO NOT USE vs USE INSTEAD comparison
+   - Explanation of WHY TimerManager is required
+   - Example usage code for setTimeout and setInterval
+
+---
+
+## ✅ XSS SECURITY CLEANUP SESSION - 8 ITEMS FIXED/VERIFIED 🖤💀🔒
+
+**Session:** 2025-12-02 (GO Workflow Continued)
+
+### COMPLETED:
+
+1. **panel-manager.js:354** - ✅ ALREADY FIXED (verified _toolbarDragHandlers + cleanup)
+
+2. **virtual-list.js** - Added XSS warning documentation
+   - Clear `⚠️ XSS SECURITY WARNING ⚠️` in constructor JSDoc
+   - Usage example for escapeHtmlVirtual()
+   - Warning about never using raw user data
+
+3. **npc-chat-ui.js** - ✅ VERIFIED (formatNPCMessage calls escapeHtml at line 1010)
+
+4. **people-panel.js** - Added escapeHtml to NPC card
+   - name, title, description all now escaped
+   - addChatMessage already uses textContent (safe)
+
+5. **property-ui.js** - Added escapeHtml to names
+   - propertyType.name escaped in createPropertyElement
+   - location.name escaped in createPropertyElement + showPropertyDetails
+
+6. **game.js** - Fixed player.name XSS
+   - Line 802: player.name now escaped
+   - Line 804: location.name now escaped
+
+7. **npc-trade.js** - ✅ VERIFIED (escapeHtml at line 804, used extensively)
+
+8. **property-storage.js** - Added safeItemName escaping
+   - 3 locations: renderStoredItems, renderInventoryItems, renderPropertyTransfer
+   - All itemName values now use this.escapeHtml()
+
+---
+
+---
+
+## PHASE -13: UNIFIED QUEST/EVENT/ENCOUNTER DIALOGUE SYSTEM 🖤💀🎭🔥
+
+**Request:** Apply the Elder NPC quest dialogue fix to ALL quests, quest lines, events, and encounters in the game so they all work uniformly with proper API TTS and quest context.
+
+### SCOPE (MASSIVE):
+This affects EVERY quest-related, event-related, and encounter-related file:
+
+**Quest Files (100+ quests):**
+- `main-quests.js` - 35 main story quests across 5 acts
+- `side-quests.js` - 50+ side quests across 14 chains
+- `doom-quests.js` - Quest data for doom world
+- `doom-quest-system.js` - 15 doom world quests
+- `quest-system.js` - Core quest management
+
+**Encounter Files:**
+- `npc-encounters.js` - Random NPC encounters (robbers, travelers, etc.)
+- `initial-encounter.js` - Tutorial/intro hooded stranger
+
+**Event Files:**
+- `city-event-system.js` - City-based random events
+- `random-event-panel.js` - Random event display and handling
+
+**NPC Instruction Files:**
+- `npc-instruction-templates.js` - Normal world NPC dialogue templates ✅ DONE (CHAT action added)
+- `doom-npc-instruction-templates.js` - Doom world NPC dialogue templates (NEEDS CHAT action)
+- `npc-dialogue.js` - NPC dialogue generation
+
+### WHAT NEEDS TO BE UNIFIED:
+
+1. **Quest Buttons** - All quests show specific names:
+   - "📜 Accept: Quest Name" (available quests)
+   - "⏳ Progress: Quest Name" (in progress)
+   - "✅ Complete: Quest Name" (ready to turn in)
+   - "📦 Deliver: Item Name" (delivery quests)
+
+2. **Quest Context in Chat** - ALL chat interactions include:
+   - Available quests from this NPC
+   - Active quests with this NPC
+   - Quest dialogue (offer/progress/complete)
+   - Quest commands ({assignQuest:id}, {completeQuest:id})
+
+3. **API TTS for ALL Dialogue** - NO hardcoded fallbacks:
+   - Quest NPCs speak actual quest dialogue
+   - Events use API for NPC responses
+   - Encounters use API for NPC dialogue
+   - Tutorial uses API for hooded stranger
+
+4. **Uniform Event/Encounter Handling** - All use same pattern:
+   - Show event/encounter UI
+   - Get AI response with context
+   - Play TTS
+   - Execute commands
+   - Update UI with results
+
+### FILES TO MODIFY:
+
+| File | What Needs Fixing |
+|------|-------------------|
+| `people-panel.js` | ✅ DONE - Quest buttons + chat context |
+| `npc-instruction-templates.js` | ✅ DONE - CHAT action added |
+| `doom-npc-instruction-templates.js` | Add CHAT action |
+| `main-quests.js` | Verify all 35 quests have dialogue |
+| `side-quests.js` | Verify all quests have dialogue |
+| `doom-quests.js` | Verify all doom quests have dialogue |
+| `doom-quest-system.js` | Verify doom quest flow |
+| `quest-system.js` | Verify getQuestContextForNPC works |
+| `npc-encounters.js` | Use API TTS for encounters |
+| `city-event-system.js` | Use API TTS for city events |
+| `random-event-panel.js` | Verify API TTS usage |
+| `initial-encounter.js` | Verify tutorial uses API TTS |
+
+### PHASES:
+
+1. ✅ **PHASE 1:** Audit all files, document what's missing - COMPLETE
+2. ✅ **PHASE 2:** main-quests.js - HAS DIALOGUE (offer/progress/complete) - NO CHANGES NEEDED
+3. ✅ **PHASE 3:** side-quests.js - HAS DIALOGUE (offer/progress/complete) - NO CHANGES NEEDED
+4. ⬜ **PHASE 4:** Fix doom-quests.js + doom-quest-system.js
+5. ⬜ **PHASE 5:** Fix npc-encounters.js - CRITICAL (no API TTS at all!)
+6. ⬜ **PHASE 6:** Fix city-event-system.js - (market events, no voice)
+7. ⬜ **PHASE 7:** Fix random-event-panel.js - (random events, no voice)
+8. ⬜ **PHASE 8:** Fix initial-encounter.js - CRITICAL (hooded stranger, no voice!)
+9. ⬜ **PHASE 9:** Fix doom-npc-instruction-templates.js - needs CHAT action
+10. ⬜ **PHASE 10:** End-to-end testing
+
+---
+
+## 📋 DETAILED SPECS FOR EACH FILE
+
+### SPEC 1: npc-encounters.js (CRITICAL - ~800 lines)
+
+**Current State:**
+- Has encounter types: road (friendly/neutral/hostile), location (tavern/market/etc.), event (festival/plague/etc.)
+- `showEncounterDialog()` line 516: Uses hardcoded greeting from `npcData.greetings[]`
+- `startEncounterConversation()` line 591: Opens NPCChatUI but NO API call for TTS
+- NO voice playback at all
+
+**Required Changes:**
+1. Add `async` to `startEncounterConversation()`
+2. Before opening NPCChatUI, call `NPCVoiceChatSystem.generateNPCResponse()` with:
+   - npcData (traveler/robber/etc.)
+   - greeting context
+   - encounter type (road/tavern/etc.)
+3. Play TTS with `NPCVoiceChatSystem.playVoice(response.text, npcData.voice)`
+4. Add API error fallback to use hardcoded greeting
+5. Pass encounter context to NPCChatUI for continued conversation
+
+**Files to Reference:**
+- `people-panel.js:sendMessage()` - Example of API TTS integration
+- `npc-instruction-templates.js:_buildChatInstruction()` - Example of context building
+
+---
+
+### SPEC 2: city-event-system.js (LOW PRIORITY - ~350 lines)
+
+**Current State:**
+- `triggerEvent()` line 182: Uses `addMessage()` for notifications
+- No voice, no character dialogue - just system messages
+- Events: festival, raid, drought, boom, recession, plague, celebration, construction, politics
+
+**Required Changes:**
+- **OPTION A (minimal):** Add town crier NPC voice for event announcements
+- **OPTION B (full):** Create event-specific NPCs (herald, merchant, guard) who announce events via API TTS
+
+**Recommended:** Option A - Add a simple `announceEventWithVoice()` method that:
+1. Creates a temporary "town crier" NPC
+2. Calls API for announcement text
+3. Plays TTS
+4. Keeps existing `addMessage()` as fallback
+
+---
+
+### SPEC 3: random-event-panel.js (MEDIUM - ~400 lines)
+
+**Current State:**
+- `showEvent()` displays event in panel with hardcoded description
+- No voice at all
+- Events have `description` but it's just text in the panel
+
+**Required Changes:**
+1. Add `async showEventWithVoice(event)` method
+2. For events with NPCs (bandit encounter, tax collector), call API for dialogue
+3. Play TTS for NPC events
+4. Keep panel visual as-is, just add voice layer
+
+**Note:** Some events (weather, market) don't need voice - only NPC events do
+
+---
+
+### SPEC 4: initial-encounter.js (CRITICAL - ~600 lines)
+
+**Current State:**
+- `showStrangerEncounter()` line 300: Uses hardcoded dialogue for hooded stranger
+- Stranger has `voice: 'onyx'` defined but NEVER USED
+- All dialogue is in HTML strings, no API calls
+
+**Required Changes:**
+1. Add `async` to `showStrangerEncounter()`
+2. Call `NPCVoiceChatSystem.generateNPCResponse()` with:
+   - mysteriousStranger NPC data
+   - "introduction" context
+   - player name
+3. Play TTS with stranger's 'onyx' voice
+4. Use API response in modal content instead of hardcoded text
+5. Add error fallback to hardcoded dialogue
+
+**This is the FIRST voice players hear - must work perfectly!**
+
+---
+
+### SPEC 5: doom-npc-instruction-templates.js (~300 lines)
+
+**Current State:**
+- Has NPC templates for doom world
+- NO 'CHAT' action defined (unlike normal npc-instruction-templates.js)
+- Falls through to generic handler
+
+**Required Changes:**
+1. Add `CHAT: 'chat'` to ACTIONS constant
+2. Add `case this.ACTIONS.CHAT:` in switch statement
+3. Add `_buildChatInstruction(spec, context)` method
+4. Include doom quest context from `DoomQuestSystem.getQuestContextForNPC()`
+
+**Copy pattern from:** `npc-instruction-templates.js:_buildChatInstruction()`
+
+---
+
+### SPEC 6: doom-world-system.js - BOATMAN (CRITICAL - lines 298-610)
+
+**Current State:**
+- `getBoatmanNPC()` line 299: Returns boatman NPC data with `voice: 'ash'`
+- `getBoatmanInstruction()` line 601: Has instruction text but NO TTS call
+- `enterDoomWorld()` line 318: Uses `TravelSystem.portalToDoomWorld()` - no voice
+- `exitDoomWorld()` line 385: Uses `TravelSystem.portalToNormalWorld()` - no voice
+
+**Required Changes:**
+1. When player selects boatman in People Panel, use `NPCVoiceChatSystem.generateNPCResponse()` for greeting
+2. Before portal entry, play TTS farewell from boatman
+3. On doom world arrival, play arrival dialogue with TTS
+4. Add `playBoatmanVoice(message)` helper method
+
+**Boatman Voice Flow:**
+1. Player clicks Boatman → "Step aboard, if you dare..." (API TTS)
+2. Player clicks "Enter Portal" → "The void awaits..." (API TTS)
+3. Arrive in doom world → Location-specific arrival text (API TTS)
+
+---
+
+### SPEC 7: doom-quests.js - QUEST DIALOGUE (✅ VERIFIED GOOD)
+
+**Current State:**
+- All 15 doom quests have `dialogue: { offer, progress, complete }`
+- Quest data structure matches main-quests.js
+
+**NO CHANGES NEEDED** - Quest data is properly structured.
+
+---
+
+### SPEC 8: doom-quest-system.js - QUEST HANDLING
+
+**Current State:**
+- `getQuestContextForNPC()` - Need to verify this exists and works like QuestSystem
+
+**Required Changes:**
+- Verify doom quests are returned by `getQuestContextForNPC()`
+- Ensure doom NPCs pass quest context to chat
+
+---
+
+## 🎯 PRIORITY ORDER (Based on Player Impact)
+
+| Priority | File | Why |
+|----------|------|-----|
+| 1 | **initial-encounter.js** | First voice players hear - sets tone for whole game |
+| 2 | **doom-world-system.js (Boatman)** | Critical transition moment into doom world |
+| 3 | **npc-encounters.js** | Random encounters are common, voice makes them alive |
+| 4 | **doom-npc-instruction-templates.js** | Doom world needs proper chat context |
+| 5 | **doom-quest-system.js** | Doom quest NPCs need context |
+| 6 | random-event-panel.js | NPC events (bandit, tax) need voice |
+| 7 | city-event-system.js | Nice to have, but events are just notifications |
+
+---
+
+## ESTIMATED EFFORT
+
+| File | Lines to Change | Complexity | Time |
+|------|-----------------|------------|------|
+| initial-encounter.js | ~50 lines | Medium | ~10 min |
+| doom-world-system.js | ~30 lines | Medium | ~10 min |
+| npc-encounters.js | ~40 lines | Medium | ~10 min |
+| doom-npc-instruction-templates.js | ~60 lines | Low (copy pattern) | ~5 min |
+| doom-quest-system.js | ~20 lines | Low | ~5 min |
+| random-event-panel.js | ~30 lines | Medium | ~10 min |
+| city-event-system.js | ~30 lines | Medium | ~10 min |
+| **TOTAL** | ~260 lines | - | ~60 min |
+
+---
+
+## PHASE -12: ELDER NPC QUEST DIALOGUE FIX 🖤💀🎭
+
+**Request:** Elder NPC shows generic "check quest progress" button with no specific quest info. TTS uses hardcoded fallbacks instead of API. No way to accept/turn-in quests properly. NPC says generic "wisdom" stuff instead of actual quest dialogue.
+
+### Root Causes:
+1. **Generic button labels** - "⏳ Check quest progress" instead of specific quest names
+2. **Single button for all quests** - Multiple in-progress quests showed just one button
+3. **No quest context in chat** - `PeoplePanel.sendMessage()` didn't pass quest options to AI
+4. **Missing 'chat' action** - `NPCInstructionTemplates` had no handler for 'chat', fell through to generic `_buildCustomInstruction`
+
+### Fixes:
+
+**people-panel.js:990-998** - Individual quest buttons with specific names:
+```javascript
+// 🖤💀 Show INDIVIDUAL buttons for each quest, not one generic button!
+inProgress.forEach(quest => {
+    actions.push({
+        label: `⏳ Progress: ${quest.name}`,
+        action: () => this.askQuestProgressSpecific(quest),
+        priority: 4,
+        questRelated: true
+    });
+});
+```
+
+**people-panel.js:1139-1144** - Added quest-specific progress method:
+```javascript
+// 🖤💀 ASK QUEST PROGRESS SPECIFIC - Check status of a SPECIFIC quest
+async askQuestProgressSpecific(quest) {
+    const message = `What's the status on "${quest.name}"? How am I doing?`;
+    document.getElementById('people-chat-input').value = message;
+    await this.sendMessage();
+},
+```
+
+**people-panel.js:877-892** - Pass quest context to API in sendMessage:
+```javascript
+// 🖤💀 INCLUDE QUEST CONTEXT so the AI knows what quests to offer/check/complete!
+const options = {
+    action: 'chat',  // Specify action for template system
+    availableQuests: this.getAvailableQuestsForNPC(),
+    activeQuests: this.getActiveQuestsForNPC(),
+    rumors: this.getRumors(),
+    nearbyLocations: this.getNearbyLocations()
+};
+
+const response = await NPCVoiceChatSystem.generateNPCResponse(
+    this.currentNPC,
+    message,
+    this.chatHistory,
+    options  // 🖤💀 Pass the quest context!
+);
+```
+
+**npc-instruction-templates.js:92** - Added CHAT action constant:
+```javascript
+CHAT: 'chat',  // 🖤💀 General chat with full quest context
+```
+
+**npc-instruction-templates.js:241-291** - Added full `_buildChatInstruction` method with:
+- NPC personality and voice instructions
+- Complete quest context from `QuestSystem.getQuestContextForNPC()`
+- Available commands for assigning/completing quests
+- Player message integration
+
+### Result:
+- Quest buttons now show specific quest names: "⏳ Progress: First Steps"
+- Each quest gets its own button (not one generic button)
+- Chat messages include full quest context for AI to respond properly
+- AI receives proper instructions to offer/check/complete quests with commands
+- TTS plays API-generated responses, not hardcoded fallbacks
+- Quick actions update after chat in case quest status changed
+
+---
+
+## PHASE -11: NEW GAME DOOM WORLD STATE RESET 🖤💀🆕
+
+**Request:** On new game, visited locations showing wrong location (silk_road_inn instead of vineyard_village), "Withered Vines" (doom name) appearing in normal world, paths not showing correctly.
+
+### Root Cause:
+When starting a new game, the doom world state wasn't being properly reset:
+1. `GameWorld.init()` reset `visitedLocations` to `['greendale']` but NOT `doomVisitedLocations`
+2. `DoomWorldSystem.isActive` wasn't being reset to `false`
+3. `TravelSystem.currentWorld` wasn't being reset to `'normal'`
+4. `game.inDoomWorld` flag wasn't being reset
+5. `visitedLocations` was only being "added to", not set to the actual starting location
+
+### Fixes:
+
+**game-world.js:1030** - Reset doomVisitedLocations in init():
+```javascript
+// 🖤💀 Reset doom world visited locations on new game - no bleeding between games!
+this.doomVisitedLocations = [];
+```
+
+**game.js:7237-7251** - Reset ALL doom world state in initializeGameWorld():
+```javascript
+// 🖤💀 Reset doom world state on new game - no bleeding between sessions!
+if (typeof DoomWorldSystem !== 'undefined') {
+    DoomWorldSystem.isActive = false;
+    DoomWorldSystem._removeDoomEffects?.(); // Remove CSS effects, indicator, etc.
+    console.log('💀 DoomWorldSystem reset for new game');
+}
+if (typeof TravelSystem !== 'undefined') {
+    TravelSystem.currentWorld = 'normal';
+    TravelSystem.doomDiscoveredPaths?.clear?.(); // Reset doom discovered paths
+    console.log('🛤️ TravelSystem world reset to normal');
+}
+// Reset game doom flag
+game.inDoomWorld = false;
+// Remove any lingering doom body class
+document.body.classList.remove('doom-world');
+```
+
+**game.js:7327** - PROPERLY set visited locations to ONLY the starting location:
+```javascript
+// 🖤💀 PROPERLY set visited locations to ONLY the starting location
+// GameWorld.init() sets it to ['greendale'] as default, but we need the ACTUAL starting location
+GameWorld.visitedLocations = [startLocationId];
+console.log(`🗺️ Visited locations set to starting location: [${startLocationId}]`);
+```
+
+### Result:
+- New game now properly resets ALL doom world state
+- Visited locations correctly set to actual starting location (e.g., vineyard_village for Village Elder perk)
+- No more doom names appearing in normal world
+- No more old visited locations bleeding into new game
+
+---
+
+## PHASE -10: RANDOM EVENT DOUBLE POPUP FIX 🖤💀🎲
+
+**Request:** Random events showing twice - have to close popup twice, first one doesn't log.
+
+### Root Cause:
+`game.js:triggerEvent()` was calling `showEvent()` TWICE:
+
+1. Line 1828: `RandomEventPanel.showEvent(event)` - Direct call
+2. Line 1832: `document.dispatchEvent(new CustomEvent('random-event-triggered', ...))`
+3. Then `random-event-panel.js:362-365` listens for that event and calls `showEvent()` AGAIN
+
+So every event triggered `showEvent()` twice!
+
+### Fix:
+
+**game.js:1824-1830** - Removed direct `RandomEventPanel.showEvent()` call:
+```javascript
+// 🖤💀 Dispatch custom event - RandomEventPanel listens for this and shows the popup
+// DO NOT call RandomEventPanel.showEvent() directly - that causes DOUBLE popups!
+const isSilent = eventType.silent || eventId === 'travel_complete';
+document.dispatchEvent(new CustomEvent('random-event-triggered', {
+    detail: { event, silent: isSilent }
+}));
+```
+
+**random-event-panel.js:362-371** - Added silent event check:
+```javascript
+document.addEventListener('random-event-triggered', (e) => {
+    if (e.detail && e.detail.event) {
+        // 🖤💀 Skip silent events (they only log to message panel, no popup)
+        if (e.detail.silent) return;
+        this.showEvent(e.detail.event);
+    }
+});
+```
+
+### Result:
+- Events now only trigger ONE popup
+- Silent events skip the popup entirely
+- No more double-close required
+
+---
+
+## PHASE -9: DOOM WORLD DOUBLE STAT DRAIN 🖤💀🍖
+
+**Request:** Doom world should use double stat drain based on existing time-machine speed system.
+
+### Implementation:
+
+Added doom multiplier to `game.js:processPlayerStatsOverTime()` at lines 2250-2261:
+
+```javascript
+// 🖤💀 DOOM WORLD MULTIPLIER - Double stat drain in the apocalypse! 💀
+const isInDoomWorld = (typeof TravelSystem !== 'undefined' && TravelSystem.isInDoomWorld?.()) ||
+                      (typeof DoomWorldSystem !== 'undefined' && DoomWorldSystem.isActive) ||
+                      (typeof game !== 'undefined' && game.inDoomWorld);
+const doomMultiplier = isInDoomWorld ? 2.0 : 1.0;
+
+// Applied to both hunger and thirst decay:
+const hungerDecay = survivalConfig.hunger.decayPerUpdate * hungerSeasonMod * doomMultiplier * intervalsPassed;
+const thirstDecay = survivalConfig.thirst.decayPerUpdate * thirstSeasonMod * doomMultiplier * intervalsPassed;
+```
+
+### Result:
+- Normal World: 5 days hunger decay, 3 days thirst decay
+- Doom World: **2.5 days hunger decay, 1.5 days thirst decay** (2x faster!)
+- Stacks with seasonal modifiers (winter hunger bonus, summer thirst bonus)
+- Works with all time speeds (1x, 2x, 3x)
+
+---
+
+## PHASE -8: DOOM WORLD INDICATOR POSITION FIX 🖤💀📍
+
+**Request:** Doom World skull indicator is overlapping the "Medieval Trading Game" title in the center. Needs to be directly to the LEFT of the time widget, butted up with same spacing as other widgets.
+
+### Problem:
+The doom indicator used a CSS `::after` pseudo-element on `body.doom-world` with:
+```css
+position: fixed;
+left: 50%;
+transform: translateX(-50%);
+```
+This centered it over the page title. It can't be placed inside flexbox containers as a pseudo-element.
+
+### Solution:
+Changed from CSS pseudo-element to actual DOM injection:
+
+1. **Removed CSS `::after`** from `z-index-system.css:462-478`
+   - Replaced with `#doom-world-indicator` styling that matches `.top-bar-indicator` widgets
+
+2. **Added DOM injection methods** to `doom-world-system.js:472-504`:
+   - `_showDoomIndicator()` - Creates and prepends indicator to `#top-bar-widgets`
+   - `_hideDoomIndicator()` - Removes indicator from DOM
+   - Called from `_applyDoomEffects()` and `_removeDoomEffects()`
+
+3. **Indicator now uses flexbox layout** like other widgets:
+   - Uses `.top-bar-indicator` class for consistent styling
+   - Uses `prepend()` to place it FIRST (left of all other widgets)
+   - Has same 0.6rem gap as other widgets in the row
+
+### Result:
+💀 DOOM WORLD indicator now appears directly to the LEFT of the time widget, butted up with same spacing as date/weather indicators.
+
+---
+
+## PHASE -2: PERMANENT Z-INDEX WEATHER FIX 🖤💀⚡
+
+**Request:** Locations and paths are under weather AGAIN. Make a permanent fucking fix.
+
+### Root Cause Analysis:
+
+The CSS z-index system was correct (weather at 2-3, map UI at 10-30), BUT:
+1. `weather-system.js:1462` had fallback `15` (should be `2`)
+2. `day-night-cycle.js:435` had fallback `12` (should be `3`)
+3. `environmental-effects-system.js` had hardcoded `60`, `65`, `70` (should be `1-4`)
+
+**JavaScript inline styles OVERRIDE CSS rules** - so even though CSS said weather = 2, the JS was setting it to 15+.
+
+### Permanent Fix Applied:
+
+| File | Line | Old Value | New Value |
+|------|------|-----------|-----------|
+| weather-system.js | 1462 | `var(--z-weather-overlay, 15)` | `var(--z-weather-overlay, 2)` |
+| day-night-cycle.js | 435 | `var(--z-day-night-overlay, 12)` | `var(--z-day-night-overlay, 3)` |
+| environmental-effects-system.js | 259 | `z-index: 70` | `var(--z-weather-overlay, 2)` |
+| environmental-effects-system.js | 274 | `z-index: 65` | `z-index: 1` |
+| environmental-effects-system.js | 290 | `z-index: 60` | `z-index: 4` |
+
+### Final Z-Index Hierarchy (PERMANENT):
+
+```
+Layer 0   : Background/terrain
+Layer 1   : Lighting effects
+Layer 2   : Weather overlay (rain, snow, fog)
+Layer 3   : Day/night overlay
+Layer 4   : Atmosphere effects
+Layer 10  : Path connections (SVG lines)
+Layer 15  : Location icons
+Layer 18  : Location labels
+Layer 20  : Player marker
+Layer 25  : Quest wayfinder
+Layer 28  : Traveling indicator
+Layer 50+ : UI Panels
+```
+
+**This fix is PERMANENT because we fixed the JavaScript fallback values, not just CSS.**
+
+---
+
+## PHASE -1: MASSIVE README RESTRUCTURE 🖤💀📚
+
+**Request:** Gee moved all readmes to `/readmes/` folder. Update all workflow files, create GitHub root README, run full system analysis with agents, update all documentation with accurate counts and features.
+
+### Completed:
+
+1. ✅ **Updated 000-GO-workflow.md** - New readme paths in `/readmes/` folder
+2. ✅ **Created root README.md** - GitHub display readme linking to readmes folder
+3. ✅ **Deployed 5 parallel agents** for full system analysis:
+   - Combat & Dungeon Systems
+   - Trading & Economy Systems
+   - Quest & Progression Systems
+   - World & Travel Systems
+   - NPC & Dialogue Systems
+
+4. ✅ **Rewrote 001-ARCHITECT.md** - Full game architecture with accurate data:
+   - 42 locations (was incorrectly 30+)
+   - 115 achievements (was incorrectly 57)
+   - 100+ quests (5 acts × 7 quests + 50+ side + 15 doom)
+   - 13 enemy types + 8 dungeon bosses
+   - 6 merchant personality types
+   - Wealth gates by difficulty
+   - Complete trading system details
+
+5. ✅ **Updated all readmes to v0.90.00**:
+   - `readmes/NerdReadme.md` - Updated file structure, version
+   - `readmes/GameplayReadme.md` - Updated feature counts
+   - `readmes/DebuggerReadme.md` - Updated version and date
+
+### Agent Findings - Issues Fixed:
+
+| Issue | Old Value | Correct Value | Status |
+|-------|-----------|---------------|--------|
+| Achievements | 57 | 115 | ✅ Fixed |
+| Locations | 30+ | 42 | ✅ Fixed |
+| Quests | "100" vague | 100+ detailed | ✅ Fixed |
+| Outpost fees | Mismatched | Verified from code | ✅ Fixed |
+
+### Agent Analysis Summary:
+
+**Combat System:**
+- 13 enemy types with stat scaling
+- 8 dungeon bosses with unique mechanics (phasing, regen, firebreath)
+- 30+ sellOnly dungeon loot items
+- Mutex protection against double-click exploits
+
+**Trading System:**
+- 5 time-of-day modifiers (0.85x → 1.35x)
+- 6 merchant personalities with pricing/haggle modifiers
+- Daily gold limits by market size (500g → 25,000g)
+- Stock decay from 100% → 25% by day end
+- Bulk trading shortcuts (Shift=5x, Ctrl=25x)
+
+**Quest System:**
+- 35 main story quests (5 acts)
+- 50+ side quests (14 regional chains)
+- 15 Doom World quests
+- Tutorial-first flow (v0.90.00)
+- Quest wayfinder marker system
+
+**World System:**
+- 42 locations across 6 regions
+- Path types with speed multipliers
+- Seasonal backdrop crossfade
+- Doom World economy inversion
+
+**NPC System:**
+- 12 boss personalities
+- 6 merchant archetypes
+- AI dialogue via Pollinations API
+- 13 TTS voice options
+
+**Files Changed:**
+- `.claude/skills/000-GO-workflow.md` - Updated readme paths
+- `.claude/skills/001-ARCHITECT.md` - Complete rewrite with accurate data
+- `README.md` - Created for GitHub display
+- `readmes/NerdReadme.md` - Updated version, file structure
+- `readmes/GameplayReadme.md` - Updated feature counts
+- `readmes/DebuggerReadme.md` - Updated version
+
+---
+
+## PHASE 0: Fake Features Purge + Dungeon Loot System 🖤💀
+
+**Request:** Gee identified fake events (Foreign Merchant popup with no real implementation) and missing dungeon loot items.
+
+### Completed:
+
+1. ✅ **Deleted fake events** - merchant_arrival, weekly_market, merchant_caravan events had no real implementation
+2. ✅ **Removed misleading newItems** from festival event
+3. ✅ **Added proper dungeon loot system** to ItemDatabase:
+   - New categories: `DUNGEON_LOOT` and `TREASURE`
+   - **Treasure items** (merchants buy AND sell): rare_gem, ancient_coin, golden_idol, enchanted_crystal, dragon_scale
+   - **Dungeon loot** (sellOnly - merchants buy but DON'T sell): rusty_dagger, tattered_cloth, broken_armor, monster_bone, etc.
+   - **Enemy combat loot** (sellOnly): rusty_sword, leather_scraps, wolf_pelt, bone_fragment, goblin_ear, etc.
+   - Added `sellOnly: true` flag to all trash loot items
+4. ✅ **Fixed combat-system.js** - bandage → bandages to match ItemDatabase
+5. ✅ **Filtered sellOnly items from merchant displays**:
+   - `game.js:updateMarketDisplay()` - Added filter to skip sellOnly items
+   - `npc-trade.js:renderInventoryItems()` - Added filter for NPC trading window
+
+**Files Changed:**
+- `src/js/core/game.js` - Removed fake events, added sellOnly filter in market display
+- `src/js/data/items/item-database.js` - Added 30+ new dungeon/treasure items with proper categories
+- `src/js/systems/combat/combat-system.js` - Fixed bandage → bandages
+- `src/js/npc/npc-trade.js` - Added sellOnly filter for NPC inventory display
+- `src/js/ui/panels/random-event-panel.js` - Removed fake event icons/colors
+
+**Result:** Merchants now properly buy trash loot from players but will never sell it back. Players can find valuable dungeon loot and sell it for gold.
 
 ---
 
@@ -3298,6 +4167,204 @@ Searched all requested folders for:
 ✅ No other bloat found - code is clean! 🖤💀
 
 **Files Changed:** 33 total (32 version updates + 1 bloat removal)
+
+---
+
+### Status: COMPLETE ⏰
+Waiting for Gee's next request.
+
+---
+
+## PHASE -4: DOOM WORLD ENTRY FIX 🖤💀🔥
+
+**Request:** When typing "doom", the explored world didn't reset - should teleport to a dungeon with ONLY that dungeon explored, and only connecting paths/locations discovered.
+
+### Root Cause:
+`GameWorld.visitedLocations` was a single array for BOTH normal and doom worlds. When entering doom world, the entire normal world's visited locations were still being used, so all locations appeared explored.
+
+### Solution Implemented:
+
+1. **Added `GameWorld.doomVisitedLocations`** - Separate array for doom world progress
+   - `src/js/data/game-world.js:1017` - New property
+
+2. **Added world-aware helper methods** to GameWorld:
+   - `getActiveVisitedLocations()` - Returns correct array based on current world
+   - `isLocationVisited(locationId)` - Checks correct array
+   - `markLocationVisited(locationId)` - Adds to correct array
+   - `resetDoomVisitedLocations(entryLocationId)` - Resets doom progress on entry
+
+3. **Updated debooger "doom" command** (`debooger-command-system.js:739-760`):
+   - Calls `GameWorld.resetDoomVisitedLocations(entryDungeon)` first
+   - Discovers paths TO adjacent locations (not the locations themselves)
+
+4. **Updated map renderers to use world-aware methods**:
+   - `game-world-renderer.js:802-827` - Uses `getActiveVisitedLocations()`
+   - `travel-panel-map.js:307-315, 421-425` - Same fix
+   - `travel-system.js:2236-2254` - Uses `markLocationVisited()` on arrival
+
+5. **Updated save/load** (`save-manager.js:290, 551`):
+   - Saves and loads `doomVisitedLocations` separately
+
+### Result:
+- When entering doom world, ONLY the entry dungeon is explored
+- Adjacent locations are discovered (greyed out, can travel to)
+- Normal world progress is preserved and restored when exiting doom
+- Doom world progress is saved separately
+
+---
+
+## PHASE -7: DOOM QUEST + RANDOM EVENT FIXES 🖤💀🎲
+
+**Issues:**
+1. `QuestSystem.startQuest is not a function` error
+2. Random events happening too often
+
+### Fix 1: startQuest → assignQuest
+
+The method `startQuest` doesn't exist - it's called `assignQuest`.
+
+**Fixed in:**
+- `doom-quest-system.js:601` - Changed `QuestSystem.startQuest` → `QuestSystem.assignQuest`
+- `quest-system.js:1364` - Changed `this.startQuest` → `this.assignQuest`
+
+### Fix 2: Random Events - Max 2 Per Day
+
+Added daily limit system in `game.js:1771-1802`:
+
+```javascript
+// 🖤💀 DAILY EVENT LIMIT - max 2 events per game day
+eventsToday: 0,
+MAX_EVENTS_PER_DAY: 2,
+lastEventDay: -1,
+```
+
+**Changes:**
+- Increased cooldown from 60s → 120s (2 min between checks)
+- Track `eventsToday` counter
+- Reset counter on new game day
+- Block events if `eventsToday >= MAX_EVENTS_PER_DAY`
+
+**Result:** Max 2 random events per game day, no more tax collector spam!
+
+---
+
+## PHASE -6: BAD WEATHER DURATION FIX 🖤💀🌧️
+
+**Request:** No 20-day blizzards! Bad weather should last max 1 day, then force good weather for a few days.
+
+### Problem:
+The weather system could chain bad weather infinitely: rain → storm → rain → blizzard → snow → blizzard, etc. No protection against endless misery.
+
+### Solution - Bad Weather Protection System:
+
+Added to `weather-system.js`:
+
+```javascript
+// 🖤💀 BAD WEATHER PROTECTION
+badWeatherStreak: 0,           // How many bad weather periods in a row
+goodWeatherStreak: 0,          // How many good weather periods in a row
+MAX_BAD_WEATHER_STREAK: 2,     // Max 2 bad weather periods (~10 min real = ~1 game day)
+MIN_GOOD_WEATHER_AFTER_BAD: 3, // Force 3 good weather periods after bad streak
+forcingGoodWeather: false,     // Currently forcing good weather?
+```
+
+**New helper methods:**
+- `isBadWeather(weatherId)` - rain, storm, blizzard, thundersnow, heatwave, snow
+- `isGoodWeather(weatherId)` - clear, cloudy, windy, fog
+
+**Updated `getNextWeatherFromProgression()`:**
+1. If `forcingGoodWeather` is true, ONLY return clear/cloudy/windy
+2. Track `badWeatherStreak` - if >= 2, force good weather
+3. Track `goodWeatherStreak` - after 3 good periods, resume normal weather
+4. Increased de-escalate chance from 0.6 → 0.75 for severe weather
+5. Decreased escalate chance from 0.25 → 0.15
+6. Increased "clear up completely" mercy chance from 20% → 30%
+
+**Save/Load updated:**
+- `getState()` and `loadState()` now preserve streak tracking
+
+### Result:
+- Max ~2 bad weather periods in a row (~10 real minutes = ~1 game day)
+- After bad streak: forced 3 good weather periods (~15 real minutes)
+- Severe weather (storm, blizzard) now 75% likely to get better
+- No more 20-day blizzards! ☀️
+
+---
+
+## PHASE -5: TOOLTIP QUEST INFO FIX 🖤💀🎯
+
+**Request:** Greendale tooltip not working after accepting a quest. Quest info in tooltips was breaking them.
+
+### Root Cause:
+`QuestSystem.getQuestInfoForLocation()` at line 2545 was calling `this.getObjectiveDescription(obj)` which **doesn't exist**. The correct method is `this.getObjectiveText(obj)`.
+
+This caused a JavaScript error that broke the entire tooltip rendering.
+
+### Fix Applied:
+
+1. **Fixed quest-system.js:2545-2546** - Changed:
+   ```javascript
+   // OLD (broken):
+   currentObjective = this.getObjectiveDescription(obj);
+
+   // NEW (fixed):
+   currentObjective = obj.description || this.getObjectiveText(obj);
+   ```
+
+2. **Added quest info to TravelPanelMap tooltips** (`travel-panel-map.js:990-1007`):
+   - Now shows tracked quest info in mini-map tooltips
+   - Doom quests show orange styling, normal quests gold
+
+3. **Added quest info to TravelSystem tooltips** (`travel-system.js:1365-1381`):
+   - Canvas map tooltips now also show quest info
+
+### All Tooltip Systems Now Working:
+- ✅ GameWorldRenderer (main map) - already had quest info, now works
+- ✅ TravelPanelMap (mini-map) - added quest info
+- ✅ TravelSystem (canvas map) - added quest info
+- ✅ Doom world tooltips - same fix applies
+
+---
+
+## PHASE -3: RANDOM EVENT PANEL FIX 🖤💀🎲
+
+**Request:** RandomEventPanel needs to be:
+1. Draggable (by header)
+2. Centered on screen when appearing
+3. Only closable after event completes (after clicking "Got it!")
+
+### Implementation Details:
+
+**File:** `src/js/ui/panels/random-event-panel.js`
+
+**Changes Made:**
+
+1. **Added drag functionality:**
+   - `startDrag(e)` - Initiates drag from header only
+   - `drag(e)` - Moves panel with mouse, keeps within viewport bounds
+   - `endDrag()` - Cleans up drag state
+   - Mouse event listeners added in `setupEventListeners()`
+
+2. **Centered on open:**
+   - `open()` now sets `position: fixed`, `left: 50%`, `top: 50%`, `transform: translate(-50%, -50%)`
+   - Also sets `z-index: 9999` to ensure it's on top
+
+3. **Close only after acknowledgment:**
+   - Added `eventAcknowledged: false` property
+   - `updateCloseButtonVisibility()` hides X button until acknowledged
+   - Close button click handler checks `eventAcknowledged` flag
+   - If not acknowledged, panel shakes (panelShake animation) instead of closing
+   - `acknowledgeEvent()` sets `eventAcknowledged = true` and then closes
+
+4. **Added CSS:**
+   - `@keyframes panelShake` - Shake animation when trying to close without acknowledging
+   - `.event-header` cursor styles for drag indication
+
+**Result:** Panel now:
+- Opens centered on screen ✅
+- Can be dragged by the header ✅
+- X button hidden until "Got it!" is clicked ✅
+- If somehow trying to close without acknowledging, panel shakes ✅
 
 ---
 

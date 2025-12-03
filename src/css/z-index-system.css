@@ -459,22 +459,32 @@ body.doom-world .message-log .message.danger {
     color: #ff4444;
 }
 
-/* 💀 Doom world indicator in UI */
-body.doom-world::after {
-    content: '💀 DOOM WORLD';
-    position: fixed;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
+/* 💀 Doom world indicator in top-bar-widgets (injected by DoomWorldSystem) */
+/* 🖤 OLD ::after pseudo-element REMOVED - now using real DOM element 💀 */
+
+#doom-world-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
     background: rgba(139, 0, 0, 0.8);
+    padding: 0.3rem 0.7rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 68, 68, 0.5);
     color: #ff4444;
-    padding: 4px 12px;
-    border-radius: 4px;
-    font-size: 12px;
+    font-size: 0.8rem;
     font-weight: bold;
-    z-index: 9999;
-    pointer-events: none;
+    white-space: nowrap;
     animation: doom-indicator-glow 2s infinite;
+}
+
+#doom-world-indicator .indicator-icon {
+    font-size: 0.95rem;
+}
+
+#doom-world-indicator .indicator-text {
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 @keyframes doom-indicator-glow {

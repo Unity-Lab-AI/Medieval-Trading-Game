@@ -159,25 +159,15 @@ const DeboogerCommandSystem = {
         this.execute(commandText);
     },
 
-    // 🔒 Check if debooger commands are enabled - are we worthy of this power?
+    // 🔒 Check if debooger commands are enabled - CONFIG IS THE MASTER SWITCH 🖤💀
     isDeboogerEnabled() {
-        // ⚙️ Config takes priority - config says yes? Reality says yes 🖤
+        // ⚙️ GameConfig.debooger.enabled is THE ONLY authority - no fallbacks, no overrides
+        // 🖤 Config says yes? Debooger enabled. Config says no? Debooger DEAD. Period. 💀
         if (typeof GameConfig !== 'undefined' && GameConfig.debooger) {
-            if (GameConfig.debooger.enabled === true) {
-                return true; // Config override - godmode enabled
-            }
+            return GameConfig.debooger.enabled === true;
         }
 
-        // 🏆 If config disabled, check if unlocked via Super Hacker achievement - earned power
-        if (typeof AchievementSystem !== 'undefined' && AchievementSystem.isDeboogerUnlockedForSave()) {
-            return true;
-        }
-
-        // 🛠️ Default to true if config not loaded (dev mode) - developers deserve chaos
-        if (typeof GameConfig === 'undefined') {
-            return true;
-        }
-
+        // 🔒 If config not loaded, default to FALSE for safety - no sneaky unlocks 🦇
         return false;
     },
 
@@ -736,11 +726,29 @@ const DeboogerCommandSystem = {
 
             console.log(`💀 DOOM COMMAND: Entering doom world at ${doomName}...`);
 
+            // 🖤💀 Step 0.5: Reset doom world visited locations - start fresh with ONLY entry dungeon explored!
+            if (typeof GameWorld !== 'undefined') {
+                GameWorld.resetDoomVisitedLocations(entryDungeon);
+                results.push('Doom locations reset');
+                console.log('💀 GameWorld.doomVisitedLocations reset to:', GameWorld.doomVisitedLocations);
+            }
+
             // 🖤 Step 1: Transport player to dungeon location
             if (typeof TravelSystem !== 'undefined') {
-                // 🦇 Clear doom discovered paths - start fresh, only entry point known
+                // 🦇 Clear doom discovered paths - start fresh, only entry point and its connections known
                 TravelSystem.doomDiscoveredPaths = new Set();
                 TravelSystem.doomDiscoveredPaths.add(entryDungeon);
+
+                // 🖤💀 Also discover paths TO adjacent locations (so player can see where to go)
+                const entryLocation = GameWorld?.locations?.[entryDungeon];
+                if (entryLocation?.connections) {
+                    entryLocation.connections.forEach(connId => {
+                        // Add path to adjacent locations (but NOT the locations themselves - just paths)
+                        TravelSystem.doomDiscoveredPaths.add(`${entryDungeon}->${connId}`);
+                        TravelSystem.doomDiscoveredPaths.add(`${connId}->${entryDungeon}`);
+                    });
+                    console.log('💀 Discovered paths from entry:', Array.from(TravelSystem.doomDiscoveredPaths));
+                }
 
                 // 🖤 Use portal function which handles world switching
                 TravelSystem.portalToDoomWorld(entryDungeon);
@@ -1512,13 +1520,17 @@ const UniversalGoldManager = {
 window.DeboogerCommandSystem = DeboogerCommandSystem;
 window.UniversalGoldManager = UniversalGoldManager;
 
-// Initialize when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
+// 🔒 ONLY initialize if debooger is enabled in config
+if (typeof GameConfig !== 'undefined' && GameConfig.debooger && GameConfig.debooger.enabled === true) {
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => DeboogerCommandSystem.init(), 500);
+        });
+    } else {
         setTimeout(() => DeboogerCommandSystem.init(), 500);
-    });
+    }
+    console.log('🎮 Debooger Command System loaded!');
 } else {
-    setTimeout(() => DeboogerCommandSystem.init(), 500);
+    console.log('🔒 Debooger Command System DISABLED by config');
 }
-
-console.log('🎮 Debooger Command System loaded!');

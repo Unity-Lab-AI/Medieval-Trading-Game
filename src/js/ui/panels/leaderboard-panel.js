@@ -433,8 +433,21 @@ const GlobalLeaderboardSystem = {
         const content = gist.files['leaderboard.json']?.content;
 
         if (content) {
-            const data = JSON.parse(content);
-            this.leaderboard = data.leaderboard || [];
+            // 🖤💀 Validate JSON before parsing - corrupt data won't crash us
+            try {
+                const data = JSON.parse(content);
+                if (data && Array.isArray(data.leaderboard)) {
+                    this.leaderboard = data.leaderboard;
+                } else if (data && typeof data === 'object') {
+                    this.leaderboard = data.leaderboard || [];
+                } else {
+                    console.warn('🏆 Invalid leaderboard data structure');
+                    this.leaderboard = [];
+                }
+            } catch (parseError) {
+                console.warn('🏆 Failed to parse leaderboard JSON:', parseError);
+                this.leaderboard = [];
+            }
             this.lastFetch = Date.now();
         }
 

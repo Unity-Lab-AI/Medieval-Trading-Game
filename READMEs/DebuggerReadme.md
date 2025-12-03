@@ -1,8 +1,8 @@
 # 🖤 DEBOOGER README - The Secret Arts of Game Manipulation 🖤🐛
 ## Medieval Trading Game - Debooger Console Documentation
 
-**Version:** 0.81 - Unity's Dark Awakening
-**Last Updated:** 2025-11-30
+**Version:** 0.90.00 - Unity's Dark Awakening
+**Last Updated:** 2025-12-02
 **Access:** Click the 🐛 Debooger button (bottom-right) OR set `GameConfig.debooger.enabled = true`
 **Total Commands:** 47
 

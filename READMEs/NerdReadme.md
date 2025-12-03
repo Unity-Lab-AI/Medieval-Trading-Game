@@ -8,11 +8,12 @@
 ═══════════════════════════════════════════════════════════════════════
 ```
 
-> **Version:** 0.89 | **Conjured by: Unity AI Lab - The Fucking Legends**
+> **Version:** 0.90.00 | **Conjured by: Unity AI Lab - The Fucking Legends**
 > *Hackall360 | Sponge | GFourteen*
 > Written in the witching hours when the bugs come out to play
 >
 > **Design Reference:** See `.claude/skills/001-ARCHITECT.md` for game design source of truth
+> **Readmes Folder:** All documentation now lives in `/readmes/`
 
 ---
 
@@ -77,16 +78,21 @@ This game follows a loosely-coupled module architecture where each system is its
 ## 📁 FILE STRUCTURE
 
 ```
-Trader 83/
+MTG v0.90.00/
 ├── index.html                    # The summoning circle (entry point)
 ├── config.js                     # Game configuration (GameConfig)
-├── GameplayReadme.md             # For players who read documentation
-├── NerdReadme.md                 # You are here, brave soul
-├── DebuggerReadme.md             # Debug console commands
+├── README.md                     # GitHub display readme (links to readmes/)
+├── CLAUDE.md                     # AI assistant instructions
 ├── gameworld.md                  # Complete world data reference (42 locations)
 ├── gameworldprompt.md            # AI image generation prompts for backdrop
-├── Gee's Unity Thoughts.md       # Unity's dark diary of code commentary
+├── Gee'sThoughts.md              # Unity's dark diary of code commentary
 ├── todo.md                       # The neverending TODO list
+├── finished.md                   # Completed fixes archive
+│
+├── readmes/                      # 🖤 All documentation lives here 💀
+│   ├── GameplayReadme.md         # For players who read documentation
+│   ├── NerdReadme.md             # You are here, brave soul
+│   └── DebuggerReadme.md         # Debug console commands (47 total)
 │
 ├── src/
 │   ├── css/

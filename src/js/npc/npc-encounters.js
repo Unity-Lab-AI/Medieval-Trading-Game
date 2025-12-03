@@ -513,10 +513,39 @@ const NPCEncounterSystem = {
         return title ? `${firstName} ${title}` : firstName;
     },
 
-    showEncounterDialog(npcData, context) {
-        // get an appropriate greeting message
-        const greeting = npcData.greetings?.[Math.floor(Math.random() * npcData.greetings.length)]
+    // 🖤💀 Show encounter dialog with API TTS for greeting
+    async showEncounterDialog(npcData, context) {
+        // get an appropriate greeting message (fallback)
+        const fallbackGreeting = npcData.greetings?.[Math.floor(Math.random() * npcData.greetings.length)]
             || "Greetings, traveler.";
+
+        // 🖤💀 Try to get API-generated greeting
+        let greeting = fallbackGreeting;
+        let useAPIVoice = false;
+
+        try {
+            if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.settings?.voiceEnabled) {
+                console.log(`🎭 Generating encounter greeting for ${npcData.type}...`);
+
+                const response = await NPCVoiceChatSystem.generateNPCResponse(
+                    npcData,
+                    `You just encountered a traveler on the ${context}. Greet them briefly in character. Be ${npcData.personality || 'friendly'}.`,
+                    [],
+                    {
+                        action: 'encounter_greeting',
+                        context: context,
+                        npcType: npcData.type
+                    }
+                );
+
+                if (response && response.text) {
+                    greeting = response.text;
+                    useAPIVoice = true;
+                }
+            }
+        } catch (e) {
+            console.warn('🎭 Encounter greeting API failed, using fallback:', e);
+        }
 
         // create context message
         const contextMessages = {
@@ -582,14 +611,23 @@ const NPCEncounterSystem = {
                 `,
                 buttons: buttons
             });
+
+            // 🖤💀 Play TTS after modal shows
+            if (useAPIVoice && typeof NPCVoiceChatSystem !== 'undefined') {
+                setTimeout(() => {
+                    NPCVoiceChatSystem.playVoice(greeting, npcData.voice || 'nova');
+                }, 300);
+            }
         } else {
             // fallback - just open chat directly
             this.startEncounterConversation(npcData);
         }
     },
 
+    // 🖤💀 Start conversation - NPCChatUI handles the rest with API
     startEncounterConversation(npcData) {
         if (typeof NPCChatUI !== 'undefined') {
+            // 🖤💀 NPCChatUI will use NPCVoiceChatSystem for continued conversation
             NPCChatUI.open(npcData);
         }
     },

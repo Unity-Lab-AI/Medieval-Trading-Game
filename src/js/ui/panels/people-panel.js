@@ -68,7 +68,7 @@ const PeoplePanel = {
             <!-- 💬 CHAT VIEW - conversation with selected NPC -->
             <div id="people-chat-view" class="people-view hidden">
                 <div class="panel-header chat-header">
-                    <button class="back-btn" onclick="PeoplePanel.showListView()">← Back</button>
+                    <button class="back-btn" data-action="back-to-list">← Back</button>
                     <div class="npc-header-info">
                         <span id="chat-npc-icon" class="npc-icon">👤</span>
                         <div class="npc-header-text">
@@ -117,7 +117,7 @@ const PeoplePanel = {
                     <div id="people-trade-section" class="trade-section hidden">
                         <div class="trade-header">💰 Trade Available</div>
                         <div id="trade-preview" class="trade-preview"></div>
-                        <button class="trade-btn" onclick="PeoplePanel.openFullTrade()">Open Market</button>
+                        <button class="trade-btn" data-action="open-trade">Open Market</button>
                     </div>
                 </div>
 
@@ -126,7 +126,7 @@ const PeoplePanel = {
                     <div class="chat-input-row">
                         <input type="text" id="people-chat-input" placeholder="Say something..."
                                onkeypress="if(event.key==='Enter')PeoplePanel.sendMessage()">
-                        <button class="send-btn" onclick="PeoplePanel.sendMessage()">Send</button>
+                        <button class="send-btn" data-action="send-message">Send</button>
                     </div>
                 </div>
             </div>
@@ -532,6 +532,16 @@ const PeoplePanel = {
             if (e.target.matches(`[data-close-overlay="${this.panelId}"]`)) {
                 this.close();
             }
+            // 🖤💀 Handle panel button actions - no more inline onclick garbage
+            if (e.target.matches('[data-action="back-to-list"]')) {
+                this.showListView();
+            }
+            if (e.target.matches('[data-action="open-trade"]')) {
+                this.openFullTrade();
+            }
+            if (e.target.matches('[data-action="send-message"]')) {
+                this.sendMessage();
+            }
         });
 
         // 🖤 listen for quest updates
@@ -674,9 +684,10 @@ const PeoplePanel = {
         card.dataset.npcId = npc.id;
 
         const icon = this.getNPCIcon(npc.type || npc.id);
-        const name = npc.name || this.formatNPCName(npc.id);
-        const title = npc.title || this.getNPCTitle(npc.type || npc.id);
-        const description = npc.description || this.getNPCDescription(npc.type || npc.id);
+        // 🖤💀 Escape NPC data for XSS safety - never trust external data
+        const name = this.escapeHtml(npc.name || this.formatNPCName(npc.id));
+        const title = this.escapeHtml(npc.title || this.getNPCTitle(npc.type || npc.id));
+        const description = this.escapeHtml(npc.description || this.getNPCDescription(npc.type || npc.id));
 
         // 🖤 Check for quest availability
         const hasQuest = this.npcHasQuest(npc.type || npc.id);
@@ -875,10 +886,20 @@ const PeoplePanel = {
 
         try {
             if (typeof NPCVoiceChatSystem !== 'undefined') {
+                // 🖤💀 INCLUDE QUEST CONTEXT so the AI knows what quests to offer/check/complete!
+                const options = {
+                    action: 'chat',  // Specify action for template system
+                    availableQuests: this.getAvailableQuestsForNPC(),
+                    activeQuests: this.getActiveQuestsForNPC(),
+                    rumors: this.getRumors(),
+                    nearbyLocations: this.getNearbyLocations()
+                };
+
                 const response = await NPCVoiceChatSystem.generateNPCResponse(
                     this.currentNPC,
                     message,
-                    this.chatHistory
+                    this.chatHistory,
+                    options  // 🖤💀 Pass the quest context!
                 );
 
                 // 🖤 Remove typing indicator
@@ -889,17 +910,20 @@ const PeoplePanel = {
                 this.addChatMessage(response.text, 'npc');
                 this.chatHistory.push({ role: 'assistant', content: response.text });
 
-                // 🔊 Play TTS
+                // 🔊 Play TTS with NPC-specific voice
                 if (NPCVoiceChatSystem.settings?.voiceEnabled) {
-                    const voice = this.currentNPC.voice || 'nova';
+                    const voice = this.getNPCVoice(this.currentNPC);
                     NPCVoiceChatSystem.playVoice(response.text, voice);
                 }
 
                 // 🖤 Update quest items in case something changed
                 this.updateQuestItems();
+                // 🖤💀 Also update quick actions in case quest status changed
+                this.updateQuickActions(this.currentNPC);
             }
         } catch (e) {
             // 🖤 API error - NPC gracefully deflects with in-character response
+            console.error('🖤 Chat error:', e);
             const messages = document.getElementById('people-chat-messages');
             const typing = messages?.querySelector('.typing-indicator');
             if (typing) typing.remove();
@@ -981,17 +1005,20 @@ const PeoplePanel = {
             }
 
             // ⏳ CHECK PROGRESS - Player has active quests from this NPC
+            // 🖤💀 Show INDIVIDUAL buttons for each quest, not one generic button!
             const activeFromNPC = QuestSystem.getActiveQuestsForNPC(npcType);
             const inProgress = activeFromNPC.filter(q => {
                 const progress = QuestSystem.checkProgress(q.id);
                 return progress.status === 'in_progress';
             });
             if (inProgress.length > 0) {
-                actions.push({
-                    label: '⏳ Check quest progress',
-                    action: () => this.askQuestProgress(),
-                    priority: 4,
-                    questRelated: true
+                inProgress.forEach(quest => {
+                    actions.push({
+                        label: `⏳ Progress: ${quest.name}`,
+                        action: () => this.askQuestProgressSpecific(quest),
+                        priority: 4,
+                        questRelated: true
+                    });
                 });
             }
         }
@@ -1059,13 +1086,56 @@ const PeoplePanel = {
         container.classList.remove('hidden');
     },
 
-    // 🎉 GET QUESTS READY TO COMPLETE - where this NPC is the quest GIVER
+    // 🎉 GET QUESTS READY TO COMPLETE - where this NPC is the quest GIVER or TURN-IN target
     getQuestsReadyToComplete(npcType) {
         if (typeof QuestSystem === 'undefined') return [];
+
+        // 🖤💀 Get quests where this NPC is the GIVER
         const activeFromNPC = QuestSystem.getActiveQuestsForNPC(npcType);
-        return activeFromNPC.filter(q => {
+
+        // 🖤💀 ALSO get quests where this NPC is the TURN-IN target (might be different from giver!)
+        const allActive = Object.values(QuestSystem.activeQuests || {});
+        const turnInQuests = allActive.filter(q => {
+            // Check if turnInNpc matches
+            if (q.turnInNpc && QuestSystem._npcMatchesObjective?.(npcType, q.turnInNpc)) return true;
+            // Check if final talk objective targets this NPC
+            const talkObj = q.objectives?.find(o => o.type === 'talk' && !o.completed);
+            if (talkObj && QuestSystem._npcMatchesObjective?.(npcType, talkObj.npc)) return true;
+            return false;
+        });
+
+        // 🦇 Combine and dedupe
+        const combined = [...activeFromNPC, ...turnInQuests];
+        const uniqueQuests = [...new Map(combined.map(q => [q.id, q])).values()];
+
+        return uniqueQuests.filter(q => {
             const progress = QuestSystem.checkProgress(q.id);
-            return progress.status === 'ready_to_complete';
+
+            // 🖤💀 Standard check - all objectives complete
+            if (progress.status === 'ready_to_complete') return true;
+
+            // 🖤💀 SPECIAL CASE: If only the final "talk" objective remains AND we're talking to that NPC
+            // Then treat as ready_to_complete (talking IS the completion action!)
+            if (progress.status === 'in_progress') {
+                const incompleteObjs = q.objectives?.filter(o => {
+                    if (o.type === 'collect' || o.type === 'defeat' || o.type === 'buy' || o.type === 'trade') {
+                        return (o.current || 0) < o.count;
+                    } else if (o.type === 'explore') {
+                        return (o.current || 0) < o.rooms;
+                    }
+                    return !o.completed;
+                }) || [];
+
+                // If only 1 incomplete objective AND it's a talk to THIS NPC
+                if (incompleteObjs.length === 1 && incompleteObjs[0].type === 'talk') {
+                    const talkTarget = incompleteObjs[0].npc;
+                    if (QuestSystem._npcMatchesObjective?.(npcType, talkTarget)) {
+                        return true; // 🖤 Talking to them IS the completion action!
+                    }
+                }
+            }
+
+            return false;
         });
     },
 
@@ -1126,9 +1196,16 @@ const PeoplePanel = {
         await this.sendMessage();
     },
 
-    // ⏳ ASK QUEST PROGRESS - Check status of active quests
+    // ⏳ ASK QUEST PROGRESS - Check status of active quests (generic)
     async askQuestProgress() {
         const message = `How am I doing on the tasks you gave me?`;
+        document.getElementById('people-chat-input').value = message;
+        await this.sendMessage();
+    },
+
+    // 🖤💀 ASK QUEST PROGRESS SPECIFIC - Check status of a SPECIFIC quest
+    async askQuestProgressSpecific(quest) {
+        const message = `What's the status on "${quest.name}"? How am I doing?`;
         document.getElementById('people-chat-input').value = message;
         await this.sendMessage();
     },

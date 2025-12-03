@@ -799,20 +799,29 @@ const GameWorldRenderer = {
         const visibility = {};
         const locations = (typeof GameWorld !== 'undefined' && GameWorld.locations) ? GameWorld.locations : {};
 
-        // Get visited locations - check multiple sources
+        // 🖤💀 Get visited locations - use world-aware helper for doom/normal world separation!
         let visited = [];
-        if (typeof GameWorld !== 'undefined' && Array.isArray(GameWorld.visitedLocations)) {
-            visited = GameWorld.visitedLocations;
+        if (typeof GameWorld !== 'undefined') {
+            // Use the new helper that returns doomVisitedLocations or visitedLocations based on current world
+            if (typeof GameWorld.getActiveVisitedLocations === 'function') {
+                visited = GameWorld.getActiveVisitedLocations();
+            } else if (Array.isArray(GameWorld.visitedLocations)) {
+                visited = GameWorld.visitedLocations;
+            }
         }
 
         // If no visited locations yet, use current location as starting point
         if (visited.length === 0 && typeof game !== 'undefined' && game.currentLocation && game.currentLocation.id) {
             visited = [game.currentLocation.id];
-            // Also add to GameWorld if possible
+            // Also add to GameWorld using world-aware method if possible
             if (typeof GameWorld !== 'undefined') {
-                GameWorld.visitedLocations = GameWorld.visitedLocations || [];
-                if (!GameWorld.visitedLocations.includes(game.currentLocation.id)) {
-                    GameWorld.visitedLocations.push(game.currentLocation.id);
+                if (typeof GameWorld.markLocationVisited === 'function') {
+                    GameWorld.markLocationVisited(game.currentLocation.id);
+                } else {
+                    GameWorld.visitedLocations = GameWorld.visitedLocations || [];
+                    if (!GameWorld.visitedLocations.includes(game.currentLocation.id)) {
+                        GameWorld.visitedLocations.push(game.currentLocation.id);
+                    }
                 }
             }
         }

@@ -1014,6 +1014,7 @@ const GameWorld = {
     // ═══════════════════════════════════════════════════════════════
     unlockedRegions: [],
     visitedLocations: [],
+    doomVisitedLocations: [], // 🖤💀 Separate tracking for Doom World - starts fresh on each entry!
     currentRegion: 'starter',
 
     // ═══════════════════════════════════════════════════════════════
@@ -1025,6 +1026,8 @@ const GameWorld = {
         // 🖤 Start with greendale as default - createCharacter() will add proper starting location based on perks 💀
         // This ensures the map always has something to render even if called before character creation
         this.visitedLocations = ['greendale'];
+        // 🖤💀 Reset doom world visited locations on new game - no bleeding between games!
+        this.doomVisitedLocations = [];
         this.currentRegion = 'starter';
 
         // 🦇 Try to setup market prices (may fail if ItemDatabase not loaded)
@@ -1516,12 +1519,45 @@ const GameWorld = {
     },
 
     // ═══════════════════════════════════════════════════════════════
+    // 🖤💀 DOOM WORLD VISITED LOCATIONS HELPERS
+    // ═══════════════════════════════════════════════════════════════
+
+    // 🖤 Get the correct visited locations array based on current world 💀
+    getActiveVisitedLocations() {
+        const inDoom = (typeof TravelSystem !== 'undefined' && TravelSystem.isInDoomWorld()) ||
+                       (typeof DoomWorldSystem !== 'undefined' && DoomWorldSystem.isActive);
+        return inDoom ? this.doomVisitedLocations : this.visitedLocations;
+    },
+
+    // 🖤 Check if a location is visited in the current world 💀
+    isLocationVisited(locationId) {
+        return this.getActiveVisitedLocations().includes(locationId);
+    },
+
+    // 🖤 Mark a location as visited in the current world 💀
+    markLocationVisited(locationId) {
+        const visited = this.getActiveVisitedLocations();
+        if (!visited.includes(locationId)) {
+            visited.push(locationId);
+            return true; // First visit
+        }
+        return false; // Already visited
+    },
+
+    // 🖤 Reset doom visited locations for fresh entry 💀
+    resetDoomVisitedLocations(entryLocationId) {
+        this.doomVisitedLocations = [entryLocationId];
+        console.log('💀 GameWorld: Doom visited locations reset to:', this.doomVisitedLocations);
+    },
+
+    // ═══════════════════════════════════════════════════════════════
     // 💾 SAVE/LOAD
     // ═══════════════════════════════════════════════════════════════
     getSaveData() {
         return {
             unlockedRegions: [...this.unlockedRegions],
             visitedLocations: [...this.visitedLocations],
+            doomVisitedLocations: [...this.doomVisitedLocations], // 🖤💀 Save doom progress too!
             currentRegion: this.currentRegion
         };
     },
@@ -1530,6 +1566,7 @@ const GameWorld = {
         if (!data) return;
         if (data.unlockedRegions) this.unlockedRegions = [...data.unlockedRegions];
         if (data.visitedLocations) this.visitedLocations = [...data.visitedLocations];
+        if (data.doomVisitedLocations) this.doomVisitedLocations = [...data.doomVisitedLocations]; // 🖤💀
         if (data.currentRegion) this.currentRegion = data.currentRegion;
         console.log('🖤 GameWorld state restored from the abyss');
     }

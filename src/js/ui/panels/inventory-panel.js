@@ -30,18 +30,34 @@ const InventorySystem = {
         if (sortBtn) {
             EventManager.addEventListener(sortBtn, 'click', () => this.showSortOptions());
         }
-        
+
         // filtering - finding the needle in the hoarder haystack
         const filterBtn = document.getElementById('filter-inventory-btn');
         if (filterBtn) {
             EventManager.addEventListener(filterBtn, 'click', () => this.showFilterOptions());
         }
-        
+
         // settings - customizing the chaos
         const settingsBtn = document.getElementById('inventory-settings-btn');
         if (settingsBtn) {
             EventManager.addEventListener(settingsBtn, 'click', () => this.showInventorySettings());
         }
+
+        // 🖤💀 Event delegation for item action buttons - no more inline onclick garbage
+        document.addEventListener('click', (e) => {
+            if (e.target.matches('[data-action="use-item"]')) {
+                const itemId = e.target.dataset.itemId;
+                if (itemId && typeof InventorySystem !== 'undefined') {
+                    InventorySystem.useItem(itemId);
+                }
+            }
+            if (e.target.matches('[data-action="equip-item"]')) {
+                const itemId = e.target.dataset.itemId;
+                if (itemId && typeof EquipmentSystem !== 'undefined') {
+                    EquipmentSystem.equip(itemId);
+                }
+            }
+        });
     },
     
     // 📦 Update inventory display - admiring our collection
@@ -88,8 +104,8 @@ const InventorySystem = {
                 <div class="item-weight">${weight.toFixed(1)} lbs</div>
                 <div class="item-value">${value} gold</div>
                 <div class="item-actions">
-                    ${item.consumable ? `<button class="use-item-btn" onclick="InventorySystem.useItem('${itemId}')">Use</button>` : ''}
-                    ${isEquippable ? `<button class="equip-item-btn" onclick="EquipmentSystem.equip('${itemId}')">Equip</button>` : ''}
+                    ${item.consumable ? `<button class="use-item-btn" data-action="use-item" data-item-id="${itemId}">Use</button>` : ''}
+                    ${isEquippable ? `<button class="equip-item-btn" data-action="equip-item" data-item-id="${itemId}">Equip</button>` : ''}
                 </div>
             `;
 
@@ -573,8 +589,8 @@ const InventorySystem = {
                 <div class="item-weight">${weight.toFixed(1)} lbs</div>
                 <div class="item-value">${value} gold</div>
                 <div class="item-actions">
-                    ${item.consumable ? `<button class="use-item-btn" onclick="InventorySystem.useItem('${itemId}')">Use</button>` : ''}
-                    ${isEquippable ? `<button class="equip-item-btn" onclick="EquipmentSystem.equip('${itemId}')">Equip</button>` : ''}
+                    ${item.consumable ? `<button class="use-item-btn" data-action="use-item" data-item-id="${itemId}">Use</button>` : ''}
+                    ${isEquippable ? `<button class="equip-item-btn" data-action="equip-item" data-item-id="${itemId}">Equip</button>` : ''}
                 </div>
             `;
 
