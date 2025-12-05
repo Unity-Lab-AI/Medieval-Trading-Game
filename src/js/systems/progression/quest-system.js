@@ -1242,7 +1242,10 @@ const QuestSystem = {
                         break;
 
                     case 'visit':
-                        if (data.location === objective.location) {
+                    case 'travel': // 🖤💀 Travel is alias for visit - doom quests use this 💀
+                        // 🖤 Support both 'location' and 'to' properties for objectives 💀
+                        const targetLocation = objective.location || objective.to;
+                        if (data.location === targetLocation) {
                             objective.completed = true;
                             updated = true;
                         }
@@ -1252,6 +1255,14 @@ const QuestSystem = {
                         if (data.npc === objective.npc || data.npcType === objective.npc) {
                             objective.completed = true;
                             updated = true;
+                            // 🖤💀 If this talk objective gives an item, add it to player inventory 💀
+                            if (objective.givesItem && typeof game !== 'undefined' && game.player) {
+                                if (!game.player.inventory) game.player.inventory = {};
+                                game.player.inventory[objective.givesItem] = (game.player.inventory[objective.givesItem] || 0) + 1;
+                                if (typeof addMessage === 'function') {
+                                    addMessage(`📜 Received: ${objective.givesItem.replace(/_/g, ' ')}`, 'quest');
+                                }
+                            }
                         }
                         break;
 
@@ -1259,6 +1270,22 @@ const QuestSystem = {
                         if (data.dungeon === objective.dungeon) {
                             objective.current = Math.min((objective.current || 0) + (data.rooms || 1), objective.rooms);
                             updated = true;
+                        }
+                        break;
+
+                    // 🖤💀 Investigate objective - search a location, may give items 💀
+                    case 'investigate':
+                        if (data.location === objective.location) {
+                            objective.completed = true;
+                            updated = true;
+                            // 🖤💀 If investigating gives an item, add to inventory 💀
+                            if (objective.givesItem && typeof game !== 'undefined' && game.player) {
+                                if (!game.player.inventory) game.player.inventory = {};
+                                game.player.inventory[objective.givesItem] = (game.player.inventory[objective.givesItem] || 0) + 1;
+                                if (typeof addMessage === 'function') {
+                                    addMessage(`🔍 Found: ${objective.givesItem.replace(/_/g, ' ')}`, 'quest');
+                                }
+                            }
                         }
                         break;
 
@@ -2162,11 +2189,13 @@ const QuestSystem = {
             case 'collect': return `Collect ${objective.item}`;
             case 'defeat': return `Defeat ${objective.enemy}`;
             case 'visit': return `Visit ${objective.location}`;
+            case 'travel': return `Travel to ${objective.to || objective.location}`; // 🖤💀 Doom quests use travel 💀
             case 'talk': return `Talk to ${objective.npc}`;
             case 'buy': return 'Make a purchase';
             case 'trade': return 'Complete a trade';
             case 'carry': return `Carry ${objective.item}`;
             case 'explore': return `Explore ${objective.dungeon}`;
+            case 'investigate': return `Search ${objective.location}`; // 🖤💀 Investigation objectives 💀
             default: return objective.type;
         }
     },
@@ -3308,10 +3337,16 @@ const QuestSystem = {
         // 🖤 Fixed: was 'location-changed' but travel fires 'player-location-changed' 💀
         document.addEventListener('player-location-changed', (e) => {
             this.updateProgress('visit', { location: e.detail.location });
+            this.updateProgress('travel', { location: e.detail.location }); // 🖤💀 Also trigger travel objectives 💀
         });
 
         document.addEventListener('npc-interaction', (e) => {
             this.updateProgress('talk', { npc: e.detail.npcType });
+        });
+
+        // 🖤💀 Investigation events - searching areas for clues/items 💀
+        document.addEventListener('area-investigated', (e) => {
+            this.updateProgress('investigate', { location: e.detail.location || e.detail.area });
         });
 
         document.addEventListener('dungeon-room-explored', (e) => {

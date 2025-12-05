@@ -29,8 +29,7 @@ const DoomQuestSystem = {
             isDoom: true,
             objectives: [
                 { type: 'visit', location: 'greendale', completed: false, description: 'Journey to Greendale Ashes' },
-                { type: 'talk', npc: 'haunted_elder', completed: false, description: 'Speak with the Haunted Elder' },
-                { type: 'collect', item: 'survivor_journal', count: 1, current: 0, description: 'Find a survivor\'s journal' }
+                { type: 'talk', npc: 'haunted_elder', completed: false, description: 'Speak with the Haunted Elder', givesItem: 'survivor_journal' }
             ],
             rewards: { items: { food: 10, water: 5 }, experience: 200 },
             nextQuest: 'doom_fallen_throne',
@@ -443,8 +442,8 @@ const DoomQuestSystem = {
             type: 'horror',
             difficulty: 'hard',
             objectives: [
-                { type: 'find', item: 'keepers_journal', description: 'Find Keeper Jonas\'s journal' },
-                { type: 'read', item: 'keepers_journal', description: 'Read what he saw' },
+                { type: 'investigate', location: 'lighthouse_quarters', description: 'Search the keeper\'s quarters for his journal', givesItem: 'keepers_journal' },
+                { type: 'collect', item: 'keepers_journal', count: 1, current: 0, description: 'Obtain the journal' },
                 { type: 'choice', options: [
                     { id: 'light_beacon', label: 'Light the beacon again', consequence: 'See what comes. Face the truth.' },
                     { id: 'destroy_beacon', label: 'Destroy the lighthouse', consequence: 'Whatever it is, it can\'t find us in the dark' },
