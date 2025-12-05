@@ -2210,6 +2210,10 @@ const QuestSystem = {
         return `${hours}h ${minutes}m`;
     },
 
+    // 🖤💀 QUEST TRACKER STATE - track expanded/minimized mode 💀
+    trackerExpanded: false,
+    expandedChains: {}, // Track which chains are expanded in chain view
+
     updateQuestTracker() {
         let tracker = document.getElementById('quest-tracker');
         if (!tracker) {
@@ -2221,8 +2225,8 @@ const QuestSystem = {
 
         const activeQuestCount = Object.keys(this.activeQuests).length;
 
-        // 🖤 Don't show if user manually hid it or no active quests
-        if (activeQuestCount === 0 || this.trackerHidden) {
+        // 🖤 Don't show if user manually hid it
+        if (this.trackerHidden) {
             tracker.classList.add('hidden');
             return;
         }
@@ -2233,106 +2237,27 @@ const QuestSystem = {
         const sidePanel = document.getElementById('side-panel');
         if (sidePanel && !tracker.dataset.userDragged) {
             const sidePanelRect = sidePanel.getBoundingClientRect();
-            // 🖤 Position directly below the side-panel, aligned to the right edge
-            tracker.style.top = (sidePanelRect.bottom + 10) + 'px'; // 10px gap below side panel
-            tracker.style.right = (window.innerWidth - sidePanelRect.right) + 'px'; // Align right edge with side-panel
-            tracker.style.left = 'auto'; // Clear left so right positioning works
+            tracker.style.top = (sidePanelRect.bottom + 10) + 'px';
+            tracker.style.right = (window.innerWidth - sidePanelRect.right) + 'px';
+            tracker.style.left = 'auto';
         }
 
-        // 🎯 If a quest is tracked, show only that quest prominently
-        if (this.trackedQuestId && this.activeQuests[this.trackedQuestId]) {
-            const quest = this.activeQuests[this.trackedQuestId];
-            const progress = this.checkProgress(quest.id);
-            const targetLocation = this.getTrackedQuestLocation();
-            const locationName = targetLocation ? this.getLocationDisplayName(targetLocation) : '';
+        // 🖤💀 BUILD THE QUEST CHAIN VIEW 💀
+        const chainHTML = this.buildQuestChainView();
 
-            // 🖤💀 Check if doom quest for styling - orange for doom, gold for normal
-            const isDoomQuest = quest.isDoom || quest.id?.startsWith('doom_');
-            const questClass = isDoomQuest ? 'tracker-tracked-quest doom-quest' : 'tracker-tracked-quest';
-            const worldIndicator = isDoomQuest ? '💀 DOOM' : '🌍 Normal';
-
-            // 🖤 Build quest selector dropdown options
-            const otherQuests = Object.values(this.activeQuests).filter(q => q.id !== this.trackedQuestId);
-            const questSelectorOptions = otherQuests.map(q => {
-                const isDoom = q.isDoom || q.id?.startsWith('doom_');
-                return `<option value="${q.id}">${isDoom ? '💀' : ''} ${this.getQuestTypeIcon(q.type)} ${q.name}</option>`;
-            }).join('');
-
-            // 🖤 FIX: Smaller header, icon after text, no button, scrollable content 💀
-            tracker.innerHTML = `
-                <div class="tracker-header">
-                    <span class="drag-grip">⋮⋮</span>
-                    <span class="tracker-title">Tracked Quest 🎯</span>
-                    <button class="tracker-close" onclick="QuestSystem.hideQuestTracker()" title="Close">×</button>
-                </div>
-                <div class="tracker-content">
-                    <div class="${questClass}" onclick="QuestSystem.showQuestInfoPanel('${quest.id}');">
-                        <div class="tracker-quest-title">
-                            <span class="tracker-quest-icon">${this.getQuestTypeIcon(quest.type)}</span>
-                            <span class="tracker-quest-name">${quest.name}</span>
-                            <span class="tracker-world-badge ${isDoomQuest ? 'doom' : 'normal'}">${worldIndicator}</span>
-                        </div>
-                        ${locationName ? `<div class="tracker-quest-location">📍 ${locationName}</div>` : ''}
-                        <div class="tracker-quest-objectives">
-                            ${quest.objectives.slice(0, 4).map(obj => {
-                                // 🖤 FIX: Check completion for count-based AND boolean objectives 💀
-                                const isCountBased = obj.type === 'collect' || obj.type === 'defeat' || obj.type === 'buy' || obj.type === 'trade' || obj.type === 'sell';
-                                const isExplore = obj.type === 'explore';
-                                const isComplete = isCountBased ? (obj.current || 0) >= obj.count :
-                                                   isExplore ? (obj.current || 0) >= obj.rooms :
-                                                   obj.completed;
-                                const icon = isComplete ? '✅' : '⬜';
-                                const countText = obj.count ? ` (${obj.current || 0}/${obj.count})` :
-                                                  obj.rooms ? ` (${obj.current || 0}/${obj.rooms})` : '';
-                                return `<div class="tracker-objective ${isComplete ? 'completed' : ''}">
-                                    ${icon} ${obj.description}${countText}
-                                </div>`;
-                            }).join('')}
-                        </div>
-                        <div class="tracker-quest-footer">
-                            <span class="tracker-quest-progress ${progress.status}">${progress.progress}</span>
-                            <button class="tracker-untrack-btn" onclick="event.stopPropagation(); QuestSystem.untrackQuest();" title="Untrack">🚫</button>
-                        </div>
-                    </div>
-                    ${activeQuestCount > 1 ? `
-                        <div class="tracker-quest-selector">
-                            <select id="tracker-quest-select" onchange="QuestSystem.trackQuest(this.value)">
-                                <option value="" disabled selected>🔄 Switch quest (${activeQuestCount - 1} more)...</option>
-                                ${questSelectorOptions}
-                            </select>
-                        </div>
-                    ` : ''}
-                </div>
-            `;
-        } else {
-            // 💀 No tracked quest - show list of quests with track buttons
-            const activeQuestsList = Object.values(this.activeQuests);
-
-            // 🖤 FIX: Smaller header, icon after text, scrollable content 💀
-            tracker.innerHTML = `
-                <div class="tracker-header">
-                    <span class="drag-grip">⋮⋮</span>
-                    <span class="tracker-title">Active Quests 📋</span>
-                    <button class="tracker-close" onclick="QuestSystem.hideQuestTracker()" title="Close">×</button>
-                </div>
-                <div class="tracker-content">
-                    ${activeQuestsList.map(quest => {
-                        const progress = this.checkProgress(quest.id);
-                        // 🖤💀 Check if doom quest for styling - orange for doom, gold for normal
-                        const isDoomQuest = quest.isDoom || quest.id?.startsWith('doom_');
-                        const questClass = isDoomQuest ? 'tracker-quest doom-quest' : 'tracker-quest';
-                        const readyClass = progress.status === 'ready_to_complete' ? ' ready' : '';
-                        return `
-                            <div class="${questClass}${readyClass}" onclick="QuestSystem.showQuestInfoPanel('${quest.id}');">
-                                <button class="tracker-track-btn" onclick="event.stopPropagation(); QuestSystem.trackQuest('${quest.id}');" title="Track this quest">🎯</button>
-                                <span class="tracker-quest-name">${isDoomQuest ? '💀 ' : ''}${quest.name}</span>
-                                <span class="tracker-quest-progress">${progress.progress}</span>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-            `;
-        }
+        tracker.innerHTML = `
+            <div class="tracker-header">
+                <span class="drag-grip">⋮⋮</span>
+                <span class="tracker-title">Quest Chain 🔗</span>
+                <button class="tracker-expand-btn" onclick="QuestSystem.toggleTrackerExpand()" title="${this.trackerExpanded ? 'Minimize' : 'Expand'}">
+                    ${this.trackerExpanded ? '▼' : '▲'}
+                </button>
+                <button class="tracker-close" onclick="QuestSystem.hideQuestTracker()" title="Close">×</button>
+            </div>
+            <div class="tracker-content ${this.trackerExpanded ? 'expanded' : 'minimized'}">
+                ${chainHTML}
+            </div>
+        `;
 
         // 🖤 Setup dragging - must re-attach after innerHTML changes
         if (typeof DraggablePanels !== 'undefined') {
@@ -2343,162 +2268,451 @@ const QuestSystem = {
         this.addTrackerStyles();
     },
 
+    // 🖤💀 BUILD QUEST CHAIN VISUALIZATION 💀
+    buildQuestChainView() {
+        // 🦇 Group quests intelligently
+        const chains = {
+            'shadow_rising': [],  // Main story
+            'doom_world': [],     // Doom quests
+            'greendale': [],      // Location quests
+            'ironforge': [],
+            'jade_harbor': [],
+            'sunhaven': [],
+            'frostholm': [],
+            'royal_capital': [],
+            'riverside': [],
+            'repeatable': []      // Trading/daily quests
+        };
+
+        const allQuests = { ...this.quests };
+
+        // Build chain structure
+        for (const [questId, quest] of Object.entries(allQuests)) {
+            // 🖤 Priority: explicit chain > location-based > repeatable > misc
+            if (quest.chain === 'shadow_rising') {
+                chains['shadow_rising'].push({ ...quest, id: questId });
+            } else if (quest.chain === 'doom_world' || quest.isDoom || questId.startsWith('doom_')) {
+                chains['doom_world'].push({ ...quest, id: questId });
+            } else if (quest.location) {
+                // Group by location
+                const loc = quest.location.toLowerCase();
+                if (loc.includes('greendale') || loc === 'riverside_inn') {
+                    chains['greendale'].push({ ...quest, id: questId });
+                } else if (loc.includes('ironforge')) {
+                    chains['ironforge'].push({ ...quest, id: questId });
+                } else if (loc.includes('jade')) {
+                    chains['jade_harbor'].push({ ...quest, id: questId });
+                } else if (loc.includes('sunhaven')) {
+                    chains['sunhaven'].push({ ...quest, id: questId });
+                } else if (loc.includes('frost')) {
+                    chains['frostholm'].push({ ...quest, id: questId });
+                } else if (loc.includes('royal') || loc.includes('capital')) {
+                    chains['royal_capital'].push({ ...quest, id: questId });
+                } else if (quest.repeatable) {
+                    chains['repeatable'].push({ ...quest, id: questId });
+                } else {
+                    chains['repeatable'].push({ ...quest, id: questId });
+                }
+            } else if (quest.repeatable) {
+                chains['repeatable'].push({ ...quest, id: questId });
+            } else {
+                chains['repeatable'].push({ ...quest, id: questId });
+            }
+        }
+
+        // Sort each chain - main story by act/order, others alphabetically
+        chains['shadow_rising'].sort((a, b) => {
+            const actA = a.act || 0;
+            const actB = b.act || 0;
+            if (actA !== actB) return actA - actB;
+            return (a.actOrder || 0) - (b.actOrder || 0);
+        });
+
+        chains['doom_world'].sort((a, b) => (a.actOrder || 0) - (b.actOrder || 0));
+
+        // Sort location quests alphabetically
+        for (const loc of ['greendale', 'ironforge', 'jade_harbor', 'sunhaven', 'frostholm', 'royal_capital', 'riverside', 'repeatable']) {
+            chains[loc].sort((a, b) => a.name.localeCompare(b.name));
+        }
+
+        // 🖤 Build HTML for each non-empty chain
+        let html = '';
+        const chainOrder = ['shadow_rising', 'doom_world', 'greendale', 'ironforge', 'jade_harbor', 'sunhaven', 'frostholm', 'royal_capital', 'repeatable'];
+
+        for (const chainName of chainOrder) {
+            const quests = chains[chainName];
+            if (quests.length === 0) continue;
+
+            const chainExpanded = this.expandedChains[chainName] || false;
+            const chainDisplayName = this.getChainDisplayName(chainName);
+
+            // Count quest statuses in this chain
+            const completedCount = quests.filter(q => this.completedQuests.includes(q.id)).length;
+            const activeCount = quests.filter(q => this.activeQuests[q.id]).length;
+            const totalCount = quests.length;
+
+            // 🖤 Auto-expand chains with active quests
+            const hasActiveQuest = activeCount > 0;
+
+            html += `
+                <div class="chain-section ${chainExpanded ? 'expanded' : ''} ${hasActiveQuest ? 'has-active' : ''}">
+                    <div class="chain-header" onclick="QuestSystem.toggleChainExpand('${chainName}')">
+                        <span class="chain-arrow">${chainExpanded ? '▼' : '▶'}</span>
+                        <span class="chain-name">${chainDisplayName}</span>
+                        <span class="chain-progress ${activeCount > 0 ? 'active' : ''}">${completedCount}/${totalCount}</span>
+                    </div>
+                    <div class="chain-quests ${chainExpanded ? 'visible' : 'hidden'}">
+                        ${this.buildChainQuestList(quests)}
+                    </div>
+                </div>
+            `;
+        }
+
+        return html || '<div class="no-quests">No quest chains discovered</div>';
+    },
+
+    // 🖤💀 BUILD QUEST LIST FOR A CHAIN 💀
+    buildChainQuestList(quests) {
+        return quests.map((quest, index) => {
+            const isCompleted = this.completedQuests.includes(quest.id);
+            const isActive = !!this.activeQuests[quest.id];
+            const isTracked = this.trackedQuestId === quest.id;
+
+            // 🦇 Determine quest status for styling
+            let status = 'locked'; // Default - not yet available
+            let statusIcon = '🔒';
+            let statusClass = 'quest-locked';
+
+            if (isCompleted) {
+                status = 'completed';
+                statusIcon = '✅';
+                statusClass = 'quest-completed';
+            } else if (isActive) {
+                const progress = this.checkProgress(quest.id);
+                if (progress.status === 'ready_to_complete') {
+                    status = 'ready';
+                    statusIcon = '🎉';
+                    statusClass = 'quest-ready';
+                } else {
+                    status = 'active';
+                    statusIcon = '📍';
+                    statusClass = 'quest-active';
+                }
+            } else {
+                // Check if prerequisite is met (quest is available but not started)
+                const prereqMet = !quest.prerequisite || this.completedQuests.includes(quest.prerequisite);
+                if (prereqMet) {
+                    status = 'available';
+                    statusIcon = '❓';
+                    statusClass = 'quest-available';
+                }
+            }
+
+            // 🖤 Build connector line (except for first quest)
+            const connector = index > 0 ? '<div class="quest-connector">│</div>' : '';
+
+            // 🖤 Show details only if expanded mode AND (active OR completed)
+            const showDetails = this.trackerExpanded && (isActive || isCompleted);
+
+            // 🖤💀 Build quest row
+            const isRepeatable = quest.repeatable;
+            return `
+                ${connector}
+                <div class="chain-quest ${statusClass} ${isTracked ? 'tracked' : ''} ${isRepeatable ? 'repeatable' : ''}"
+                     onclick="QuestSystem.handleChainQuestClick('${quest.id}', '${status}')"
+                     data-quest-id="${quest.id}">
+                    <span class="quest-status-icon">${statusIcon}</span>
+                    <span class="quest-chain-name">${quest.name}</span>
+                    ${isRepeatable && !isActive && !isCompleted ? '<span class="repeat-icon">🔄</span>' : ''}
+                    ${isTracked ? '<span class="tracked-badge">🎯</span>' : ''}
+                    ${showDetails ? this.buildQuestDetails(quest) : ''}
+                </div>
+            `;
+        }).join('');
+    },
+
+    // 🖤💀 BUILD QUEST DETAILS (for expanded view) 💀
+    buildQuestDetails(quest) {
+        const activeQuest = this.activeQuests[quest.id];
+        if (!activeQuest) {
+            // Completed quest - just show completion message
+            return `<div class="quest-details completed-details">
+                <span class="detail-complete-msg">✓ Quest Complete</span>
+            </div>`;
+        }
+
+        // Active quest - show objectives
+        const objectives = activeQuest.objectives || [];
+        const objHTML = objectives.slice(0, 3).map(obj => {
+            const isCountBased = ['collect', 'defeat', 'buy', 'trade', 'sell'].includes(obj.type);
+            const isExplore = obj.type === 'explore';
+            const isComplete = isCountBased ? (obj.current || 0) >= obj.count :
+                               isExplore ? (obj.current || 0) >= obj.rooms :
+                               obj.completed;
+            const icon = isComplete ? '✓' : '○';
+            const countText = obj.count ? ` ${obj.current || 0}/${obj.count}` :
+                              obj.rooms ? ` ${obj.current || 0}/${obj.rooms}` : '';
+            return `<div class="detail-objective ${isComplete ? 'done' : ''}">${icon} ${obj.description}${countText}</div>`;
+        }).join('');
+
+        return `<div class="quest-details">${objHTML}</div>`;
+    },
+
+    // 🖤💀 HANDLE CLICK ON QUEST IN CHAIN VIEW 💀
+    handleChainQuestClick(questId, status) {
+        if (status === 'completed' || status === 'active' || status === 'ready') {
+            // Show quest info panel for completed/active quests
+            this.showQuestInfoPanel(questId);
+        } else if (status === 'available') {
+            // Quest is available - show info about where to get it
+            const quest = this.quests[questId];
+            if (quest && typeof addMessage === 'function') {
+                addMessage(`📜 "${quest.name}" - Talk to ${quest.giverName || 'the quest giver'} in ${quest.location || 'the world'}`, 'info');
+            }
+        } else {
+            // Locked quest - show hint
+            const quest = this.quests[questId];
+            if (quest?.prerequisite && typeof addMessage === 'function') {
+                const prereqQuest = this.quests[quest.prerequisite];
+                addMessage(`🔒 Complete "${prereqQuest?.name || quest.prerequisite}" first`, 'warning');
+            }
+        }
+    },
+
+    // 🖤💀 TOGGLE CHAIN EXPAND/COLLAPSE 💀
+    toggleChainExpand(chainName) {
+        this.expandedChains[chainName] = !this.expandedChains[chainName];
+        this.updateQuestTracker();
+    },
+
+    // 🖤💀 TOGGLE TRACKER EXPAND/MINIMIZE 💀
+    toggleTrackerExpand() {
+        this.trackerExpanded = !this.trackerExpanded;
+        this.updateQuestTracker();
+    },
+
+    // 🖤💀 GET DISPLAY NAME FOR CHAIN 💀
+    getChainDisplayName(chainName) {
+        const names = {
+            'shadow_rising': '⚔️ Shadow Rising (Main Story)',
+            'doom_world': '💀 Doom World',
+            'greendale': '🌾 Greendale',
+            'ironforge': '⚒️ Ironforge City',
+            'jade_harbor': '🌊 Jade Harbor',
+            'sunhaven': '☀️ Sunhaven',
+            'frostholm': '❄️ Frostholm',
+            'royal_capital': '👑 Royal Capital',
+            'riverside': '🏠 Riverside',
+            'repeatable': '🔄 Repeatable Tasks',
+            'misc': '📋 Miscellaneous',
+            'side': '🌟 Side Quests',
+            'daily': '🔄 Daily Tasks'
+        };
+        return names[chainName] || `📜 ${chainName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}`;
+    },
+
     // 🖤 Add styles for the improved tracker
     addTrackerStyles() {
         if (document.getElementById('quest-tracker-styles')) return;
 
         const style = document.createElement('style');
         style.id = 'quest-tracker-styles';
-        // 🖤 FIX: Smaller, more compact styles 💀
+        // 🖤💀 QUEST CHAIN TRACKER STYLES 💀
         style.textContent = `
-            .tracker-tracked-quest {
-                padding: 8px;
-                background: rgba(255, 215, 0, 0.1);
-                border: 1px solid rgba(255, 215, 0, 0.3);
-                border-radius: 6px;
-                margin: 2px 0;
+            /* 🖤 Expand button */
+            .tracker-expand-btn {
+                background: rgba(79, 195, 247, 0.2);
+                border: none;
+                border-radius: 3px;
+                color: #4fc3f7;
+                cursor: pointer;
+                padding: 2px 6px;
+                font-size: 10px;
+                margin-right: 4px;
+            }
+            .tracker-expand-btn:hover {
+                background: rgba(79, 195, 247, 0.4);
+            }
+
+            /* 🖤 Content modes */
+            .tracker-content.minimized {
+                max-height: 200px;
+                overflow-y: auto;
+            }
+            .tracker-content.expanded {
+                max-height: 400px;
+                overflow-y: auto;
+            }
+
+            /* 🔗 Chain Section */
+            .chain-section {
+                margin-bottom: 2px;
+            }
+            .chain-header {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                padding: 6px 8px;
+                background: rgba(30, 30, 50, 0.8);
+                border-radius: 4px;
                 cursor: pointer;
                 transition: all 0.2s;
             }
-            .tracker-tracked-quest:hover {
-                background: rgba(255, 215, 0, 0.2);
-                border-color: rgba(255, 215, 0, 0.5);
+            .chain-header:hover {
+                background: rgba(50, 50, 80, 0.9);
             }
-            /* 💀 DOOM QUEST STYLING - Orange instead of gold */
-            .tracker-tracked-quest.doom-quest {
-                background: rgba(255, 140, 0, 0.15);
-                border: 1px solid rgba(255, 140, 0, 0.4);
-            }
-            .tracker-tracked-quest.doom-quest:hover {
-                background: rgba(255, 140, 0, 0.25);
-                border-color: rgba(255, 140, 0, 0.6);
-            }
-            .tracker-quest.doom-quest {
-                background: rgba(255, 140, 0, 0.1);
-                border-left: 3px solid #ff8c00;
-            }
-            .tracker-quest.doom-quest:hover {
-                background: rgba(255, 140, 0, 0.2);
-            }
-            .doom-quest .tracker-quest-title,
-            .doom-quest .tracker-quest-name {
-                color: #ff8c00 !important;
-            }
-            /* 🌍 World badge styling */
-            .tracker-world-badge {
-                font-size: 9px;
-                padding: 1px 4px;
-                border-radius: 3px;
-                margin-left: auto;
-            }
-            .tracker-world-badge.doom {
-                background: rgba(255, 140, 0, 0.3);
-                color: #ff8c00;
-            }
-            .tracker-world-badge.normal {
-                background: rgba(255, 215, 0, 0.2);
-                color: #ffd700;
-            }
-            .tracker-quest-title {
-                display: flex;
-                align-items: center;
-                gap: 5px;
-                font-weight: bold;
-                font-size: 12px;
-                color: #ffd700;
-                margin-bottom: 4px;
-            }
-            .tracker-quest-icon { font-size: 14px; }
-            .tracker-quest-name { font-size: 11px; }
-            .tracker-quest-location {
+            .chain-arrow {
                 font-size: 10px;
                 color: #4fc3f7;
-                margin-bottom: 4px;
+                width: 12px;
             }
-            .tracker-quest-objectives {
+            .chain-name {
+                flex: 1;
+                font-size: 11px;
+                font-weight: bold;
+                color: #ffd700;
+            }
+            .chain-progress {
                 font-size: 10px;
-                color: #ccc;
+                color: #888;
+                padding: 1px 6px;
+                background: rgba(0, 0, 0, 0.3);
+                border-radius: 8px;
             }
-            .tracker-objective {
+
+            /* 🔗 Chain Quest List */
+            .chain-quests {
+                padding-left: 12px;
+                border-left: 2px solid rgba(79, 195, 247, 0.2);
+                margin-left: 8px;
+            }
+            .chain-quests.hidden {
+                display: none;
+            }
+            .chain-quests.visible {
+                display: block;
+            }
+
+            /* 📍 Quest Connector Lines */
+            .quest-connector {
+                color: rgba(79, 195, 247, 0.3);
+                font-size: 10px;
+                padding-left: 4px;
+                line-height: 0.8;
+            }
+
+            /* 📜 Individual Quest in Chain */
+            .chain-quest {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 6px;
+                padding: 4px 8px;
+                margin: 2px 0;
+                border-radius: 4px;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            .chain-quest:hover {
+                background: rgba(255, 255, 255, 0.05);
+            }
+
+            /* Quest Status Styling */
+            .chain-quest.quest-locked {
+                opacity: 0.4;
+            }
+            .chain-quest.quest-locked .quest-chain-name {
+                color: #666;
+            }
+            .chain-quest.quest-available {
+                opacity: 0.7;
+            }
+            .chain-quest.quest-available .quest-chain-name {
+                color: #aaa;
+            }
+            .chain-quest.quest-active {
+                background: rgba(79, 195, 247, 0.1);
+                border-left: 3px solid #4fc3f7;
+            }
+            .chain-quest.quest-active .quest-chain-name {
+                color: #4fc3f7;
+            }
+            .chain-quest.quest-ready {
+                background: rgba(129, 199, 132, 0.15);
+                border-left: 3px solid #81c784;
+            }
+            .chain-quest.quest-ready .quest-chain-name {
+                color: #81c784;
+            }
+            .chain-quest.quest-completed {
+                opacity: 0.6;
+            }
+            .chain-quest.quest-completed .quest-chain-name {
+                color: #81c784;
+                text-decoration: line-through;
+            }
+
+            /* Tracked quest highlight */
+            .chain-quest.tracked {
+                background: rgba(255, 215, 0, 0.15) !important;
+                border: 1px solid rgba(255, 215, 0, 0.4);
+            }
+            .tracked-badge {
+                font-size: 10px;
+            }
+
+            /* Quest status icons */
+            .quest-status-icon {
+                font-size: 12px;
+                width: 16px;
+                text-align: center;
+            }
+            .quest-chain-name {
+                font-size: 11px;
+                flex: 1;
+            }
+
+            /* Quest details (expanded view) */
+            .quest-details {
+                width: 100%;
+                padding: 4px 0 4px 22px;
+                font-size: 10px;
+            }
+            .detail-objective {
+                color: #888;
                 padding: 1px 0;
             }
-            .tracker-objective.completed {
+            .detail-objective.done {
                 color: #81c784;
                 text-decoration: line-through;
                 opacity: 0.7;
             }
-            .tracker-quest-footer {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-top: 6px;
-                padding-top: 4px;
-                border-top: 1px solid rgba(255, 255, 255, 0.1);
-            }
-            .tracker-quest-progress {
-                font-size: 10px;
-                color: #888;
-            }
-            .tracker-quest-progress.ready_to_complete {
+            .detail-complete-msg {
                 color: #81c784;
-                font-weight: bold;
+                font-style: italic;
             }
-            .tracker-untrack-btn, .tracker-track-btn {
-                background: rgba(100, 100, 100, 0.3);
-                border: none;
-                border-radius: 4px;
-                padding: 2px 5px;
-                cursor: pointer;
-                font-size: 11px;
-                transition: all 0.2s;
-            }
-            .tracker-untrack-btn:hover {
-                background: rgba(244, 67, 54, 0.5);
-            }
-            .tracker-track-btn:hover {
-                background: rgba(255, 215, 0, 0.5);
-            }
-            .tracker-more {
+
+            /* No quests message */
+            .no-quests {
                 text-align: center;
-                font-size: 11px;
+                padding: 20px;
+                color: #666;
+                font-style: italic;
+            }
+
+            /* Chain with active quest indicator */
+            .chain-section.has-active .chain-header {
+                border-left: 3px solid #4fc3f7;
+            }
+            .chain-progress.active {
+                background: rgba(79, 195, 247, 0.3);
                 color: #4fc3f7;
-                padding: 6px;
-                cursor: pointer;
             }
-            .tracker-more:hover {
-                text-decoration: underline;
-            }
-            .tracker-quest {
-                display: flex;
-                align-items: center;
-                gap: 6px;
-            }
-            /* 🖤 Quest selector dropdown */
-            .tracker-quest-selector {
-                padding: 6px 8px;
-                border-top: 1px solid rgba(255, 255, 255, 0.1);
-            }
-            .tracker-quest-selector select {
-                width: 100%;
-                padding: 6px 8px;
-                background: rgba(30, 30, 50, 0.9);
-                border: 1px solid rgba(79, 195, 247, 0.3);
-                border-radius: 4px;
-                color: #ccc;
-                font-size: 11px;
-                cursor: pointer;
-            }
-            .tracker-quest-selector select:hover {
-                border-color: rgba(79, 195, 247, 0.6);
-            }
-            .tracker-quest-selector select:focus {
-                outline: none;
-                border-color: #4fc3f7;
-            }
-            .tracker-quest-selector select option {
-                background: #1a1a2e;
-                color: #fff;
-                padding: 8px;
+
+            /* Repeatable quest icon */
+            .repeat-icon {
+                font-size: 10px;
+                opacity: 0.7;
             }
         `;
         document.head.appendChild(style);

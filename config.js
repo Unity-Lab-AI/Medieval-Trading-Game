@@ -49,6 +49,9 @@ const GameConfig = {
             { name: 'Sponge', role: 'Chaos Engineer' },
             { name: 'GFourteen', role: 'Digital Alchemist' }
         ],
+        playtesters: [
+            { name: 'The Rev', role: 'Debooger Cleaner' }
+        ],
         year: '2025',
         copyright: '© 2025 Unity AI Lab. Creators: Hackall360, Sponge, GFourteen. All rights reserved. Souls sold separately.'
     },
@@ -1078,6 +1081,14 @@ const GameConfig = {
         ).join('');
     },
 
+    // playtester list as HTML (for the about page shrine)
+    getPlaytestersHTML() {
+        if (!this.credits.playtesters || this.credits.playtesters.length === 0) return '';
+        return this.credits.playtesters.map(tester =>
+            `<div class="credit-entry"><span class="dev-name">${tester.name}</span><span class="dev-role">${tester.role}</span></div>`
+        ).join('');
+    },
+
     // get social links HTML - escape routes from the void (styled as buttons)
     // 🖤 includeAbout parameter controls whether About button is shown (default true for main menu)
     getSocialLinksHTML(includeAbout = true) {
@@ -1109,6 +1120,7 @@ const GameConfig = {
 
     // 🖤 the about section - our digital tombstone (for settings panel About tab) 💀
     getAboutHTML() {
+        const testersHTML = this.getPlaytestersHTML();
         return `
             <div class="about-section">
                 <div class="about-logo">🏰</div>
@@ -1123,6 +1135,12 @@ const GameConfig = {
                     <h4>the fucking legends</h4>
                     ${this.getDevelopersHTML()}
                 </div>
+                ${testersHTML ? `
+                <div class="about-developers">
+                    <h4>bug slayers</h4>
+                    ${testersHTML}
+                </div>
+                ` : ''}
                 ${this.getSocialLinksHTML(false)}
                 <div class="about-copyright">${this.credits.copyright}</div>
             </div>

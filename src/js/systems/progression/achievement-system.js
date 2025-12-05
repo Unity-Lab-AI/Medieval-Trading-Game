@@ -1520,41 +1520,44 @@ const AchievementSystem = {
 
     // wake up this monument to your gaming addiction
     init() {
-        console.log('🏆 Achievement System awakened from its slumber... waiting for first unpause + rank up to validate your existence');
-        // 🖤 DON'T check achievements immediately - wait for BOTH first unpause AND first rank up 💀
+        console.log('🏆 Achievement System awakened from its slumber... waiting for first unpause to validate your existence');
+        // 🖤 DON'T check achievements immediately - wait for first unpause 💀
         this._firstUnpauseOccurred = false;
-        this._firstRankUpOccurred = false;
         this._achievementsEnabled = false;
     },
 
-    // 🖤 Called when player first unpauses the game - tracks unpause but doesn't enable yet 💀
+    // 🖤 Called when player first unpauses the game - enables achievements 💀
     onFirstUnpause() {
         if (this._firstUnpauseOccurred) return;
         this._firstUnpauseOccurred = true;
-        console.log('🏆 First unpause detected - waiting for first rank up to enable achievements 🖤💀');
-        this._tryEnableAchievements();
+        console.log('🏆 First unpause detected - enabling achievements NOW 🖤💀');
+        this._enableAchievements();
     },
 
-    // 🖤 Called when player gets their first trader rank up 💀
+    // 🖤 Called when player gets their first trader rank up - also triggers check 💀
     onFirstRankUp() {
-        if (this._firstRankUpOccurred) return;
-        this._firstRankUpOccurred = true;
-        console.log('🏆 First rank up detected - checking if achievements can be enabled 🖤💀');
-        this._tryEnableAchievements();
+        console.log('🏆 First rank up detected - checking achievements 🖤💀');
+        if (this._achievementsEnabled) {
+            this.checkAchievements();
+        }
     },
 
-    // 🖤 Internal: Only enable achievements when BOTH conditions are met 💀
-    _tryEnableAchievements() {
+    // 🖤 Internal: Enable achievements and run first check 💀
+    _enableAchievements() {
         if (this._achievementsEnabled) return;
-        if (!this._firstUnpauseOccurred || !this._firstRankUpOccurred) return;
 
         this._achievementsEnabled = true;
-        console.log('🏆 BOTH conditions met! Achievement checking now ENABLED 🖤💀');
+        console.log('🏆 Achievement checking now ENABLED 🖤💀');
         // 🖤 DEBUG: Log current journey stats when enabling 💀
         console.log(`🏆 At enable time - journeysStarted: ${this.stats.journeysStarted}`);
 
         // Now check achievements for the first time
         this.checkAchievements();
+    },
+
+    // 🖤 Backwards compatibility 💀
+    _tryEnableAchievements() {
+        this._enableAchievements();
     },
 
     // 🖤 DEPRECATED: Use onFirstUnpause() instead - kept for backwards compatibility 💀

@@ -16,6 +16,88 @@ Each entry follows this format:
 
 ---
 
+## 2025-12-05 - SESSION #18: CREDITS, QUEST ICONS, ACHIEVEMENTS & CHAIN TRACKER 🖤💀🎮
+
+**Request:** Gee requested:
+1. Add "The Rev" as playtester with role "Debooger Cleaner" to credits
+2. Fix quest turn-in for 2nd mission (trade 3x50g) - no way to turn in
+3. No segway between missions - don't know who gave next quest
+4. Achievements not unlocking
+5. Implement WoW-style quest icons (!/?/colors)
+6. Redesign quest tracker as chain view with expand/collapse
+
+**Status:** ✅ COMPLETE
+
+### Fixes Applied:
+
+**Credits Update** - ADDED in `config.js:52-54`, `credits-system.js:44,72-78,109-118`
+- Added `playtesters` array to GameConfig.credits
+- Added "The Rev" with role "Debooger Cleaner"
+- Added `getPlaytestersHTML()` method to config.js
+- Updated `getAboutHTML()` to display playtesters under "bug slayers"
+- Updated credits-system.js rolling credits to show playtesters section
+
+**WoW-Style Quest Icons** - IMPLEMENTED in `people-panel.js:192-227,742-751,861-883,2645-2706`
+- New CSS classes for colored quest markers:
+  - Gold `!` = Available quest (non-repeatable)
+  - Faded Yellow `!` = Low-level/trivial quest
+  - Blue `!` = Repeatable quest (daily/weekly)
+  - Orange `!` = Main story/legendary quest
+  - Gold `?` = Quest ready to turn in
+  - Silver `?` = Quest in progress (not complete)
+  - Blue `?` = Repeatable quest ready to turn in
+  - Orange `?` = Main story quest ready to turn in
+- New `getQuestMarker(npcType)` method returns {marker, style} based on quest status
+- Updated `createNPCCard()` to use new quest markers
+- Updated chat view badges to show quest status
+
+**Quest Flow/Segway Fix** - IMPROVED in `main-quests.js:95-98,118-128,148-159`
+- Quest 1 completion dialogue now explicitly directs player to merchant for Quest 2
+- Quest 2 now has `talk` objective to return to merchant after trades
+- Quest 2 dialogue updated to reference the Elder sending player
+- Quest 3 now has `talk` objective to speak with Harbormaster on arrival
+- Quest 3 dialogue updated to reference merchant sending player
+
+**Achievements Fix** - SIMPLIFIED in `achievement-system.js:1516-1561`
+- **Old behavior:** Required BOTH first unpause AND first rank-up (could be hours!)
+- **New behavior:** Requires ONLY first unpause
+- Achievements now enable immediately after player starts playing
+- `onFirstRankUp()` now just triggers a check, doesn't gate enabling
+
+**Quest Tracker Chain View** - REDESIGNED in `quest-system.js:2213-2720`
+- Complete redesign of quest tracker UI
+- **Minimized mode:** Shows quest chain names only (compact)
+- **Expanded mode:** Shows quest chain names + objectives for active/completed quests
+- **Chain groups:**
+  - ⚔️ Shadow Rising (Main Story) - sorted by act/order
+  - 💀 Doom World - doom quests
+  - 🌾 Greendale, ⚒️ Ironforge, 🌊 Jade Harbor, ☀️ Sunhaven, ❄️ Frostholm, 👑 Royal Capital - location quests
+  - 🔄 Repeatable Tasks - daily/weekly quests
+- **Quest status styling:**
+  - 🔒 Locked (greyed out) - prerequisite not met
+  - ❓ Available (dimmed) - can be picked up
+  - 📍 Active (blue) - in progress
+  - 🎉 Ready (green) - objectives complete, turn in available
+  - ✅ Completed (strikethrough) - done
+- **Click behavior:**
+  - Active/Completed: Opens quest info panel
+  - Available: Shows message where to get quest
+  - Locked: Shows prerequisite needed
+- Expand/minimize button for tracker
+- Each chain section collapsible
+- Chains with active quests highlighted
+- Repeatable quests show 🔄 icon
+
+**Files Modified:**
+- `config.js` - Added playtesters array, getPlaytestersHTML(), updated getAboutHTML()
+- `src/js/ui/credits-system.js` - Added playtesters section to rolling credits
+- `src/js/ui/panels/people-panel.js` - WoW-style quest marker CSS and logic
+- `src/js/systems/progression/main-quests.js` - Quest dialogue and objective improvements
+- `src/js/systems/progression/achievement-system.js` - Simplified enabling logic
+- `src/js/systems/progression/quest-system.js` - Quest tracker chain view redesign
+
+---
+
 ## 2025-12-05 - SESSION #17: NPC DEDUPLICATION + REPUTATION FIX 🖤💀👴
 
 **Request:** Gee reported:

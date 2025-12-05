@@ -189,21 +189,42 @@ const PeoplePanel = {
                 position: relative;
             }
 
+            /* 🖤💀 WOW-STYLE QUEST MARKERS - Exclamation Points & Question Marks 💀 */
             .quest-badge {
                 position: absolute;
                 top: -4px;
                 right: -4px;
-                background: #ffd700;
                 color: #000;
-                font-size: 0.5em;
+                font-size: 0.7em;
                 font-weight: bold;
-                width: 16px;
-                height: 16px;
+                width: 18px;
+                height: 18px;
                 border-radius: 50%;
                 display: flex;
                 align-items: center;
                 justify-content: center;
+                text-shadow: 0 0 2px rgba(0,0,0,0.5);
+                border: 1px solid rgba(0,0,0,0.3);
             }
+            /* Gold ! = Available quest (non-repeatable) */
+            .quest-badge.quest-available { background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%); }
+            /* Faded Yellow ! = Low-level/trivial quest */
+            .quest-badge.quest-trivial { background: linear-gradient(135deg, #a89940 0%, #8a7830 100%); color: #333; }
+            /* Blue ! = Repeatable quest (daily/weekly) */
+            .quest-badge.quest-repeatable { background: linear-gradient(135deg, #4a9eff 0%, #2070cc 100%); color: #fff; }
+            /* Orange ! = Main story/legendary quest */
+            .quest-badge.quest-main { background: linear-gradient(135deg, #ff8c00 0%, #cc5500 100%); color: #fff; }
+            /* Brown shield ! = Campaign quest */
+            .quest-badge.quest-campaign { background: linear-gradient(135deg, #8b4513 0%, #5c2d0e 100%); color: #ffd700; border: 2px solid #ffd700; }
+
+            /* Gold ? = Quest ready to turn in */
+            .quest-badge.quest-complete { background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%); }
+            /* Silver ? = Quest in progress (not complete) */
+            .quest-badge.quest-progress { background: linear-gradient(135deg, #c0c0c0 0%, #808080 100%); color: #333; }
+            /* Blue ? = Repeatable quest ready to turn in */
+            .quest-badge.quest-repeatable-complete { background: linear-gradient(135deg, #4a9eff 0%, #2070cc 100%); color: #fff; }
+            /* Orange ? = Main story quest ready to turn in */
+            .quest-badge.quest-main-complete { background: linear-gradient(135deg, #ff8c00 0%, #cc5500 100%); color: #fff; }
 
             .trade-badge {
                 position: absolute;
@@ -273,7 +294,11 @@ const PeoplePanel = {
                 font-size: 0.75em;
                 font-weight: bold;
             }
+            /* Quest status badges */
             .badge-quest { background: #ffd700; color: #000; }
+            .badge-quest-main { background: #ff8c00; color: #fff; }
+            .badge-quest-progress { background: #808080; color: #fff; }
+            .badge-quest-complete { background: #ffd700; color: #000; }
             .badge-trade { background: #4a9; color: #fff; }
             .badge-delivery { background: #94a; color: #fff; }
 
@@ -718,13 +743,15 @@ const PeoplePanel = {
         const title = this.escapeHtml(npc.title || this.getNPCTitle(npc.type || npc.id));
         const description = this.escapeHtml(npc.description || this.getNPCDescription(npc.type || npc.id));
 
-        // 🖤 Check for quest availability
-        const hasQuest = this.npcHasQuest(npc.type || npc.id);
+        // 🖤💀 WOW-STYLE QUEST MARKERS - Check for quest status 💀
+        const questMarker = this.getQuestMarker(npc.type || npc.id);
         const hasDelivery = this.npcHasDeliveryForThem(npc.type || npc.id);
         const canTrade = this.npcCanTrade(npc.type || npc.id);
 
         let badges = '';
-        if (hasQuest) badges += '<span class="quest-badge">!</span>';
+        if (questMarker) {
+            badges += `<span class="quest-badge ${questMarker.style}">${questMarker.marker}</span>`;
+        }
         if (canTrade) badges += '<span class="trade-badge">💰</span>';
 
         card.innerHTML = `
@@ -831,14 +858,28 @@ const PeoplePanel = {
         const badges = document.getElementById('chat-npc-badges');
         badges.innerHTML = '';
 
-        if (this.npcHasQuest(npcData.type || npcData.id)) {
-            badges.innerHTML += '<span class="badge badge-quest">Quest</span>';
+        // 🖤💀 WOW-STYLE QUEST BADGES 💀
+        const questMarker = this.getQuestMarker(npcData.type || npcData.id);
+        if (questMarker) {
+            if (questMarker.marker === '?') {
+                // Quest to turn in or in progress
+                const isComplete = questMarker.style.includes('complete');
+                const isMain = questMarker.style.includes('main');
+                const badgeClass = isComplete ? 'badge-quest-complete' : 'badge-quest-progress';
+                const text = isComplete ? '? Turn In' : '? In Progress';
+                badges.innerHTML += `<span class="badge ${badgeClass}">${text}</span>`;
+            } else {
+                // Quest available
+                const isMain = questMarker.style.includes('main');
+                const badgeClass = isMain ? 'badge-quest-main' : 'badge-quest';
+                badges.innerHTML += `<span class="badge ${badgeClass}">! Quest</span>`;
+            }
         }
         if (this.npcHasDeliveryForThem(npcData.type || npcData.id)) {
-            badges.innerHTML += '<span class="badge badge-delivery">Delivery</span>';
+            badges.innerHTML += '<span class="badge badge-delivery">📦 Delivery</span>';
         }
         if (this.npcCanTrade(npcData.type || npcData.id)) {
-            badges.innerHTML += '<span class="badge badge-trade">Trade</span>';
+            badges.innerHTML += '<span class="badge badge-trade">💰 Trade</span>';
         }
     },
 
@@ -2620,6 +2661,69 @@ Speak cryptically and briefly. You offer passage to the ${inDoom ? 'normal world
     // ═══════════════════════════════════════════════════════════════
     // 🔍 NPC CHECKS - figuring out what this NPC can do
     // ═══════════════════════════════════════════════════════════════
+
+    // 🖤💀 WOW-STYLE QUEST MARKER SYSTEM 💀
+    // Returns object with: { marker: '!' or '?', style: 'quest-available', 'quest-main', etc. }
+    getQuestMarker(npcType) {
+        if (typeof QuestSystem === 'undefined') return null;
+
+        const location = typeof game !== 'undefined' ? game.currentLocation?.id : null;
+
+        // 🖤 PRIORITY 1: Quest ready to turn in (? markers)
+        const readyToComplete = this.getQuestsReadyToComplete(npcType);
+        if (readyToComplete.length > 0) {
+            // Find the highest priority quest to show
+            const mainQuest = readyToComplete.find(q => q.type === 'main');
+            const repeatableQuest = readyToComplete.find(q => q.repeatable);
+
+            if (mainQuest) {
+                return { marker: '?', style: 'quest-main-complete' }; // Orange ?
+            } else if (repeatableQuest) {
+                return { marker: '?', style: 'quest-repeatable-complete' }; // Blue ?
+            } else {
+                return { marker: '?', style: 'quest-complete' }; // Gold ?
+            }
+        }
+
+        // 🖤 PRIORITY 2: Quest in progress from this NPC (grey ? markers)
+        const activeFromNPC = QuestSystem.getActiveQuestsForNPC?.(npcType) || [];
+        const inProgress = activeFromNPC.filter(q => {
+            const progress = QuestSystem.checkProgress?.(q.id);
+            return progress?.status === 'in_progress';
+        });
+
+        // 🦇 Also check if this NPC is the turn-in target for any active quest
+        const turnInQuests = Object.values(QuestSystem.activeQuests || {}).filter(q => {
+            if (q.turnInNpc === npcType) return true;
+            const talkObj = q.objectives?.find(o => o.type === 'talk' && !o.completed);
+            return talkObj?.npc === npcType;
+        });
+
+        if (inProgress.length > 0 || turnInQuests.length > 0) {
+            return { marker: '?', style: 'quest-progress' }; // Silver/grey ?
+        }
+
+        // 🖤 PRIORITY 3: Quest available to pick up (! markers)
+        const availableQuests = QuestSystem.getQuestsForNPC?.(npcType, location) || [];
+        if (availableQuests.length > 0) {
+            // Find the highest priority quest type
+            const mainQuest = availableQuests.find(q => q.type === 'main');
+            const repeatableQuest = availableQuests.find(q => q.repeatable);
+
+            // Check player level for trivial quests (if applicable)
+            // For now, assume no trivial system - all quests are appropriate level
+
+            if (mainQuest) {
+                return { marker: '!', style: 'quest-main' }; // Orange !
+            } else if (repeatableQuest) {
+                return { marker: '!', style: 'quest-repeatable' }; // Blue !
+            } else {
+                return { marker: '!', style: 'quest-available' }; // Gold !
+            }
+        }
+
+        return null; // No quest marker for this NPC
+    },
 
     npcHasQuest(npcType) {
         if (typeof QuestSystem === 'undefined') return false;

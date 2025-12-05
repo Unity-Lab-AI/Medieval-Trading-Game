@@ -41,6 +41,7 @@ const CreditsSystem = {
             { name: 'Sponge', role: 'Chaos Engineer' },
             { name: 'GFourteen', role: 'Digital Alchemist' }
         ];
+        const playtesters = config?.credits?.playtesters || [];
         const copyright = config?.credits?.copyright || '© 2025 Unity AI Lab. All rights reserved.';
         const version = config?.version?.game || '0.90.00';
 
@@ -67,6 +68,14 @@ const CreditsSystem = {
                 <span class="dev-role">${dev.role}</span>
             </div>
         `).join('');
+
+        // 🎮 Build playtesters HTML
+        const testersHTML = playtesters.length > 0 ? playtesters.map(tester => `
+            <div class="credits-dev">
+                <span class="dev-name">${tester.name}</span>
+                <span class="dev-role">${tester.role}</span>
+            </div>
+        `).join('') : '';
 
         // 🖤 Determine the opening message
         const openingText = endingMessage || tagline;
@@ -96,6 +105,17 @@ const CreditsSystem = {
                             ${devsHTML}
                         </div>
                     </div>
+
+                    ${testersHTML ? `
+                    <div class="credits-spacer"></div>
+
+                    <div class="credits-section">
+                        <div class="credits-section-title">Bug Slayers</div>
+                        <div class="credits-developers">
+                            ${testersHTML}
+                        </div>
+                    </div>
+                    ` : ''}
 
                     <div class="credits-spacer"></div>
 

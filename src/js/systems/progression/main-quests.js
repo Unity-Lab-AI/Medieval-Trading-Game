@@ -95,7 +95,7 @@ const MainQuests = {
                 dialogue: {
                     offer: "Welcome to Greendale, young traveler. I sense great potential in you. But first, prove you understand the ways of trade - make a purchase from one of our merchants, then return to me.",
                     progress: "Have you made a purchase yet? The merchants eagerly await customers.",
-                    complete: "Excellent! You have the instincts of a true trader. There is much I must tell you about the world... and the shadows gathering on its edges."
+                    complete: "Excellent! You have the instincts of a true trader. The Merchant Guild has taken notice of your potential - speak with their representative Marcus, the merchant here in Greendale. He wishes to test your trading skills."
                 }
             },
 
@@ -116,15 +116,16 @@ const MainQuests = {
                 chain: 'shadow_rising',
                 difficulty: 'easy',
                 objectives: [
-                    { type: 'trade', count: 3, current: 0, minValue: 50, description: 'Complete 3 trades worth at least 50 gold each' }
+                    { type: 'trade', count: 3, current: 0, minValue: 50, description: 'Complete 3 trades worth at least 50 gold each' },
+                    { type: 'talk', npc: 'merchant', completed: false, description: 'Return to the Merchant in Greendale' }
                 ],
                 rewards: { gold: 50, reputation: 15, experience: 30 },
                 prerequisite: 'act1_quest1',
                 nextQuest: 'act1_quest3',
                 dialogue: {
-                    offer: "The Merchant Guild keeps records of promising traders. Complete three substantial trades and you'll earn our notice - and our support.",
-                    progress: "Trading is the lifeblood of our realm. Keep at it!",
-                    complete: "Impressive work! The Guild acknowledges your skill. Elder Morin asked me to send you to him - he seems troubled by something."
+                    offer: "Ah, the Elder spoke of you! The Merchant Guild keeps records of promising traders. Complete three substantial trades - each worth at least 50 gold - and you'll earn our notice. Return to me when you're done.",
+                    progress: "Trading is the lifeblood of our realm. Keep at it! You need trades worth 50 gold or more - buy or sell, it all counts.",
+                    complete: "Impressive work! The Guild acknowledges your skill. Elder Morin asked me to send you to him - he seems troubled by something. Go speak with him."
                 }
             },
 
@@ -145,15 +146,16 @@ const MainQuests = {
                 chain: 'shadow_rising',
                 difficulty: 'easy',
                 objectives: [
-                    { type: 'visit', location: 'sunhaven', completed: false, description: 'Travel to Sunhaven in the south' }
+                    { type: 'visit', location: 'sunhaven', completed: false, description: 'Travel to Sunhaven in the south' },
+                    { type: 'talk', npc: 'harbormaster', completed: false, description: 'Speak with the Harbormaster in Sunhaven' }
                 ],
                 rewards: { gold: 40, reputation: 10, experience: 25 },
                 prerequisite: 'act1_quest2',
                 nextQuest: 'act1_quest4',
                 dialogue: {
-                    offer: "Strange whispers reach my ears from Sunhaven to the south. Ships arriving with sealed cargo, merchants who speak in hushed tones. I need someone I can trust to investigate. Will you go?",
-                    progress: "The road south is safe enough. Sunhaven awaits.",
-                    complete: "You've arrived safely. Good. Now, find the harbormaster - they see everything that passes through that port."
+                    offer: "Ah, Marcus sent you! The Guild speaks highly of your trading skills. But I have a different task for you. Strange whispers reach my ears from Sunhaven to the south. Ships arriving with sealed cargo, merchants who speak in hushed tones. I need someone I can trust to investigate. Travel there and speak with the Harbormaster - they see everything that passes through that port.",
+                    progress: "The road south is safe enough. Sunhaven awaits. Find the Harbormaster when you arrive.",
+                    complete: "You found me! Good. The Elder sent you, yes? I've been expecting someone to ask about the strange cargo... come, let me tell you what I've seen."
                 }
             },
 
