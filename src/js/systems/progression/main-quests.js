@@ -87,13 +87,13 @@ const MainQuests = {
                 difficulty: 'easy',
                 objectives: [
                     { type: 'buy', count: 1, current: 0, description: 'Make your first purchase from any merchant' },
-                    { type: 'talk', npc: 'elder', completed: false, description: 'Return to the Village Elder in Greendale' }
+                    { type: 'talk', npc: 'elder', completed: false, description: 'Speak to the Village Elder in Greendale' }
                 ],
                 rewards: { gold: 25, reputation: 10, experience: 20 },
                 prerequisite: null,
                 nextQuest: 'act1_quest2',
                 dialogue: {
-                    offer: "Welcome to Greendale, young traveler. I sense great potential in you. But first, prove you understand the ways of trade - make a purchase from one of our merchants, then return to me.",
+                    offer: "Welcome to Greendale, young traveler. I sense great potential in you. But first, prove you understand the ways of trade - make a purchase from one of our merchants, then come speak with me.",
                     progress: "Have you made a purchase yet? The merchants eagerly await customers.",
                     complete: "Excellent! You have the instincts of a true trader. The Merchant Guild has taken notice of your potential - speak with their representative Marcus, the merchant here in Greendale. He wishes to test your trading skills."
                 }

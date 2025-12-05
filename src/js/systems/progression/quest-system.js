@@ -2343,35 +2343,29 @@ const QuestSystem = {
             const quests = chains[chainName];
             if (quests.length === 0) continue;
 
-            // 🖤💀 FIX: Only show chains that have at least one UNLOCKED quest 💀
-            // A quest is "unlocked" if it's completed, active, discovered, or available (prereq met)
-            const hasUnlockedQuest = quests.some(quest => {
+            // 🖤💀 FIX: Only show chains that have at least one KNOWN quest 💀
+            // A quest is "known" ONLY if the player has actually interacted with it:
+            // - Completed it
+            // - Currently has it active
+            // - Has explicitly discovered it (NPC offered it, found it, etc.)
+            // NO "prereq met" - that's still a spoiler!
+            const knownQuests = quests.filter(quest => {
                 const isCompleted = this.completedQuests.includes(quest.id);
                 const isActive = !!this.activeQuests[quest.id];
                 const isDiscovered = this.discoveredQuests?.includes(quest.id);
-                const prereqMet = !quest.prerequisite || this.completedQuests.includes(quest.prerequisite);
-                return isCompleted || isActive || isDiscovered || prereqMet;
+                return isCompleted || isActive || isDiscovered;
             });
 
-            // 🖤 Skip chains where ALL quests are still locked 💀
-            if (!hasUnlockedQuest) continue;
+            // 🖤 Skip chains where player has NO known quests 💀
+            if (knownQuests.length === 0) continue;
 
             const chainExpanded = this.expandedChains[chainName] || false;
             const chainDisplayName = this.getChainDisplayName(chainName);
 
-            // Count quest statuses in this chain (only count unlocked quests)
-            const completedCount = quests.filter(q => this.completedQuests.includes(q.id)).length;
-            const activeCount = quests.filter(q => this.activeQuests[q.id]).length;
-
-            // 🖤 For total, only count quests that are unlocked (not fully locked) 💀
-            const unlockedQuests = quests.filter(quest => {
-                const isCompleted = this.completedQuests.includes(quest.id);
-                const isActive = !!this.activeQuests[quest.id];
-                const isDiscovered = this.discoveredQuests?.includes(quest.id);
-                const prereqMet = !quest.prerequisite || this.completedQuests.includes(quest.prerequisite);
-                return isCompleted || isActive || isDiscovered || prereqMet;
-            });
-            const totalCount = unlockedQuests.length;
+            // Count quest statuses in this chain
+            const completedCount = knownQuests.filter(q => this.completedQuests.includes(q.id)).length;
+            const activeCount = knownQuests.filter(q => this.activeQuests[q.id]).length;
+            const totalCount = knownQuests.length;
 
             // 🖤 Auto-expand chains with active quests
             const hasActiveQuest = activeCount > 0;
@@ -2384,7 +2378,7 @@ const QuestSystem = {
                         <span class="chain-progress ${activeCount > 0 ? 'active' : ''}">${completedCount}/${totalCount}</span>
                     </div>
                     <div class="chain-quests ${chainExpanded ? 'visible' : 'hidden'}">
-                        ${this.buildChainQuestList(unlockedQuests)}
+                        ${this.buildChainQuestList(knownQuests)}
                     </div>
                 </div>
             `;
@@ -2394,16 +2388,18 @@ const QuestSystem = {
     },
 
     // 🖤💀 BUILD QUEST LIST FOR A CHAIN 💀
+    // NOTE: Only receives KNOWN quests (completed, active, or discovered) - NO spoilers!
     buildChainQuestList(quests) {
         return quests.map((quest, index) => {
             const isCompleted = this.completedQuests.includes(quest.id);
             const isActive = !!this.activeQuests[quest.id];
             const isTracked = this.trackedQuestId === quest.id;
+            const isDiscovered = this.discoveredQuests?.includes(quest.id);
 
-            // 🦇 Determine quest status for styling
-            let status = 'locked'; // Default - not yet available
-            let statusIcon = '🔒';
-            let statusClass = 'quest-locked';
+            // 🦇 Determine quest status for styling - NO locked status possible here!
+            let status = 'discovered'; // Default for known but not started
+            let statusIcon = '📜';
+            let statusClass = 'quest-discovered';
 
             if (isCompleted) {
                 status = 'completed';
@@ -2420,15 +2416,8 @@ const QuestSystem = {
                     statusIcon = '📍';
                     statusClass = 'quest-active';
                 }
-            } else {
-                // Check if prerequisite is met (quest is available but not started)
-                const prereqMet = !quest.prerequisite || this.completedQuests.includes(quest.prerequisite);
-                if (prereqMet) {
-                    status = 'available';
-                    statusIcon = '❓';
-                    statusClass = 'quest-available';
-                }
             }
+            // else: discovered but not started - uses default above
 
             // 🖤 Build connector line (except for first quest)
             const connector = index > 0 ? '<div class="quest-connector">│</div>' : '';
@@ -2640,17 +2629,14 @@ const QuestSystem = {
             }
 
             /* Quest Status Styling */
-            .chain-quest.quest-locked {
-                opacity: 0.4;
+            /* 🖤💀 Discovered: Quest known but not yet started 💀 */
+            .chain-quest.quest-discovered {
+                opacity: 0.85;
+                background: rgba(255, 193, 7, 0.08);
+                border-left: 2px solid rgba(255, 193, 7, 0.4);
             }
-            .chain-quest.quest-locked .quest-chain-name {
-                color: #666;
-            }
-            .chain-quest.quest-available {
-                opacity: 0.7;
-            }
-            .chain-quest.quest-available .quest-chain-name {
-                color: #aaa;
+            .chain-quest.quest-discovered .quest-chain-name {
+                color: #ffc107;
             }
             .chain-quest.quest-active {
                 background: rgba(79, 195, 247, 0.1);

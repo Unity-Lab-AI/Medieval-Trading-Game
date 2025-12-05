@@ -16,6 +16,42 @@ Each entry follows this format:
 
 ---
 
+## 2025-12-05 - SESSION #23: NO SPOILERS IN QUEST TRACKER 🖤💀🔗
+
+**Request:** Gee clarified:
+1. Quest tracker was STILL showing greyed out "locked" quests - these are spoilers!
+2. Should ONLY show: discovered, active, tracked, or completed quests
+3. Intro quest says "return to the Village Elder" but player hasn't been there yet - should be "travel to" or "speak to"
+
+**Status:** ✅ COMPLETE
+
+### Fixes Applied:
+
+**Quest Chain View - True No Spoilers** - FIXED in `quest-system.js:2346-2387`
+- **Root Cause:** Previous fix still included quests where "prereq is met" (available but not started) - still spoilers!
+- **Fix:** Now ONLY shows quests that are:
+  - Completed (✅)
+  - Active (📍) or Ready to complete (🎉)
+  - Explicitly discovered (📜) - offered by NPC but not accepted
+- Removed "locked" (🔒) and "available" (❓) statuses entirely from the tracker
+- Added new "discovered" status with gold/yellow styling for quests known but not started
+
+**Quest List Rendering** - FIXED in `quest-system.js:2390-2442`
+- Removed locked/available quest logic since those can't appear anymore
+- Added `quest-discovered` CSS class with gold styling
+- Changed default from "locked" to "discovered" for known quests
+
+**Intro Quest Dialogue** - FIXED in `main-quests.js:90-96`
+- Changed objective from "Return to the Village Elder" → "Speak to the Village Elder"
+- Changed offer dialogue from "then return to me" → "then come speak with me"
+- These are first-time visits, not returns!
+
+**Files Modified:**
+- `src/js/systems/progression/quest-system.js` - Chain visibility and quest list rendering
+- `src/js/systems/progression/main-quests.js` - Intro quest dialogue
+
+---
+
 ## 2025-12-05 - SESSION #22: QUEST TRACKER - HIDE LOCKED CHAINS 🖤💀🔗
 
 **Request:** Gee requested:
