@@ -12,7 +12,7 @@ const DraggablePanels = {
     STORAGE_KEY: 'trader-claude-panel-positions',
     eventsSetup: false,
 
-    // 🖤 Map of panel IDs to their drag handle selectors
+    // 🖤 Map of panel IDs/classes to their drag handle selectors
     // If not listed, will try common header selectors
     panelDragHandles: {
         'market-panel': '.market-header',
@@ -21,6 +21,7 @@ const DraggablePanels = {
         'inventory-panel': '.inventory-header, h2, h3',
         'side-panel': '.player-section, .player-name-gold-row',
         'message-log': 'h3',
+        'quest-tracker': '.tracker-header', // 🖤💀 Quest tracker drag handle
         'character-sheet-overlay': '.character-header, h2',
         'quest-overlay': '.quest-header, h2',
         'achievement-overlay': '.achievement-header, h2',
@@ -94,6 +95,13 @@ const DraggablePanels = {
             'panel-toolbar'
         ];
 
+        // 🖤💀 Also setup quest tracker if it exists
+        const questTracker = document.querySelector('.quest-tracker');
+        if (questTracker && !questTracker.dataset.draggableSetup) {
+            this.makeDraggable(questTracker);
+            questTracker.dataset.draggableSetup = 'true';
+        }
+
         specificElements.forEach(id => {
             const el = document.getElementById(id);
             if (el) this.makeDraggable(el);
@@ -145,8 +153,19 @@ const DraggablePanels = {
 
     // 🦇 Find the appropriate drag handle for a panel
     findDragHandle(element) {
-        // Check specific mapping first
-        const selectorList = this.panelDragHandles[element.id];
+        // 🖤 Check specific mapping first - by ID
+        let selectorList = this.panelDragHandles[element.id];
+
+        // 🖤💀 Also check by class name (e.g., 'quest-tracker')
+        if (!selectorList && element.classList) {
+            for (const className of element.classList) {
+                if (this.panelDragHandles[className]) {
+                    selectorList = this.panelDragHandles[className];
+                    break;
+                }
+            }
+        }
+
         if (selectorList) {
             const selectors = selectorList.split(',').map(s => s.trim());
             for (const selector of selectors) {
@@ -160,6 +179,7 @@ const DraggablePanels = {
             '.panel-header',
             '.modal-header',
             '.overlay-header',
+            '.tracker-header', // 🖤 Quest tracker header
             'header',
             'h2',
             'h3'
@@ -431,7 +451,7 @@ const DraggablePanels = {
         });
     },
 
-    // 🖤 Ensure all dragged panels stay within viewport after resize 💀
+    // 🖤💀 Ensure ALL panels stay within viewport after resize - not just manually dragged ones 💀
     constrainAllPanels() {
         const positions = this.getAllPositions();
         const viewportWidth = window.innerWidth;
@@ -439,46 +459,72 @@ const DraggablePanels = {
         const margin = 20;
         const minVisible = 50;
 
+        // 🦇 First, handle manually-dragged panels (from saved positions)
         Object.keys(positions).forEach(id => {
             const element = document.getElementById(id);
             if (!element || element.style.position !== 'fixed') return;
             if (!element.style.left || element.style.left === 'auto') return;
 
-            const rect = element.getBoundingClientRect();
+            this._constrainSinglePanel(element, viewportWidth, viewportHeight, margin, minVisible, true);
+        });
 
-            // Check if panel is outside viewport
-            let needsUpdate = false;
-            let newLeft = rect.left;
-            let newTop = rect.top;
+        // 🖤💀 ALSO check ALL fixed-position panels, even if not manually dragged
+        // This prevents CSS-default panels from going off-screen
+        const fixedPanels = document.querySelectorAll('.quest-tracker, #message-log, #side-panel, .panel, .overlay');
+        fixedPanels.forEach(element => {
+            if (!element || getComputedStyle(element).position !== 'fixed') return;
+            if (element.classList.contains('hidden') || getComputedStyle(element).display === 'none') return;
 
-            // Panel too far right
-            if (rect.left > viewportWidth - minVisible) {
-                newLeft = viewportWidth - minVisible;
-                needsUpdate = true;
-            }
-            // Panel too far left
-            if (rect.right < minVisible) {
-                newLeft = margin;
-                needsUpdate = true;
-            }
-            // Panel too far down
-            if (rect.top > viewportHeight - minVisible) {
-                newTop = viewportHeight - minVisible;
-                needsUpdate = true;
-            }
-            // Panel too far up
-            if (rect.bottom < minVisible) {
-                newTop = margin;
-                needsUpdate = true;
-            }
+            this._constrainSinglePanel(element, viewportWidth, viewportHeight, margin, minVisible, false);
+        });
+    },
 
-            if (needsUpdate) {
+    // 🖤 Constrain a single panel to viewport bounds 💀
+    _constrainSinglePanel(element, viewportWidth, viewportHeight, margin, minVisible, saveAfter) {
+        const rect = element.getBoundingClientRect();
+
+        // Check if panel is outside viewport
+        let needsUpdate = false;
+        let newLeft = rect.left;
+        let newTop = rect.top;
+
+        // Panel too far right - bring it back
+        if (rect.left > viewportWidth - minVisible) {
+            newLeft = viewportWidth - rect.width - margin;
+            needsUpdate = true;
+        }
+        // Panel too far left
+        if (rect.right < minVisible) {
+            newLeft = margin;
+            needsUpdate = true;
+        }
+        // Panel too far down
+        if (rect.top > viewportHeight - minVisible) {
+            newTop = viewportHeight - rect.height - margin;
+            needsUpdate = true;
+        }
+        // Panel too far up
+        if (rect.bottom < minVisible) {
+            newTop = margin;
+            needsUpdate = true;
+        }
+
+        if (needsUpdate) {
+            // 🖤 Only switch to left/top positioning if panel was manually dragged
+            // CSS-based panels should stay CSS-based, we just need to prevent them from being lost
+            if (element.dataset.userDragged === 'true' || saveAfter) {
+                element.style.position = 'fixed';
                 element.style.left = Math.max(margin, newLeft) + 'px';
                 element.style.top = Math.max(margin, newTop) + 'px';
-                // Save new position
-                this.savePosition(element);
+                element.style.right = 'auto';
+                element.style.bottom = 'auto';
+
+                // Save new position only for manually dragged panels
+                if (saveAfter) {
+                    this.savePosition(element);
+                }
             }
-        });
+        }
     },
 
     resetPositions() {

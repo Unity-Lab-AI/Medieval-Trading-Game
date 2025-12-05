@@ -1240,6 +1240,10 @@ const AchievementSystem = {
             // 🖤 FIX: Must visit ALL dungeons (caves, ruins, dungeons) AND have 0 bandit encounters 💀
             // Main dungeons have bosses, caves/ruins have quest NPCs - but they're ALL dungeons
             condition: () => {
+                // 🖤 Safety check: Need to have visited AT LEAST one location first 💀
+                const visited = AchievementSystem.stats.uniqueLocationsVisited;
+                if (!visited || visited.size === 0) return false;
+
                 // All dungeon types (caves, ruins, dungeons - NOT mines)
                 const dungeonTypes = ['dungeon', 'cave', 'ruins'];
                 const allDungeons = typeof GameWorld !== 'undefined' && GameWorld.locations
@@ -1248,10 +1252,11 @@ const AchievementSystem = {
                         .map(([id]) => id)
                     : ['shadow_dungeon', 'forest_dungeon', 'ancient_ruins', 'coastal_cave', 'crystal_cave', 'mountain_cave', 'hidden_cave', 'smugglers_cove', 'ice_cave'];
 
+                // 🖤 Safety: Must have dungeons to check AND have visited at least one dungeon 💀
+                if (allDungeons.length === 0) return false;
+
                 // Check if player visited ALL dungeons
-                const visitedAll = allDungeons.every(id =>
-                    AchievementSystem.stats.uniqueLocationsVisited.has(id)
-                );
+                const visitedAll = allDungeons.every(id => visited.has(id));
                 const noBandits = AchievementSystem.stats.banditEncounters === 0;
                 return visitedAll && noBandits;
             }

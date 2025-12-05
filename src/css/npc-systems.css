@@ -863,12 +863,13 @@
    🖤   - Player Info (side-panel): top: 70px, right: 160px (left of panels)
    🖤   - Quest Tracker: below player info, same column as player info
    ═══════════════════════════════════════════════════════════════ */
+/* 🖤💀 RESPONSIVE: Quest tracker uses calc() for viewport-aware positioning */
 .quest-tracker {
     position: fixed;
-    top: 350px; /* 🖤 Default: below side-panel (JS will adjust dynamically) */
+    top: min(350px, 40vh); /* 🖤 Below side-panel, but not too far down on small screens */
     bottom: auto;
-    right: 160px; /* 🖤 Same column as player info (side-panel) */
-    width: 200px; /* 🖤 Match side-panel width */
+    right: calc(10px + 1vw); /* 🖤 Small offset from right edge, scales with viewport */
+    width: min(200px, 25vw); /* 🦇 Match side-panel width, shrink on small screens */
     max-width: 30vw;
     background: rgba(26, 26, 46, 0.85);
     border: 1px solid rgba(79, 195, 247, 0.3);
@@ -879,7 +880,7 @@
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     display: flex;
     flex-direction: column;
-    max-height: 250px;
+    max-height: min(250px, 35vh); /* 🖤 Shrink height on small viewports */
     pointer-events: auto;
     /* 🖤 Draggable via header - cursor set there */
 }

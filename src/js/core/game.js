@@ -1422,11 +1422,20 @@ const GameState = {
 // 💀 If TimeSystem is undefined, something's wrong with script loading
 // ═══════════════════════════════════════════════════════════════
 
-/* EXTRACTED - TimeSystem now lives at src/js/core/time-system.js
-// ⏰ TIME MANAGEMENT - aka "time is a construct but we need it anyway"
-// fun fact: time moves differently when you're coding at night
-// (spoiler: it moves FAST and suddenly it's 4am and you haven't eaten)
-const TimeSystem = {
+/* 🖤💀 ARCHIVED TimeSystem - MUST REMAIN COMMENTED OUT! 💀🖤
+ * The REAL TimeSystem is defined in time-machine.js (loaded earlier as alias to TimeMachine)
+ * This duplicate was OVERWRITING the time-machine.js version and causing bugs:
+ *   - Vitals (hunger/thirst) decaying even when game was paused!
+ *   - TimeMachine.isPaused was true, but this TimeSystem.isPaused started as false
+ *   - processPlayerStatsOverTime() checked the WRONG object
+ * Commented out 2025-12-05 by Unity to fix the vitals decay when paused issue
+ *
+ * EXTRACTED - TimeSystem now lives at src/js/core/time-machine.js
+ * ⏰ TIME MANAGEMENT - aka "time is a construct but we need it anyway"
+ * fun fact: time moves differently when you're coding at night
+ * (spoiler: it moves FAST and suddenly it's 4am and you haven't eaten)
+
+const TimeSystem_DEAD_CODE = {
     // these are just... time being time, nothing poetic here
     MINUTES_PER_HOUR: 60,
     HOURS_PER_DAY: 24,
@@ -1650,7 +1659,7 @@ const TimeSystem = {
                (this.currentTime.year * this.MONTHS_PER_YEAR * this.DAYS_PER_MONTH);
     }
 };
-END OF EXTRACTED TimeSystem */
+ * END OF ARCHIVED TimeSystem - THE REAL ONE IS IN time-machine.js! 🖤💀 */
 
 // ═══════════════════════════════════════════════════════════════
 // 🎲 EVENT SYSTEM - because chaos is more fun than order
@@ -4814,7 +4823,12 @@ if (document.readyState === 'loading') {
     // 🖤 LoadingManager handles showing main menu - don't show it here
     // showScreen('main-menu');  // DISABLED - LoadingManager does this
     addMessage(typeof GameConfig !== 'undefined' ? GameConfig.ui.welcomeMessage : 'Welcome to Medieval Trading Game!');
-    
+
+    // 🎵 Start menu music (will queue until user clicks)
+    if (typeof MusicSystem !== 'undefined') {
+        MusicSystem.playMenuMusic();
+    }
+
     // Then initialize all systems with proper order
     setTimeout(() => {
         initializeAllSystems();
@@ -4840,6 +4854,11 @@ if (document.readyState === 'loading') {
 
     showScreen('main-menu');
     addMessage(typeof GameConfig !== 'undefined' ? GameConfig.ui.welcomeMessage : 'Welcome to Medieval Trading Game!');
+
+    // 🎵 Start menu music (will queue until user clicks)
+    if (typeof MusicSystem !== 'undefined') {
+        MusicSystem.playMenuMusic();
+    }
 
     setTimeout(() => {
         initializeAllSystems();
@@ -5112,31 +5131,17 @@ function setupEventListeners() {
         });
     });
     
-    // Game Setup
-    if (elements.startGameBtn) {
-        EventManager.addEventListener(elements.startGameBtn, 'click', (e) => {
-            console.log('Start Game button clicked via elements.startGameBtn');
-            createCharacter(e);
-        });
-    }
+    // Game Setup - Start button uses onclick in HTML, cancel uses EventManager
+    // 🖤 REMOVED duplicate EventManager listeners for start-game-btn
+    // The HTML onclick handler already calls window.createCharacter(event)
+    // Having both caused createCharacter to run TWICE, breaking panel hide 💀
     if (elements.cancelSetupBtn) {
         EventManager.addEventListener(elements.cancelSetupBtn, 'click', cancelGameSetup);
     }
 
-    // New game setup buttons
-    const startGameBtn = document.getElementById('start-game-btn');
+    // Cancel button fallback
     const cancelSetupBtn = document.getElementById('cancel-setup-btn');
-
-    if (startGameBtn) {
-        console.log('Setting up Start Game button event listener');
-        EventManager.addEventListener(startGameBtn, 'click', (e) => {
-            console.log('Start Game button clicked!');
-            createCharacter(e);
-        });
-    } else {
-        gameDeboogerWarn('🖤 start-game-btn element not found');
-    }
-    if (cancelSetupBtn) {
+    if (cancelSetupBtn && !elements.cancelSetupBtn) {
         EventManager.addEventListener(cancelSetupBtn, 'click', cancelGameSetup);
     }
 
@@ -5195,31 +5200,74 @@ function setupEventListeners() {
     // This ensures they're properly initialized with the game state
 
     // Get saved games list (defined BEFORE use)
+    // 🖤 Refresh Load button state - call this whenever saves might have changed 💀
+    function refreshLoadButtonState() {
+        const loadBtn = elements.loadGameBtn || document.getElementById('load-game-btn');
+        if (!loadBtn) return;
+
+        const savedGames = game.getSavedGames();
+        if (savedGames && savedGames.length > 0) {
+            loadBtn.disabled = false;
+            loadBtn.title = 'Load a saved game';
+            console.log('📂 Load button enabled - found', savedGames.length, 'save(s)');
+        } else {
+            loadBtn.disabled = true;
+            loadBtn.title = 'No saved games found';
+            console.log('📂 Load button disabled - no saves found');
+        }
+    }
+    // 🖤 Make it accessible globally so SaveManager can call it after saving 💀
+    window.refreshLoadButtonState = refreshLoadButtonState;
+
+    // 🖤 Get saved games using SaveManager metadata - handles compressed saves properly 💀
     game.getSavedGames = function() {
         try {
             const saves = [];
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key && key.startsWith('tradingGameSave_')) {
-                    const saveDataString = localStorage.getItem(key);
-                    if (saveDataString) {
-                        let saveData;
-                        try {
-                            saveData = JSON.parse(saveDataString);
-                        } catch (error) {
-                            // 🦇 Corrupt save slot - skip it silently
-                            continue;
-                        }
-                        if (saveData && saveData.player) {
+
+            // 🖤 First: Check SaveManager's metadata (fast, no decompression needed) 💀
+            const metadata = localStorage.getItem('tradingGameSaveSlots');
+            if (metadata) {
+                try {
+                    const slots = JSON.parse(metadata);
+                    for (const [slotNum, slot] of Object.entries(slots)) {
+                        if (slot?.exists) {
                             saves.push({
-                                name: saveData.player.name || 'Unknown',
-                                date: saveData.saveDate || new Date().toISOString(),
-                                slot: key
+                                name: slot.playerInfo?.name || slot.name || 'Unknown',
+                                date: slot.timestamp ? new Date(slot.timestamp).toISOString() : new Date().toISOString(),
+                                slot: `tradingGameSave_${slotNum}`
                             });
+                        }
+                    }
+                } catch (e) {
+                    // Metadata corrupt, fall through to direct scan
+                }
+            }
+
+            // 🖤 Fallback: Check for actual save files if metadata didn't find any 💀
+            if (saves.length === 0) {
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && key.startsWith('tradingGameSave_')) {
+                        const saveDataString = localStorage.getItem(key);
+                        if (saveDataString) {
+                            // 🖤 Check if save data exists (don't parse - might be compressed) 💀
+                            // Compressed saves start with 'UC:' or 'LZ:', uncompressed are JSON
+                            const isCompressed = saveDataString.startsWith('UC:') || saveDataString.startsWith('LZ:');
+                            const isValidJson = !isCompressed && saveDataString.startsWith('{');
+
+                            if (isCompressed || isValidJson) {
+                                // Save exists - add to list even if we can't parse it
+                                saves.push({
+                                    name: 'Saved Game',
+                                    date: new Date().toISOString(),
+                                    slot: key
+                                });
+                            }
                         }
                     }
                 }
             }
+
             return saves.sort((a, b) => new Date(b.date) - new Date(a.date));
         } catch (error) {
             // 🦇 Failed to enumerate saves - return empty list
@@ -5231,17 +5279,8 @@ function setupEventListeners() {
     if (elements.saveGameBtn) {
         EventManager.addEventListener(elements.saveGameBtn, 'click', saveGame);
     }
-    if (elements.loadGameBtn) {
-        // Check if there are any saved games
-        const savedGames = game.getSavedGames();
-        if (savedGames && savedGames.length > 0) {
-            elements.loadGameBtn.disabled = false;
-            EventManager.addEventListener(elements.loadGameBtn, 'click', loadGame);
-        } else {
-            elements.loadGameBtn.disabled = true;
-            elements.loadGameBtn.title = 'No saved games found';
-        }
-    }
+    // 🖤 Load button state is updated by refreshLoadButtonState() - listener already added above 💀
+    refreshLoadButtonState();
     
     // Market Tabs
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -5316,6 +5355,17 @@ function changeState(newState) {
     const oldState = game.state;
     game.state = newState;
     
+    // 🎵 Update music based on state change
+    if (typeof MusicSystem !== 'undefined') {
+        if (newState === GameState.MENU) {
+            MusicSystem.playMenuMusic();
+        } else if (newState === GameState.PLAYING) {
+            // Music will be updated based on location (normal/dungeon/doom)
+            // This is handled in updateLocationPanel or when entering dungeons
+            MusicSystem.playNormalMusic();
+        }
+    }
+
     // Handle state transitions
     switch (newState) {
         case GameState.MENU:
@@ -5333,7 +5383,9 @@ function changeState(newState) {
             showScreen('game-container');
             hideAllPanels();
             game.hideAllOverlays();
-            showPanel('location-panel');
+            // 🖤💀 Show FULL game UI - not just location panel! This reveals:
+            // top-bar, side-panel, bottom-action-bar, map-container, message-log, location-panel
+            showGameUI();
             startGameLoop();
             // 🖤 initialize the world map renderer - rise from the ashes
             if (typeof GameWorldRenderer !== 'undefined') {
@@ -6138,6 +6190,12 @@ function closePerkModal() {
 
 // Confirm perk selection and close modal
 function confirmPerkSelection() {
+    // 🖤 Safety check - ensure selectedPerks is initialized before we touch it 💀
+    if (typeof selectedPerks === 'undefined' || selectedPerks === null) {
+        console.warn('⚠️ selectedPerks not initialized in confirmPerkSelection, initializing now...');
+        selectedPerks = [];
+    }
+
     console.log('Confirming perk selection...', selectedPerks);
     closePerkModal();
     updatePerkSelection(); // Update the perk counter badge
@@ -6938,10 +6996,9 @@ function createCharacter(event) {
     updatePlayerStats();
     updateInventoryDisplay(); // 🎒 Make sure inventory shows our starting items!
 
-    // Hide setup panel and reveal full game UI
+    // Hide setup panel - changeState(GameState.PLAYING) will call showGameUI()
     hidePanel('game-setup-panel');
-    showGameUI();  // Reveal all game UI elements that were hidden during setup
-    changeState(GameState.PLAYING);
+    changeState(GameState.PLAYING); // 🖤💀 This now calls showGameUI() to reveal all UI elements
 
     // 🌦️ NOW we transfer menu weather to game weather (AFTER setup panel is hidden!)
     // This must happen after game-setup-panel has .hidden class, otherwise CSS will hide the overlay
@@ -7602,6 +7659,26 @@ function updateLocationPanel() {
     // 🏚️ Add exploration button for dungeons, caves, ruins, etc.
     if (typeof DungeonExplorationSystem !== 'undefined') {
         DungeonExplorationSystem.addExploreButton(game.currentLocation.id);
+    }
+
+    // ⛏️ Add gathering section for resource locations (forest, mine, farm, etc.)
+    if (typeof ResourceGatheringSystem !== 'undefined') {
+        ResourceGatheringSystem.addGatheringSection(game.currentLocation.id);
+    }
+
+    // 🎵 Update music based on location type
+    if (typeof MusicSystem !== 'undefined') {
+        const locationType = location.type?.toLowerCase() || '';
+        const dungeonTypes = ['dungeon', 'cave', 'mine', 'ruins', 'crypt', 'tomb', 'catacomb'];
+        const isDoomWorld = game.player?.isDoomWorld === true;
+
+        if (isDoomWorld) {
+            MusicSystem.playDoomMusic();
+        } else if (dungeonTypes.includes(locationType)) {
+            MusicSystem.playDungeonMusic();
+        } else {
+            MusicSystem.playNormalMusic();
+        }
     }
 }
 
@@ -8801,42 +8878,52 @@ function openPropertyEmployeePanel() {
 
 // Update inventory display with new items (legacy function - now handled by InventorySystem)
 function updateInventoryDisplay() {
-    if (typeof InventorySystem !== 'undefined') {
-        InventorySystem.updateInventoryDisplay();
-    } else {
-        // Fallback to original implementation
-        const inventoryContainer = document.getElementById('inventory-items');
-        if (!inventoryContainer) return;
-        
-        inventoryContainer.innerHTML = '';
-        
-        if (!game.player.inventory || Object.keys(game.player.inventory).length === 0) {
-            inventoryContainer.innerHTML = '<p>Your inventory is empty.</p>';
-            return;
-        }
-        
-        for (const [itemId, quantity] of Object.entries(game.player.inventory)) {
-            if (quantity <= 0) continue;
-            
-            const item = ItemDatabase.getItem(itemId);
-            if (!item) continue;
-            
-            const itemElement = document.createElement('div');
-            itemElement.className = 'inventory-item';
-            // 🖤 XSS fix: use data attribute instead of inline onclick
-            itemElement.innerHTML = `
-                <div class="item-icon">${item.icon}</div>
-                <div class="item-name">${item.name}</div>
-                <div class="item-quantity">×${quantity}</div>
-                <div class="item-weight">${ItemDatabase.calculateWeight(itemId, quantity).toFixed(1)} lbs</div>
-                ${item.consumable ? `<button class="use-item-btn" data-item-id="${escapeHtml(itemId)}">Use</button>` : ''}
-            `;
-            // 💀 Attach use button event listener safely
-            const useBtn = itemElement.querySelector('.use-item-btn');
-            if (useBtn) useBtn.onclick = () => useItem(useBtn.dataset.itemId);
+    // 🖤💀 Safety check - ItemDatabase might not be loaded yet during early init
+    if (typeof ItemDatabase === 'undefined') {
+        console.warn('🎒 updateInventoryDisplay: ItemDatabase not loaded yet, skipping');
+        return;
+    }
 
-            inventoryContainer.appendChild(itemElement);
+    try {
+        if (typeof InventorySystem !== 'undefined') {
+            InventorySystem.updateInventoryDisplay();
+        } else {
+            // Fallback to original implementation
+            const inventoryContainer = document.getElementById('inventory-items');
+            if (!inventoryContainer) return;
+
+            inventoryContainer.innerHTML = '';
+
+            if (!game.player.inventory || Object.keys(game.player.inventory).length === 0) {
+                inventoryContainer.innerHTML = '<p>Your inventory is empty.</p>';
+                return;
+            }
+
+            for (const [itemId, quantity] of Object.entries(game.player.inventory)) {
+                if (quantity <= 0) continue;
+
+                const item = ItemDatabase.getItem(itemId);
+                if (!item) continue;
+
+                const itemElement = document.createElement('div');
+                itemElement.className = 'inventory-item';
+                // 🖤 XSS fix: use data attribute instead of inline onclick
+                itemElement.innerHTML = `
+                    <div class="item-icon">${item.icon}</div>
+                    <div class="item-name">${item.name}</div>
+                    <div class="item-quantity">×${quantity}</div>
+                    <div class="item-weight">${ItemDatabase.calculateWeight(itemId, quantity).toFixed(1)} lbs</div>
+                    ${item.consumable ? `<button class="use-item-btn" data-item-id="${escapeHtml(itemId)}">Use</button>` : ''}
+                `;
+                // 💀 Attach use button event listener safely
+                const useBtn = itemElement.querySelector('.use-item-btn');
+                if (useBtn) useBtn.onclick = () => useItem(useBtn.dataset.itemId);
+
+                inventoryContainer.appendChild(itemElement);
+            }
         }
+    } catch (error) {
+        console.warn('🎒 updateInventoryDisplay error:', error.message);
     }
 }
 

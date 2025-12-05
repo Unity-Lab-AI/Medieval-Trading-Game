@@ -701,6 +701,60 @@ const NPCMerchantSystem = {
         if (relationship >= -25) return '🟡 Cautious';
         if (relationship >= -50) return '🟠 Unfriendly';
         return '🔴 Hostile';
+    },
+
+    // 🖤 Get save data for per-slot persistence - no more global localStorage exploit! 💀
+    getSaveData() {
+        const merchantData = {};
+
+        Object.entries(this.merchants).forEach(([locationId, merchant]) => {
+            merchantData[locationId] = {
+                // Relationship and trade history
+                relationship: merchant.relationship || 0,
+                timesTraded: merchant.timesTraded || 0,
+                totalGoldTraded: merchant.totalGoldTraded || 0,
+                lastTrade: merchant.lastTrade || null,
+                // Economy state - critical for preventing exploit!
+                currentGold: merchant.currentGold || 0,
+                maxGold: merchant.maxGold || 0,
+                startingStock: merchant.startingStock || {}
+            };
+        });
+
+        return {
+            merchants: merchantData,
+            lastEconomyUpdate: this.lastEconomyUpdate,
+            lastEconomyDay: this.lastEconomyDay
+        };
+    },
+
+    // 🖤 Load save data - restore merchant economy from save slot 💀
+    loadSaveData(saveData) {
+        if (!saveData || !saveData.merchants) {
+            console.warn('🖤 No merchant save data to load');
+            return;
+        }
+
+        Object.entries(saveData.merchants).forEach(([locationId, data]) => {
+            if (this.merchants[locationId]) {
+                const merchant = this.merchants[locationId];
+                // Restore relationship and trade history
+                merchant.relationship = data.relationship ?? 0;
+                merchant.timesTraded = data.timesTraded ?? 0;
+                merchant.totalGoldTraded = data.totalGoldTraded ?? 0;
+                merchant.lastTrade = data.lastTrade ?? null;
+                // Restore economy state
+                merchant.currentGold = data.currentGold ?? 0;
+                merchant.maxGold = data.maxGold ?? 0;
+                merchant.startingStock = data.startingStock ?? {};
+            }
+        });
+
+        // Restore economy timing
+        this.lastEconomyUpdate = saveData.lastEconomyUpdate ?? null;
+        this.lastEconomyDay = saveData.lastEconomyDay ?? null;
+
+        console.log('🖤 Merchant economy state restored from save 💀');
     }
 };
 

@@ -297,9 +297,14 @@ const ResourceGatheringSystem = {
         const currentStamina = playerStats?.stats?.stamina || 100;
         const currentHealth = playerStats?.stats?.health || 100;
 
-        // Location difficulty modifier based on region
+        // 🖤💀 Location-specific difficulty modifier - uses gatheringDifficulty from game-world.js
+        // Each mine/forest/farm/cave has its own difficulty based on resource value
         let difficultyMod = 1.0;
-        if (location?.region) {
+        if (location?.gatheringDifficulty) {
+            // 🦇 Use the location's specific difficulty (set in game-world.js)
+            difficultyMod = location.gatheringDifficulty;
+        } else if (location?.region) {
+            // 🖤 Fallback to region-based difficulty if no specific difficulty set
             const regionMods = {
                 capital: 0.7,
                 starter: 0.8,
@@ -551,10 +556,11 @@ const ResourceGatheringSystem = {
             this.commitToLocation(locationId);
         }
 
-        // Calculate gathering time (base: 15-30 minutes game time)
+        // 🖤💀 Calculate gathering time - harder locations take longer but yield better resources
         const baseTime = 15 + Math.random() * 15;
         const toolEfficiency = toolCheck.toolInfo?.efficiency || 1.0;
-        let gatheringTime = Math.round(baseTime / toolEfficiency);
+        const locationDifficulty = location.gatheringDifficulty || 1.0; // 🦇 Uses location-specific difficulty
+        let gatheringTime = Math.round((baseTime * locationDifficulty) / toolEfficiency);
 
         // SLOW MODE: if stamina is low, gathering takes longer
         const staminaPercent = currentStamina / (game.player?.stats?.maxStamina || 100);
@@ -620,10 +626,18 @@ const ResourceGatheringSystem = {
 
         const { resourceId, abundance, tool, staminaCost, locationId, isSlowMode } = this.activeGathering;
 
+        // 🖤💀 Get location for difficulty-based yield bonus
+        const location = this.findLocation(locationId);
+        const locationDifficulty = location?.gatheringDifficulty || 1.0;
+
         // Calculate yield based on abundance, luck, and equipment bonuses
         const baseYield = Math.floor(1 + abundance * 3);
         const bonusYield = Math.random() < abundance ? 1 : 0;
-        let totalYield = baseYield + bonusYield;
+
+        // 🦇 Higher difficulty locations give better yields (risk vs reward!)
+        // Difficulty 2.0 = +50% yield, Difficulty 0.8 = -10% yield
+        const difficultyBonus = Math.floor((locationDifficulty - 1.0) * 2);
+        let totalYield = baseYield + bonusYield + Math.max(0, difficultyBonus);
 
         // 🔧 Apply equipment gathering bonuses
         if (typeof EquipmentSystem !== 'undefined') {
@@ -809,6 +823,205 @@ const ResourceGatheringSystem = {
             water: 'Water'
         };
         return names[resourceId] || resourceId.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    },
+
+    // 🖤💀 Track gathering section collapsed state
+    gatheringSectionCollapsed: true,
+
+    // 🖤💀 Toggle gathering section collapse
+    toggleGatheringSection() {
+        this.gatheringSectionCollapsed = !this.gatheringSectionCollapsed;
+        const content = document.getElementById('gathering-section-content');
+        const fullHeader = document.getElementById('gathering-full-header');
+        const collapsedBtn = document.getElementById('gathering-collapsed-btn');
+
+        if (this.gatheringSectionCollapsed) {
+            if (content) content.style.display = 'none';
+            if (fullHeader) fullHeader.style.display = 'none';
+            if (collapsedBtn) collapsedBtn.style.display = 'block';
+        } else {
+            if (content) content.style.display = 'block';
+            if (fullHeader) fullHeader.style.display = 'flex';
+            if (collapsedBtn) collapsedBtn.style.display = 'none';
+        }
+    },
+
+    // 🖤💀 Add gathering section to location panel (like exploration section)
+    addGatheringSection(locationId) {
+        const location = this.findLocation(locationId);
+        if (!location) return;
+
+        const locationPanel = document.getElementById('location-panel');
+        if (!locationPanel) return;
+
+        // Remove existing gathering section
+        const existingSection = document.getElementById('gathering-section');
+        if (existingSection) existingSection.remove();
+
+        // Get available gathering actions for this location type
+        const availableActions = this.getAvailableGatheringActions(location.type);
+
+        // Create gathering section
+        const section = document.createElement('div');
+        section.id = 'gathering-section';
+        section.className = 'location-gathering-section';
+        section.style.cssText = 'margin-top: 10px; border-top: 1px solid #4fc3f740; padding-top: 10px;';
+
+        // Build section HTML
+        let contentHTML = `
+            <!-- 🖤 Collapsed state: Just a simple "Gather" button -->
+            <button id="gathering-collapsed-btn"
+                    style="display: ${this.gatheringSectionCollapsed ? 'flex' : 'none'};
+                           width: 100%; padding: 10px 15px; margin: 5px 0;
+                           background: linear-gradient(135deg, #2e5a3a 0%, #1a3a2a 100%);
+                           border: 1px solid #4caf50; border-radius: 6px;
+                           color: #4caf50; font-weight: bold; cursor: pointer;
+                           align-items: center; justify-content: center; gap: 8px;"
+                    onclick="ResourceGatheringSystem.toggleGatheringSection()">
+                ⛏️ Gather Resources (${availableActions.length} available)
+            </button>
+
+            <!-- 🖤 Expanded state: Full header with details -->
+            <div id="gathering-full-header"
+                 style="display: ${this.gatheringSectionCollapsed ? 'none' : 'flex'}; justify-content: space-between; align-items: center; margin-bottom: 10px; cursor: pointer;"
+                 onclick="ResourceGatheringSystem.toggleGatheringSection()">
+                <h3 style="color: #4caf50; margin: 0; display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 0.8em; width: 16px;">▼</span>
+                    ⛏️ Gathering
+                </h3>
+                <span style="color: #888; font-size: 0.85em;">${availableActions.length} resources</span>
+            </div>
+            <div id="gathering-section-content" style="display: ${this.gatheringSectionCollapsed ? 'none' : 'block'};">
+        `;
+
+        if (availableActions.length === 0) {
+            contentHTML += `
+                <div style="padding: 15px; text-align: center; color: #888;">
+                    <p style="margin: 0;">🔍 No resources to gather here.</p>
+                    <p style="margin: 5px 0 0 0; font-size: 0.85em; font-style: italic;">
+                        Try forests, mines, farms, or fishing spots!
+                    </p>
+                </div>
+            `;
+        } else {
+            // Scrollable list of available gathering actions
+            contentHTML += `
+                <div class="gathering-actions-list" style="max-height: 200px; overflow-y: auto; border: 1px solid rgba(76, 175, 80, 0.2); border-radius: 6px;">
+            `;
+
+            availableActions.forEach(action => {
+                const toolCheck = this.checkToolRequirement(action);
+                const canGather = toolCheck.hasRequired;
+                const toolInfo = toolCheck.hasRequired
+                    ? `<span style="color: #4caf50;">✓ ${toolCheck.toolName || 'No tool needed'}</span>`
+                    : `<span style="color: #f44336;">✗ Need ${toolCheck.requiredTool}</span>`;
+
+                contentHTML += `
+                    <div class="gathering-action-item"
+                         data-action-id="${action.id}"
+                         style="
+                            padding: 10px 12px;
+                            border-bottom: 1px solid rgba(76, 175, 80, 0.1);
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            cursor: ${canGather ? 'pointer' : 'not-allowed'};
+                            opacity: ${canGather ? '1' : '0.5'};
+                            transition: background 0.2s ease;
+                         "
+                         ${canGather ? `onclick="ResourceGatheringSystem.startGatheringFromPanel('${action.id}')"` : ''}
+                         onmouseenter="this.style.background='rgba(76, 175, 80, 0.1)'"
+                         onmouseleave="this.style.background='transparent'"
+                    >
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 1.3em;">${action.icon}</span>
+                            <div>
+                                <div style="font-weight: bold; color: #e0e0e0;">${action.name}</div>
+                                <div style="font-size: 0.75em; color: #888;">
+                                    ${toolInfo} • ${action.baseTime}s
+                                </div>
+                            </div>
+                        </div>
+                        <div style="text-align: right; font-size: 0.8em;">
+                            <div style="color: #4caf50;">${action.baseYield.min}-${action.baseYield.max}x</div>
+                            <div style="color: #888;">${action.outputItem}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            contentHTML += '</div>'; // close gathering-actions-list
+        }
+
+        contentHTML += '</div>'; // close gathering-section-content
+        section.innerHTML = contentHTML;
+        locationPanel.appendChild(section);
+    },
+
+    // 🖤💀 Get available gathering actions for a location type
+    getAvailableGatheringActions(locationType) {
+        if (typeof UnifiedItemSystem === 'undefined') return [];
+
+        const actions = [];
+        const gatheringActions = UnifiedItemSystem.gatheringActions || {};
+
+        for (const [actionId, action] of Object.entries(gatheringActions)) {
+            if (action.locationTypes && action.locationTypes.includes(locationType)) {
+                actions.push({ id: actionId, ...action });
+            }
+        }
+
+        return actions;
+    },
+
+    // 🖤💀 Check tool requirement for gathering action
+    checkToolRequirement(action) {
+        if (!action.toolRequired) {
+            return { hasRequired: true, toolName: null, requiredTool: null };
+        }
+
+        // Check player inventory for the required tool
+        if (typeof game !== 'undefined' && game.player && game.player.inventory) {
+            const inventory = game.player.inventory;
+            const toolId = action.toolRequired;
+
+            // Check if player has the tool
+            if (inventory[toolId] && inventory[toolId] > 0) {
+                return { hasRequired: true, toolName: toolId.replace(/_/g, ' '), requiredTool: null };
+            }
+
+            // Check for upgraded versions
+            const upgradedTools = Object.keys(inventory).filter(item =>
+                item.includes(toolId) || item.includes(toolId.replace('_', ''))
+            );
+
+            if (upgradedTools.some(t => inventory[t] > 0)) {
+                return { hasRequired: true, toolName: upgradedTools[0].replace(/_/g, ' '), requiredTool: null };
+            }
+        }
+
+        return { hasRequired: false, toolName: null, requiredTool: action.toolRequired.replace(/_/g, ' ') };
+    },
+
+    // 🖤💀 Start gathering from the panel UI
+    startGatheringFromPanel(actionId) {
+        if (typeof game === 'undefined' || !game.currentLocation) {
+            addMessage('❌ cannot gather here - no location data', 'error');
+            return;
+        }
+
+        const action = UnifiedItemSystem?.gatheringActions?.[actionId];
+        if (!action) {
+            addMessage('❌ invalid gathering action', 'error');
+            return;
+        }
+
+        // Use the resource ID from the action
+        const resourceId = action.outputItem;
+        const locationId = game.currentLocation.id;
+
+        // Start gathering
+        this.startGathering(locationId, resourceId);
     },
 
     // Setup gathering UI elements

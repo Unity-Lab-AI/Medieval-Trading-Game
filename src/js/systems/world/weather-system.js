@@ -1158,7 +1158,7 @@ const WeatherSystem = {
                 width: 100%;
                 height: 100%;
                 pointer-events: none;
-                z-index: 16;
+                z-index: 1; /* 🖤 FIXED: Was 16, now inside weather container at layer 1 💀 */
                 border-radius: inherit;
                 opacity: 0;
                 transition: opacity 0.05s ease-out;
@@ -1211,7 +1211,7 @@ const WeatherSystem = {
                 rgba(200,220,255,1) 50%,
                 rgba(100,150,255,1) 100%);
             box-shadow: 0 0 10px #fff, 0 0 20px #88ccff, 0 0 40px #4488ff, 0 0 60px #0044ff;
-            z-index: 100;
+            z-index: 1; /* 🖤 FIXED: Was 100, now inside weather container at layer 1 💀 */
             animation: bolt-strike-down 0.15s ease-out forwards;
             --bolt-height: ${boltHeight}vh;
             transform-origin: top center;
@@ -1260,7 +1260,7 @@ const WeatherSystem = {
             left: ${x}%;
             top: ${y}vh;
             transform: translate(-50%, -50%);
-            z-index: 50;
+            z-index: 1; /* 🖤 FIXED: Was 50, now inside weather container at layer 1 💀 */
         `;
 
         // Create the fire glow - white/blue core fading to orange edges
@@ -1398,7 +1398,7 @@ const WeatherSystem = {
             top: ${startY}%;
             font-size: ${24 * size}px;
             opacity: 0;
-            z-index: 10;
+            z-index: 1; /* 🖤 FIXED: Was 10, now inside weather container at layer 1 💀 */
             filter: drop-shadow(0 0 10px #ff6600) drop-shadow(0 0 20px #ff3300);
             transform: rotate(-45deg) scale(0.5);
             transition: none;
@@ -1503,7 +1503,7 @@ const WeatherSystem = {
             left: ${x}%;
             top: ${y}vh;
             transform: translate(-50%, -50%);
-            z-index: 50;
+            z-index: 1; /* 🖤 FIXED: Was 50, now inside weather container at layer 1 💀 */
         `;
 
         // Create the fire glow - orange/red core with flickering flames
@@ -1556,7 +1556,7 @@ const WeatherSystem = {
                 font-size: 14px;
                 opacity: 0.8;
                 animation: game-rain-fall 1.5s linear infinite;
-                z-index: 5;
+                z-index: 1; /* 🖤 FIXED: Was 5, now inside weather container at layer 1 💀 */
             }
             /* 🌧️ Line-style rain drops (like main menu) */
             .game-rain-drop {
@@ -1816,7 +1816,7 @@ const WeatherSystem = {
             }
             .offscreen-impact {
                 pointer-events: none;
-                z-index: 50;
+                z-index: 1; /* 🖤 FIXED: Was 50, now inside weather container at layer 1 💀 */
             }
 
             /* Weather/date indicators styled in top-bar via styles.css */

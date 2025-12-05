@@ -33,6 +33,9 @@ const GlobalLeaderboardSystem = {
     // 🖤 No auto-refresh interval - API calls only on user action 💀
     // cacheTimeout now comes from config
     _fetchPromise: null, // 🖤 Stores ongoing fetch promise so concurrent callers can await 💀
+    _submitPromise: null, // 🖤 Prevents concurrent submissions from causing duplicates 💀
+    _lastSubmittedCharacterId: null, // 🖤 Track last submitted character to block rapid re-submissions 💀
+    _lastSubmitTime: 0, // 🖤 Timestamp of last submission for debounce 💀
 
     // 🎮 Initialize the system
     init() {
@@ -220,27 +223,53 @@ const GlobalLeaderboardSystem = {
             return false;
         }
 
+        // 🖤💀 DEDUP FIX: Block rapid re-submissions of same character (5 second debounce)
+        const now = Date.now();
+        const characterId = scoreData.characterId;
+        if (characterId && characterId === this._lastSubmittedCharacterId && (now - this._lastSubmitTime) < 5000) {
+            console.log('🏆 Blocking rapid re-submission for character:', characterId, '- wait 5 seconds');
+            return true; // Return true so callers don't think it failed
+        }
+
+        // 🖤💀 DEDUP FIX: If a submission is already in progress, wait for it instead of starting another
+        if (this._submitPromise) {
+            console.log('🏆 Submission already in progress, waiting...');
+            return await this._submitPromise;
+        }
+
         // Always save locally first
         console.log('🏆 Saving to local first...');
         this.saveToLocal(scoreData);
 
+        // 🖤💀 Track this submission to prevent duplicates
+        this._lastSubmittedCharacterId = characterId;
+        this._lastSubmitTime = now;
+
         try {
-            switch (this.config.backend) {
-                case 'jsonbin':
-                    console.log('🏆 Submitting to JSONBin...');
-                    return await this.submitToJSONBin(scoreData);
-                case 'gist':
-                    console.log('🏆 Submitting to Gist...');
-                    return await this.submitToGist(scoreData);
-                case 'local':
-                default:
-                    console.log('🏆 Backend is local, already saved');
-                    return true; // Already saved locally
-            }
+            // 🖤💀 Wrap the submission in a promise we can track
+            this._submitPromise = (async () => {
+                switch (this.config.backend) {
+                    case 'jsonbin':
+                        console.log('🏆 Submitting to JSONBin...');
+                        return await this.submitToJSONBin(scoreData);
+                    case 'gist':
+                        console.log('🏆 Submitting to Gist...');
+                        return await this.submitToGist(scoreData);
+                    case 'local':
+                    default:
+                        console.log('🏆 Backend is local, already saved');
+                        return true; // Already saved locally
+                }
+            })();
+
+            return await this._submitPromise;
         } catch (error) {
             // 🦇 Global submission failed - user already notified via addMessage
             addMessage?.('score saved locally. global submission failed - the void consumed it.');
             return false;
+        } finally {
+            // 🖤💀 Clear the promise so next submission can proceed
+            this._submitPromise = null;
         }
     },
 

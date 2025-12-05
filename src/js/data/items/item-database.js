@@ -328,17 +328,26 @@ const ItemDatabase = {
             category: 'weapons',
             rarity: 'uncommon',
             weight: 10,
-            basePrice: 60
+            basePrice: 60,
+            // 🖤💀 EQUIPPABLE: Generic weapon bundle 💀
+            equipSlot: 'weapon',
+            equipType: 'weapon',
+            damage: 15,
+            bonuses: { attack: 5, damage: 15 }
         },
         armor: {
             id: 'armor',
             name: 'Armor',
             description: 'Protective equipment.',
             icon: '🛡️',
-            category: 'weapons',
+            category: 'armor',  // 🖤 Fixed: was 'weapons', now 'armor' 💀
             rarity: 'uncommon',
             weight: 15,
-            basePrice: 80
+            basePrice: 80,
+            // 🖤💀 EQUIPPABLE: Generic armor set 💀
+            equipSlot: 'body',
+            equipType: 'armor',
+            bonuses: { defense: 15 }
         },
         luxury_goods: {
             id: 'luxury_goods',
@@ -1169,12 +1178,16 @@ const ItemDatabase = {
         winter_clothing: {
             id: 'winter_clothing',
             name: 'Winter Clothing',
-            description: 'Warm clothing for cold climates.',
+            description: 'Warm clothing for cold climates. Protects against harsh weather.',
             icon: '🧥',
-            category: 'luxury',
+            category: 'armor',
             rarity: 'uncommon',
             weight: 3,
-            basePrice: 60
+            basePrice: 60,
+            // 🖤💀 EQUIPPABLE: Body slot - weather protection 💀
+            equipSlot: 'body',
+            equipType: 'clothing',
+            stats: { coldResist: 10, weatherProtection: 5 }
         },
         iron_bar: {
             id: 'iron_bar',
@@ -1362,7 +1375,7 @@ const ItemDatabase = {
             category: 'weapons',
             rarity: 'uncommon',
             weight: 6,
-            basePrice: 60,
+            basePrice: 85, // 🖤 Balanced: 25 damage uncommon ranged, same tier as longsword 💀
             damage: 25,
             equipSlot: 'weapon',
             equipType: 'weapon',
@@ -1904,53 +1917,73 @@ const ItemDatabase = {
         lamp: {
             id: 'lamp',
             name: 'Lamp',
-            description: 'Oil lamp for illumination.',
+            description: 'Oil lamp for illumination. Helpful in caves and dungeons.',
             icon: '🪔',
             category: 'tools',
             rarity: 'common',
             weight: 2,
-            basePrice: 18
+            basePrice: 18,
+            // 🖤💀 EQUIPPABLE: Off-hand light source 💀
+            equipSlot: 'offhand',
+            equipType: 'lantern',
+            stats: { perception: 2, dungeonBonus: 5 }
         },
         torch: {
             id: 'torch',
             name: 'Torch',
-            description: 'Burning torch for light and fire.',
+            description: 'Burning torch for light and fire. Essential for dark places.',
             icon: '🔦',
             category: 'tools',
             rarity: 'common',
             weight: 1,
-            basePrice: 3
+            basePrice: 3,
+            // 🖤💀 EQUIPPABLE: Off-hand light source 💀
+            equipSlot: 'offhand',
+            equipType: 'lantern',
+            stats: { perception: 1, dungeonBonus: 3 }
         },
         compass: {
             id: 'compass',
             name: 'Compass',
-            description: 'Navigation tool for travelers.',
+            description: 'Navigation tool for travelers. Never get lost again.',
             icon: '🧭',
             category: 'tools',
             rarity: 'rare',
             weight: 0.3,
-            basePrice: 75
+            basePrice: 75,
+            // 🖤💀 EQUIPPABLE: Accessory for navigation 💀
+            equipSlot: 'accessory1',
+            equipType: 'trinket',
+            stats: { navigation: 5, travelSpeed: 2 }
         },
         spyglass: {
             id: 'spyglass',
             name: 'Spyglass',
-            description: 'Telescope for spotting distant things.',
+            description: 'Telescope for spotting distant things. See dangers before they see you.',
             icon: '🔭',
             category: 'tools',
             rarity: 'rare',
             weight: 2,
-            basePrice: 90
+            basePrice: 90,
+            // 🖤💀 EQUIPPABLE: Tool for scouting 💀
+            equipSlot: 'tool',
+            equipType: 'tool',
+            stats: { perception: 5, scouting: 3 }
         },
         backpack: {
             id: 'backpack',
             name: 'Backpack',
-            description: 'Sturdy pack for carrying goods.',
+            description: 'Sturdy pack for carrying goods. Increases carry capacity.',
             icon: '🎒',
             category: 'tools',
             rarity: 'common',
             weight: 2,
             basePrice: 20,
-            carryBonus: 10
+            carryBonus: 10,
+            // 🖤💀 EQUIPPABLE: Accessory for carrying 💀
+            equipSlot: 'accessory2',
+            equipType: 'accessory',
+            stats: { carryCapacity: 10 }
         },
 
         // === EXPANDED ITEMS - Luxury & Rare ===
@@ -2022,18 +2055,13 @@ const ItemDatabase = {
             category: 'luxury',
             rarity: 'legendary',
             weight: 2,
-            basePrice: 1500
+            basePrice: 1500,
+            // 🖤💀 EQUIPPABLE: Head slot - royalty flex 💀
+            equipSlot: 'head',
+            equipType: 'crown',
+            bonuses: { charisma: 15, reputation: 10, luck: 5 }
         },
-        dragon_scale: {
-            id: 'dragon_scale',
-            name: 'Dragon Scale',
-            description: 'Legendary scale from an ancient dragon.',
-            icon: '🐉',
-            category: 'luxury',
-            rarity: 'legendary',
-            weight: 1,
-            basePrice: 2500
-        },
+        // 🖤 dragon_scale REMOVED - duplicate of line 592 in treasure section 💀
         phoenix_feather: {
             id: 'phoenix_feather',
             name: 'Phoenix Feather',
@@ -2055,6 +2083,51 @@ const ItemDatabase = {
             rarity: 'common',
             weight: 4,
             basePrice: 16,
+            craftable: true
+        },
+        // 🖤 Construction Materials - Planks → Building Items 💀
+        crate: {
+            id: 'crate',
+            name: 'Wooden Crate',
+            description: 'Sturdy wooden crate for storing and transporting goods.',
+            icon: '📦',
+            category: 'building_materials',
+            rarity: 'common',
+            weight: 8,
+            basePrice: 35,
+            craftable: true
+        },
+        barrel: {
+            id: 'barrel',
+            name: 'Barrel',
+            description: 'Wooden barrel for storing liquids and dry goods.',
+            icon: '🛢️',
+            category: 'building_materials',
+            rarity: 'common',
+            weight: 12,
+            basePrice: 45,
+            craftable: true
+        },
+        wooden_beam: {
+            id: 'wooden_beam',
+            name: 'Wooden Beam',
+            description: 'Strong wooden beam for structural support in buildings.',
+            icon: '🪵',
+            category: 'building_materials',
+            rarity: 'common',
+            weight: 10,
+            basePrice: 25,
+            craftable: true
+        },
+        scaffolding: {
+            id: 'scaffolding',
+            name: 'Scaffolding',
+            description: 'Building scaffolding used for construction projects. Can be deconstructed for materials.',
+            icon: '🏗️',
+            category: 'building_materials',
+            rarity: 'uncommon',
+            weight: 25,
+            basePrice: 120,
             craftable: true
         },
         flour: {
@@ -2172,7 +2245,11 @@ const ItemDatabase = {
             weight: 5,
             basePrice: 85,
             damage: 30,
-            craftable: true
+            craftable: true,
+            // 🖤💀 EQUIPPABLE: Weapon slot 💀
+            equipSlot: 'weapon',
+            equipType: 'weapon',
+            bonuses: { attack: 10, damage: 30 }
         },
         steel_sword: {
             id: 'steel_sword',
@@ -2184,7 +2261,11 @@ const ItemDatabase = {
             weight: 5,
             basePrice: 180,
             damage: 50,
-            craftable: true
+            craftable: true,
+            // 🖤💀 EQUIPPABLE: Weapon slot 💀
+            equipSlot: 'weapon',
+            equipType: 'weapon',
+            bonuses: { attack: 18, damage: 50, speed: 1 }
         },
 
         // === LEGENDARY WEAPONS (Achievement Rewards) ===
@@ -2220,14 +2301,18 @@ const ItemDatabase = {
         iron_armor: {
             id: 'iron_armor',
             name: 'Iron Armor',
-            description: 'Solid iron plate armor.',
+            description: 'Solid iron plate armor. Heavy but protective.',
             icon: '🛡️',
             category: 'armor',
             rarity: 'uncommon',
             weight: 25,
             basePrice: 200,
             defense: 40,
-            craftable: true
+            craftable: true,
+            // 🖤💀 EQUIPPABLE: Body slot 💀
+            equipSlot: 'body',
+            equipType: 'armor',
+            bonuses: { defense: 40, endurance: 3, speed: -1 }
         },
 
         // === CLOTHING ===
@@ -2236,33 +2321,45 @@ const ItemDatabase = {
             name: 'Simple Clothes',
             description: 'Basic linen clothing.',
             icon: '👕',
-            category: 'basic_resources',
+            category: 'armor',  // 🖤 Changed to armor for equipment system 💀
             rarity: 'common',
             weight: 2,
             basePrice: 25,
-            craftable: true
+            craftable: true,
+            // 🖤💀 EQUIPPABLE: Body slot - basic clothing 💀
+            equipSlot: 'body',
+            equipType: 'clothing',
+            bonuses: { charisma: 1 }
         },
         fine_clothes: {
             id: 'fine_clothes',
             name: 'Fine Clothes',
             description: 'Elegant silk garments.',
             icon: '👗',
-            category: 'luxury',
+            category: 'armor',  // 🖤 Changed to armor for equipment system 💀
             rarity: 'rare',
             weight: 2,
             basePrice: 120,
-            craftable: true
+            craftable: true,
+            // 🖤💀 EQUIPPABLE: Body slot - fancy clothing 💀
+            equipSlot: 'body',
+            equipType: 'clothing',
+            bonuses: { charisma: 8, reputation: 5, tradingDiscount: 3 }
         },
         silk_garments: {
             id: 'silk_garments',
             name: 'Silk Garments',
             description: 'Luxurious silk clothing.',
             icon: '🥻',
-            category: 'luxury',
+            category: 'armor',  // 🖤 Changed to armor for equipment system 💀
             rarity: 'rare',
             weight: 1,
             basePrice: 150,
-            craftable: true
+            craftable: true,
+            // 🖤💀 EQUIPPABLE: Body slot - luxury clothing 💀
+            equipSlot: 'body',
+            equipType: 'clothing',
+            bonuses: { charisma: 10, reputation: 8, luck: 2 }
         },
 
         // === FOOD (Crafted) ===
@@ -2295,12 +2392,16 @@ const ItemDatabase = {
             weight: 6,
             basePrice: 55,
             craftable: true,
-            durability: 200
+            durability: 200,
+            // 🖤💀 EQUIPPABLE: Tool slot 💀
+            equipSlot: 'tool',
+            equipType: 'tool',
+            bonuses: { crafting: 3, gathering: 2 }
         },
         scythe: {
             id: 'scythe',
             name: 'Scythe',
-            description: 'Farming tool for harvesting grain.',
+            description: 'Farming tool for harvesting grain. Essential for farmers.',
             icon: '🔪',
             category: 'tools',
             rarity: 'common',
@@ -2308,12 +2409,15 @@ const ItemDatabase = {
             basePrice: 30,
             toolType: 'farming',
             craftable: true,
-            durability: 150
+            durability: 150,
+            // 🖤💀 EQUIPPABLE: Tool slot 💀
+            equipSlot: 'tool',
+            bonuses: { gathering: 3, farming: 5 }
         },
         fishing_rod: {
             id: 'fishing_rod',
             name: 'Fishing Rod',
-            description: 'Tool for catching fish.',
+            description: 'Tool for catching fish. A patient angler never goes hungry.',
             icon: '🎣',
             category: 'tools',
             rarity: 'common',
@@ -2321,12 +2425,15 @@ const ItemDatabase = {
             basePrice: 25,
             toolType: 'fishing',
             craftable: true,
-            durability: 100
+            durability: 100,
+            // 🖤💀 EQUIPPABLE: Tool slot 💀
+            equipSlot: 'tool',
+            bonuses: { gathering: 2, fishing: 5 }
         },
         steel_pickaxe: {
             id: 'steel_pickaxe',
             name: 'Steel Pickaxe',
-            description: 'High-quality mining tool.',
+            description: 'High-quality mining tool. Mines ore faster and lasts longer.',
             icon: '⛏️',
             category: 'tools',
             rarity: 'rare',
@@ -2334,7 +2441,10 @@ const ItemDatabase = {
             basePrice: 85,
             toolType: 'mining',
             craftable: true,
-            durability: 250
+            durability: 250,
+            // 🖤💀 EQUIPPABLE: Tool slot - better than regular pickaxe 💀
+            equipSlot: 'tool',
+            bonuses: { gathering: 4, mining: 8 }
         },
         simple_tools: {
             id: 'simple_tools',
@@ -2345,7 +2455,11 @@ const ItemDatabase = {
             rarity: 'common',
             weight: 4,
             basePrice: 12,
-            craftable: true
+            craftable: true,
+            // 🖤💀 EQUIPPABLE: Tool slot - basic starter tools 💀
+            equipSlot: 'tool',
+            equipType: 'tool',
+            bonuses: { crafting: 1, gathering: 1 }
         },
 
         // === MATERIALS (Processed) ===
@@ -2510,11 +2624,15 @@ const ItemDatabase = {
             name: 'Colorful Clothes',
             description: 'Bright, eye-catching garments.',
             icon: '👘',
-            category: 'luxury',
+            category: 'armor',  // 🖤 Changed to armor for equipment system 💀
             rarity: 'uncommon',
             weight: 2,
             basePrice: 45,
-            craftable: true
+            craftable: true,
+            // 🖤💀 EQUIPPABLE: Body slot - flashy clothing 💀
+            equipSlot: 'body',
+            equipType: 'clothing',
+            bonuses: { charisma: 5, happiness: 3, luck: 1 }
         },
         tale_scrolls: {
             id: 'tale_scrolls',
@@ -2541,13 +2659,21 @@ const ItemDatabase = {
         walking_staff: {
             id: 'walking_staff',
             name: 'Walking Staff',
-            description: 'Sturdy wooden staff for travel.',
+            description: 'Sturdy wooden staff for travel. Helps with balance and can ward off wild animals.',
             icon: '🦯',
             category: 'tools',
             rarity: 'common',
             weight: 2,
             basePrice: 15,
-            craftable: true
+            craftable: true,
+            // 🖤💀 EQUIPPABLE: Can be equipped in tool slot for travel bonuses 💀
+            equipType: 'staff',
+            equipSlot: 'tool',
+            stats: {
+                speed: 1,        // 🦇 Slightly faster travel
+                defense: 1,      // 🖤 Can fend off weak attackers
+                stamina: 5       // 💀 Helps with long journeys
+            }
         },
         wisdom_scrolls: {
             id: 'wisdom_scrolls',
@@ -2637,13 +2763,289 @@ const ItemDatabase = {
         noble_cloak: {
             id: 'noble_cloak',
             name: 'Noble Cloak',
-            description: 'Fine cloak befitting nobility.',
+            description: 'Fine cloak befitting nobility. Impresses merchants and nobles alike.',
             icon: '🧥',
-            category: 'luxury',
+            category: 'armor',
             rarity: 'rare',
             weight: 3,
             basePrice: 120,
+            craftable: true,
+            // 🖤💀 EQUIPPABLE: Body slot - charisma boost 💀
+            equipSlot: 'body',
+            equipType: 'clothing',
+            bonuses: { charisma: 5, reputation: 3, defense: 3 }
+        },
+
+        // === 💀 DOOM WORLD SPECIFIC ITEMS 💀 ===
+        // 🖤 Corrupted food - survival items from the apocalypse 💀
+        tainted_bread: {
+            id: 'tainted_bread',
+            name: 'Tainted Bread',
+            description: "Moldy bread from the doom world. It'll keep you alive... barely.",
+            icon: '🍞',
+            category: 'consumables',
+            rarity: 'common',
+            weight: 0.5,
+            basePrice: 30,  // 🖤 10x normal bread price in doom 💀
+            consumable: true,
+            doomOnly: true,
+            effects: {
+                hunger: 10,
+                health: -2  // 🖤 Slightly poisonous 💀
+            }
+        },
+        void_water: {
+            id: 'void_water',
+            name: 'Void Water',
+            description: 'Dark, murky water from corrupted wells. Desperate times call for desperate measures.',
+            icon: '💧',
+            category: 'consumables',
+            rarity: 'common',
+            weight: 2,
+            basePrice: 30,  // 🖤 15x normal water price in doom 💀
+            consumable: true,
+            doomOnly: true,
+            effects: {
+                thirst: 20,
+                health: -1
+            }
+        },
+        shadow_rations: {
+            id: 'shadow_rations',
+            name: 'Shadow Rations',
+            description: 'Preserved food from before the darkness. Old, but edible.',
+            icon: '🥫',
+            category: 'consumables',
+            rarity: 'uncommon',
+            weight: 1,
+            basePrice: 150,  // 🖤 10x military rations in doom 💀
+            consumable: true,
+            doomOnly: true,
+            effects: {
+                hunger: 25,
+                health: 5
+            }
+        },
+        corrupted_meat: {
+            id: 'corrupted_meat',
+            name: 'Corrupted Meat',
+            description: 'Meat from a beast touched by darkness. Cook it well... or don\'t.',
+            icon: '🥩',
+            category: 'consumables',
+            rarity: 'common',
+            weight: 2,
+            basePrice: 120,  // 🖤 10x normal meat in doom 💀
+            consumable: true,
+            doomOnly: true,
+            effects: {
+                hunger: 20,
+                health: -5
+            }
+        },
+
+        // 🖤 Dark potions - medicine in the apocalypse 💀
+        void_essence_potion: {
+            id: 'void_essence_potion',
+            name: 'Void Essence',
+            description: 'A bubbling black liquid that radiates cold. Alchemists claim it can heal... or kill.',
+            icon: '🧪',
+            category: 'consumables',
+            rarity: 'rare',
+            weight: 0.5,
+            basePrice: 300,  // 🖤 12x medicine price in doom 💀
+            consumable: true,
+            doomOnly: true,
+            effects: {
+                health: 40,
+                happiness: -10  // 🖤 Tastes like death 💀
+            }
+        },
+        shadow_elixir: {
+            id: 'shadow_elixir',
+            name: 'Shadow Elixir',
+            description: 'A shimmering dark potion that pulses with unnatural life. Desperate healers brew these.',
+            icon: '⚗️',
+            category: 'consumables',
+            rarity: 'epic',
+            weight: 0.3,
+            basePrice: 600,  // 🖤 Premium doom medicine 💀
+            consumable: true,
+            doomOnly: true,
+            effects: {
+                health: 60,
+                stamina: 20,
+                hunger: 10
+            }
+        },
+        corruption_cure: {
+            id: 'corruption_cure',
+            name: 'Corruption Cure',
+            description: 'A rare antidote that cleanses the body of shadow poison. Worth its weight in gold... literally.',
+            icon: '💊',
+            category: 'consumables',
+            rarity: 'legendary',
+            weight: 0.2,
+            basePrice: 1000,
+            consumable: true,
+            doomOnly: true,
+            effects: {
+                health: 80,
+                happiness: 20,
+                thirst: 15,
+                hunger: 15
+            }
+        },
+
+        // 🖤 Cursed weapons - doom world arsenal 💀
+        shadow_blade: {
+            id: 'shadow_blade',
+            name: 'Shadow Blade',
+            description: 'A sword forged in darkness. It whispers to you when held.',
+            icon: '⚔️',
+            category: 'weapons',
+            rarity: 'rare',
+            weight: 4,
+            basePrice: 180,  // 🖤 3x weapon price in doom 💀
+            damage: 45,
+            equipSlot: 'weapon',
+            equipType: 'weapon',
+            doomOnly: true,
+            bonuses: { attack: 15, damage: 45, dark_damage: 10 }
+        },
+        void_dagger: {
+            id: 'void_dagger',
+            name: 'Void Dagger',
+            description: 'A blade that seems to absorb light itself. Silent and deadly.',
+            icon: '🗡️',
+            category: 'weapons',
+            rarity: 'uncommon',
+            weight: 2,
+            basePrice: 90,
+            damage: 35,
+            equipSlot: 'weapon',
+            equipType: 'weapon',
+            doomOnly: true,
+            bonuses: { attack: 12, damage: 35, speed: 5, stealth: 10 }
+        },
+        cursed_axe: {
+            id: 'cursed_axe',
+            name: 'Cursed Axe',
+            description: 'A massive axe dripping with malevolent energy. Heavy with the weight of countless souls.',
+            icon: '🪓',
+            category: 'weapons',
+            rarity: 'epic',
+            weight: 10,
+            basePrice: 330,
+            damage: 60,
+            equipSlot: 'weapon',
+            equipType: 'weapon',
+            doomOnly: true,
+            bonuses: { attack: 20, damage: 60, strength: 8, life_drain: 5 }
+        },
+
+        // 🖤 Shadow materials - crafting in the darkness 💀
+        void_crystal: {
+            id: 'void_crystal',
+            name: 'Void Crystal',
+            description: 'A crystallized shard of pure darkness. It hums with otherworldly power.',
+            icon: '🔮',
+            category: 'basic_resources',
+            rarity: 'rare',
+            weight: 0.3,
+            basePrice: 200,
+            doomOnly: true,
             craftable: true
+        },
+        shadow_cloth: {
+            id: 'shadow_cloth',
+            name: 'Shadow Cloth',
+            description: 'Fabric woven from the threads of night itself. Light cannot touch it.',
+            icon: '🧵',
+            category: 'basic_resources',
+            rarity: 'uncommon',
+            weight: 1,
+            basePrice: 80,
+            doomOnly: true,
+            craftable: true
+        },
+        dark_iron: {
+            id: 'dark_iron',
+            name: 'Dark Iron',
+            description: 'Iron ore corrupted by the doom. Stronger than steel, but at what cost?',
+            icon: '⚫',
+            category: 'raw_ores',
+            rarity: 'rare',
+            weight: 15,
+            basePrice: 120,
+            doomOnly: true,
+            craftable: true
+        },
+        blighted_wood: {
+            id: 'blighted_wood',
+            name: 'Blighted Wood',
+            description: 'Timber from corrupted forests. It never rots, but it never truly lives either.',
+            icon: '🪵',
+            category: 'basic_resources',
+            rarity: 'common',
+            weight: 6,
+            basePrice: 40,
+            doomOnly: true
+        },
+        cursed_leather: {
+            id: 'cursed_leather',
+            name: 'Cursed Leather',
+            description: 'Hide from doom-touched beasts. Unnaturally durable and unsettlingly cold.',
+            icon: '🦌',
+            category: 'basic_resources',
+            rarity: 'uncommon',
+            weight: 2,
+            basePrice: 90,
+            doomOnly: true,
+            craftable: true
+        },
+
+        // 🖤 Doom-specific consumables - survival necessities 💀
+        shadow_torch: {
+            id: 'shadow_torch',
+            name: 'Shadow Torch',
+            description: 'A torch that burns with black flame. It provides light, but the wrong kind.',
+            icon: '🔦',
+            category: 'tools',
+            rarity: 'common',
+            weight: 1,
+            basePrice: 15,
+            doomOnly: true,
+            // 🖤💀 EQUIPPABLE: Off-hand doom light source 💀
+            equipSlot: 'offhand',
+            equipType: 'lantern',
+            stats: { perception: 2, dungeonBonus: 5, dark_resistance: 3 }
+        },
+        void_salt: {
+            id: 'void_salt',
+            name: 'Void Salt',
+            description: 'Black salt harvested from the dead seas. Preserves food... and sanity.',
+            icon: '🧂',
+            category: 'basic_resources',
+            rarity: 'uncommon',
+            weight: 1,
+            basePrice: 100,  // 🖤 4x normal salt in doom 💀
+            doomOnly: true
+        },
+        corrupted_herbs: {
+            id: 'corrupted_herbs',
+            name: 'Corrupted Herbs',
+            description: 'Plants twisted by darkness. Still medicinal, but their effects are... unpredictable.',
+            icon: '🌿',
+            category: 'consumables',
+            rarity: 'uncommon',
+            weight: 0.5,
+            basePrice: 96,  // 🖤 12x medicine price in doom 💀
+            consumable: true,
+            doomOnly: true,
+            effects: {
+                health: 15,
+                hunger: -5
+            }
         },
 
         // === QUEST ITEMS - Required for storyline ===

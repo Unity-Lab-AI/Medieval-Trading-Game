@@ -1205,6 +1205,16 @@ const TradeCartPanel = {
             }
         }
 
+        // 🖤💀 NPC TRADE - Update NPC's persistent inventory 💰
+        if (!isMarketTrade && this.currentMerchant && typeof NPCTradeWindow !== 'undefined') {
+            // Player bought items FROM NPC - remove items from NPC, add gold to NPC
+            for (const item of this.cart) {
+                NPCTradeWindow.removeNPCItem(this.currentMerchant, item.itemId, item.quantity);
+            }
+            NPCTradeWindow.modifyNPCGold(this.currentMerchant, this.finalTotal);
+            console.log(`🛒 NPC Trade: ${this.currentMerchant.name || this.currentMerchant.type} received ${this.finalTotal}g for items`);
+        }
+
         // 📜 Show success message
         const itemCount = this.cart.reduce((sum, i) => sum + i.quantity, 0);
         const message = `Purchased ${itemCount} item(s) for ${this.finalTotal}g`;
@@ -1225,6 +1235,16 @@ const TradeCartPanel = {
 
     // 💰 SELL TRANSACTION
     completeSellTransaction(isMarketTrade) {
+        // 🖤💀 NPC TRADE - Check if NPC can afford to buy items 💰
+        if (!isMarketTrade && this.currentMerchant && typeof NPCTradeWindow !== 'undefined') {
+            const npcGold = NPCTradeWindow.getNPCGold(this.currentMerchant);
+            if (npcGold < this.finalTotal) {
+                const message = `${this.currentMerchant.name || 'The NPC'} can't afford this! They only have ${npcGold}g.`;
+                if (typeof addMessage === 'function') addMessage(message);
+                return; // Abort transaction
+            }
+        }
+
         // 💰 Add gold to player
         if (typeof UniversalGoldManager !== 'undefined') {
             const itemNames = this.cart.map(i => `${i.quantity}x ${i.name}`).join(', ');
@@ -1268,6 +1288,16 @@ const TradeCartPanel = {
                     NPCMerchantSystem.removeMerchantGold?.(this.currentMerchant.id, this.finalTotal);
                 }
             }
+        }
+
+        // 🖤💀 NPC TRADE - Update NPC's persistent inventory 💰
+        if (!isMarketTrade && this.currentMerchant && typeof NPCTradeWindow !== 'undefined') {
+            // Player sold items TO NPC - add items to NPC, remove gold from NPC
+            for (const item of this.cart) {
+                NPCTradeWindow.addNPCItem(this.currentMerchant, item.itemId, item.quantity);
+            }
+            NPCTradeWindow.modifyNPCGold(this.currentMerchant, -this.finalTotal);
+            console.log(`🛒 NPC Trade: ${this.currentMerchant.name || this.currentMerchant.type} spent ${this.finalTotal}g on items`);
         }
 
         // 📜 Show success message

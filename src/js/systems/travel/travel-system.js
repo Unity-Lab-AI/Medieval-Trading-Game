@@ -2114,9 +2114,9 @@ const TravelSystem = {
         if (typeof GameWorldRenderer !== 'undefined') {
             GameWorldRenderer.recordLocationDeparture();
             GameWorldRenderer.setDestination(destination.id);
-            // Trigger map marker animation
+            // Trigger map marker animation - 🖤 FIX: Pass full route for multi-hop path animation 💀
             if (GameWorldRenderer.onTravelStart) {
-                GameWorldRenderer.onTravelStart(currentLoc.id, destination.id, travelInfo.timeHours * 60);
+                GameWorldRenderer.onTravelStart(currentLoc.id, destination.id, travelInfo.timeHours * 60, travelInfo.route);
             }
         }
 

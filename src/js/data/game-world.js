@@ -272,6 +272,7 @@ const GameWorld = {
         // ═══════════════════════════════════════════════════════════
         // ⛏️ MINES (4 mining locations) - Sell raw ore, buy tools
         // ═══════════════════════════════════════════════════════════
+        // 🖤💀 gatheringDifficulty: 1.0 = normal, higher = harder but better resources
         iron_mines: {
             id: 'iron_mines',
             name: 'Iron Mines',
@@ -285,7 +286,9 @@ const GameWorld = {
             mapPosition: { x: 340, y: 100 },
             sells: ['iron_ore', 'coal', 'stone'],
             buys: ['pickaxe', 'torch', 'lamp', 'rope', 'food', 'ale', 'bandages'],
-            npcs: ['miner', 'foreman', 'merchant']
+            npcs: ['miner', 'foreman', 'merchant'],
+            gatheringDifficulty: 1.0, // 🖤 Base difficulty - common iron and coal
+            availableResources: ['stone', 'iron_ore', 'coal', 'copper_ore'] // 🦇 What can be gathered here
         },
         silver_mine: {
             id: 'silver_mine',
@@ -300,7 +303,9 @@ const GameWorld = {
             mapPosition: { x: 200, y: 100 },
             sells: ['silver_ore', 'gems', 'stone'],
             buys: ['pickaxe', 'torch', 'food', 'ale', 'rope', 'bandages'],
-            npcs: ['miner', 'foreman', 'jeweler']
+            npcs: ['miner', 'foreman', 'jeweler'],
+            gatheringDifficulty: 1.5, // 🖤 Harder - precious metals
+            availableResources: ['stone', 'silver_ore', 'coal'] // 🦇 Silver mine specializes in silver
         },
         deep_mine: {
             id: 'deep_mine',
@@ -315,12 +320,15 @@ const GameWorld = {
             mapPosition: { x: 100, y: 420 },
             sells: ['gold_ore', 'gems', 'rare_gems', 'coal'],
             buys: ['steel_pickaxe', 'lamp', 'rope', 'food', 'bandages', 'ale'],
-            npcs: ['miner', 'adventurer']
+            npcs: ['miner', 'adventurer'],
+            gatheringDifficulty: 2.0, // 🖤 Very hard - gold and rare gems!
+            availableResources: ['stone', 'iron_ore', 'gold_ore', 'coal'] // 🦇 Deep mine has gold!
         },
 
         // ═══════════════════════════════════════════════════════════
         // 🌲 FORESTS (5 forest locations) - Sell gathered goods
         // ═══════════════════════════════════════════════════════════
+        // 🖤💀 gatheringDifficulty: 1.0 = normal, higher = harder but rarer/better resources
         ancient_forest: {
             id: 'ancient_forest',
             name: 'Ancient Forest',
@@ -334,7 +342,9 @@ const GameWorld = {
             mapPosition: { x: 120, y: 180 },
             sells: ['herbs', 'medical_plants', 'mushrooms', 'timber', 'berries'],
             buys: ['bread', 'cheese', 'ale', 'axe', 'rope'],
-            npcs: ['herbalist', 'hunter', 'forager']
+            npcs: ['herbalist', 'hunter', 'forager'],
+            gatheringDifficulty: 1.8, // 🖤 Hard - ancient trees, rare herbs
+            availableResources: ['wood', 'timber', 'herbs', 'mushrooms', 'berries'] // 🦇 Ancient timber here!
         },
         whispering_woods: {
             id: 'whispering_woods',
@@ -349,7 +359,9 @@ const GameWorld = {
             mapPosition: { x: 680, y: 160 },
             sells: ['herbs', 'medical_plants', 'mushrooms', 'honey', 'berries'],
             buys: ['bread', 'salt', 'glass', 'cloth'],
-            npcs: ['herbalist', 'alchemist', 'wanderer']
+            npcs: ['herbalist', 'alchemist', 'wanderer'],
+            gatheringDifficulty: 1.5, // 🖤 Medium-hard - magical herbs
+            availableResources: ['wood', 'herbs', 'mushrooms', 'honey', 'berries'] // 🦇 Rare herbs!
         },
         hunters_wood: {
             id: 'hunters_wood',
@@ -364,12 +376,15 @@ const GameWorld = {
             mapPosition: { x: 260, y: 520 },
             sells: ['furs', 'leather', 'hide', 'meat', 'mutton'],
             buys: ['bow', 'arrows', 'bread', 'ale', 'rope', 'salt'],
-            npcs: ['hunter', 'trapper', 'merchant']
+            npcs: ['hunter', 'trapper', 'merchant'],
+            gatheringDifficulty: 1.0, // 🖤 Easy - beginner hunting ground
+            availableResources: ['wood', 'meat', 'hide', 'herbs'] // 🦇 Basic forest resources
         },
 
         // ═══════════════════════════════════════════════════════════
         // 🌾 FARMS (4 farming locations) - Sell crops, buy tools
         // ═══════════════════════════════════════════════════════════
+        // 🖤💀 gatheringDifficulty: farms are generally easy (0.8-1.2)
         wheat_farm: {
             id: 'wheat_farm',
             name: 'Golden Wheat Farm',
@@ -383,7 +398,9 @@ const GameWorld = {
             mapPosition: { x: 340, y: 380 },
             sells: ['wheat', 'grain', 'eggs', 'vegetables', 'straw'],
             buys: ['scythe', 'tools', 'seeds', 'salt', 'cloth'],
-            npcs: ['farmer', 'miller', 'farmhand']
+            npcs: ['farmer', 'miller', 'farmhand'],
+            gatheringDifficulty: 0.8, // 🖤 Very easy - basic farming
+            availableResources: ['wheat', 'eggs', 'vegetables', 'milk'] // 🦇 Basic farm stuff
         },
         eastern_farm: {
             id: 'eastern_farm',
@@ -398,7 +415,9 @@ const GameWorld = {
             mapPosition: { x: 620, y: 340 },
             sells: ['tea', 'silk', 'vegetables', 'herbs', 'eggs'],
             buys: ['tools', 'seeds', 'cloth', 'salt', 'iron_tools'],
-            npcs: ['farmer', 'silkweaver', 'merchant']
+            npcs: ['farmer', 'silkweaver', 'merchant'],
+            gatheringDifficulty: 1.2, // 🖤 Slightly harder - exotic crops require skill
+            availableResources: ['vegetables', 'herbs', 'eggs', 'flax'] // 🦇 Exotic eastern crops
         },
         orchard_farm: {
             id: 'orchard_farm',
@@ -413,7 +432,9 @@ const GameWorld = {
             mapPosition: { x: 220, y: 480 },
             sells: ['apples', 'fruits', 'cider', 'honey', 'wax'],
             buys: ['tools', 'seeds', 'barrels', 'cloth'],
-            npcs: ['farmer', 'beekeeper', 'orchardist']
+            npcs: ['farmer', 'beekeeper', 'orchardist'],
+            gatheringDifficulty: 1.0, // 🖤 Normal - orchards and bees
+            availableResources: ['honey', 'eggs', 'wool', 'milk'] // 🦇 Orchard goods + bees
         },
         sunny_farm: {
             id: 'sunny_farm',
@@ -428,7 +449,9 @@ const GameWorld = {
             mapPosition: { x: 580, y: 520 },
             sells: ['grapes', 'oil', 'vegetables', 'herbs', 'honey'],
             buys: ['tools', 'seeds', 'barrels', 'salt', 'cloth'],
-            npcs: ['farmer', 'vintner', 'olive_presser']
+            npcs: ['farmer', 'vintner', 'olive_presser'],
+            gatheringDifficulty: 1.1, // 🖤 Slightly harder - olive pressing, wine grapes
+            availableResources: ['grapes', 'vegetables', 'herbs', 'oil'] // 🦇 Southern specialty crops
         },
 
         // ═══════════════════════════════════════════════════════════
@@ -482,6 +505,7 @@ const GameWorld = {
 
         // ═══════════════════════════════════════════════════════════
         // 🦇 CAVES (6 cave locations) - Sell gathered cave goods
+        // 🖤💀 gatheringDifficulty: caves are moderate to hard (1.2-2.0)
         // ═══════════════════════════════════════════════════════════
         deep_cavern: {
             id: 'deep_cavern',
@@ -496,7 +520,9 @@ const GameWorld = {
             mapPosition: { x: 300, y: 60 },
             sells: ['mushrooms', 'crystals', 'stone'],
             buys: ['torch', 'lamp', 'rope', 'food'],
-            npcs: ['explorer', 'miner'] // Quest: hidden_riches needs to enter here
+            npcs: ['explorer', 'miner'], // Quest: hidden_riches needs to enter here
+            gatheringDifficulty: 1.4, // 🖤 Moderate - deep but common goods
+            availableResources: ['stone', 'mushrooms', 'crystals'] // 🦇 Cavern resources
         },
         frozen_cave: {
             id: 'frozen_cave',
@@ -511,7 +537,9 @@ const GameWorld = {
             mapPosition: { x: 520, y: 40 },
             sells: ['crystals', 'fish', 'ice_goods'],
             buys: ['torch', 'food', 'furs', 'ale'],
-            npcs: ['explorer', 'ice_harvester'] // Quest: frostholm_secret needs to enter here
+            npcs: ['explorer', 'ice_harvester'], // Quest: frostholm_secret needs to enter here
+            gatheringDifficulty: 1.8, // 🖤 Hard - freezing conditions, rare ice crystals
+            availableResources: ['crystals', 'fish', 'stone'] // 🦇 Frozen specialties
         },
         crystal_cave: {
             id: 'crystal_cave',
@@ -526,7 +554,9 @@ const GameWorld = {
             mapPosition: { x: 140, y: 60 },
             sells: ['crystals', 'gems', 'mushrooms', 'stone'],
             buys: ['torch', 'lamp', 'rope', 'pickaxe', 'food'],
-            npcs: ['gem_collector', 'miner']
+            npcs: ['gem_collector', 'miner'],
+            gatheringDifficulty: 1.6, // 🖤 Medium-hard - valuable crystals and gems
+            availableResources: ['crystals', 'gems', 'stone', 'mushrooms'] // 🦇 Crystal specialties
         },
         river_cave: {
             id: 'river_cave',
@@ -541,7 +571,9 @@ const GameWorld = {
             mapPosition: { x: 540, y: 540 },
             sells: ['pearls', 'fish', 'stone', 'mushrooms'],
             buys: ['torch', 'rope', 'food', 'ale'],
-            npcs: ['diver', 'pearl_hunter']
+            npcs: ['diver', 'pearl_hunter'],
+            gatheringDifficulty: 1.2, // 🖤 Easy-moderate - beginner cave, water hazards
+            availableResources: ['fish', 'pearls', 'stone', 'mushrooms'] // 🦇 River cave goods
         },
         coastal_cave: {
             id: 'coastal_cave',
@@ -556,7 +588,9 @@ const GameWorld = {
             mapPosition: { x: 640, y: 500 },
             sells: ['pearls', 'gems', 'gold_bar', 'artifacts'],
             buys: ['torch', 'rope', 'food', 'weapons'],
-            npcs: ['treasure_hunter', 'diver']
+            npcs: ['treasure_hunter', 'diver'],
+            gatheringDifficulty: 1.7, // 🖤 Hard - tides, treasure hunting danger
+            availableResources: ['pearls', 'gems', 'coral', 'fish'] // 🦇 Coastal treasures
         },
         fairy_cave: {
             id: 'fairy_cave',
@@ -571,7 +605,9 @@ const GameWorld = {
             mapPosition: { x: 720, y: 120 },
             sells: ['mushrooms', 'herbs', 'medical_plants', 'crystals', 'honey'],
             buys: ['bread', 'cheese', 'cloth', 'glass'],
-            npcs: ['herbalist', 'wanderer']
+            npcs: ['herbalist', 'wanderer'],
+            gatheringDifficulty: 1.5, // 🖤 Medium - magical interference, rare herbs
+            availableResources: ['mushrooms', 'herbs', 'crystals', 'honey'] // 🦇 Magical cave goods
         },
 
         // ═══════════════════════════════════════════════════════════
@@ -782,7 +818,9 @@ const GameWorld = {
             mapPosition: { x: 100, y: 280 },
             sells: ['herbs', 'medical_plants', 'mushrooms', 'honey', 'berries'],
             buys: ['bread', 'cheese', 'cloth', 'parchment', 'ink'],
-            npcs: ['hermit', 'sage']
+            npcs: ['hermit', 'sage'],
+            gatheringDifficulty: 1.6, // 🖤 Medium-hard - rare healing herbs, mystical forest
+            availableResources: ['herbs', 'mushrooms', 'honey', 'berries'] // 🦇 Rare herbs
         },
         druid_grove: {
             id: 'druid_grove',
@@ -797,7 +835,9 @@ const GameWorld = {
             mapPosition: { x: 60, y: 220 },
             sells: ['medical_plants', 'herbs', 'honey', 'berries', 'mushrooms'],
             buys: ['bread', 'fruit', 'vegetables', 'cloth', 'glass'],
-            npcs: ['druid', 'herbalist', 'acolyte'] // Quest: main_shadow_key needs druid
+            npcs: ['druid', 'herbalist', 'acolyte'], // Quest: main_shadow_key needs druid
+            gatheringDifficulty: 1.9, // 🖤 Hard - sacred grove, druids guard best herbs
+            availableResources: ['herbs', 'medical_plants', 'honey', 'mushrooms'] // 🦇 Enchanted herbs
         },
         stone_quarry: {
             id: 'stone_quarry',
@@ -812,7 +852,9 @@ const GameWorld = {
             mapPosition: { x: 180, y: 420 },
             sells: ['stone', 'clay', 'sand', 'bricks'],
             buys: ['pickaxe', 'tools', 'food', 'ale', 'rope', 'bandages'],
-            npcs: ['quarry_foreman', 'stonecutter', 'merchant']
+            npcs: ['quarry_foreman', 'stonecutter', 'merchant'],
+            gatheringDifficulty: 0.9, // 🖤 Easy - open pit quarry, no cave dangers
+            availableResources: ['stone', 'clay', 'sand'] // 🦇 Building materials
         }
     },
 
@@ -925,10 +967,13 @@ const GameWorld = {
             // 🦇 Generate unique ID for this NPC at this location
             const npcId = `${locationId}_${npcType}`;
 
+            // 🖤💀 Generate unique name for this NPC at this location
+            const generatedName = this.generateNPCName(locationId, npcType);
+
             return {
                 id: npcId,
                 type: npcType,
-                name: persona?.name || this.formatNPCName(npcType),
+                name: generatedName, // 🖤 Now uses unique location-seeded name!
                 title: persona?.title || this.getNPCTitle(npcType),
                 voice: persona?.voice || 'nova',
                 personality: persona?.personality || 'friendly',
@@ -947,8 +992,154 @@ const GameWorld = {
         return `The ${formatted}`;
     },
 
-    // 🖤 Helper: format NPC type to display name
-    formatNPCName(npcType) {
+    // ═══════════════════════════════════════════════════════════════
+    // 🖤💀 NPC NAME GENERATOR - Medieval names seeded by location 🦇
+    // ═══════════════════════════════════════════════════════════════
+    // Each NPC gets a UNIQUE name based on their type and location
+    // Names are deterministic - same location+type = same name always
+    // ═══════════════════════════════════════════════════════════════
+
+    // 🖤 Medieval first names by personality type
+    _npcFirstNames: {
+        // Hospitable types (innkeeper, bartender, traveler)
+        hospitable_male: ['Edmund', 'Geoffrey', 'Harold', 'Oswald', 'Bertram', 'Gilbert', 'Walter', 'Cedric', 'Aldwin', 'Godwin', 'Humphrey', 'Reginald'],
+        hospitable_female: ['Agnes', 'Matilda', 'Beatrice', 'Edith', 'Mildred', 'Gertrude', 'Hilda', 'Eleanor', 'Rosalind', 'Constance', 'Winifred', 'Maude'],
+        // Strong types (guard, blacksmith, captain, sergeant)
+        strong_male: ['Aldric', 'Gareth', 'Roderick', 'Theron', 'Magnus', 'Bjorn', 'Conrad', 'Godfrey', 'Leofric', 'Wulfric', 'Siegfried', 'Ragnar'],
+        strong_female: ['Brynhild', 'Astrid', 'Freya', 'Sigrid', 'Greta', 'Helga', 'Ingrid', 'Brunhilde', 'Thyra', 'Gudrun', 'Valdis', 'Ragnhild'],
+        // Wise types (elder, scholar, sage, priest, druid)
+        wise_male: ['Aldous', 'Cornelius', 'Erasmus', 'Fabian', 'Ignatius', 'Marius', 'Severus', 'Tiberius', 'Ambrose', 'Benedict', 'Cuthbert', 'Dunstan'],
+        wise_female: ['Hildegard', 'Scholastica', 'Perpetua', 'Eugenia', 'Ursula', 'Brigid', 'Gwendolyn', 'Mechtild', 'Petronilla', 'Radegund', 'Walburga', 'Etheldreda'],
+        // Crafty types (jeweler, tailor, apothecary)
+        crafty_male: ['Silvanus', 'Tobias', 'Jasper', 'Felix', 'Lucian', 'Cyrus', 'Darius', 'Phineas', 'Ezra', 'Silas', 'Mordecai', 'Zachariah'],
+        crafty_female: ['Sapphira', 'Lavinia', 'Cordelia', 'Portia', 'Octavia', 'Nerissa', 'Jessamine', 'Ophelia', 'Perdita', 'Rosamund', 'Seraphina', 'Viola'],
+        // Merchant types (merchant, banker, general_store)
+        merchant_male: ['Marcus', 'Lucius', 'Gaius', 'Quintus', 'Titus', 'Cassius', 'Brutus', 'Octavius', 'Valerius', 'Maximus', 'Crassus', 'Publius'],
+        merchant_female: ['Livia', 'Aurelia', 'Cornelia', 'Flavia', 'Lucilla', 'Marcia', 'Julia', 'Claudia', 'Valeria', 'Cassia', 'Fabia', 'Tullia'],
+        // Rural types (farmer, shepherd, miller, farmhand)
+        rural_male: ['Alden', 'Bran', 'Colby', 'Dale', 'Earle', 'Ford', 'Grove', 'Heath', 'Jasper', 'Keld', 'Lee', 'Marsh'],
+        rural_female: ['Daisy', 'Ivy', 'Lily', 'Rose', 'Violet', 'Holly', 'Hazel', 'Fern', 'Laurel', 'Willow', 'Heather', 'Clover'],
+        // Seafaring types (sailor, ferryman, fisherman, dockmaster)
+        seafaring_male: ['Morgan', 'Drake', 'Finn', 'Cormac', 'Brendan', 'Niall', 'Padraig', 'Seamus', 'Declan', 'Rory', 'Eamon', 'Killian'],
+        seafaring_female: ['Marina', 'Coral', 'Pearl', 'Nerida', 'Ondine', 'Delphine', 'Morgana', 'Isla', 'Moira', 'Siobhan', 'Aoife', 'Niamh'],
+        // Noble types (noble, herald, steward)
+        noble_male: ['Alistair', 'Beaumont', 'Clarence', 'Dominic', 'Everard', 'Fitzgerald', 'Gervais', 'Horace', 'Ignatius', 'Jasper', 'Leopold', 'Montague'],
+        noble_female: ['Adelaide', 'Bianca', 'Celestine', 'Delphine', 'Evangeline', 'Francesca', 'Genevieve', 'Helena', 'Isolde', 'Josephine', 'Katharine', 'Lorraine'],
+        // Adventure types (adventurer, explorer, treasure_hunter)
+        adventure_male: ['Ajax', 'Borin', 'Caelum', 'Dax', 'Erik', 'Flint', 'Grim', 'Hawk', 'Ivan', 'Jax', 'Knox', 'Lance'],
+        adventure_female: ['Arya', 'Brienne', 'Cass', 'Dara', 'Elara', 'Freya', 'Giselle', 'Harper', 'Iris', 'Jade', 'Kira', 'Luna'],
+        // Mining types (miner, foreman, gem_collector)
+        mining_male: ['Durgan', 'Flint', 'Granite', 'Ironside', 'Jasper', 'Korvak', 'Lodestone', 'Malachite', 'Nickle', 'Orik', 'Pyrite', 'Quarry'],
+        mining_female: ['Amber', 'Beryl', 'Crystal', 'Diamond', 'Emerald', 'Garnet', 'Jade', 'Opal', 'Ruby', 'Sapphire', 'Topaz', 'Zircon'],
+        // Hunting types (hunter, trapper)
+        hunting_male: ['Arrow', 'Bowman', 'Claw', 'Dusk', 'Fang', 'Gale', 'Hawke', 'Hunter', 'Ranger', 'Shadow', 'Talon', 'Wolf'],
+        hunting_female: ['Artemis', 'Diana', 'Falcon', 'Huntress', 'Lynx', 'Raven', 'Scout', 'Swift', 'Vixen', 'Wildheart', 'Dawn', 'Starlight']
+    },
+
+    // 🖤 NPC type to name category mapping
+    _npcTypeCategories: {
+        innkeeper: 'hospitable', bartender: 'hospitable', traveler: 'hospitable', bard: 'hospitable',
+        guard: 'strong', blacksmith: 'strong', captain: 'strong', sergeant: 'strong', scout: 'strong',
+        elder: 'wise', scholar: 'wise', sage: 'wise', priest: 'wise', druid: 'wise', acolyte: 'wise', hermit: 'wise',
+        jeweler: 'crafty', tailor: 'crafty', apothecary: 'crafty', herbalist: 'crafty', alchemist: 'crafty',
+        merchant: 'merchant', banker: 'merchant', general_store: 'merchant', steward: 'merchant',
+        farmer: 'rural', shepherd: 'rural', miller: 'rural', farmhand: 'rural', vintner: 'rural', beekeeper: 'rural', orchardist: 'rural',
+        sailor: 'seafaring', ferryman: 'seafaring', fisherman: 'seafaring', dockmaster: 'seafaring', harbormaster: 'seafaring', lighthouse_keeper: 'seafaring', boatwright: 'seafaring',
+        noble: 'noble', herald: 'noble', villager: 'rural', mason: 'strong',
+        adventurer: 'adventure', explorer: 'adventure', treasure_hunter: 'adventure', archaeologist: 'adventure', diver: 'adventure', pearl_hunter: 'adventure', ice_harvester: 'adventure', mountain_guide: 'adventure', caravan_master: 'adventure', wanderer: 'adventure',
+        miner: 'mining', foreman: 'mining', gem_collector: 'mining',
+        hunter: 'hunting', trapper: 'hunting', forager: 'rural', healer: 'wise',
+        hooded_stranger: 'mysterious', prophet: 'mysterious' // 🖤💀 Quest givers
+    },
+
+    // 🖤 Cache for generated NPC names - consistent across sessions
+    _npcNameCache: {},
+
+    // 🦇 Seeded random number generator for consistent names
+    _seededRandom(seed) {
+        let hash = 0;
+        for (let i = 0; i < seed.length; i++) {
+            const char = seed.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32bit integer
+        }
+        // LCG parameters for decent distribution
+        const a = 1664525;
+        const c = 1013904223;
+        const m = Math.pow(2, 32);
+        hash = (a * Math.abs(hash) + c) % m;
+        return hash / m;
+    },
+
+    // 🖤💀 Generate a unique NPC name based on location and type
+    generateNPCName(locationId, npcType) {
+        const cacheKey = `${locationId}_${npcType}`;
+
+        // 🦇 Return cached name if we already generated one
+        if (this._npcNameCache[cacheKey]) {
+            return this._npcNameCache[cacheKey];
+        }
+
+        // 🖤 Get the category for this NPC type
+        const category = this._npcTypeCategories[npcType] || 'hospitable';
+
+        // 🦇 Use seeded random to pick gender (deterministic based on location+type)
+        const genderSeed = this._seededRandom(cacheKey + '_gender');
+        const isMale = genderSeed > 0.5;
+
+        // 🖤 Get the appropriate name list
+        const nameKey = `${category}_${isMale ? 'male' : 'female'}`;
+        const nameList = this._npcFirstNames[nameKey] || this._npcFirstNames.hospitable_male;
+
+        // 🦇 Pick name using seeded random
+        const nameSeed = this._seededRandom(cacheKey + '_name');
+        const nameIndex = Math.floor(nameSeed * nameList.length);
+        const firstName = nameList[nameIndex];
+
+        // 🖤 Format the full name with title
+        const title = this._getNPCRoleTitle(npcType);
+        const fullName = `${firstName} the ${title}`;
+
+        // 🦇 Cache it for consistency
+        this._npcNameCache[cacheKey] = fullName;
+
+        return fullName;
+    },
+
+    // 🖤 Get role-appropriate title for NPC (simpler than full getNPCTitle)
+    _getNPCRoleTitle(npcType) {
+        const titles = {
+            innkeeper: 'Innkeeper', blacksmith: 'Smith', general_store: 'Shopkeeper',
+            apothecary: 'Apothecary', jeweler: 'Jeweler', tailor: 'Tailor',
+            banker: 'Banker', guard: 'Guard', merchant: 'Merchant', farmer: 'Farmer',
+            miner: 'Miner', hunter: 'Hunter', herbalist: 'Herbalist', druid: 'Druid',
+            explorer: 'Explorer', adventurer: 'Adventurer', scholar: 'Scholar',
+            healer: 'Healer', ferryman: 'Ferryman', sailor: 'Sailor', fisherman: 'Fisherman',
+            traveler: 'Traveler', noble: 'Noble', priest: 'Priest', elder: 'Elder',
+            captain: 'Captain', sergeant: 'Sergeant', scout: 'Scout', herald: 'Herald',
+            steward: 'Steward', sage: 'Sage', bartender: 'Barkeep', bard: 'Bard',
+            dockmaster: 'Dockmaster', harbormaster: 'Harbormaster', foreman: 'Foreman',
+            shepherd: 'Shepherd', miller: 'Miller', vintner: 'Vintner', mason: 'Mason',
+            villager: 'Villager', acolyte: 'Acolyte', hermit: 'Hermit', alchemist: 'Alchemist',
+            forager: 'Forager', wanderer: 'Wanderer', caravan_master: 'Caravan Master',
+            mountain_guide: 'Guide', lighthouse_keeper: 'Keeper', boatwright: 'Boatwright',
+            farmhand: 'Farmhand', beekeeper: 'Beekeeper', orchardist: 'Orchardist',
+            gem_collector: 'Gem Hunter', treasure_hunter: 'Treasure Hunter',
+            trapper: 'Trapper', pearl_hunter: 'Pearl Diver', ice_harvester: 'Ice Harvester',
+            archaeologist: 'Archaeologist', diver: 'Diver',
+            hooded_stranger: 'Stranger', prophet: 'Prophet' // 🖤💀 Quest givers
+        };
+        return titles[npcType] || npcType.charAt(0).toUpperCase() + npcType.slice(1).replace(/_/g, ' ');
+    },
+
+    // 🖤 Helper: format NPC type to display name (NOW USES GENERATED NAMES)
+    formatNPCName(npcType, locationId = null) {
+        // 🦇 If we have a location, generate a unique name
+        if (locationId) {
+            return this.generateNPCName(locationId, npcType);
+        }
+
+        // 🖤 Fallback to generic names if no location provided
         const names = {
             innkeeper: 'The Innkeeper',
             blacksmith: 'The Blacksmith',
@@ -973,7 +1164,8 @@ const GameWorld = {
             fisherman: 'Fisherman',
             traveler: 'Weary Traveler',
             noble: 'Noble',
-            priest: 'Priest'
+            priest: 'Priest',
+            elder: 'The Elder'
         };
         return names[npcType] || npcType.charAt(0).toUpperCase() + npcType.slice(1).replace(/_/g, ' ');
     },

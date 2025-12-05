@@ -1533,6 +1533,21 @@ body:has(#main-menu:not(.hidden)) #game-container {
     transition: box-shadow 0.2s ease;
 }
 
+/* 🖤 CRITICAL FIX: Ensure ALL interactive elements inside panels are clickable 💀 */
+.panel button,
+.panel input,
+.panel select,
+.panel textarea,
+.panel a,
+.panel label,
+#ui-panels button,
+#ui-panels input,
+#ui-panels select,
+#ui-panels textarea,
+#ui-panels a {
+    pointer-events: auto !important;
+}
+
 .panel.dragging {
     box-shadow: 0 12px 48px rgba(79, 195, 247, 0.4) !important;
     z-index: 1000 !important;
@@ -2266,17 +2281,18 @@ body:has(#main-menu:not(.hidden)) #game-container {
 }
 
 /* Message Log - positioned left of player info panel, bottom */
+/* 🖤💀 RESPONSIVE: Uses calc() so position scales with viewport */
 #message-log {
     position: fixed;
     bottom: 10px;
-    right: 220px; /* 200px side-panel + 10px gap + 10px side-panel margin */
-    width: 320px;
+    right: calc(200px + 2vw); /* 🖤 Side-panel width + viewport-relative gap */
+    width: min(320px, 30vw); /* 🦇 Cap at 320px but shrink on small screens */
     max-width: 35vw;
     background: rgba(30, 30, 30, 0.95);
     border: 1px solid rgba(79, 195, 247, 0.3);
     border-radius: 12px;
     padding: 0;
-    max-height: 220px;
+    max-height: min(220px, 30vh); /* 🖤 Shrink height on small viewports too */
     overflow: hidden;
     z-index: 150;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);

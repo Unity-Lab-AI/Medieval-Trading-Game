@@ -41,7 +41,7 @@ const SideQuests = {
                     description: 'The cellar beneath the inn has become infested with giant rats. Clear them out before they ruin the food stores.',
                     giver: 'innkeeper',
                     giverName: 'Martha the Innkeeper',
-                    location: 'greendale',
+                    location: 'riverside_inn', // 🖤💀 Fixed: Innkeeper is at the inn, not the city!
                     type: 'side',
                     subtype: 'combat',
                     chain: 'greendale_vermin',
@@ -139,7 +139,7 @@ const SideQuests = {
                     description: 'The miller needs wheat to demonstrate his new grinding technique. Help gather a good supply.',
                     giver: 'miller',
                     giverName: 'Old Gus the Miller',
-                    location: 'greendale',
+                    location: 'wheat_farm', // 🖤💀 Fixed: Miller is at the wheat farm, not the city!
                     type: 'side',
                     subtype: 'trade',
                     chain: 'greendale_farm',
@@ -166,7 +166,7 @@ const SideQuests = {
                     description: 'Old Gus wants to share his special flour recipe, but needs rare ingredients to perfect it.',
                     giver: 'miller',
                     giverName: 'Old Gus the Miller',
-                    location: 'greendale',
+                    location: 'wheat_farm', // 🖤💀 Fixed: Miller is at the wheat farm!
                     type: 'side',
                     subtype: 'trade',
                     chain: 'greendale_farm',

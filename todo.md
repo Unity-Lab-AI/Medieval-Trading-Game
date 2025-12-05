@@ -2,8 +2,50 @@
 
 **Purpose:** ONLY unfinished items. Completed items move to `finished.md`.
 
-**Last Updated:** 2025-12-04
-**Total Remaining:** 0 bugs, 0 test failures
+**Last Updated:** 2025-12-05
+**Total Remaining:** 6 items
+
+---
+
+## 🟠 HIGH - Remaining Items
+
+- [ ] **Map-based location picker** - Can only buy/build properties at current location, need world map selection
+- [ ] **Panels lose position on resize** - Quest widget, message panel don't stay relative when browser resizes
+- [x] **Leaderboard duplicate posts** - ✅ FIXED: Added submission lock + 5s debounce for same characterId in leaderboard-panel.js
+
+---
+
+## 🟡 MEDIUM - Quest/NPC Integration
+
+- [ ] **Quest turn-in buttons** - Not all NPCs with quests have proper accept/turn-in buttons in dialogue
+- [x] **Quest location tooltips** - ✅ ALREADY IMPLEMENTED: Code exists in game-world-renderer.js using QuestSystem.getQuestInfoForLocation()
+
+---
+
+## 🟢 LOW - Nice to Have
+
+- [x] **Bread + meat → stew recipe** - ✅ FIXED: Added `hearty_stew` recipe (bread + meat + water) in unified-item-system.js
+- [x] **Gathering materials system** - ✅ FIXED: Added `addGatheringSection()` to ResourceGatheringSystem with collapsible panel showing location-specific gathering actions. All gatherable items:
+  - **Mining:** stone, iron_ore, copper_ore, gold_ore, coal (pickaxe bonus/required)
+  - **Woodcutting:** wood (hand/axe), timber (axe required)
+  - **Farming:** wheat (scythe), flax (sickle), wool, milk, eggs
+  - **Fishing:** fish (fishing_rod required)
+  - **Herbalism:** herbs (sickle), vegetables, fruits, honey, water
+  - **Hunting:** meat (bow required), hide (dagger required)
+
+---
+
+## ✅ COMPLETED (Move to finished.md)
+
+### Session #4 - 10-Agent Regression (2025-12-05):
+- [x] Load button not appearing on main menu
+- [x] Save/load missing 8 system states
+- [x] 50+ NPC type inventories
+- [x] 40+ doom NPC inventories
+- [x] NPCMerchantSystem persistence
+- [x] NPCScheduleSystem persistence
+- [x] Crossbow price 60g → 85g
+- [x] Duplicate dragon_scale removed
 
 ---
 

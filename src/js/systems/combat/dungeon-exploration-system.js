@@ -2260,6 +2260,11 @@ const DungeonExplorationSystem = {
             return;
         }
 
+        // 🎵 Switch to dungeon music when exploring
+        if (typeof MusicSystem !== 'undefined') {
+            MusicSystem.playDungeonMusic();
+        }
+
         // Check cooldown
         if (this.isOnCooldown(locationId)) {
             const remaining = this.getCooldownRemaining(locationId);
@@ -2614,10 +2619,21 @@ const DungeonExplorationSystem = {
         if (overlay) {
             overlay.classList.remove('active');
         }
+
+        // 🎵 Return to normal world music when leaving exploration
+        if (typeof MusicSystem !== 'undefined') {
+            // Check if we're in doom world
+            const isDoom = typeof game !== 'undefined' && game.player?.isDoomWorld;
+            if (isDoom) {
+                MusicSystem.playDoomMusic();
+            } else {
+                MusicSystem.playNormalMusic();
+            }
+        }
     },
 
-    // Track exploration section collapsed state
-    explorationSectionCollapsed: false,
+    // Track exploration section collapsed state - 🖤💀 DEFAULT TO COLLAPSED
+    explorationSectionCollapsed: true,
 
     // Calculate enhanced difficulty based on gear, stats, rep, location type, and NPCs
     calculateEnhancedDifficulty(location, event, playerStats) {
@@ -2689,16 +2705,23 @@ const DungeonExplorationSystem = {
         return events;
     },
 
-    // Toggle exploration section collapse
+    // Toggle exploration section collapse - 🖤💀 Collapse to just a button, not full header
     toggleExplorationSection() {
         this.explorationSectionCollapsed = !this.explorationSectionCollapsed;
         const content = document.getElementById('exploration-section-content');
-        const toggleBtn = document.getElementById('exploration-toggle-btn');
-        if (content) {
-            content.style.display = this.explorationSectionCollapsed ? 'none' : 'block';
-        }
-        if (toggleBtn) {
-            toggleBtn.textContent = this.explorationSectionCollapsed ? '▶' : '▼';
+        const fullHeader = document.getElementById('exploration-full-header');
+        const collapsedBtn = document.getElementById('exploration-collapsed-btn');
+
+        if (this.explorationSectionCollapsed) {
+            // Collapse to just "Explore" button
+            if (content) content.style.display = 'none';
+            if (fullHeader) fullHeader.style.display = 'none';
+            if (collapsedBtn) collapsedBtn.style.display = 'block';
+        } else {
+            // Expand to full view
+            if (content) content.style.display = 'block';
+            if (fullHeader) fullHeader.style.display = 'flex';
+            if (collapsedBtn) collapsedBtn.style.display = 'none';
         }
     },
 
@@ -2741,10 +2764,26 @@ const DungeonExplorationSystem = {
         const onCooldown = this.isOnCooldown(locationId);
 
         // Build section content with collapsible header
+        // 🖤💀 Two states: collapsed (just button) vs expanded (full header + content)
         let contentHTML = `
-            <div class="exploration-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; cursor: pointer;" onclick="DungeonExplorationSystem.toggleExplorationSection()">
+            <!-- 🖤 Collapsed state: Just a simple "Explore" button -->
+            <button id="exploration-collapsed-btn"
+                    style="display: ${this.explorationSectionCollapsed ? 'block' : 'none'};
+                           width: 100%; padding: 10px 15px; margin: 5px 0;
+                           background: linear-gradient(135deg, #1a3a4a 0%, #0d2030 100%);
+                           border: 1px solid #4fc3f7; border-radius: 6px;
+                           color: #4fc3f7; font-weight: bold; cursor: pointer;
+                           display: flex; align-items: center; justify-content: center; gap: 8px;"
+                    onclick="DungeonExplorationSystem.toggleExplorationSection()">
+                🏚️ Explore (${availableEvents.length} areas)
+            </button>
+
+            <!-- 🖤 Expanded state: Full header with details -->
+            <div id="exploration-full-header" class="exploration-header"
+                 style="display: ${this.explorationSectionCollapsed ? 'none' : 'flex'}; justify-content: space-between; align-items: center; margin-bottom: 10px; cursor: pointer;"
+                 onclick="DungeonExplorationSystem.toggleExplorationSection()">
                 <h3 style="color: #4fc3f7; margin: 0; display: flex; align-items: center; gap: 8px;">
-                    <span id="exploration-toggle-btn" style="font-size: 0.8em; width: 16px;">${this.explorationSectionCollapsed ? '▶' : '▼'}</span>
+                    <span style="font-size: 0.8em; width: 16px;">▼</span>
                     🏚️ Exploration
                     <span class="difficulty-badge difficulty-${difficulty}" style="font-size: 0.8em; padding: 2px 8px; border-radius: 4px; background: ${this.getDifficultyColor(difficulty)}; color: #fff;">
                         ${difficulty.toUpperCase()}

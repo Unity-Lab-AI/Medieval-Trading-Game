@@ -1948,11 +1948,20 @@ const SettingsPanel = {
                         break;
                     case 'musicVolume':
                         AudioSystem.setMusicVolume(value);
+                        // 🎵 Also update MusicSystem volume
+                        if (typeof MusicSystem !== 'undefined') {
+                            MusicSystem.setVolume(value);
+                        }
                         break;
                     case 'sfxVolume':
                         AudioSystem.setSfxVolume(value);
                         break;
                 }
+            }
+
+            // 🎵 Apply music volume to MusicSystem even if AudioSystem not available
+            if (category === 'audio' && settingKey === 'musicVolume' && typeof MusicSystem !== 'undefined') {
+                MusicSystem.setVolume(value);
             }
         });
     },
@@ -2102,11 +2111,22 @@ const SettingsPanel = {
                             break;
                         case 'isMusicMuted':
                             AudioSystem.toggleMusicMute();
+                            // 🎵 Also toggle MusicSystem
+                            if (typeof MusicSystem !== 'undefined') {
+                                MusicSystem.setEnabled(!value);
+                            }
                             break;
                         case 'isSfxMuted':
                             AudioSystem.toggleSfxMute();
                             break;
                     }
+                }
+                // 🎵 Handle music mute even if AudioSystem not available
+                if (settingKey === 'isMusicMuted' && typeof MusicSystem !== 'undefined') {
+                    MusicSystem.setEnabled(!value);
+                }
+                if (settingKey === 'audioEnabled' && typeof MusicSystem !== 'undefined') {
+                    MusicSystem.setEnabled(value);
                 }
                 break;
                 
@@ -2830,6 +2850,7 @@ const SettingsPanel = {
     },
 
     // 🖤 populate about tab - display who to blame for this mess 💀
+    // 🖤 FIX: Added error handling and fallback for About section 💀
     populateAboutTab() {
         // 🖤 Use panelElement.querySelector for dynamic panel DOM - not document.getElementById
         let aboutContent = this.panelElement?.querySelector('#about-content');
@@ -2837,14 +2858,31 @@ const SettingsPanel = {
         if (!aboutContent) {
             aboutContent = document.getElementById('about-content');
         }
-        if (!aboutContent) return;
+        if (!aboutContent) {
+            console.warn('🖤 About content container not found');
+            return;
+        }
 
-        if (typeof GameConfig !== 'undefined') {
-            aboutContent.innerHTML = GameConfig.getAboutHTML();
-        } else {
-            // fallback if gameconfig isn't available - this should never happen
-            // but if it does, at least show something
-            aboutContent.innerHTML = `
+        // 🖤 FIX: Try GameConfig.getAboutHTML with error handling 💀
+        if (typeof GameConfig !== 'undefined' && typeof GameConfig.getAboutHTML === 'function') {
+            try {
+                aboutContent.innerHTML = GameConfig.getAboutHTML();
+                return; // Success - exit early
+            } catch (err) {
+                console.warn('🖤 GameConfig.getAboutHTML failed:', err.message);
+                // Fall through to fallback
+            }
+        }
+
+        // 🖤 Check if GameConfig exists but method is missing 💀
+        if (typeof GameConfig !== 'undefined' && typeof GameConfig.getAboutHTML !== 'function') {
+            console.warn('🖤 GameConfig exists but getAboutHTML method is missing');
+        }
+
+        // 🖤 FIX: Show fallback content for ANY failure case 💀
+        // This runs if: GameConfig undefined, getAboutHTML missing, or getAboutHTML threw error
+        console.warn('🖤 Using fallback About content');
+        aboutContent.innerHTML = `
                 <div class="about-section">
                     <div class="about-logo">🏰</div>
                     <h2>Medieval Trading Game</h2>
@@ -2869,7 +2907,6 @@ const SettingsPanel = {
                     <div class="about-copyright">© 2025 Unity AI Lab. All rights reserved.</div>
                 </div>
             `;
-        }
     },
 
     // refresh keybindings ui - map your keyboard to your suffering

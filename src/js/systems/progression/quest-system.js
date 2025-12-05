@@ -301,10 +301,10 @@ const QuestSystem = {
         greendale_rat_problem: {
             id: 'greendale_rat_problem',
             name: 'Rat Problem',
-            description: 'Giant rats infest the village storehouse. Clear them out.',
+            description: 'Giant rats infest the inn storehouse. Clear them out.',
             giver: 'innkeeper',
             giverName: 'Martha the Innkeep',
-            location: 'greendale',
+            location: 'riverside_inn', // 🖤💀 Fixed: Innkeeper is at the inn!
             type: 'combat',
             difficulty: 'easy',
             objectives: [
@@ -431,10 +431,10 @@ const QuestSystem = {
         jade_fish_feast: {
             id: 'jade_fish_feast',
             name: 'Fresh Catch',
-            description: 'The inn is hosting a feast. They need fresh fish.',
+            description: 'The inn is hosting a feast. They need fresh fish from Jade Harbor.',
             giver: 'innkeeper',
-            giverName: 'Captain Wong',
-            location: 'jade_harbor',
+            giverName: 'Madame Chen',
+            location: 'silk_road_inn', // 🖤💀 Fixed: Innkeeper is at Silk Road Inn (connects to jade_harbor)
             type: 'collect',
             difficulty: 'easy',
             objectives: [
@@ -1534,7 +1534,8 @@ const QuestSystem = {
                        (typeof DoomWorldSystem !== 'undefined' && DoomWorldSystem.isActive);
 
         return Object.values(this.quests).filter(quest => {
-            if (quest.giver !== npcType) return false;
+            // 🖤💀 Use _npcMatchesObjective for flexible NPC matching (handles arrays too!)
+            if (!this._npcMatchesObjective(npcType, quest.giver)) return false;
             if (quest.location && quest.location !== location && quest.location !== 'any') return false;
             if (this.activeQuests[quest.id]) return false;
             if (this.completedQuests.includes(quest.id) && !quest.repeatable) return false;
@@ -1551,7 +1552,8 @@ const QuestSystem = {
 
     getActiveQuestsForNPC(npcType) {
         return Object.values(this.activeQuests).filter(quest => {
-            return quest.giver === npcType;
+            // 🖤💀 Use _npcMatchesObjective for flexible NPC matching
+            return this._npcMatchesObjective(npcType, quest.giver);
         });
     },
 

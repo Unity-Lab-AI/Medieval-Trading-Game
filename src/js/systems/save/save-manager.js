@@ -124,6 +124,11 @@ const SaveManager = {
             }
         }, 100);
 
+        // 🖤 Refresh Load button state now that SaveManager is ready 💀
+        if (typeof refreshLoadButtonState === 'function') {
+            refreshLoadButtonState();
+        }
+
         console.log('💾 SaveManager: Ready!');
     },
 
@@ -294,7 +299,7 @@ const SaveManager = {
                     gold: game.player.gold,
                     inventory: game.player.inventory,
                     equipment: game.player.equipment,
-                    stats: game.player.stats,
+                    stats: game.player.stats, // 🖤 Contains health, hunger, thirst, stamina, happiness + max values 💀
                     attributes: game.player.attributes,
                     skills: game.player.skills,
                     perks: game.player.perks,
@@ -310,7 +315,12 @@ const SaveManager = {
                     level: game.player.level,
                     experience: game.player.experience,
                     tradeRoutes: game.player.tradeRoutes,
-                    questItems: game.player.questItems || {} // 🖤 Quest items for delivery quests 💀
+                    questItems: game.player.questItems || {}, // 🖤 Quest items for delivery quests 💀
+                    // 🖤 Additional player state that was missing 💀
+                    ownedTools: game.player.ownedTools || [],
+                    toolDurability: game.player.toolDurability || {},
+                    ownsHouse: game.player.ownsHouse || false,
+                    lastRestTime: game.player.lastRestTime || 0
                 } : null,
                 currentLocation: game.currentLocation,
                 // 🖤 Use TimeMachine's getSaveData for complete time state
@@ -364,7 +374,44 @@ const SaveManager = {
                 },
                 settings: game.settings || {},
                 // 🖤 Panel positions - save player's custom panel layout
-                panelPositions: typeof DraggablePanels !== 'undefined' ? DraggablePanels.getAllPositions() : {}
+                panelPositions: typeof DraggablePanels !== 'undefined' ? DraggablePanels.getAllPositions() : {},
+                // 🖤 Additional systems that need state persistence 💀
+                doomWorldState: typeof DoomWorldSystem !== 'undefined' && DoomWorldSystem.getSaveData
+                    ? DoomWorldSystem.getSaveData()
+                    : null,
+                weatherState: typeof WeatherSystem !== 'undefined' && WeatherSystem.getState
+                    ? WeatherSystem.getState()
+                    : null,
+                mountState: typeof MountSystem !== 'undefined' && MountSystem.getSaveData
+                    ? MountSystem.getSaveData()
+                    : null,
+                shipState: typeof ShipSystem !== 'undefined' && ShipSystem.getSaveData
+                    ? ShipSystem.getSaveData()
+                    : null,
+                merchantRankState: typeof MerchantRankSystem !== 'undefined' && MerchantRankSystem.getSaveData
+                    ? MerchantRankSystem.getSaveData()
+                    : null,
+                reputationState: typeof ReputationSystem !== 'undefined' && ReputationSystem.getSaveData
+                    ? ReputationSystem.getSaveData()
+                    : null,
+                achievementState: typeof AchievementSystem !== 'undefined' && AchievementSystem.getProgress
+                    ? AchievementSystem.getProgress()
+                    : null,
+                // 🖤 Travel system state - includes doom path discovery 💀
+                travelState: typeof TravelSystem !== 'undefined' ? {
+                    isInDoomWorld: TravelSystem.isInDoomWorld?.() || false,
+                    doomDiscoveredPaths: TravelSystem.doomDiscoveredPaths || [],
+                    isTraveling: TravelSystem.isTraveling || false,
+                    currentTravelRoute: TravelSystem.currentTravelRoute || null
+                } : null,
+                // 🖤 NPC Merchant economy state - per-slot isolation (no more exploit!) 💀
+                merchantEconomyState: typeof NPCMerchantSystem !== 'undefined' && NPCMerchantSystem.getSaveData
+                    ? NPCMerchantSystem.getSaveData()
+                    : null,
+                // 🖤 NPC Schedule state - registered NPC schedules persist 💀
+                npcScheduleState: typeof NPCScheduleSystem !== 'undefined' && NPCScheduleSystem.getSaveData
+                    ? NPCScheduleSystem.getSaveData()
+                    : null
             }
         };
     },
@@ -629,6 +676,11 @@ const SaveManager = {
                 this.submitToLeaderboard(gameState);
             }
 
+            // 🖤 Refresh main menu Load button state after save 💀
+            if (typeof refreshLoadButtonState === 'function') {
+                refreshLoadButtonState();
+            }
+
             return true;
         } catch (e) {
             console.error('Save failed:', e);
@@ -813,6 +865,112 @@ const SaveManager = {
                 console.log('🖤 Panel positions restored from save');
             } catch (e) {
                 console.warn('🖤 Failed to restore panel positions:', e.message);
+            }
+        }
+
+        // 🖤 Restore additional system states 💀
+        // Doom World
+        if (gameData.doomWorldState && typeof DoomWorldSystem !== 'undefined' && DoomWorldSystem.loadSaveData) {
+            try {
+                DoomWorldSystem.loadSaveData(gameData.doomWorldState);
+                console.log('🖤 Doom world state restored');
+            } catch (e) {
+                console.warn('🖤 Failed to restore doom world state:', e.message);
+            }
+        }
+
+        // Weather System
+        if (gameData.weatherState && typeof WeatherSystem !== 'undefined' && WeatherSystem.loadState) {
+            try {
+                WeatherSystem.loadState(gameData.weatherState);
+                console.log('🖤 Weather state restored');
+            } catch (e) {
+                console.warn('🖤 Failed to restore weather state:', e.message);
+            }
+        }
+
+        // Mount System
+        if (gameData.mountState && typeof MountSystem !== 'undefined' && MountSystem.loadSaveData) {
+            try {
+                MountSystem.loadSaveData(gameData.mountState);
+                console.log('🖤 Mount state restored');
+            } catch (e) {
+                console.warn('🖤 Failed to restore mount state:', e.message);
+            }
+        }
+
+        // Ship System
+        if (gameData.shipState && typeof ShipSystem !== 'undefined' && ShipSystem.loadSaveData) {
+            try {
+                ShipSystem.loadSaveData(gameData.shipState);
+                console.log('🖤 Ship state restored');
+            } catch (e) {
+                console.warn('🖤 Failed to restore ship state:', e.message);
+            }
+        }
+
+        // Merchant Rank System
+        if (gameData.merchantRankState && typeof MerchantRankSystem !== 'undefined' && MerchantRankSystem.loadSaveData) {
+            try {
+                MerchantRankSystem.loadSaveData(gameData.merchantRankState);
+                console.log('🖤 Merchant rank restored');
+            } catch (e) {
+                console.warn('🖤 Failed to restore merchant rank:', e.message);
+            }
+        }
+
+        // Reputation System (city reputation)
+        if (gameData.reputationState && typeof ReputationSystem !== 'undefined' && ReputationSystem.loadSaveData) {
+            try {
+                ReputationSystem.loadSaveData(gameData.reputationState);
+                console.log('🖤 City reputation restored');
+            } catch (e) {
+                console.warn('🖤 Failed to restore city reputation:', e.message);
+            }
+        }
+
+        // Achievement System
+        if (gameData.achievementState && typeof AchievementSystem !== 'undefined' && AchievementSystem.loadProgress) {
+            try {
+                AchievementSystem.loadProgress(gameData.achievementState);
+                console.log('🖤 Achievement progress restored');
+            } catch (e) {
+                console.warn('🖤 Failed to restore achievement progress:', e.message);
+            }
+        }
+
+        // Travel System (doom paths)
+        if (gameData.travelState && typeof TravelSystem !== 'undefined') {
+            try {
+                if (gameData.travelState.doomDiscoveredPaths) {
+                    TravelSystem.doomDiscoveredPaths = gameData.travelState.doomDiscoveredPaths;
+                }
+                if (gameData.travelState.isInDoomWorld && typeof game !== 'undefined') {
+                    game.inDoomWorld = true;
+                }
+                console.log('🖤 Travel state restored');
+            } catch (e) {
+                console.warn('🖤 Failed to restore travel state:', e.message);
+            }
+        }
+
+        // 🖤 NPC Merchant economy state - per-slot isolation (no more exploit!) 💀
+        if (gameData.merchantEconomyState && typeof NPCMerchantSystem !== 'undefined' && NPCMerchantSystem.loadSaveData) {
+            try {
+                NPCMerchantSystem.loadSaveData(gameData.merchantEconomyState);
+                console.log('🖤 Merchant economy state restored');
+            } catch (e) {
+                console.warn('🖤 Failed to restore merchant economy state:', e.message);
+            }
+        }
+
+        // 🖤 NPC Schedule state - registered NPC schedules persist 💀
+        if (gameData.npcScheduleState && typeof NPCScheduleSystem !== 'undefined' && NPCScheduleSystem.loadSaveData) {
+            try {
+                NPCScheduleSystem.loadSaveData(gameData.npcScheduleState);
+                console.log('🖤 NPC schedule state restored');
+            } catch (e) {
+                console.warn('🖤 Failed to restore NPC schedule state:', e.message);
             }
         }
     },
@@ -1607,12 +1765,25 @@ window.SaveUISystem = {
     },
 
     // 🏆 Create Hall of Champions display on main menu
-    createLeaderboardDisplay: () => {
+    // 🖤 FIX: Added retry logic for race condition with DOM loading 💀
+    createLeaderboardDisplay: (retryCount = 0) => {
         const mainMenu = document.getElementById('main-menu');
-        if (!mainMenu) return;
+        if (!mainMenu) {
+            // 🦇 Retry up to 5 times if DOM not ready yet
+            if (retryCount < 5) {
+                setTimeout(() => SaveUISystem.createLeaderboardDisplay(retryCount + 1), 500);
+            }
+            return;
+        }
 
         const menuContent = mainMenu.querySelector('.menu-content');
-        if (!menuContent) return;
+        if (!menuContent) {
+            // 🦇 Retry if menu-content not found yet
+            if (retryCount < 5) {
+                setTimeout(() => SaveUISystem.createLeaderboardDisplay(retryCount + 1), 500);
+            }
+            return;
+        }
 
         // Don't create duplicates
         if (document.getElementById('main-menu-leaderboard')) return;
@@ -1643,9 +1814,14 @@ window.SaveUISystem = {
     },
 
     // 🏆 Update leaderboard entries display
+    // 🖤 FIX: Added logging for debugging Hall of Champions display issues 💀
     updateLeaderboard: () => {
         const container = document.getElementById('leaderboard-entries');
-        if (!container) return;
+        if (!container) {
+            console.log('🏆 updateLeaderboard: leaderboard-entries container not found, creating it...');
+            SaveUISystem.createLeaderboardDisplay();
+            return;
+        }
 
         // 🖤 Helper to render scores to the container 💀
         const renderScores = (scores) => {

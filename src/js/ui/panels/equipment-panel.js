@@ -11,13 +11,15 @@ const EquipmentSystem = {
     // ═══════════════════════════════════════════════════════════════
     // 🎰 EQUIPMENT SLOTS - the holes in your existence to fill
     // ═══════════════════════════════════════════════════════════════
+    // 🖤💀 Equipment slots - allowedTypes must match both item.category AND item.equipType 💀
     slots: {
         weapon: {
             id: 'weapon',
             name: 'Weapon',
             icon: '⚔️',
             description: 'Primary weapon for combat',
-            allowedTypes: ['weapon', 'sword', 'axe', 'mace', 'dagger', 'bow', 'staff'],
+            // 🖤 Added 'weapons' (category) and 'spear' type
+            allowedTypes: ['weapon', 'weapons', 'sword', 'axe', 'mace', 'dagger', 'bow', 'spear', 'staff'],
             bonusTypes: ['attack', 'combat', 'damage']
         },
         offhand: {
@@ -33,7 +35,8 @@ const EquipmentSystem = {
             name: 'Head',
             icon: '🎩',
             description: 'Headwear and helmets',
-            allowedTypes: ['helmet', 'hat', 'hood', 'crown', 'headwear'],
+            // 🖤 Added 'headgear' category
+            allowedTypes: ['helmet', 'hat', 'hood', 'crown', 'headwear', 'headgear'],
             bonusTypes: ['defense', 'intelligence', 'perception']
         },
         body: {
@@ -41,7 +44,8 @@ const EquipmentSystem = {
             name: 'Body',
             icon: '🥋',
             description: 'Armor and clothing',
-            allowedTypes: ['armor', 'robe', 'clothing', 'chest'],
+            // 🖤 Added 'armors' category
+            allowedTypes: ['armor', 'armors', 'robe', 'clothing', 'chest'],
             bonusTypes: ['defense', 'endurance', 'protection']
         },
         hands: {
@@ -49,7 +53,7 @@ const EquipmentSystem = {
             name: 'Hands',
             icon: '🧤',
             description: 'Gloves and gauntlets',
-            allowedTypes: ['gloves', 'gauntlets', 'bracers'],
+            allowedTypes: ['gloves', 'gauntlets', 'bracers', 'handwear'],
             bonusTypes: ['crafting', 'gathering', 'dexterity']
         },
         feet: {
@@ -65,7 +69,8 @@ const EquipmentSystem = {
             name: 'Tool',
             icon: '🔧',
             description: 'Equipped tool for gathering/crafting',
-            allowedTypes: ['tool', 'pickaxe', 'axe', 'hammer', 'fishing_rod', 'sickle'],
+            // 🖤💀 CRITICAL: Added 'tools' (category) - this was the walking_staff bug! 💀
+            allowedTypes: ['tool', 'tools', 'pickaxe', 'axe', 'hammer', 'fishing_rod', 'sickle', 'scythe', 'staff', 'walking_staff'],
             bonusTypes: ['gathering', 'crafting', 'efficiency']
         },
         accessory1: {
@@ -73,7 +78,8 @@ const EquipmentSystem = {
             name: 'Accessory 1',
             icon: '💍',
             description: 'Ring, amulet, or trinket',
-            allowedTypes: ['ring', 'amulet', 'necklace', 'trinket', 'accessory'],
+            // 🖤 Added 'accessories' category and more types
+            allowedTypes: ['ring', 'amulet', 'necklace', 'trinket', 'accessory', 'accessories', 'jewelry'],
             bonusTypes: ['luck', 'charisma', 'special']
         },
         accessory2: {
@@ -81,7 +87,8 @@ const EquipmentSystem = {
             name: 'Accessory 2',
             icon: '📿',
             description: 'Second accessory slot',
-            allowedTypes: ['ring', 'amulet', 'necklace', 'trinket', 'accessory'],
+            // 🖤 Added 'accessories' category and more types
+            allowedTypes: ['ring', 'amulet', 'necklace', 'trinket', 'accessory', 'accessories', 'jewelry'],
             bonusTypes: ['luck', 'charisma', 'special']
         }
     },
@@ -214,11 +221,15 @@ const EquipmentSystem = {
 
     // Equip an item
     equip(itemId, slotId = null) {
+        console.log(`⚔️ EquipmentSystem.equip() called with itemId: ${itemId}, slotId: ${slotId}`);
+
         const item = ItemDatabase?.items?.[itemId];
         if (!item) {
+            console.log(`⚔️ Item not found in ItemDatabase: ${itemId}`);
             addMessage(`Cannot equip unknown item!`, 'warning');
             return false;
         }
+        console.log(`⚔️ Found item: ${item.name}, category: ${item.category}, equipSlot: ${item.equipSlot}, equipType: ${item.equipType}`);
 
         // find appropriate slot if not specified
         if (!slotId) {
@@ -246,6 +257,11 @@ const EquipmentSystem = {
         const currentEquipped = this.getEquipped(slotId);
         if (currentEquipped) {
             this.unequip(slotId, false); // silent unequip
+        }
+
+        // 🖤💀 Ensure equipment object exists before equipping! 💀
+        if (!game.player.equipment) {
+            game.player.equipment = {};
         }
 
         // equip the new item

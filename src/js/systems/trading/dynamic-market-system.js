@@ -163,9 +163,9 @@ const DynamicMarketSystem = {
 
         for (const itemId of location.sells) {
             if (this.originalStock[locationId][itemId] === undefined) {
-                // Random initial stock based on market size
-                const marketSizes = { tiny: 5, small: 10, medium: 20, large: 35, grand: 50 };
-                const baseStock = marketSizes[location.marketSize] || 10;
+                // 🖤💀 Random initial stock based on market size - BALANCED UP for better availability
+                const marketSizes = { tiny: 12, small: 25, medium: 45, large: 65, grand: 90 };
+                const baseStock = marketSizes[location.marketSize] || 25;
                 const variance = Math.floor(Math.random() * baseStock * 0.5);
                 this.originalStock[locationId][itemId] = baseStock + variance;
             }
@@ -209,8 +209,9 @@ const DynamicMarketSystem = {
         this.initLocationStock(locationId);
 
         const location = GameWorld.locations[locationId];
-        const marketSizes = { tiny: 10, small: 20, medium: 40, large: 70, grand: 100 };
-        const maxStock = marketSizes[location?.marketSize] || 20;
+        // 🖤💀 maxStock values - BALANCED UP for better merchant inventory capacity
+        const marketSizes = { tiny: 25, small: 40, medium: 70, large: 110, grand: 150 };
+        const maxStock = marketSizes[location?.marketSize] || 40;
 
         if (this.originalStock[locationId]?.[itemId] !== undefined) {
             this.originalStock[locationId][itemId] = Math.min(maxStock,
@@ -231,7 +232,7 @@ const DynamicMarketSystem = {
     },
 
     // 🖤 Market size lookup table - cached outside loop for performance 💀
-    _marketSizes: { tiny: 5, small: 10, medium: 20, large: 35, grand: 50 },
+    _marketSizes: { tiny: 12, small: 25, medium: 45, large: 65, grand: 90 },
 
     // Reset all stock at start of new day
     resetDailyStock() {
@@ -683,8 +684,9 @@ const DynamicMarketSystem = {
             const location = GameWorld.locations[locationId];
             if (!location) continue;
 
-            const marketSizes = { tiny: 8, small: 15, medium: 30, large: 50, grand: 75 };
-            const baseStock = marketSizes[location.marketSize] || 15;
+            // 🖤💀 Morning restock values - BALANCED UP for better daily availability
+            const marketSizes = { tiny: 15, small: 28, medium: 50, large: 70, grand: 100 };
+            const baseStock = marketSizes[location.marketSize] || 28;
 
             for (const itemId of Object.keys(this.originalStock[locationId])) {
                 // Fresh stock each morning with slight variance

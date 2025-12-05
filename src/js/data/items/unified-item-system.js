@@ -266,6 +266,32 @@ const UnifiedItemSystem = {
             craftTime: 30,
             facility: 'sawmill'
         },
+        // 🖤 Construction materials - Planks → Building Materials 💀
+        crate: {
+            actionType: 'none',
+            stackable: true,
+            maxStack: 50,
+            description: 'Sturdy wooden crate for storing goods.'
+        },
+        barrel: {
+            actionType: 'none',
+            stackable: true,
+            maxStack: 50,
+            description: 'Wooden barrel for storing liquids and dry goods.'
+        },
+        scaffolding: {
+            actionType: 'none',
+            stackable: true,
+            maxStack: 20,
+            description: 'Building scaffolding used for construction projects.'
+        },
+        wooden_beam: {
+            actionType: 'craft',
+            craftedFrom: 'planks',
+            craftTime: 45,
+            facility: 'sawmill',
+            description: 'Strong wooden beam for structural support.'
+        },
         leather: {
             actionType: 'craft',
             craftedFrom: 'hide',
@@ -790,6 +816,57 @@ const UnifiedItemSystem = {
             skillGain: 1
         },
 
+        // 🖤 Construction Materials - Planks → Building Items 💀
+        crate: {
+            output: { item: 'crate', quantity: 1 },
+            inputs: [
+                { item: 'planks', quantity: 4 },
+                { item: 'nails', quantity: 6 }
+            ],
+            facility: 'workshop',
+            time: 25,
+            skillType: 'woodworking',
+            skillRequired: 1,
+            skillGain: 2
+        },
+        barrel: {
+            output: { item: 'barrel', quantity: 1 },
+            inputs: [
+                { item: 'planks', quantity: 6 },
+                { item: 'iron_bar', quantity: 1 }
+            ],
+            facility: 'workshop',
+            time: 40,
+            skillType: 'woodworking',
+            skillRequired: 2,
+            skillGain: 3
+        },
+        wooden_beam: {
+            output: { item: 'wooden_beam', quantity: 2 },
+            inputs: [
+                { item: 'planks', quantity: 4 },
+                { item: 'nails', quantity: 4 }
+            ],
+            facility: 'sawmill',
+            time: 35,
+            skillType: 'woodworking',
+            skillRequired: 1,
+            skillGain: 2
+        },
+        scaffolding: {
+            output: { item: 'scaffolding', quantity: 1 },
+            inputs: [
+                { item: 'wooden_beam', quantity: 4 },
+                { item: 'rope', quantity: 3 },
+                { item: 'nails', quantity: 10 }
+            ],
+            facility: 'workshop',
+            time: 60,
+            skillType: 'woodworking',
+            skillRequired: 3,
+            skillGain: 4
+        },
+
         // Textile Processing
         leather: {
             output: { item: 'leather', quantity: 1 },
@@ -870,6 +947,20 @@ const UnifiedItemSystem = {
             inputs: [
                 { item: 'meat', quantity: 2 },
                 { item: 'vegetables', quantity: 2 },
+                { item: 'water', quantity: 1 }
+            ],
+            facility: 'kitchen',
+            time: 45,
+            skillType: 'cooking',
+            skillRequired: 1,
+            skillGain: 2
+        },
+        // 🖤💀 Bread-based stew alternative - for when vegetables are scarce!
+        hearty_stew: {
+            output: { item: 'stew', quantity: 2 },
+            inputs: [
+                { item: 'bread', quantity: 2 },
+                { item: 'meat', quantity: 2 },
                 { item: 'water', quantity: 1 }
             ],
             facility: 'kitchen',
@@ -1946,29 +2037,56 @@ const UnifiedItemSystem = {
     },
 
     // Get equipment bonuses for a slot
+    // 🖤💀 FIXED: Now checks BOTH itemMetadata AND ItemDatabase.items! 💀
     getEquipmentBonuses(itemId) {
         const meta = this.itemMetadata[itemId];
-        if (!meta) return {};
-
         const bonuses = {};
 
-        if (meta.combatBonus) {
-            Object.assign(bonuses, meta.combatBonus);
+        // 🖤💀 CRITICAL: Also check ItemDatabase.items for bonuses and stats! 💀
+        // Items like walking_staff have stats/bonuses directly on them
+        const itemDef = typeof ItemDatabase !== 'undefined' ? ItemDatabase.items?.[itemId] : null;
+
+        // 🦇 Merge bonuses from itemMetadata (legacy system)
+        if (meta) {
+            if (meta.combatBonus) {
+                Object.assign(bonuses, meta.combatBonus);
+            }
+            if (meta.gatherBonus) {
+                bonuses.gatherBonus = meta.gatherBonus;
+            }
+            if (meta.craftBonus) {
+                bonuses.craftBonus = meta.craftBonus;
+            }
+            if (meta.tradeBonus) {
+                Object.assign(bonuses, meta.tradeBonus);
+            }
+            if (meta.carryBonus) {
+                bonuses.carryBonus = meta.carryBonus;
+            }
+            if (meta.travelBonus) {
+                Object.assign(bonuses, meta.travelBonus);
+            }
         }
-        if (meta.gatherBonus) {
-            bonuses.gatherBonus = meta.gatherBonus;
-        }
-        if (meta.craftBonus) {
-            bonuses.craftBonus = meta.craftBonus;
-        }
-        if (meta.tradeBonus) {
-            Object.assign(bonuses, meta.tradeBonus);
-        }
-        if (meta.carryBonus) {
-            bonuses.carryBonus = meta.carryBonus;
-        }
-        if (meta.travelBonus) {
-            Object.assign(bonuses, meta.travelBonus);
+
+        // 🖤💀 Merge bonuses from ItemDatabase.items (new system) 💀
+        if (itemDef) {
+            // Direct bonuses property (pickaxe, sword, etc.)
+            if (itemDef.bonuses) {
+                Object.assign(bonuses, itemDef.bonuses);
+            }
+            // Stats property (walking_staff, lamp, etc.)
+            if (itemDef.stats) {
+                Object.assign(bonuses, itemDef.stats);
+            }
+            // Legacy damage property → attack
+            if (itemDef.damage && !bonuses.attack && !bonuses.damage) {
+                bonuses.attack = itemDef.damage;
+                bonuses.damage = itemDef.damage;
+            }
+            // Carry bonus
+            if (itemDef.carryBonus) {
+                bonuses.carryBonus = (bonuses.carryBonus || 0) + itemDef.carryBonus;
+            }
         }
 
         return bonuses;

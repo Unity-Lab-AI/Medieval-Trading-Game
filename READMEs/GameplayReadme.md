@@ -1577,13 +1577,18 @@ The game features **57 achievements** across 12 categories, including 10 hidden 
 
 ## 📅 VERSION HISTORY
 
-### v0.90.00 - The Unified Dialogue Update (2025-12-04)
+### v0.90.00 - The Unified Dialogue Update (2025-12-05)
 
 **Major Features:**
 - 🎭 **Unified Quest System** - All quest buttons now show specific quest names
 - 📜 **API Quest Instructions** - Button-specific instructions for {assignQuest}, {completeQuest}, {confirmDelivery}
 - 🖤 **Intro Panel Rework** - Hooded Stranger now uses People Panel instead of separate modals
 - 🔬 **Mega Regression Test** - 121 checks across 10 categories, 100% pass rate
+- 🗺️ **Multi-Hop Travel Animation** - Travel path shows waypoints on long journeys
+- 🔨 **Construction Materials Crafting** - Full tree: crate, barrel, wooden_beam, scaffolding
+- 💾 **Save/Load Enhancements** - 12+ system states properly serialized
+- 🎭 **50+ NPC Type Inventories** - Each NPC type has contextual item pools
+- 🏆 **Hall of Champions Polish** - Top 3 display with medals
 
 **Bug Fixes (519+ total):**
 - ✅ All 42 game-flow tests passing

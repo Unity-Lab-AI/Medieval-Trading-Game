@@ -724,6 +724,15 @@ const PeoplePanel = {
     talkTo(npc) {
         let npcData = npc;
 
+        // 🖤💀 SPECIAL HANDLER: Hooded Stranger - offers initial quest if not accepted yet 💀
+        if ((npc.type === 'hooded_stranger' || npc.id?.includes('hooded_stranger')) &&
+            typeof InitialEncounterSystem !== 'undefined' &&
+            InitialEncounterSystem.needsInitialQuest?.()) {
+            console.log('👥 PeoplePanel: Hooded Stranger clicked - showing quest offer!');
+            this._showHoodedStrangerQuestOffer(npc);
+            return;
+        }
+
         // 🖤 Enrich with persona data if available
         if (typeof NPCPersonaDatabase !== 'undefined') {
             const persona = NPCPersonaDatabase.getPersona(npc.type || npc.id);
@@ -734,6 +743,49 @@ const PeoplePanel = {
 
         console.log(`👥 PeoplePanel: Starting conversation with ${npcData.name}`);
         this.showChatView(npcData);
+    },
+
+    // 🖤💀 Show the Hooded Stranger quest offer (for players who declined initially) 💀
+    _showHoodedStrangerQuestOffer(npc) {
+        const playerName = typeof game !== 'undefined' ? game.player?.name : 'Traveler';
+        const questOffer = InitialEncounterSystem.offerInitialQuestFromStranger?.();
+
+        if (!questOffer?.canAcceptQuest) {
+            // Quest already accepted - just show normal chat
+            console.log('👥 PeoplePanel: Quest already accepted, showing normal chat');
+            this.showChatView(npc);
+            return;
+        }
+
+        // 🖤 Show special encounter with quest offer
+        this.showSpecialEncounter(InitialEncounterSystem.mysteriousStranger, {
+            introText: 'The hooded figure turns to face you, ancient eyes gleaming beneath the cowl...',
+            greeting: questOffer.dialogue,
+            disableChat: true,
+            disableBack: false, // 🖤 Can back out this time
+            customActions: [
+                {
+                    label: '✅ Accept Quest: First Steps',
+                    action: () => {
+                        console.log('🎭 Player accepted quest from Hooded Stranger (fallback)');
+                        if (questOffer.onAccept) questOffer.onAccept();
+                    },
+                    primary: true,
+                    questRelated: true,
+                    closeAfter: true
+                },
+                {
+                    label: '❓ Not yet...',
+                    action: () => {
+                        this.addChatMessage("*The stranger nods slowly* Very well... but do not delay too long. Darkness does not wait.", 'npc');
+                    },
+                    questRelated: false
+                }
+            ],
+            onClose: () => {
+                console.log('🎭 Hooded Stranger quest offer closed');
+            }
+        });
     },
 
     // 📝 UPDATE CHAT HEADER
@@ -2211,7 +2263,7 @@ Speak cryptically and briefly. You offer passage to the ${inDoom ? 'normal world
             miner: '⛏️', woodcutter: '🪓', barkeep: '🍺', general_store: '🏪',
             herbalist: '🌿', hunter: '🏹', druid: '🌳', sailor: '⚓',
             explorer: '🧭', adventurer: '⚔️', banker: '🏦',
-            prophet: '🎭', mysterious_stranger_intro: '🎭', // 🖤 Hooded Stranger intro NPC
+            prophet: '🎭', mysterious_stranger_intro: '🎭', hooded_stranger: '🎭', // 🖤 Hooded Stranger intro NPC
             default: '👤'
         };
         return icons[type] || icons.default;
@@ -2231,7 +2283,7 @@ Speak cryptically and briefly. You offer passage to the ${inDoom ? 'normal world
             barkeep: 'Barkeep', general_store: 'Shopkeeper', herbalist: 'Herbalist',
             hunter: 'Hunter', druid: 'Forest Keeper', sailor: 'Sailor',
             explorer: 'Explorer', adventurer: 'Adventurer', banker: 'Banker',
-            prophet: 'Mysterious Prophet', mysterious_stranger_intro: 'Mysterious Figure', // 🖤 Hooded Stranger
+            prophet: 'Mysterious Prophet', mysterious_stranger_intro: 'Mysterious Figure', hooded_stranger: 'Hooded Stranger', // 🖤 Hooded Stranger
             default: 'Local'
         };
         return titles[type] || titles.default;
@@ -2248,6 +2300,7 @@ Speak cryptically and briefly. You offer passage to the ${inDoom ? 'normal world
             farmer: 'Tends to crops and livestock.',
             general_store: 'Sells general supplies and necessities.',
             boatman: 'A cloaked figure beside a shimmering portal. Can transport between worlds.',
+            hooded_stranger: 'A mysterious cloaked figure watching from the shadows. They seem to have something important to tell you.',
             default: 'A local going about their business.'
         };
         return descriptions[type] || descriptions.default;

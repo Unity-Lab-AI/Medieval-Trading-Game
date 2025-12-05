@@ -1679,7 +1679,8 @@ const GameWorldRenderer = {
 
     // 🚶 animate your little marker wandering across the map like it has purpose
     // travelTimeMinutes: how long you'll suffer on this journey
-    animateTravel(fromLocationId, toLocationId, travelTimeMinutes) {
+    // 🖤 FIX: Now accepts optional route array for multi-hop path animation 💀
+    animateTravel(fromLocationId, toLocationId, travelTimeMinutes, route = null) {
         const locations = typeof GameWorld !== 'undefined' ? GameWorld.locations : {};
         const fromLoc = locations[fromLocationId];
         const toLoc = locations[toLocationId];
@@ -1699,6 +1700,30 @@ const GameWorldRenderer = {
             cancelAnimationFrame(this.travelAnimation);
         }
 
+        // 🖤 FIX: Build waypoints array for multi-hop paths 💀
+        // If route has multiple stops, we follow them in order instead of beelining
+        let waypoints = [];
+        if (route && route.length > 1) {
+            // Build scaled waypoint positions for each stop in the route
+            for (const locId of route) {
+                const loc = locations[locId];
+                if (loc?.mapPosition) {
+                    const scaled = this.scalePosition(loc.mapPosition);
+                    if (scaled) {
+                        waypoints.push({ x: scaled.x, y: scaled.y, id: locId });
+                    }
+                }
+            }
+            console.log('🗺️ Multi-hop route with', waypoints.length, 'waypoints:', route);
+        }
+        // If no valid waypoints, fall back to direct path
+        if (waypoints.length < 2) {
+            waypoints = [
+                { x: scaledFrom.x, y: scaledFrom.y, id: fromLocationId },
+                { x: scaledTo.x, y: scaledTo.y, id: toLocationId }
+            ];
+        }
+
         // Store travel info for time-synced animation (using scaled positions)
         this.currentTravel = {
             fromId: fromLocationId,
@@ -1707,6 +1732,7 @@ const GameWorldRenderer = {
             startY: scaledFrom.y,
             endX: scaledTo.x,
             endY: scaledTo.y,
+            waypoints: waypoints, // 🖤 NEW: Array of waypoint positions 💀
             durationMinutes: travelTimeMinutes,
             startGameTime: typeof TimeSystem !== 'undefined' ? TimeSystem.getTotalMinutes() : 0
         };
@@ -1807,9 +1833,57 @@ const GameWorldRenderer = {
             ? 2 * progress * progress
             : 1 - Math.pow(-2 * progress + 2, 2) / 2;
 
-        // Calculate current position (already scaled in animateTravel)
-        const currentX = travel.startX + (travel.endX - travel.startX) * easeProgress;
-        const currentY = travel.startY + (travel.endY - travel.startY) * easeProgress;
+        // 🖤 FIX: Calculate current position using WAYPOINTS, not beeline! 💀
+        let currentX, currentY;
+
+        if (travel.waypoints && travel.waypoints.length > 1) {
+            // Multi-hop path: interpolate along waypoint segments
+            const waypoints = travel.waypoints;
+            const numSegments = waypoints.length - 1;
+
+            // Calculate total path length for proper time distribution
+            let totalDist = 0;
+            const segmentDists = [];
+            for (let i = 0; i < numSegments; i++) {
+                const dx = waypoints[i + 1].x - waypoints[i].x;
+                const dy = waypoints[i + 1].y - waypoints[i].y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                segmentDists.push(dist);
+                totalDist += dist;
+            }
+
+            // Find which segment we're on based on eased progress
+            let targetDist = easeProgress * totalDist;
+            let accumDist = 0;
+            let segmentIndex = 0;
+            let segmentProgress = 0;
+
+            for (let i = 0; i < numSegments; i++) {
+                if (accumDist + segmentDists[i] >= targetDist) {
+                    segmentIndex = i;
+                    segmentProgress = (targetDist - accumDist) / segmentDists[i];
+                    break;
+                }
+                accumDist += segmentDists[i];
+                segmentIndex = i;
+            }
+
+            // Clamp to last segment
+            if (segmentIndex >= numSegments) {
+                segmentIndex = numSegments - 1;
+                segmentProgress = 1;
+            }
+
+            // Interpolate within the current segment
+            const from = waypoints[segmentIndex];
+            const to = waypoints[segmentIndex + 1] || waypoints[waypoints.length - 1];
+            currentX = from.x + (to.x - from.x) * segmentProgress;
+            currentY = from.y + (to.y - from.y) * segmentProgress;
+        } else {
+            // Fallback to direct beeline if no waypoints
+            currentX = travel.startX + (travel.endX - travel.startX) * easeProgress;
+            currentY = travel.startY + (travel.endY - travel.startY) * easeProgress;
+        }
 
         // Update marker position (pass alreadyScaled=true since travel coords are pre-scaled)
         this.updatePlayerMarker(currentX, currentY, true);
@@ -1935,10 +2009,12 @@ const GameWorldRenderer = {
     },
 
     // 🗺️ called when you decide to leave your current misery for different misery
-    onTravelStart(fromId, toId, travelTimeMinutes) {
+    // 🖤 FIX: Now accepts optional route array for multi-hop path animation 💀
+    onTravelStart(fromId, toId, travelTimeMinutes, route = null) {
         console.log(`🗺️ GameWorldRenderer.onTravelStart: ${fromId} -> ${toId}, duration: ${travelTimeMinutes} game minutes`);
         console.log('🗺️ Player marker exists:', !!this.playerMarker);
-        this.animateTravel(fromId, toId, travelTimeMinutes);
+        console.log('🗺️ Route:', route);
+        this.animateTravel(fromId, toId, travelTimeMinutes, route);
         console.log('🗺️ After animateTravel - currentTravel:', !!this.currentTravel);
     },
 

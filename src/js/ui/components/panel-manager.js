@@ -28,6 +28,7 @@ const PanelManager = {
 
     // All managed panel IDs and their info
     panelInfo: {
+        'game-setup-panel': { name: 'New Game', icon: '🎮', shortcut: '' }, // 🖤 Setup panel needs tracking for proper hide
         'market-panel': { name: 'Market', icon: '🏪', shortcut: 'M', customToggle: 'openMarket()' },
         'inventory-panel': { name: 'Inventory', icon: '🎒', shortcut: 'I' },
         'travel-panel': { name: 'Travel', icon: '🗺️', shortcut: 'T' },

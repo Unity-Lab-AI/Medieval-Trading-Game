@@ -1551,18 +1551,28 @@ permissions:
 
 ## 📅 VERSION HISTORY
 
-### v0.90.00 - The Unified Dialogue Update (2025-12-04)
+### v0.90.00 - The Unified Dialogue Update (2025-12-05)
 
 **New Features:**
 - 🎭 **Unified Quest API Instructions** - Button-specific instructions for all quest types
 - 📜 **sendQuestActionMessage()** - Full quest context passed to AI
 - 🖤 **Intro Panel Rework** - Hooded Stranger uses PeoplePanel
 - 🔬 **Mega Regression Test** - 121 checks across 10 categories
+- 🗺️ **Multi-Hop Travel Animation** - Travel path shows waypoints on long journeys
+- 🔨 **Construction Materials Crafting** - Full crafting tree: crate, barrel, wooden_beam, scaffolding
+- 💾 **Save/Load System Enhancements** - 12+ system states properly serialized
+- 🎭 **50+ NPC Type Inventories** - Each NPC type has contextual item pools
+- 🌦️ **Weather Z-Index Fix** - Weather effects always render correctly (layers 1-4)
+- 🏆 **Hall of Champions Polish** - Top 3 display with medals
 
 **Technical Changes:**
 - Added OFFER_QUEST, DELIVER_ITEM, CHECK_PROGRESS action types
 - Added 3 instruction builder methods to npc-instruction-templates.js
 - Added showSpecialEncounter() to people-panel.js
+- Added waypoint markers during multi-hop travel
+- Added 4 new construction material recipes to crafting system
+- Fixed weather z-index permanently (weather: 1-4, UI: 10-30)
+- About section fallback when GameConfig unavailable
 - All 42 game-flow tests passing
 - 519+ bugs verified fixed via 10 parallel agent analysis
 

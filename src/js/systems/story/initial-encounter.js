@@ -11,6 +11,8 @@ const InitialEncounterSystem = {
     // 🔧 CONFIG
     hasShownEncounter: false,
     hasShownTutorialChoice: false, // 🖤 Track if we've shown the tutorial Yes/No popup
+    hasAcceptedInitialQuest: false, // 🖤💀 Track if player accepted the initial quest
+    strangerSpawnedAtLocation: null, // 🖤 Track where we spawned the stranger as fallback NPC
     encounterDelay: 500, // 🖤💀 FAST - show encounter quickly after game start!
 
     // 📖 THE MYSTERIOUS STRANGER - your first encounter in this world
@@ -300,6 +302,7 @@ const InitialEncounterSystem = {
                         label: '✅ Accept Quest: First Steps',
                         action: () => {
                             console.log('🎭 Player accepted quest from Hooded Stranger');
+                            this.hasAcceptedInitialQuest = true; // 🖤💀 Mark quest accepted!
                             this.showQuestAcceptedThenTutorialOption(playerName);
                         },
                         primary: true,
@@ -320,6 +323,10 @@ const InitialEncounterSystem = {
                 ],
                 onClose: () => {
                     console.log('🎭 Stranger encounter closed');
+                    // 🖤💀 If player closed without accepting quest, spawn stranger as fallback NPC! 💀
+                    if (!this.hasAcceptedInitialQuest) {
+                        this._spawnStrangerAsFallbackNPC();
+                    }
                 }
             });
         } else {
@@ -627,6 +634,80 @@ const InitialEncounterSystem = {
     testEncounter(playerName = 'Test Trader') {
         this.hasShownEncounter = false;
         this.triggerInitialEncounter(playerName, 'greendale');
+    },
+
+    // 🖤💀 FALLBACK QUEST GIVER - spawn the Hooded Stranger at player's location if they close without accepting 💀
+    _spawnStrangerAsFallbackNPC() {
+        // Get current location
+        const currentLocationId = typeof game !== 'undefined' && game.currentLocation?.id;
+        if (!currentLocationId) {
+            console.warn('🎭 Cannot spawn stranger - no current location!');
+            return;
+        }
+
+        // Don't spawn twice at same location
+        if (this.strangerSpawnedAtLocation === currentLocationId) {
+            console.log('🎭 Stranger already spawned at', currentLocationId);
+            return;
+        }
+
+        this.strangerSpawnedAtLocation = currentLocationId;
+
+        // 🖤 Add "hooded_stranger" to the location's NPC list dynamically
+        if (typeof GameWorld !== 'undefined' && GameWorld.locations[currentLocationId]) {
+            const location = GameWorld.locations[currentLocationId];
+            if (!location.npcs) location.npcs = [];
+
+            // Add stranger if not already there
+            if (!location.npcs.includes('hooded_stranger')) {
+                location.npcs.push('hooded_stranger');
+                console.log(`🎭 Hooded Stranger spawned at ${currentLocationId} as fallback quest giver! 💀`);
+            }
+        }
+
+        // 🦇 Show message to player
+        if (typeof addMessage === 'function') {
+            addMessage('🎭 The hooded stranger lingers in the shadows... perhaps you should speak with them.', 'info');
+        }
+
+        // 🖤 Resume time if it was paused
+        if (this._previousSpeedForIntro && typeof TimeSystem !== 'undefined') {
+            TimeSystem.setSpeed(this._previousSpeedForIntro);
+            this._previousSpeedForIntro = null;
+        }
+    },
+
+    // 🖤💀 Check if player needs the initial quest (for stranger NPC dialogue) 💀
+    needsInitialQuest() {
+        // Check if act1_quest1 is active or completed
+        if (typeof QuestSystem !== 'undefined') {
+            const quest = QuestSystem.getQuest?.('act1_quest1');
+            if (quest && (quest.status === 'active' || quest.status === 'completed')) {
+                return false;
+            }
+        }
+        return !this.hasAcceptedInitialQuest;
+    },
+
+    // 🖤💀 Offer initial quest again when talking to spawned stranger 💀
+    offerInitialQuestFromStranger() {
+        if (this.hasAcceptedInitialQuest) {
+            // Quest already accepted - stranger has different dialogue
+            return {
+                dialogue: "Ah, you have accepted your destiny. Go now, the path awaits...",
+                canAcceptQuest: false
+            };
+        }
+
+        const playerName = typeof game !== 'undefined' ? game.player?.name : 'Traveler';
+        return {
+            dialogue: this._getDefaultStrangerDialogue(playerName, "We meet again, young one..."),
+            canAcceptQuest: true,
+            onAccept: () => {
+                this.hasAcceptedInitialQuest = true;
+                this.showQuestAcceptedThenTutorialOption(playerName);
+            }
+        };
     }
 };
 

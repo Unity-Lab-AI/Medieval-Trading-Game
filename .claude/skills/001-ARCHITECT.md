@@ -387,8 +387,110 @@ ItemDatabase.categories = {
 
 ---
 
+## CRAFTING SYSTEM
+
+### Crafting Progression Tree
+```
+RAW MATERIALS → PROCESSED → CONSTRUCTION
+timber → planks → crate, barrel, wooden_beam → scaffolding
+ore → iron_bar → nails, tools, weapons
+hide → leather → armor, bags
+```
+
+### Construction Materials (v0.89.99)
+| Recipe | Inputs | Output | Facility |
+|--------|--------|--------|----------|
+| Crate | planks (4) + nails (6) | crate (1) | workshop |
+| Barrel | planks (6) + iron_bar (1) | barrel (1) | workshop |
+| Wooden Beam | planks (4) + nails (4) | wooden_beam (2) | sawmill |
+| Scaffolding | wooden_beam (4) + rope (3) + nails (10) | scaffolding (1) | workshop |
+
+---
+
+## SAVE/LOAD SYSTEM
+
+### Complete State Persistence (v0.89.99)
+All game systems save/load per slot (no more global contamination):
+
+| System | Save Data |
+|--------|-----------|
+| Player | Stats, gold, inventory, skills, attributes |
+| Time | Game day, time, speed, pause state |
+| Location | Current position, discovered paths/locations |
+| Weather | Current weather, day/night cycle state |
+| Merchants | Gold, stock, relationships, trade history |
+| NPCs | Schedules, inventories (50+ types) |
+| Quests | Active, completed, progress, timers |
+| Achievements | Unlocked, hidden, stats tracking |
+| Properties | Owned, upgrades, condition, income |
+| Combat | Last encounter, cooldowns |
+| Doom World | Discovered doom paths (separate tracking) |
+| Mounts/Ships | Owned, stats, equipped |
+
+### NPC Type Inventories (50+ Types)
+Each profession has 10-25 appropriate items:
+- **Nobility:** noble, banker, tailor, herald
+- **Military:** captain, sergeant, scout
+- **Maritime:** dockmaster, sailor, harbormaster
+- **Agriculture:** vintner, miller, farmhand, shepherd, beekeeper, orchardist
+- **Hunting:** hunter, trapper
+- **Mining:** foreman, gem_collector
+- **Adventure:** adventurer, explorer, treasure_hunter, archaeologist
+- **Nature:** alchemist, forager, druid, sage, hermit
+- **Hospitality:** bartender, bard, caravan_master
+- **Village:** elder, villager, mason
+
+---
+
+## WEATHER & VISUAL EFFECTS
+
+### Weather Layer System
+Weather renders BELOW UI elements:
+- Rain, snow, fog, lightning at z-index 2-3
+- Map UI, paths, markers at z-index 10+
+- Modals, panels at z-index 100+
+
+### Day/Night Cycle
+- 24-hour game cycle with lighting changes
+- Merchant prices affected by time of day
+- Some NPCs only appear at certain times
+
+---
+
+## MAP & TRAVEL SYSTEM
+
+### Multi-Hop Path Animation (v0.89.99)
+Travel animation follows actual waypoints:
+- Route A → B → C shows marker following path segments
+- Distance-weighted interpolation for smooth motion
+- No more "beeline" straight to destination
+
+### Map Display
+- 2400x1800 scaled map from 800x600 base
+- Seasonal backdrops with crossfade transitions
+- Fog of war for undiscovered areas
+
+---
+
+## HALL OF CHAMPIONS (Leaderboard)
+
+### Global Leaderboard
+- Top 100 merchants across all players
+- Per-slot isolation (no cross-contamination)
+- Main menu shows top 3 with retry logic for DOM loading
+- Full Hall of Champions overlay shows all entries
+
+### Score Calculation
+- Days survived
+- Total gold earned
+- Quests completed
+- Achievements unlocked
+
+---
+
 ## COMPLETED FEATURES ✅
 
+### Core Systems
 1. ✅ Unified NPC panel for combat/trade/conversation/quests
 2. ✅ Choice-based combat with stat rolls
 3. ✅ Tutorial-first initial encounter flow
@@ -399,6 +501,19 @@ ItemDatabase.categories = {
 8. ✅ Bulk trading shortcuts
 9. ✅ Dungeon loot system with sellOnly flag
 10. ✅ 115 achievements across 11 categories
+
+### Recent Additions (v0.89.99)
+11. ✅ Complete save/load with 12+ system states
+12. ✅ 50+ NPC type inventories (profession-appropriate)
+13. ✅ Merchant economy persistence per-slot
+14. ✅ Construction materials crafting tree
+15. ✅ Multi-hop travel path animation
+16. ✅ Weather z-index layering fix
+17. ✅ Hall of Champions top 3 display fix
+18. ✅ Settings About section with fallback
+19. ✅ Perk selection safety checks
+20. ✅ Achievement trigger safety checks
+21. ✅ Time system vitals pause fix
 
 ---
 

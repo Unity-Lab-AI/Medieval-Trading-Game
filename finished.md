@@ -2,7 +2,7 @@
 
 **Purpose:** Archive of ALL completed work from todo.md. This file is the graveyard where fixed bugs and completed features rest in peace.
 
-**Last Updated:** 2025-12-04
+**Last Updated:** 2025-12-05
 
 ---
 
@@ -42,6 +42,28 @@
 ---
 
 ## 🆕 NEW FEATURES - COMPLETED ✅
+
+### Start Button Fix - ItemDatabase Syntax Error (2025-12-05) 🖤💀🎮
+- [x] **Start button not working** - Clicking "Start Game" in character creation did nothing, game world never appeared
+- [x] **Root cause: Syntax error in item-database.js:2690** - Unescaped apostrophe in `'It'll keep you alive...'` broke the entire ItemDatabase from loading
+- [x] **Fixed apostrophe escaping** - Changed single quotes to double quotes for the description string
+- [x] **Added safety checks** - Added `typeof ItemDatabase === 'undefined'` guards in game.js and inventory-panel.js
+- [x] **Fixed changeState() flow** - Made `changeState(GameState.PLAYING)` call `showGameUI()` instead of just `showPanel('location-panel')`
+
+**Files Modified:**
+- `src/js/data/items/item-database.js` - Fixed syntax error at line 2690
+- `src/js/core/game.js` - Added safety checks + fixed changeState flow
+- `src/js/ui/panels/inventory-panel.js` - Added safety checks
+
+---
+
+### Save/Load & NPC Inventory Overhaul (2025-12-05) 🖤💀📦
+- [x] **Load button not appearing on main menu** - Fixed `game.getSavedGames()` to detect compressed saves (`UC:` prefix) and use SaveManager metadata
+- [x] **Added `refreshLoadButtonState()` function** - Global function updates Load button after saves, called by SaveManager
+- [x] **8 new system states saved/loaded** - DoomWorld, Weather, Mount, Ship, MerchantRank, Reputation, Achievement, Travel
+- [x] **4 missing player properties added** - ownedTools, toolDurability, ownsHouse, lastRestTime now persist
+- [x] **50+ NPC type inventories created** - Each profession has 10-25 appropriate items instead of bare minimum food/water
+- [x] **NPC categories added:** Nobility (noble, banker, tailor, herald), Military (captain, sergeant, scout), Maritime (dockmaster, sailor, harbormaster), Agriculture (vintner, miller, farmhand, shepherd, beekeeper, orchardist, olive_presser, silkweaver), Hunting (hunter, trapper), Mining (foreman, gem_collector), Adventure (adventurer, explorer, treasure_hunter, archaeologist, diver, pearl_hunter, ice_harvester), Nature (alchemist, forager, druid, acolyte, hermit, sage, wanderer), Hospitality (bartender, traveler, bard, caravan_master, mountain_guide, lighthouse_keeper), Village (elder, villager, boatwright, mason)
 
 ### Unified Quest API Instructions (2025-12-04) 🖤💀📜
 - [x] **Quest buttons show specific names** - "📜 Ask about: First Steps" not generic buttons

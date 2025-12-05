@@ -51,7 +51,8 @@
       "Bash(del testsverify-intro-helper.spec.js)",
       "Bash(powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"$mtgPath = ''C:\\Users\\gfour\\OneDrive\\Desktop\\MTG v0.89.97''; $emptyDirs = Get-ChildItem -Path $mtgPath -Directory -Recurse | Where-Object { $_FullName -notlike ''*node_modules*'' -and $_FullName -notlike ''*\\.git*'' } | Where-Object { @(Get-ChildItem -Path $_FullName -Force).Count -eq 0 }; $emptyDirs | ForEach-Object { $_FullName }\")",
       "Bash(temp_old_index.html)",
-      "Bash(\"C:\\Users\\gfour\\OneDrive\\Desktop\\MTG v0.89.97 - Copy\\Gee''sThoughts.md\")"
+      "Bash(\"C:\\Users\\gfour\\OneDrive\\Desktop\\MTG v0.89.97 - Copy\\Gee''sThoughts.md\")",
+      "Bash(\"C:\\Users\\gfour\\OneDrive\\Desktop\\MTG v0.89.99\\Gee''sThoughts.md\")"
     ],
     "deny": [],
     "ask": []

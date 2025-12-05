@@ -64,23 +64,33 @@ const InventorySystem = {
     updateInventoryDisplay() {
         const inventoryContainer = document.getElementById('inventory-items');
         if (!inventoryContainer) return;
-        
+
         inventoryContainer.innerHTML = '';
-        
+
         if (!game.player || !game.player.inventory) {
             inventoryContainer.innerHTML = '<p>Your inventory is empty.</p>';
             return;
         }
-        
+
+        // 🖤💀 Safety check - ItemDatabase might not be loaded yet during early init
+        if (typeof ItemDatabase === 'undefined') {
+            console.warn('🎒 InventoryPanel: ItemDatabase not loaded yet, skipping update');
+            inventoryContainer.innerHTML = '<p>Loading inventory...</p>';
+            return;
+        }
+
         let totalWeight = 0;
         let totalValue = 0;
-        
-        for (const [itemId, quantity] of Object.entries(game.player.inventory)) {
+
+        // 🖤💀 INVENTORY ORDERING: Gold → Weather → Food → Water → Everything else 💰
+        const sortedItems = this._sortInventoryByPriority(Object.entries(game.player.inventory));
+
+        for (const [itemId, quantity] of sortedItems) {
             if (quantity <= 0) continue;
-            
+
             const item = ItemDatabase.getItem(itemId);
             if (!item) continue;
-            
+
             const weight = ItemDatabase.calculateWeight(itemId, quantity);
             const value = ItemDatabase.calculatePrice(itemId) * quantity;
             
@@ -131,7 +141,60 @@ const InventorySystem = {
             valueDisplay.textContent = `Value: ${totalValue} gold`;
         }
     },
-    
+
+    // 🖤💀 INVENTORY PRIORITY SORTING - Gold → Weather → Food → Water → Everything else 💰
+    _sortInventoryByPriority(items) {
+        // Priority groups (lower = higher priority)
+        const getPriority = (itemId) => {
+            const item = ItemDatabase?.getItem(itemId);
+            const id = itemId.toLowerCase();
+            const category = (item?.category || '').toLowerCase();
+            const name = (item?.name || '').toLowerCase();
+
+            // 0: Gold/Currency - ALWAYS first
+            if (id === 'gold' || id.includes('coin') || category === 'currency') return 0;
+
+            // 1: Weather gear - Protection from elements
+            const weatherKeywords = ['cloak', 'coat', 'umbrella', 'hat', 'warm', 'hood', 'scarf', 'boots', 'gloves', 'rain', 'snow', 'weather'];
+            if (weatherKeywords.some(k => id.includes(k) || name.includes(k))) return 1;
+
+            // 2: Food - Sustenance items
+            const foodKeywords = ['bread', 'meat', 'fish', 'cheese', 'fruit', 'vegetable', 'apple', 'berry', 'cake', 'pie', 'stew', 'soup', 'cooked', 'ration', 'jerky', 'pastry', 'honey'];
+            if (foodKeywords.some(k => id.includes(k) || name.includes(k)) || category === 'food' || category === 'consumables') return 2;
+
+            // 3: Water/Drinks - Hydration
+            const drinkKeywords = ['water', 'ale', 'wine', 'mead', 'drink', 'potion', 'flask', 'bottle'];
+            if (drinkKeywords.some(k => id.includes(k) || name.includes(k)) || category === 'drinks') return 3;
+
+            // 4: Tools - Gathering/Crafting
+            if (category === 'tools' || category === 'tool') return 4;
+
+            // 5: Weapons - Combat
+            if (category === 'weapons' || category === 'weapon') return 5;
+
+            // 6: Armor - Protection
+            if (category === 'armor' || category === 'equipment') return 6;
+
+            // 7: Resources/Materials
+            if (category === 'resources' || category === 'materials') return 7;
+
+            // 8: Everything else
+            return 8;
+        };
+
+        return items.sort((a, b) => {
+            const priorityA = getPriority(a[0]);
+            const priorityB = getPriority(b[0]);
+
+            if (priorityA !== priorityB) return priorityA - priorityB;
+
+            // Same priority - sort by name alphabetically
+            const itemA = ItemDatabase?.getItem(a[0]);
+            const itemB = ItemDatabase?.getItem(b[0]);
+            return (itemA?.name || a[0]).localeCompare(itemB?.name || b[0]);
+        });
+    },
+
     // Sort inventory - enhanced with ascending/descending options
     sortInventory(criteria) {
         if (!game.player || !game.player.inventory) return;
