@@ -189,7 +189,7 @@ const GameConfig = {
     // ═══════════════════════════════════════════════════════════════
     defaults: {
         soundVolume: 0.7,          // loud enough to drown out thoughts
-        musicVolume: 0.5,          // background existential dread
+        musicVolume: 0.3,          // 🖤💀 lowered for background ambiance - not overpowering 💀
         autoSave: true,            // because trust issues
         autoSaveInterval: 300000,  // 5 mins of anxiety between saves
         maxSaveSlots: 10,          // 10 alternate realities
@@ -205,12 +205,27 @@ const GameConfig = {
         // 🎵 audio settings - drown out the silence
         audio: {
             masterVolume: 0.7,        // master volume slider (0-1)
-            musicVolume: 0.5,         // background music volume
+            musicVolume: 0.3,         // 🖤💀 background music - quiet ambiance, not overpowering 💀
             sfxVolume: 0.7,           // sound effects volume
             isMuted: false,           // global mute toggle
             isMusicMuted: false,      // music-only mute
             isSfxMuted: false,        // sfx-only mute
-            audioEnabled: true        // enable audio system at all
+            audioEnabled: true,       // enable audio system at all
+
+            // 🎚️ Per-track volume multipliers for normalization
+            // Adjust these if individual tracks are too loud/quiet
+            // Lower = quieter, range 0.0 to 1.0
+            trackVolumeMultipliers: {
+                menu: 0.6,            // menu music - moderate
+                normal: 0.7,          // normal world - slightly louder for ambiance
+                dungeon: 0.6,         // dungeon - atmospheric, not overpowering
+                doom: 0.5             // doom world - quietest, lets the dread sink in
+            },
+
+            // 🎵 Music system timing
+            gapBetweenTracks: 15000,  // 15 seconds silence between tracks
+            fadeOutDuration: 1000,    // 1 second fade out
+            fadeInDuration: 500       // 0.5 second fade in
         },
 
         // 👁️ visual settings - see the void in HD

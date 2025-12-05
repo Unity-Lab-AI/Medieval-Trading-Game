@@ -9,44 +9,51 @@
 
 const MusicSystem = {
     // 🎵 Music tracks by category
-    // Each track has a path and a volume multiplier (0.0-1.0) for normalization
-    // 🖤💀 Adjust multipliers to balance tracks - lower = quieter 💀
+    // Volume multipliers now come from GameConfig.settings.audio.trackVolumeMultipliers
     TRACKS: {
         menu: [
-            { path: 'assets/Music/Start Menu screen(15sec time out before replay creating music loop).mp3', volumeMult: 0.6 }
+            'assets/Music/Start Menu screen(15sec time out before replay creating music loop).mp3'
         ],
         normal: [
-            { path: 'assets/Music/normal world1.mp3', volumeMult: 0.7 },
-            { path: 'assets/Music/normal world2.mp3', volumeMult: 0.7 },
-            { path: 'assets/Music/normal world3.mp3', volumeMult: 0.7 },
-            { path: 'assets/Music/normal world4.mp3', volumeMult: 0.7 }
+            'assets/Music/normal world1.mp3',
+            'assets/Music/normal world2.mp3',
+            'assets/Music/normal world3.mp3',
+            'assets/Music/normal world4.mp3'
         ],
         dungeon: [
-            { path: 'assets/Music/dungeon1.mp3', volumeMult: 0.6 },
-            { path: 'assets/Music/dungeon2.mp3', volumeMult: 0.6 },
-            { path: 'assets/Music/dungeon3.mp3', volumeMult: 0.6 },
-            { path: 'assets/Music/dungeon4.mp3', volumeMult: 0.6 },
-            { path: 'assets/Music/dungeon5.mp3', volumeMult: 0.6 }
+            'assets/Music/dungeon1.mp3',
+            'assets/Music/dungeon2.mp3',
+            'assets/Music/dungeon3.mp3',
+            'assets/Music/dungeon4.mp3',
+            'assets/Music/dungeon5.mp3'
         ],
         doom: [
-            { path: 'assets/Music/doom world1.mp3', volumeMult: 0.5 },
-            { path: 'assets/Music/doom world2.mp3', volumeMult: 0.5 },
-            { path: 'assets/Music/doom world3.mp3', volumeMult: 0.5 },
-            { path: 'assets/Music/doom world4.mp3', volumeMult: 0.5 }
+            'assets/Music/doom world1.mp3',
+            'assets/Music/doom world2.mp3',
+            'assets/Music/doom world3.mp3',
+            'assets/Music/doom world4.mp3'
         ]
     },
 
-    // 🎚️ Get the volume multiplier for current track
-    getCurrentTrackVolumeMult() {
-        if (!this.currentCategory) return 1.0;
-        const tracks = this.TRACKS[this.currentCategory];
-        if (!tracks || !tracks[this.currentTrackIndex]) return 1.0;
-        return tracks[this.currentTrackIndex].volumeMult || 1.0;
+    // 🎚️ Get the volume multiplier for current category from GameConfig
+    // 🖤💀 Edit GameConfig.settings.audio.trackVolumeMultipliers to adjust 💀
+    getCategoryVolumeMult(category = null) {
+        const cat = category || this.currentCategory;
+        if (!cat) return 1.0;
+
+        // Try to get from GameConfig first
+        if (typeof GameConfig !== 'undefined' && GameConfig.settings?.audio?.trackVolumeMultipliers) {
+            return GameConfig.settings.audio.trackVolumeMultipliers[cat] || 1.0;
+        }
+
+        // Fallback defaults if GameConfig not loaded
+        const defaults = { menu: 0.6, normal: 0.7, dungeon: 0.6, doom: 0.5 };
+        return defaults[cat] || 1.0;
     },
 
-    // 🎚️ Get effective volume (master volume * track multiplier)
-    getEffectiveVolume() {
-        return this.settings.volume * this.getCurrentTrackVolumeMult();
+    // 🎚️ Get effective volume (master volume * category multiplier)
+    getEffectiveVolume(category = null) {
+        return this.settings.volume * this.getCategoryVolumeMult(category);
     },
 
     // 🎧 Current state
@@ -57,14 +64,26 @@ const MusicSystem = {
     isPaused: false,
     gapTimeout: null,
 
-    // ⚙️ Settings
-    // 🖤💀 Master volume lowered to 0.3 for background music - not overpowering 💀
+    // ⚙️ Settings - defaults pulled from GameConfig if available
+    // 🖤💀 Edit GameConfig.settings.audio for master control 💀
     settings: {
         enabled: true,
-        volume: 0.3,  // 0.0 to 1.0 - keep low for background ambiance
-        gapBetweenTracks: 15000,  // 15 seconds in milliseconds
-        fadeOutDuration: 1000,    // 1 second fade out
-        fadeInDuration: 500       // 0.5 second fade in
+        volume: 0.3,  // Will be overwritten by GameConfig on init
+        gapBetweenTracks: 15000,
+        fadeOutDuration: 1000,
+        fadeInDuration: 500
+    },
+
+    // 🎚️ Load settings from GameConfig
+    loadConfigDefaults() {
+        if (typeof GameConfig !== 'undefined' && GameConfig.settings?.audio) {
+            const audioConfig = GameConfig.settings.audio;
+            this.settings.volume = audioConfig.musicVolume ?? this.settings.volume;
+            this.settings.gapBetweenTracks = audioConfig.gapBetweenTracks ?? this.settings.gapBetweenTracks;
+            this.settings.fadeOutDuration = audioConfig.fadeOutDuration ?? this.settings.fadeOutDuration;
+            this.settings.fadeInDuration = audioConfig.fadeInDuration ?? this.settings.fadeInDuration;
+            console.log(`🎵 MusicSystem: Loaded config - volume: ${this.settings.volume}, gap: ${this.settings.gapBetweenTracks}ms`);
+        }
     },
 
     // 🖤 Track if user has interacted (browsers block autoplay until interaction)
@@ -75,7 +94,10 @@ const MusicSystem = {
     init() {
         console.log('🎵 MusicSystem: Awakening from the sonic void...');
 
-        // Load saved settings
+        // 🖤💀 Load defaults from GameConfig first, then override with saved settings 💀
+        this.loadConfigDefaults();
+
+        // Load saved settings (overrides config defaults if user changed them)
         this.loadSettings();
 
         // Create audio element
@@ -229,8 +251,7 @@ const MusicSystem = {
 
         // Pick a random track from the new category
         const newTrackIndex = newCategory === 'menu' ? 0 : Math.floor(Math.random() * tracks.length);
-        const newTrack = tracks[newTrackIndex];
-        const newTrackPath = newTrack.path;  // 🖤💀 Use .path from track object 💀
+        const newTrackPath = tracks[newTrackIndex];  // 🖤💀 Tracks are just path strings now 💀
 
         console.log(`🎵 MusicSystem: Crossfading to ${newTrackPath.split('/').pop()}`);
 
@@ -257,10 +278,8 @@ const MusicSystem = {
         const stepTime = 50; // Update every 50ms
         const steps = fadeDuration / stepTime;
 
-        // 🖤💀 Get target volume for new track (master * track multiplier) 💀
-        const newTrack = this.TRACKS[newCategory]?.[newTrackIndex];
-        const newTrackVolumeMult = newTrack?.volumeMult || 1.0;
-        const targetVolume = this.settings.volume * newTrackVolumeMult;
+        // 🖤💀 Get target volume for new category (master * category multiplier from GameConfig) 💀
+        const targetVolume = this.getEffectiveVolume(newCategory);
         const volumeStep = targetVolume / steps;
 
         let currentStep = 0;
@@ -335,10 +354,10 @@ const MusicSystem = {
         const tracks = this.TRACKS[this.currentCategory];
         if (!tracks || tracks.length === 0) return;
 
-        // 🖤💀 Use track object with .path property 💀
-        const track = tracks[this.currentTrackIndex];
-        const trackPath = track.path;
-        console.log(`🎵 MusicSystem: Playing ${this.currentCategory} track ${this.currentTrackIndex + 1}/${tracks.length}: ${trackPath.split('/').pop()} (vol mult: ${track.volumeMult})`);
+        // 🖤💀 Tracks are just path strings, volume mult comes from GameConfig 💀
+        const trackPath = tracks[this.currentTrackIndex];
+        const volumeMult = this.getCategoryVolumeMult();
+        console.log(`🎵 MusicSystem: Playing ${this.currentCategory} track ${this.currentTrackIndex + 1}/${tracks.length}: ${trackPath.split('/').pop()} (vol mult: ${volumeMult})`);
 
         this.currentAudio.src = trackPath;
         this.currentAudio.volume = 0; // Start silent for fade in
