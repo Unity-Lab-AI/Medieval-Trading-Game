@@ -381,25 +381,51 @@ const MusicSystem = {
         // 🖤💀 Tracks are just path strings, volume mult comes from GameConfig 💀
         const trackPath = tracks[this.currentTrackIndex];
         const volumeMult = this.getCategoryVolumeMult();
-        console.log(`🎵 MusicSystem: Playing ${this.currentCategory} track ${this.currentTrackIndex + 1}/${tracks.length}: ${trackPath.split('/').pop()} (vol mult: ${volumeMult})`);
+        console.log(`🎵 MusicSystem: Loading ${this.currentCategory} track ${this.currentTrackIndex + 1}/${tracks.length}: ${trackPath.split('/').pop()} (vol mult: ${volumeMult})`);
 
-        this.currentAudio.src = trackPath;
-        this.currentAudio.volume = 0; // Start silent for fade in
+        // 🖤💀 Wait for audio to be ready before playing - fixes Firefox/slow connection issues 💀
+        const audio = this.currentAudio;
+        audio.volume = 0; // Start silent for fade in
 
-        // Try to play (may be blocked by browser)
-        const playPromise = this.currentAudio.play();
+        // Remove old listeners to prevent stacking
+        audio.oncanplaythrough = null;
+        audio.onerror = null;
 
-        if (playPromise !== undefined) {
-            playPromise.then(() => {
-                this.isPlaying = true;
-                this.isPaused = false;
-                this.fadeIn();
-            }).catch((error) => {
-                console.log('🎵 MusicSystem: Playback blocked by browser - waiting for user interaction');
-                this.isPlaying = false;
-                // We'll try again when user interacts with the page
-            });
-        }
+        // Set up one-time listener for when audio is ready
+        audio.oncanplaythrough = () => {
+            audio.oncanplaythrough = null; // Remove listener after first trigger
+
+            // 🖤💀 Safety check - audio element may have changed during load 💀
+            if (audio !== this.currentAudio) {
+                console.log('🎵 MusicSystem: Audio element changed during load, aborting play');
+                return;
+            }
+
+            console.log(`🎵 MusicSystem: Track loaded, playing...`);
+            const playPromise = audio.play();
+
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    this.isPlaying = true;
+                    this.isPaused = false;
+                    this.fadeIn();
+                }).catch((error) => {
+                    console.log('🎵 MusicSystem: Playback blocked by browser - waiting for user interaction');
+                    this.isPlaying = false;
+                });
+            }
+        };
+
+        // Handle load errors
+        audio.onerror = (e) => {
+            console.warn('🎵 MusicSystem: Failed to load track:', trackPath, e);
+            audio.onerror = null;
+            this.scheduleNextTrack();
+        };
+
+        // Start loading the track
+        audio.src = trackPath;
+        audio.load(); // Explicitly start loading
     },
 
     // 🎵 Called when a track ends
