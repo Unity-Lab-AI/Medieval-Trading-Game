@@ -1018,6 +1018,497 @@ const DungeonExplorationSystem = {
                     ]
                 }
             ]
+        },
+
+        // ═══════════════════════════════════════════════════════════════
+        // 🏘️ SETTLEMENT EVENTS - towns, villages, cities, capital
+        // ═══════════════════════════════════════════════════════════════
+
+        town_market_stall: {
+            id: 'town_market_stall',
+            name: 'Abandoned Market Stall',
+            description: 'A merchant seems to have left in a hurry. Their stall remains unattended with goods still on display.',
+            icon: '🏪',
+            locationType: ['town', 'village', 'city', 'capital'],
+            difficulty: 'easy',
+            choices: [
+                {
+                    id: 'browse_goods',
+                    text: '👀 Browse the abandoned goods',
+                    preview: 'Risk: None. Just looking around.',
+                    healthCost: { min: 0, max: 0 },
+                    staminaCost: { min: 5, max: 10 },
+                    outcomes: [
+                        { weight: 50, type: 'find', message: 'You find some forgotten coins under the counter!', loot: ['ancient_coin', 'ancient_coin'] },
+                        { weight: 30, type: 'merchant_returns', message: 'The merchant returns! They thank you for watching the stall.', goldBonus: 15, loot: [] },
+                        { weight: 20, type: 'nothing', message: 'Nothing of value here. The merchant took everything important.', loot: [] }
+                    ]
+                },
+                {
+                    id: 'ask_around',
+                    text: '🗣️ Ask locals about the merchant',
+                    preview: 'Risk: None. Information gathering.',
+                    healthCost: { min: 0, max: 0 },
+                    staminaCost: { min: 5, max: 10 },
+                    outcomes: [
+                        { weight: 40, type: 'rumor', message: 'A local tells you the merchant hid valuables behind the loose brick!', loot: ['ancient_coin', 'ancient_coin', 'ancient_coin'] },
+                        { weight: 35, type: 'warning', message: 'They say the merchant fled from debt collectors. Best not get involved.', loot: [] },
+                        { weight: 25, type: 'tip', message: 'Someone mentions a reward poster. You collect the finder fee!', goldBonus: 25, loot: [] }
+                    ]
+                }
+            ]
+        },
+
+        town_back_alley: {
+            id: 'town_back_alley',
+            name: 'Suspicious Back Alley',
+            description: 'A narrow alleyway between buildings. Shady figures linger in the shadows. Could be dangerous... or profitable.',
+            icon: '🌑',
+            locationType: ['town', 'city', 'capital'],
+            difficulty: 'medium',
+            choices: [
+                {
+                    id: 'investigate',
+                    text: '🔍 Investigate carefully',
+                    preview: 'Risk: Moderate. Could encounter trouble.',
+                    healthCost: { min: 0, max: 15 },
+                    staminaCost: { min: 10, max: 20 },
+                    outcomes: [
+                        { weight: 35, type: 'stash', message: 'You find a hidden stash behind loose bricks!', loot: ['ancient_coin', 'ancient_coin', 'ancient_coin', 'obsidian_shard'] },
+                        { weight: 30, type: 'mugging', message: 'Thugs try to mug you! You fight them off.', healthPenalty: 10, loot: ['ancient_coin', 'bone_fragment'] },
+                        { weight: 20, type: 'informant', message: 'A shady figure offers valuable information for a price.', loot: ['dusty_tome'] },
+                        { weight: 15, type: 'nothing', message: 'Just rats and garbage. The shadows were just shadows.', loot: [] }
+                    ]
+                },
+                {
+                    id: 'bribe_locals',
+                    text: '💰 Bribe someone for info (20 gold)',
+                    preview: 'Risk: Costs gold. Might get good intel.',
+                    goldCost: 20,
+                    healthCost: { min: 0, max: 0 },
+                    staminaCost: { min: 5, max: 5 },
+                    outcomes: [
+                        { weight: 50, type: 'good_info', message: 'They point you to a hidden cache. Worth every coin!', loot: ['ancient_coin', 'ancient_coin', 'ancient_coin', 'ancient_coin', 'skull_goblet'] },
+                        { weight: 30, type: 'partial', message: 'Useful info but not as good as promised.', loot: ['ancient_coin', 'ancient_coin'] },
+                        { weight: 20, type: 'scammed', message: 'They take your money and disappear. Classic.', loot: [] }
+                    ]
+                },
+                {
+                    id: 'walk_away',
+                    text: '🚶 Leave quickly',
+                    preview: 'Risk: None. Discretion is the better part of valor.',
+                    healthCost: { min: 0, max: 0 },
+                    staminaCost: { min: 5, max: 5 },
+                    outcomes: [
+                        { weight: 100, type: 'safe', message: 'You walk away. Sometimes the smart move is no move.', loot: [] }
+                    ]
+                }
+            ]
+        },
+
+        town_tavern_rumor: {
+            id: 'town_tavern_rumor',
+            name: 'Tavern Gossip',
+            description: 'The local tavern is buzzing with gossip. Drunken patrons are loose with secrets.',
+            icon: '🍺',
+            locationType: ['town', 'village', 'city', 'capital'],
+            difficulty: 'easy',
+            choices: [
+                {
+                    id: 'buy_drinks',
+                    text: '🍻 Buy a round of drinks (15 gold)',
+                    preview: 'Risk: Costs gold. Loosen tongues.',
+                    goldCost: 15,
+                    healthCost: { min: 0, max: 0 },
+                    staminaCost: { min: 5, max: 10 },
+                    outcomes: [
+                        { weight: 40, type: 'treasure_map', message: 'A drunk sailor gives you a treasure location!', loot: ['ancient_seal', 'ancient_coin', 'ancient_coin'] },
+                        { weight: 35, type: 'gossip', message: 'Useful rumors about local merchant prices.', goldBonus: 30, loot: [] },
+                        { weight: 25, type: 'fight', message: 'Someone takes offense to your questions. Bar fight!', healthPenalty: 5, loot: ['ancient_coin'] }
+                    ]
+                },
+                {
+                    id: 'eavesdrop',
+                    text: '👂 Listen quietly',
+                    preview: 'Risk: None. Patient observation.',
+                    healthCost: { min: 0, max: 0 },
+                    staminaCost: { min: 10, max: 15 },
+                    outcomes: [
+                        { weight: 45, type: 'overhear', message: 'You overhear merchants discussing hidden goods!', loot: ['ancient_coin', 'ancient_coin'] },
+                        { weight: 35, type: 'nothing_useful', message: 'Just complaints about weather and taxes.', loot: [] },
+                        { weight: 20, type: 'noticed', message: 'Someone notices you listening. Awkward.', loot: [] }
+                    ]
+                }
+            ]
+        },
+
+        village_abandoned_house: {
+            id: 'village_abandoned_house',
+            name: 'Abandoned Cottage',
+            description: 'An old cottage at the edge of the village stands empty. Locals say it is haunted.',
+            icon: '🏚️',
+            locationType: ['village', 'town'],
+            difficulty: 'easy',
+            choices: [
+                {
+                    id: 'search_inside',
+                    text: '🏠 Search the cottage',
+                    preview: 'Risk: Low. Might be dusty.',
+                    healthCost: { min: 0, max: 5 },
+                    staminaCost: { min: 10, max: 15 },
+                    outcomes: [
+                        { weight: 40, type: 'find_cache', message: 'Under the floorboards! The previous owner left valuables!', loot: ['ancient_coin', 'ancient_coin', 'dusty_tome', 'tarnished_spoon'] },
+                        { weight: 30, type: 'just_dust', message: 'Nothing but dust and cobwebs. The ghosts took everything.', loot: ['broken_pottery'] },
+                        { weight: 20, type: 'ghost', message: 'A friendly ghost! It points you to hidden coins!', loot: ['ancient_coin', 'ancient_coin', 'ancient_coin'] },
+                        { weight: 10, type: 'angry_ghost', message: 'An angry spirit! You flee with minor scratches.', healthPenalty: 5, loot: [] }
+                    ]
+                },
+                {
+                    id: 'check_garden',
+                    text: '🌿 Check the overgrown garden',
+                    preview: 'Risk: None. Herbs might still grow.',
+                    healthCost: { min: 0, max: 0 },
+                    staminaCost: { min: 5, max: 10 },
+                    outcomes: [
+                        { weight: 50, type: 'herbs', message: 'Valuable herbs grow wild here!', loot: ['cave_mushroom', 'cave_mushroom'] },
+                        { weight: 30, type: 'buried', message: 'Something buried! A small lockbox!', loot: ['ancient_coin', 'ancient_coin', 'rusty_lockbox'] },
+                        { weight: 20, type: 'nothing', message: 'Just weeds. Very persistent weeds.', loot: [] }
+                    ]
+                }
+            ]
+        },
+
+        city_sewers: {
+            id: 'city_sewers',
+            name: 'City Sewer Entrance',
+            description: 'A grate leads down into the city sewers. Valuables get washed down here... along with worse things.',
+            icon: '🕳️',
+            locationType: ['city', 'capital'],
+            difficulty: 'medium',
+            choices: [
+                {
+                    id: 'descend',
+                    text: '⬇️ Climb down into the sewers',
+                    preview: 'Risk: Moderate. Rats and worse lurk below.',
+                    healthCost: { min: 5, max: 20 },
+                    staminaCost: { min: 20, max: 30 },
+                    outcomes: [
+                        { weight: 30, type: 'treasure', message: 'You find washed-away valuables caught in a grate!', loot: ['ancient_coin', 'ancient_coin', 'ancient_coin', 'skull_goblet', 'tarnished_spoon'] },
+                        { weight: 30, type: 'rats', message: 'Giant rats! You fight them off and find their hoard.', healthPenalty: 10, loot: ['ancient_coin', 'ancient_coin', 'bone_fragment', 'bone_fragment'] },
+                        { weight: 25, type: 'smuggler_cache', message: 'A smugglers secret stash! Jackpot!', loot: ['ancient_coin', 'ancient_coin', 'ancient_coin', 'ancient_coin', 'obsidian_shard'] },
+                        { weight: 15, type: 'lost', message: 'You get lost and barely find your way out.', healthPenalty: 15, loot: ['ancient_coin'] }
+                    ]
+                },
+                {
+                    id: 'fish_with_stick',
+                    text: '🎣 Fish around with a stick',
+                    preview: 'Risk: None. See what you can snag.',
+                    healthCost: { min: 0, max: 0 },
+                    staminaCost: { min: 10, max: 15 },
+                    outcomes: [
+                        { weight: 40, type: 'catch', message: 'You hook something valuable!', loot: ['ancient_coin', 'ancient_coin'] },
+                        { weight: 40, type: 'junk', message: 'Just garbage and old boots.', loot: ['broken_pottery'] },
+                        { weight: 20, type: 'ring', message: 'A gold ring! Someone will miss this!', loot: ['ancient_coin', 'ancient_coin', 'ancient_coin'] }
+                    ]
+                }
+            ]
+        },
+
+        capital_noble_district: {
+            id: 'capital_noble_district',
+            name: 'Noble District Opportunity',
+            description: 'The wealthy live here. A noble lady has dropped her purse near a fountain.',
+            icon: '👑',
+            locationType: ['capital', 'city'],
+            difficulty: 'easy',
+            choices: [
+                {
+                    id: 'return_purse',
+                    text: '💝 Return the purse',
+                    preview: 'Risk: None. Do the right thing.',
+                    healthCost: { min: 0, max: 0 },
+                    staminaCost: { min: 5, max: 5 },
+                    outcomes: [
+                        { weight: 60, type: 'reward', message: 'The noble rewards your honesty handsomely!', goldBonus: 50, loot: ['ancient_coin', 'ancient_coin'] },
+                        { weight: 30, type: 'big_reward', message: 'She is the Dukes daughter! Massive reward!', goldBonus: 100, loot: ['ancient_seal'] },
+                        { weight: 10, type: 'rude', message: 'She snatches it without thanks. Nobles...', loot: [] }
+                    ]
+                },
+                {
+                    id: 'keep_purse',
+                    text: '💰 Keep the purse',
+                    preview: 'Risk: Moderate. Quick profit but risky.',
+                    healthCost: { min: 0, max: 10 },
+                    staminaCost: { min: 10, max: 15 },
+                    outcomes: [
+                        { weight: 50, type: 'success', message: 'You pocket the contents and slip away!', loot: ['ancient_coin', 'ancient_coin', 'ancient_coin', 'ancient_coin'] },
+                        { weight: 30, type: 'caught', message: 'A guard sees you! You talk your way out barely.', healthPenalty: 5, loot: ['ancient_coin'] },
+                        { weight: 20, type: 'very_caught', message: 'Guards chase you! You escape but drop most of it.', healthPenalty: 10, loot: [] }
+                    ]
+                }
+            ]
+        },
+
+        // ═══════════════════════════════════════════════════════════════
+        // 🌲 WILDERNESS EVENTS - forests, farms
+        // ═══════════════════════════════════════════════════════════════
+
+        forest_hidden_grove: {
+            id: 'forest_hidden_grove',
+            name: 'Hidden Grove',
+            description: 'You stumble upon a secluded clearing. Unusual plants grow here, untouched by civilization.',
+            icon: '🌳',
+            locationType: ['forest'],
+            difficulty: 'easy',
+            choices: [
+                {
+                    id: 'gather_herbs',
+                    text: '🌿 Gather rare herbs',
+                    preview: 'Risk: Low. Natural treasures await.',
+                    healthCost: { min: 0, max: 5 },
+                    staminaCost: { min: 15, max: 25 },
+                    outcomes: [
+                        { weight: 50, type: 'herbs', message: 'Valuable medicinal herbs! Apothecaries will pay well!', loot: ['cave_mushroom', 'cave_mushroom', 'cave_mushroom', 'ancient_coin'] },
+                        { weight: 30, type: 'rare_find', message: 'A glowing mushroom! Extremely rare!', loot: ['void_crystal', 'cave_mushroom'] },
+                        { weight: 20, type: 'bees', message: 'Disturbed a beehive! Worth it for the honey though.', healthPenalty: 5, loot: ['ancient_coin', 'ancient_coin'] }
+                    ]
+                },
+                {
+                    id: 'search_shrine',
+                    text: '⛩️ Examine the old shrine',
+                    preview: 'Risk: Low. Ancient offerings might remain.',
+                    healthCost: { min: 0, max: 5 },
+                    staminaCost: { min: 10, max: 15 },
+                    outcomes: [
+                        { weight: 40, type: 'offerings', message: 'Ancient offerings left by travelers!', loot: ['ancient_coin', 'ancient_coin', 'rusted_medallion'] },
+                        { weight: 35, type: 'blessing', message: 'The forest spirit blesses you!', healthBonus: 15, loot: [] },
+                        { weight: 25, type: 'nothing', message: 'The shrine is empty. Someone got here first.', loot: [] }
+                    ]
+                }
+            ]
+        },
+
+        forest_bandit_camp: {
+            id: 'forest_bandit_camp',
+            name: 'Abandoned Bandit Camp',
+            description: 'A recently abandoned campsite. The bandits left in a hurry, leaving things behind.',
+            icon: '⛺',
+            locationType: ['forest'],
+            difficulty: 'medium',
+            choices: [
+                {
+                    id: 'search_camp',
+                    text: '🔍 Search the camp thoroughly',
+                    preview: 'Risk: Moderate. Bandits might return.',
+                    healthCost: { min: 0, max: 15 },
+                    staminaCost: { min: 20, max: 30 },
+                    outcomes: [
+                        { weight: 35, type: 'loot', message: 'Their stash! Gold and stolen goods!', loot: ['ancient_coin', 'ancient_coin', 'ancient_coin', 'skull_goblet', 'ancient_seal'] },
+                        { weight: 30, type: 'weapons', message: 'Weapons and armor left behind!', loot: ['ancient_coin', 'ancient_coin', 'obsidian_shard'] },
+                        { weight: 20, type: 'bandits_return', message: 'Bandits return! You fight and flee!', healthPenalty: 15, loot: ['ancient_coin', 'bone_fragment'] },
+                        { weight: 15, type: 'trap', message: 'They left traps! You trigger one.', healthPenalty: 10, loot: ['ancient_coin'] }
+                    ]
+                },
+                {
+                    id: 'quick_grab',
+                    text: '⚡ Grab what you can and run',
+                    preview: 'Risk: Low. Fast in, fast out.',
+                    healthCost: { min: 0, max: 5 },
+                    staminaCost: { min: 15, max: 20 },
+                    outcomes: [
+                        { weight: 50, type: 'some_loot', message: 'You grab coins and run!', loot: ['ancient_coin', 'ancient_coin', 'ancient_coin'] },
+                        { weight: 35, type: 'good_grab', message: 'Quick hands snatch the valuables!', loot: ['ancient_coin', 'ancient_coin', 'skull_goblet'] },
+                        { weight: 15, type: 'nothing', message: 'Panic grab results in... a dirty pot.', loot: ['broken_pottery'] }
+                    ]
+                }
+            ]
+        },
+
+        farm_old_barn: {
+            id: 'farm_old_barn',
+            name: 'Old Barn',
+            description: 'A weathered barn on the edge of the farm. The farmer says nobody has been inside for years.',
+            icon: '🏚️',
+            locationType: ['farm', 'village'],
+            difficulty: 'easy',
+            choices: [
+                {
+                    id: 'explore_barn',
+                    text: '🚪 Explore the barn',
+                    preview: 'Risk: Low. Watch for rotting floors.',
+                    healthCost: { min: 0, max: 10 },
+                    staminaCost: { min: 10, max: 15 },
+                    outcomes: [
+                        { weight: 40, type: 'hidden_stash', message: 'Under the hay! A hidden cache from the old days!', loot: ['ancient_coin', 'ancient_coin', 'ancient_coin', 'rusty_lockbox'] },
+                        { weight: 30, type: 'tools', message: 'Old farming tools worth something to collectors!', loot: ['ancient_coin', 'ancient_coin'] },
+                        { weight: 20, type: 'nothing', message: 'Just hay, dust, and disappointed chickens.', loot: [] },
+                        { weight: 10, type: 'floor_collapse', message: 'The floor gives way! Minor bruises.', healthPenalty: 5, loot: ['ancient_coin'] }
+                    ]
+                },
+                {
+                    id: 'check_loft',
+                    text: '⬆️ Climb to the loft',
+                    preview: 'Risk: Low. Good vantage point.',
+                    healthCost: { min: 0, max: 5 },
+                    staminaCost: { min: 10, max: 15 },
+                    outcomes: [
+                        { weight: 45, type: 'chest', message: 'An old chest! Someone hid this decades ago!', loot: ['ancient_coin', 'ancient_coin', 'dusty_tome', 'ancient_seal'] },
+                        { weight: 35, type: 'birds', message: 'Just bird nests. But one has a shiny coin!', loot: ['ancient_coin'] },
+                        { weight: 20, type: 'nothing', message: 'Empty. The view is nice though.', loot: [] }
+                    ]
+                }
+            ]
+        },
+
+        farm_well: {
+            id: 'farm_well',
+            name: 'Old Farm Well',
+            description: 'An old well that the farm no longer uses. Locals say things get dropped in there.',
+            icon: '⛲',
+            locationType: ['farm', 'village'],
+            difficulty: 'easy',
+            choices: [
+                {
+                    id: 'lower_bucket',
+                    text: '🪣 Lower a bucket',
+                    preview: 'Risk: None. See what you can fish up.',
+                    healthCost: { min: 0, max: 0 },
+                    staminaCost: { min: 10, max: 15 },
+                    outcomes: [
+                        { weight: 40, type: 'coins', message: 'Coins! People made wishes here!', loot: ['ancient_coin', 'ancient_coin', 'ancient_coin'] },
+                        { weight: 35, type: 'junk', message: 'Just waterlogged garbage.', loot: ['broken_pottery'] },
+                        { weight: 25, type: 'jewelry', message: 'A ring! Someone lost this years ago!', loot: ['ancient_coin', 'ancient_coin', 'rusted_medallion'] }
+                    ]
+                },
+                {
+                    id: 'climb_down',
+                    text: '🧗 Climb down (risky)',
+                    preview: 'Risk: Moderate. Could get stuck.',
+                    healthCost: { min: 5, max: 20 },
+                    staminaCost: { min: 25, max: 35 },
+                    outcomes: [
+                        { weight: 30, type: 'treasure', message: 'At the bottom! A locked chest!', loot: ['ancient_coin', 'ancient_coin', 'ancient_coin', 'ancient_coin', 'skull_goblet'] },
+                        { weight: 35, type: 'some_finds', message: 'You grab what is within reach.', loot: ['ancient_coin', 'ancient_coin', 'bone_fragment'] },
+                        { weight: 20, type: 'slip', message: 'You slip and scrape yourself climbing back up.', healthPenalty: 10, loot: ['ancient_coin'] },
+                        { weight: 15, type: 'stuck', message: 'Almost got stuck! Scary experience.', healthPenalty: 5, loot: [] }
+                    ]
+                }
+            ]
+        },
+
+        // ═══════════════════════════════════════════════════════════════
+        // ⚓ PORT EVENTS - docks and harbors
+        // ═══════════════════════════════════════════════════════════════
+
+        port_docks: {
+            id: 'port_docks',
+            name: 'Busy Dockside',
+            description: 'The docks are busy with sailors and cargo. Things fall off ships all the time...',
+            icon: '⚓',
+            locationType: ['port'],
+            difficulty: 'easy',
+            choices: [
+                {
+                    id: 'search_between_crates',
+                    text: '📦 Search between crates',
+                    preview: 'Risk: Low. Cargo falls off all the time.',
+                    healthCost: { min: 0, max: 5 },
+                    staminaCost: { min: 10, max: 15 },
+                    outcomes: [
+                        { weight: 45, type: 'fallen_cargo', message: 'Fallen cargo! Finders keepers!', loot: ['ancient_coin', 'ancient_coin', 'ancient_coin'] },
+                        { weight: 30, type: 'exotic', message: 'Exotic goods from far lands!', loot: ['ancient_coin', 'ancient_coin', 'obsidian_shard'] },
+                        { weight: 25, type: 'nothing', message: 'Just rope and fish smell.', loot: [] }
+                    ]
+                },
+                {
+                    id: 'talk_to_sailors',
+                    text: '🗣️ Chat with sailors',
+                    preview: 'Risk: None. Sailors know things.',
+                    healthCost: { min: 0, max: 0 },
+                    staminaCost: { min: 5, max: 10 },
+                    outcomes: [
+                        { weight: 40, type: 'tip', message: 'A sailor tells you about unclaimed cargo!', loot: ['ancient_coin', 'ancient_coin', 'ancient_coin', 'ancient_coin'] },
+                        { weight: 35, type: 'stories', message: 'Just tall tales and sea stories.', loot: [] },
+                        { weight: 25, type: 'gift', message: 'A sailor gives you a souvenir from his travels!', loot: ['ancient_seal', 'ancient_coin'] }
+                    ]
+                }
+            ]
+        },
+
+        port_smuggler_contact: {
+            id: 'port_smuggler_contact',
+            name: 'Suspicious Sailor',
+            description: 'A rough-looking sailor catches your eye. He seems to be selling something under the table.',
+            icon: '🏴‍☠️',
+            locationType: ['port'],
+            difficulty: 'medium',
+            choices: [
+                {
+                    id: 'approach',
+                    text: '🤝 Make contact',
+                    preview: 'Risk: Moderate. Could be a setup.',
+                    healthCost: { min: 0, max: 10 },
+                    staminaCost: { min: 5, max: 10 },
+                    outcomes: [
+                        { weight: 40, type: 'deal', message: 'He has smuggled goods at discount prices!', loot: ['ancient_coin', 'ancient_coin', 'ancient_coin', 'skull_goblet', 'obsidian_shard'] },
+                        { weight: 30, type: 'info', message: 'He sells you information about a hidden cache!', loot: ['ancient_coin', 'ancient_coin', 'ancient_seal'] },
+                        { weight: 20, type: 'scam', message: 'Its a scam! You lose some coins but escape.', loot: [] },
+                        { weight: 10, type: 'guards', message: 'Guards! Its a sting! You talk your way out.', healthPenalty: 5, loot: [] }
+                    ]
+                },
+                {
+                    id: 'report_him',
+                    text: '⚔️ Report to guards',
+                    preview: 'Risk: None. Law-abiding citizen reward.',
+                    healthCost: { min: 0, max: 0 },
+                    staminaCost: { min: 5, max: 5 },
+                    outcomes: [
+                        { weight: 60, type: 'reward', message: 'The guards reward you for the tip!', goldBonus: 40, loot: [] },
+                        { weight: 30, type: 'share', message: 'They share the confiscated goods with you!', loot: ['ancient_coin', 'ancient_coin', 'ancient_coin'] },
+                        { weight: 10, type: 'nothing', message: 'They dont care. Corruption runs deep here.', loot: [] }
+                    ]
+                }
+            ]
+        },
+
+        // ═══════════════════════════════════════════════════════════════
+        // ⛏️ MINE EVENTS (supplementary to existing)
+        // ═══════════════════════════════════════════════════════════════
+
+        mine_abandoned_shaft: {
+            id: 'mine_abandoned_shaft',
+            name: 'Abandoned Mine Shaft',
+            description: 'An old shaft that was sealed off years ago. The seal has crumbled away.',
+            icon: '🕳️',
+            locationType: ['mine'],
+            difficulty: 'hard',
+            choices: [
+                {
+                    id: 'enter_shaft',
+                    text: '⬇️ Enter the old shaft',
+                    preview: 'Risk: High. Could collapse.',
+                    healthCost: { min: 10, max: 30 },
+                    staminaCost: { min: 30, max: 45 },
+                    outcomes: [
+                        { weight: 25, type: 'motherload', message: 'They sealed it because it was TOO valuable! Gems everywhere!', loot: ['void_crystal', 'void_crystal', 'obsidian_shard', 'ancient_coin', 'ancient_coin', 'ancient_coin'] },
+                        { weight: 35, type: 'decent', message: 'Old equipment and some ore samples.', loot: ['ancient_coin', 'ancient_coin', 'obsidian_shard'] },
+                        { weight: 25, type: 'collapse', message: 'Partial collapse! You escape with scrapes!', healthPenalty: 20, loot: ['ancient_coin'] },
+                        { weight: 15, type: 'gas', message: 'Bad air! You retreat quickly!', healthPenalty: 15, loot: [] }
+                    ]
+                },
+                {
+                    id: 'peek_inside',
+                    text: '👀 Just look inside',
+                    preview: 'Risk: Low. Cautious approach.',
+                    healthCost: { min: 0, max: 5 },
+                    staminaCost: { min: 10, max: 15 },
+                    outcomes: [
+                        { weight: 40, type: 'spot_something', message: 'You spot something shiny just inside!', loot: ['ancient_coin', 'ancient_coin', 'obsidian_shard'] },
+                        { weight: 40, type: 'danger_signs', message: 'You see why it was sealed. Smart to stay out.', loot: [] },
+                        { weight: 20, type: 'old_equipment', message: 'Abandoned tools near the entrance.', loot: ['ancient_coin', 'broken_pottery'] }
+                    ]
+                }
+            ]
         }
     },
 
@@ -1301,19 +1792,36 @@ const DungeonExplorationSystem = {
         }
     },
 
-    // Check if a location is explorable (dungeon, cave, ruins, etc)
+    // Check if a location is explorable - ALL locations can be explored!
     isExplorableLocation(location) {
-        const explorableTypes = ['dungeon', 'cave', 'ruins', 'mine'];
-        return location && explorableTypes.includes(location.type);
+        // All location types can be explored - each has its own events
+        const explorableTypes = [
+            'dungeon', 'cave', 'ruins', 'mine',      // Dangerous locations
+            'town', 'village', 'city', 'capital',    // Settlements
+            'forest', 'farm', 'port', 'shrine',      // Other locations
+            'castle', 'market', 'inn'                // Special locations
+        ];
+        return location && location.type && explorableTypes.includes(location.type);
     },
 
-    // Get difficulty for a location based on region
+    // Get difficulty for a location based on region and type
     getLocationDifficulty(location) {
         if (!location) return 'medium';
 
         const regionDiff = this.REGION_DIFFICULTY[location.region] || 'medium';
 
-        // Special locations can override
+        // Settlement types are always easy - civilized areas
+        const safeTypes = ['town', 'village', 'city', 'capital', 'farm', 'port'];
+        if (safeTypes.includes(location.type)) {
+            return 'easy';
+        }
+
+        // Forest is medium at most
+        if (location.type === 'forest') {
+            return regionDiff === 'hard' ? 'medium' : 'easy';
+        }
+
+        // Special locations can override - dungeons are harder
         if (location.type === 'dungeon') {
             // Dungeons are always at least medium
             if (regionDiff === 'easy') return 'medium';
@@ -2108,17 +2616,119 @@ const DungeonExplorationSystem = {
         }
     },
 
+    // Track exploration section collapsed state
+    explorationSectionCollapsed: false,
+
+    // Calculate enhanced difficulty based on gear, stats, rep, location type, and NPCs
+    calculateEnhancedDifficulty(location, event, playerStats) {
+        let difficultyScore = 0;
+        const baseDifficulty = this.getLocationDifficulty(location);
+        const eventDifficulty = event.difficulty || 'medium';
+
+        // Base difficulty from region
+        const difficultyValues = { easy: 1, medium: 2, hard: 3, deadly: 4 };
+        difficultyScore += difficultyValues[baseDifficulty] || 2;
+        difficultyScore += difficultyValues[eventDifficulty] || 2;
+
+        // Player stat modifiers (reduce difficulty)
+        const stats = playerStats?.stats || {};
+        const attributes = playerStats?.attributes || {};
+
+        // Health/stamina reduce difficulty
+        if (stats.health >= 80) difficultyScore -= 0.5;
+        if (stats.stamina >= 80) difficultyScore -= 0.5;
+
+        // Attributes help
+        if (attributes.strength >= 8) difficultyScore -= 0.3;
+        if (attributes.endurance >= 8) difficultyScore -= 0.3;
+        if (attributes.luck >= 8) difficultyScore -= 0.2;
+
+        // Equipment bonuses
+        const armorValue = this.getPlayerArmorValue(playerStats);
+        const weaponValue = this.getPlayerWeaponValue(playerStats);
+        if (armorValue >= 20) difficultyScore -= 0.5;
+        if (weaponValue >= 15) difficultyScore -= 0.5;
+
+        // Reputation with location faction (if applicable)
+        if (typeof ReputationSystem !== 'undefined' && location.faction) {
+            const rep = ReputationSystem.getReputation?.(location.faction) || 0;
+            if (rep >= 50) difficultyScore -= 0.3;
+            if (rep >= 100) difficultyScore -= 0.3;
+            if (rep < -50) difficultyScore += 0.5;
+        }
+
+        // NPCs at location can affect difficulty
+        if (typeof NPCManager !== 'undefined' && NPCManager.getActiveNPCs) {
+            const npcs = NPCManager.getActiveNPCs(location.id) || [];
+            const hostileNPCs = npcs.filter(npc => npc.hostile || npc.disposition === 'hostile');
+            const friendlyNPCs = npcs.filter(npc => npc.friendly || npc.disposition === 'friendly');
+            difficultyScore += hostileNPCs.length * 0.2;
+            difficultyScore -= friendlyNPCs.length * 0.1;
+        }
+
+        // Clamp to valid range
+        difficultyScore = Math.max(1, Math.min(5, difficultyScore));
+
+        // Return difficulty tier
+        if (difficultyScore <= 1.5) return { tier: 'easy', color: '#4caf50', label: 'Easy' };
+        if (difficultyScore <= 2.5) return { tier: 'medium', color: '#ff9800', label: 'Medium' };
+        if (difficultyScore <= 3.5) return { tier: 'hard', color: '#f44336', label: 'Hard' };
+        return { tier: 'deadly', color: '#9c27b0', label: 'Deadly' };
+    },
+
+    // Get all exploration events available at this specific location
+    getAvailableEventsForLocation(location) {
+        if (!location || !location.type) return [];
+
+        const locationType = location.type;
+        const events = Object.values(this.EXPLORATION_EVENTS).filter(event => {
+            // Event must include this location type
+            return event.locationType && event.locationType.includes(locationType);
+        });
+
+        return events;
+    },
+
+    // Toggle exploration section collapse
+    toggleExplorationSection() {
+        this.explorationSectionCollapsed = !this.explorationSectionCollapsed;
+        const content = document.getElementById('exploration-section-content');
+        const toggleBtn = document.getElementById('exploration-toggle-btn');
+        if (content) {
+            content.style.display = this.explorationSectionCollapsed ? 'none' : 'block';
+        }
+        if (toggleBtn) {
+            toggleBtn.textContent = this.explorationSectionCollapsed ? '▶' : '▼';
+        }
+    },
+
     // Add explore button to location panel
     addExploreButton(locationId) {
         const location = this.getLocation(locationId);
-        if (!location || !this.isExplorableLocation(location)) return;
+        console.log('🏚️ addExploreButton called for:', locationId, 'type:', location?.type);
+
+        if (!location) {
+            console.log('🏚️ No location found for:', locationId);
+            return;
+        }
+
+        if (!this.isExplorableLocation(location)) {
+            console.log('🏚️ Location not explorable:', location.type, '- adding anyway for visibility');
+        }
 
         const locationPanel = document.getElementById('location-panel');
-        if (!locationPanel) return;
+        if (!locationPanel) {
+            console.log('🏚️ No location-panel element found');
+            return;
+        }
 
         // Remove existing exploration section
         const existingSection = document.getElementById('exploration-section');
         if (existingSection) existingSection.remove();
+
+        // Get available events for THIS specific location type
+        const availableEvents = this.getAvailableEventsForLocation(location);
+        console.log('🏚️ Available events for', location.type + ':', availableEvents.length);
 
         // Create exploration section
         const section = document.createElement('div');
@@ -2130,14 +2740,19 @@ const DungeonExplorationSystem = {
         const survival = this.calculateSurvivalAssessment(location, playerStats);
         const onCooldown = this.isOnCooldown(locationId);
 
-        // Build section content
+        // Build section content with collapsible header
         let contentHTML = `
-            <h3 style="color: #4fc3f7; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
-                🏚️ Exploration
-                <span class="difficulty-badge difficulty-${difficulty}" style="font-size: 0.8em; padding: 2px 8px; border-radius: 4px; background: ${this.getDifficultyColor(difficulty)}; color: #fff;">
-                    ${difficulty.toUpperCase()}
-                </span>
-            </h3>
+            <div class="exploration-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; cursor: pointer;" onclick="DungeonExplorationSystem.toggleExplorationSection()">
+                <h3 style="color: #4fc3f7; margin: 0; display: flex; align-items: center; gap: 8px;">
+                    <span id="exploration-toggle-btn" style="font-size: 0.8em; width: 16px;">${this.explorationSectionCollapsed ? '▶' : '▼'}</span>
+                    🏚️ Exploration
+                    <span class="difficulty-badge difficulty-${difficulty}" style="font-size: 0.8em; padding: 2px 8px; border-radius: 4px; background: ${this.getDifficultyColor(difficulty)}; color: #fff;">
+                        ${difficulty.toUpperCase()}
+                    </span>
+                </h3>
+                <span style="color: #888; font-size: 0.85em;">${availableEvents.length} areas</span>
+            </div>
+            <div id="exploration-section-content" style="display: ${this.explorationSectionCollapsed ? 'none' : 'block'};">
         `;
 
         if (onCooldown) {
@@ -2151,6 +2766,14 @@ const DungeonExplorationSystem = {
                     <p style="margin: 5px 0 0 0; font-size: 0.85em; color: #888; font-style: italic;">
                         "Even the darkness needs a nap between victims."
                     </p>
+                </div>
+            `;
+        } else if (availableEvents.length === 0) {
+            // No events for this location type
+            contentHTML += `
+                <div style="padding: 15px; text-align: center; color: #888;">
+                    <p style="margin: 0;">🔍 Nothing interesting to explore here right now.</p>
+                    <p style="margin: 5px 0 0 0; font-size: 0.85em; font-style: italic;">Try dungeons, caves, ruins, or mines for adventure!</p>
                 </div>
             `;
         } else {
@@ -2171,13 +2794,53 @@ const DungeonExplorationSystem = {
                         <span>🛡️ ${survival.current.armor}/${survival.requirements.recommendedArmor}</span>
                         <span>⚔️ ${survival.current.weapon}/${survival.requirements.recommendedWeapon}</span>
                     </div>
-                    <p style="margin: 8px 0 0 0; font-style: italic; color: #888; font-size: 0.85em;">
-                        "${survival.warningText}"
-                    </p>
                 </div>
             `;
 
-            // Explore button
+            // Scrollable list of available exploration areas
+            contentHTML += `
+                <div class="exploration-areas-list" style="max-height: 200px; overflow-y: auto; margin: 10px 0; border: 1px solid rgba(79, 195, 247, 0.2); border-radius: 6px;">
+            `;
+
+            availableEvents.forEach(event => {
+                const eventDiff = this.calculateEnhancedDifficulty(location, event, playerStats);
+                const canExplore = survival.canSurvive;
+
+                contentHTML += `
+                    <div class="exploration-area-item"
+                         data-event-id="${event.id}"
+                         style="
+                            padding: 10px 12px;
+                            border-bottom: 1px solid rgba(79, 195, 247, 0.1);
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            cursor: ${canExplore ? 'pointer' : 'not-allowed'};
+                            opacity: ${canExplore ? '1' : '0.5'};
+                            transition: background 0.2s ease;
+                         "
+                         onmouseenter="this.style.background='rgba(79, 195, 247, 0.1)'"
+                         onmouseleave="this.style.background='transparent'"
+                    >
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 1.3em;">${event.icon}</span>
+                            <div>
+                                <div style="font-weight: bold; color: #e0e0e0;">${event.name}</div>
+                                <div style="font-size: 0.8em; color: #888; max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    ${event.description.substring(0, 50)}...
+                                </div>
+                            </div>
+                        </div>
+                        <span style="padding: 2px 8px; border-radius: 4px; font-size: 0.75em; background: ${eventDiff.color}30; color: ${eventDiff.color}; border: 1px solid ${eventDiff.color}50;">
+                            ${eventDiff.label}
+                        </span>
+                    </div>
+                `;
+            });
+
+            contentHTML += `</div>`;
+
+            // Explore button - random exploration
             const btnDisabled = !survival.canSurvive;
             contentHTML += `
                 <button
@@ -2193,11 +2856,11 @@ const DungeonExplorationSystem = {
                         font-size: 1.1em;
                         cursor: ${btnDisabled ? 'not-allowed' : 'pointer'};
                         transition: all 0.2s ease;
+                        margin-top: 10px;
                     "
                     ${btnDisabled ? 'disabled' : ''}
-                    onclick="DungeonExplorationSystem.showExplorationPanel('${locationId}')"
                 >
-                    ${btnDisabled ? '💀 Too Weak to Explore' : '🏚️ Enter and Explore'}
+                    ${btnDisabled ? '💀 Too Weak to Explore' : '🎲 Random Exploration'}
                 </button>
             `;
 
@@ -2209,6 +2872,8 @@ const DungeonExplorationSystem = {
                 `;
             }
         }
+
+        contentHTML += `</div>`; // Close exploration-section-content
 
         section.innerHTML = contentHTML;
         section.style.cssText = `
@@ -2229,6 +2894,53 @@ const DungeonExplorationSystem = {
         } else {
             locationPanel.appendChild(section);
         }
+
+        // Attach event listeners for exploration areas
+        section.querySelectorAll('.exploration-area-item').forEach(item => {
+            item.addEventListener('click', () => {
+                if (!survival.canSurvive) return;
+                const eventId = item.dataset.eventId;
+                this.showSpecificExplorationPanel(locationId, eventId);
+            });
+        });
+
+        // Attach random exploration button
+        const randomBtn = section.querySelector('#explore-location-btn');
+        if (randomBtn && survival.canSurvive) {
+            randomBtn.addEventListener('click', () => {
+                this.showExplorationPanel(locationId);
+            });
+        }
+    },
+
+    // Show exploration panel for a specific event
+    showSpecificExplorationPanel(locationId, eventId) {
+        const location = this.getLocation(locationId);
+        if (!location) return;
+
+        // Check cooldown
+        if (this.isOnCooldown(locationId)) {
+            const remaining = this.getCooldownRemaining(locationId);
+            const hours = Math.floor(remaining);
+            const minutes = Math.round((remaining - hours) * 60);
+            this.showCooldownMessage(location, hours, minutes);
+            return;
+        }
+
+        const event = this.EXPLORATION_EVENTS[eventId];
+        if (!event) {
+            console.error('🏚️ Event not found:', eventId);
+            return;
+        }
+
+        // Verify event is valid for this location type
+        if (!event.locationType.includes(location.type)) {
+            console.error('🏚️ Event not valid for location type:', location.type);
+            return;
+        }
+
+        const difficulty = this.getLocationDifficulty(location);
+        this.renderExplorationUI(location, event, difficulty);
     },
 
     // Get difficulty color
