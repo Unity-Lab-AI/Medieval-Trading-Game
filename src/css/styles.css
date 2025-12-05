@@ -3489,8 +3489,12 @@ button.menu-social-link {
 .location-details p {
     margin: 0.5rem 0;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.5rem;
+}
+
+.location-details p strong {
+    flex-shrink: 0;
 }
 
 .location-details strong {

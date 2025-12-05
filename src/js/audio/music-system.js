@@ -153,7 +153,13 @@ const MusicSystem = {
 
                 audio.addEventListener('error', (e) => {
                     this.preloadProgress.loaded++;
-                    console.warn(`🎵 Failed to preload: ${trackPath.split('/').pop()}`, e);
+                    const fileName = trackPath.split('/').pop();
+                    // 🖤💀 Check for CORS errors and provide helpful guidance 💀
+                    if (window.location.protocol === 'file:') {
+                        console.warn(`🎵 Audio failed: ${fileName} - CORS blocked. Run game via local server (npx serve or python -m http.server)`);
+                    } else {
+                        console.warn(`🎵 Failed to preload: ${fileName}`, e.target?.error || e);
+                    }
                 }, { once: true });
 
                 audio.src = trackPath;
@@ -467,8 +473,14 @@ const MusicSystem = {
 
         // Handle load errors
         audio.onerror = (e) => {
-            console.warn('🎵 MusicSystem: Failed to load track:', trackPath, e);
             audio.onerror = null;
+            const fileName = trackPath.split('/').pop();
+            // 🖤💀 Check for CORS errors and provide helpful guidance 💀
+            if (window.location.protocol === 'file:') {
+                console.warn(`🎵 Audio failed: ${fileName} - CORS blocked. Run game via local server (npx serve)`);
+            } else {
+                console.warn(`🎵 MusicSystem: Failed to load: ${fileName}`, e.target?.error || e);
+            }
             this.scheduleNextTrack();
         };
 

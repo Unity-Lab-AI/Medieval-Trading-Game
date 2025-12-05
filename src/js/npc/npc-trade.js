@@ -1136,18 +1136,17 @@ const NPCTradeWindow = {
     },
 
     // 🔍 Get NPC's item count (returns null if not tracked)
+    // 🖤💀 FIXED: Use same key format as getNPCInventory() 💀
     getNPCItemCount(npc, itemId) {
-        if (!npc?.id || !this._npcInventoryCache) return null;
-        const inventory = this._npcInventoryCache[npc.id];
-        if (!inventory) return null;
-        return inventory[itemId] || 0;
+        if (!this._npcInventoryCache) return null;
+        // 🦇 Use same key format as getNPCInventory - not just npc.id!
+        const npcId = npc?.id || `${npc?.location || 'unknown'}_${npc?.type}`;
+        const cacheEntry = this._npcInventoryCache[npcId];
+        if (!cacheEntry?.items) return null;
+        return cacheEntry.items[itemId] || 0;
     },
 
-    // 💰 Get NPC's gold (returns null if not tracked)
-    getNPCGold(npc) {
-        if (!npc?.id || !this._npcGoldCache) return null;
-        return this._npcGoldCache[npc.id] ?? null;
-    },
+    // 🖤💀 DELETED: Duplicate getNPCGold was here - using the proper one at line ~1431 instead 💀
 
     // 📝 Log transaction to debooger history
     _transactionHistory: [],
