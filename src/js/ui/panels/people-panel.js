@@ -1954,6 +1954,7 @@ Speak cryptically and briefly. You offer passage to the ${inDoom ? 'normal world
     // ═══════════════════════════════════════════════════════════════
 
     // 💰 Give Gold to NPC - charity, bribery, or appeasement
+    // 🖤💀 FIXED: Use modal instead of browser prompt() 💀
     giveGoldToNPC() {
         if (!this.currentNPC) return;
 
@@ -1964,13 +1965,69 @@ Speak cryptically and briefly. You offer passage to the ${inDoom ? 'normal world
             return;
         }
 
-        // 🖤 Create a simple gold input dialog
-        const amounts = [1, 5, 10, 25, 50, 100].filter(a => a <= playerGold);
-        const amountStr = prompt(`How much gold to give? (You have ${playerGold})\nSuggested: ${amounts.join(', ')}`);
+        // 🖤💀 Build quick amount buttons based on player gold 💀
+        const amounts = [10, 50, 100, 500, 1000, 5000, 10000, 50000].filter(a => a <= playerGold);
+        const amountButtons = amounts.map(a =>
+            `<button class="gold-amount-btn" data-amount="${a}" style="margin:3px;padding:8px 12px;cursor:pointer;background:#2a2a2a;border:1px solid #4a4a4a;color:#ffd700;border-radius:4px;">${a.toLocaleString()}g</button>`
+        ).join('');
 
-        if (!amountStr) return;
-        const amount = parseInt(amountStr);
+        // 🖤💀 Create modal content with input and quick buttons 💀
+        const content = `
+            <div style="text-align:center;padding:10px;">
+                <p style="color:#ccc;margin-bottom:15px;">You have <strong style="color:#ffd700;">${playerGold.toLocaleString()}</strong> gold</p>
+                <div style="margin-bottom:15px;">
+                    <input type="number" id="gold-amount-input" min="1" max="${playerGold}"
+                           placeholder="Enter amount..."
+                           style="width:150px;padding:10px;font-size:16px;text-align:center;background:#1a1a1a;border:1px solid #4a4a4a;color:#ffd700;border-radius:4px;">
+                </div>
+                <div style="margin-bottom:10px;color:#888;font-size:12px;">Quick amounts:</div>
+                <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:5px;">
+                    ${amountButtons}
+                </div>
+            </div>
+        `;
 
+        // 🖤💀 Show modal using ModalSystem 💀
+        if (typeof ModalSystem !== 'undefined') {
+            ModalSystem.show({
+                title: '💰 Give Gold',
+                content: content,
+                buttons: [
+                    {
+                        text: 'Give Gold',
+                        className: 'primary',
+                        onClick: () => {
+                            const input = document.getElementById('gold-amount-input');
+                            const amount = parseInt(input?.value) || 0;
+                            this._executeGoldGift(amount, playerGold);
+                            ModalSystem.hide();
+                        }
+                    },
+                    {
+                        text: 'Cancel',
+                        className: 'secondary',
+                        onClick: () => ModalSystem.hide()
+                    }
+                ]
+            });
+
+            // 🦇 Wire up quick amount buttons after modal is shown
+            setTimeout(() => {
+                document.querySelectorAll('.gold-amount-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const input = document.getElementById('gold-amount-input');
+                        if (input) input.value = btn.dataset.amount;
+                    });
+                });
+            }, 50);
+        } else {
+            // 🖤 Fallback if ModalSystem not available
+            this.addChatMessage("*tries to offer gold but something went wrong*", 'player');
+        }
+    },
+
+    // 🖤💀 Execute the actual gold transfer 💀
+    _executeGoldGift(amount, playerGold) {
         if (isNaN(amount) || amount <= 0 || amount > playerGold) {
             this.addChatMessage("*fumbles with coin pouch*", 'player');
             return;
@@ -1987,44 +2044,104 @@ Speak cryptically and briefly. You offer passage to the ${inDoom ? 'normal world
             NPCRelationshipSystem.modifyReputation(this.currentNPC.type || this.currentNPC.id, Math.floor(amount / 5));
         }
 
-        this.addChatMessage(`*hands over ${amount} gold*`, 'player');
+        this.addChatMessage(`*hands over ${amount.toLocaleString()} gold*`, 'player');
         this.addChatMessage(`*accepts the gold gratefully* Many thanks, traveler.`, 'npc');
         if (typeof addMessage === 'function') {
-            addMessage(`💰 Gave ${amount} gold to ${this.currentNPC.name}`);
+            addMessage(`💰 Gave ${amount.toLocaleString()} gold to ${this.currentNPC.name}`);
         }
         if (typeof updateDisplay === 'function') updateDisplay();
     },
 
     // 🎁 Give Item to NPC
+    // 🖤💀 FIXED: Use modal instead of browser prompt() 💀
     giveItemToNPC() {
         if (!this.currentNPC) return;
 
-        const inventory = game?.player?.inventory || [];
-        if (inventory.length === 0) {
+        // 🖤💀 Get inventory as object {itemId: quantity} and convert to array 💀
+        const inventoryObj = game?.player?.inventory || {};
+        const inventoryItems = Object.entries(inventoryObj)
+            .filter(([id, qty]) => qty > 0 && id !== 'gold')
+            .slice(0, 12);
+
+        if (inventoryItems.length === 0) {
             this.addChatMessage("*checks bag* I have nothing to give.", 'player');
             return;
         }
 
-        // 🦇 Simple item selection - list first 10 items
-        const itemList = inventory.slice(0, 10).map((item, i) =>
-            `${i + 1}. ${item.name || item.id} (x${item.quantity || 1})`
-        ).join('\n');
+        // 🖤💀 Build item buttons for modal 💀
+        const itemButtons = inventoryItems.map(([itemId, qty]) => {
+            let name = itemId.replace(/_/g, ' ');
+            let icon = '📦';
+            if (typeof ItemDatabase !== 'undefined' && ItemDatabase.getItem) {
+                const item = ItemDatabase.getItem(itemId);
+                if (item?.name) name = item.name;
+                if (item?.icon) icon = item.icon;
+            }
+            return `<button class="give-item-btn" data-item-id="${this.escapeHtml(itemId)}"
+                style="display:flex;align-items:center;gap:8px;margin:4px;padding:8px 12px;cursor:pointer;background:#2a2a2a;border:1px solid #4a4a4a;color:#fff;border-radius:4px;width:calc(50% - 12px);">
+                <span style="font-size:18px;">${icon}</span>
+                <span style="flex:1;text-align:left;">${this.escapeHtml(name)}</span>
+                <span style="color:#888;">x${qty}</span>
+            </button>`;
+        }).join('');
 
-        const choice = prompt(`Which item to give?\n${itemList}\n\nEnter number (1-${Math.min(inventory.length, 10)}):`);
-        if (!choice) return;
+        const content = `
+            <div style="padding:10px;">
+                <p style="color:#ccc;margin-bottom:15px;text-align:center;">Select an item to give:</p>
+                <div style="display:flex;flex-wrap:wrap;justify-content:center;max-height:300px;overflow-y:auto;">
+                    ${itemButtons}
+                </div>
+            </div>
+        `;
 
-        const index = parseInt(choice) - 1;
-        if (isNaN(index) || index < 0 || index >= Math.min(inventory.length, 10)) {
+        // 🖤💀 Show modal 💀
+        if (typeof ModalSystem !== 'undefined') {
+            ModalSystem.show({
+                title: '🎁 Give Item',
+                content: content,
+                buttons: [
+                    {
+                        text: 'Cancel',
+                        className: 'secondary',
+                        onClick: () => ModalSystem.hide()
+                    }
+                ]
+            });
+
+            // 🦇 Wire up item buttons
+            setTimeout(() => {
+                document.querySelectorAll('.give-item-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const itemId = btn.dataset.itemId;
+                        this._executeItemGift(itemId);
+                        ModalSystem.hide();
+                    });
+                });
+            }, 50);
+        }
+    },
+
+    // 🖤💀 Execute the actual item transfer 💀
+    _executeItemGift(itemId) {
+        if (!itemId || !game?.player?.inventory) return;
+
+        const qty = game.player.inventory[itemId] || 0;
+        if (qty <= 0) {
             this.addChatMessage("*hesitates*", 'player');
             return;
         }
 
-        const item = inventory[index];
-        // 🖤 Remove item from inventory
-        if (typeof InventorySystem !== 'undefined') {
-            InventorySystem.removeItem(item.id, 1);
-        } else {
-            inventory.splice(index, 1);
+        // 🖤 Remove 1 of the item from inventory
+        game.player.inventory[itemId]--;
+        if (game.player.inventory[itemId] <= 0) {
+            delete game.player.inventory[itemId];
+        }
+
+        // Get display name
+        let name = itemId.replace(/_/g, ' ');
+        if (typeof ItemDatabase !== 'undefined' && ItemDatabase.getItem) {
+            const item = ItemDatabase.getItem(itemId);
+            if (item?.name) name = item.name;
         }
 
         // 💚 Increase reputation
@@ -2032,24 +2149,56 @@ Speak cryptically and briefly. You offer passage to the ${inDoom ? 'normal world
             NPCRelationshipSystem.modifyReputation(this.currentNPC.type || this.currentNPC.id, 5);
         }
 
-        this.addChatMessage(`*offers ${item.name || item.id}*`, 'player');
+        this.addChatMessage(`*offers ${name}*`, 'player');
         this.addChatMessage(`*takes the gift* How kind of you!`, 'npc');
         if (typeof addMessage === 'function') {
-            addMessage(`🎁 Gave ${item.name || item.id} to ${this.currentNPC.name}`);
+            addMessage(`🎁 Gave ${name} to ${this.currentNPC.name}`);
         }
     },
 
     // ⚔️ Attack NPC - violence has consequences
+    // 🖤💀 FIXED: Use modal instead of window.confirm() 💀
     attackNPC() {
         if (!this.currentNPC) return;
 
-        // 🖤 Confirm attack
-        const confirm = window.confirm(`⚔️ Attack ${this.currentNPC.name}?\n\nThis will have consequences!`);
-        if (!confirm) {
-            this.addChatMessage("*thinks better of it*", 'player');
-            return;
+        // 🖤💀 Show confirmation modal 💀
+        if (typeof ModalSystem !== 'undefined') {
+            ModalSystem.show({
+                title: '⚔️ Attack?',
+                content: `
+                    <div style="text-align:center;padding:15px;">
+                        <p style="color:#ff6b6b;font-size:18px;margin-bottom:10px;">Attack ${this.escapeHtml(this.currentNPC.name)}?</p>
+                        <p style="color:#888;">This will have serious consequences!</p>
+                        <p style="color:#666;font-size:12px;margin-top:10px;">• Reputation loss<br>• Possible injury<br>• Guards may be alerted</p>
+                    </div>
+                `,
+                buttons: [
+                    {
+                        text: '⚔️ Attack!',
+                        className: 'primary',
+                        onClick: () => {
+                            ModalSystem.hide();
+                            this._executeAttack();
+                        }
+                    },
+                    {
+                        text: 'Never mind',
+                        className: 'secondary',
+                        onClick: () => {
+                            ModalSystem.hide();
+                            this.addChatMessage("*thinks better of it*", 'player');
+                        }
+                    }
+                ]
+            });
+        } else {
+            // Fallback
+            this._executeAttack();
         }
+    },
 
+    // 🖤💀 Execute the actual attack 💀
+    _executeAttack() {
         this.addChatMessage("*draws weapon and attacks!*", 'player');
 
         // 🦇 Simple combat resolution

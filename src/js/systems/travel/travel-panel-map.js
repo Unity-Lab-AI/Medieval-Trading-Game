@@ -287,6 +287,9 @@ const TravelPanelMap = {
             }
         });
 
+        // 🖤💀 Draw region labels - large zone names like "WESTERN GRAVES" 💀
+        this.drawRegionLabels();
+
         // Apply current transform
         this.updateTransform();
 
@@ -296,6 +299,49 @@ const TravelPanelMap = {
 
         // 🎯 Update quest marker on mini map after render
         this.updateQuestMarker();
+    },
+
+    // 🖤💀 Draw large region labels on the map 💀
+    drawRegionLabels() {
+        if (typeof GameWorld === 'undefined' || !GameWorld.regions) return;
+
+        // Region label positions - calculated center of each region
+        const regionPositions = {
+            starter: { x: 500, y: 280, name: 'RIVERLANDS' },
+            capital: { x: 500, y: 150, name: 'CAPITAL REGION' },
+            northern: { x: 500, y: 50, name: 'NORTHERN HIGHLANDS' },
+            eastern: { x: 700, y: 300, name: 'EASTERN SHORES' },
+            western: { x: 150, y: 300, name: 'WESTERN GRAVES' },
+            southern: { x: 500, y: 500, name: 'SOUTHERN PLAINS' },
+            doom: { x: 400, y: 400, name: 'THE DOOM' }
+        };
+
+        Object.entries(regionPositions).forEach(([regionId, pos]) => {
+            const region = GameWorld.regions[regionId];
+            if (!region) return;
+
+            const label = document.createElement('div');
+            label.className = 'region-label';
+            label.textContent = pos.name;
+            label.style.cssText = `
+                position: absolute;
+                left: ${pos.x}px;
+                top: ${pos.y}px;
+                transform: translate(-50%, -50%);
+                font-size: 24px;
+                font-weight: bold;
+                color: rgba(255, 255, 255, 0.15);
+                text-transform: uppercase;
+                letter-spacing: 4px;
+                pointer-events: none;
+                z-index: 1;
+                text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+                font-family: 'Cinzel', serif;
+                white-space: nowrap;
+            `;
+
+            this.mapElement.appendChild(label);
+        });
     },
 
     // 🔍 Calculate visibility for all locations (borrowed from GameWorldRenderer)
