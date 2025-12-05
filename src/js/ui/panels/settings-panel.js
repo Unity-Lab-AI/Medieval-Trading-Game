@@ -657,7 +657,7 @@ const SettingsPanel = {
                         <button class="settings-btn settings-reset-btn">Reset to Defaults</button>
                         <button class="panel-close-btn-footer settings-cancel-btn">Close</button>
                         <button class="settings-btn settings-main-menu-btn" style="background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);">🏠 Main Menu</button>
-                        <button class="settings-btn settings-clear-all-btn" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); margin-left: auto;">🗑️ Clear All Data</button>
+                        <button class="settings-btn settings-clear-all-btn" onclick="SettingsPanel.clearAllData();" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); margin-left: auto;">🗑️ Clear All Data</button>
                     </div>
                 </div>
             </div>

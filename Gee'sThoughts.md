@@ -16,6 +16,37 @@ Each entry follows this format:
 
 ---
 
+## 2025-12-05 - SESSION #24: STRICT QUEST TRACKER + CLEAR DATA FIX 🖤💀🔗
+
+**Request:** Gee reported:
+1. Quest tracker STILL showing "discovered but not started" quests - these are spoilers too!
+2. Clear All Data button in settings not working
+
+**Status:** ✅ COMPLETE
+
+### Fixes Applied:
+
+**Quest Tracker - STRICT Mode** - FIXED in `quest-system.js:2346-2415`
+- **Root Cause:** Previous fix allowed "discovered" quests (offered by NPC but not accepted) to show
+- **Fix:** Now ONLY shows quests that are:
+  - ACTIVE (player is working on it) - 📍
+  - COMPLETED (player finished it) - ✅
+  - READY TO COMPLETE (objectives done) - 🎉
+- Removed "discovered" status entirely from tracker view
+- Chains only appear when player has at least one ACTIVE or COMPLETED quest
+- Changed filter from `knownQuests` to `engagedQuests` for clarity
+- Updated empty message from "No quest chains discovered" to "No active quests"
+
+**Clear All Data Button** - FIXED in `settings-panel.js:660`
+- **Root Cause:** Event listener wasn't attaching correctly via querySelector
+- **Fix:** Added inline `onclick="SettingsPanel.clearAllData();"` for reliable triggering
+
+**Files Modified:**
+- `src/js/systems/progression/quest-system.js` - Strict quest filtering
+- `src/js/ui/panels/settings-panel.js` - Clear button onclick handler
+
+---
+
 ## 2025-12-05 - SESSION #23: NO SPOILERS IN QUEST TRACKER 🖤💀🔗
 
 **Request:** Gee clarified:

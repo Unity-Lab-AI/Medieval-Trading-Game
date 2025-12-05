@@ -2343,29 +2343,26 @@ const QuestSystem = {
             const quests = chains[chainName];
             if (quests.length === 0) continue;
 
-            // 🖤💀 FIX: Only show chains that have at least one KNOWN quest 💀
-            // A quest is "known" ONLY if the player has actually interacted with it:
-            // - Completed it
-            // - Currently has it active
-            // - Has explicitly discovered it (NPC offered it, found it, etc.)
-            // NO "prereq met" - that's still a spoiler!
-            const knownQuests = quests.filter(quest => {
+            // 🖤💀 FIX: Only show chains that have at least one ACTIVE or COMPLETED quest 💀
+            // NO "discovered but not started" - Gee doesn't want those as they're still spoilers!
+            // Only show quests the player is WORKING ON or HAS FINISHED.
+            const engagedQuests = quests.filter(quest => {
                 const isCompleted = this.completedQuests.includes(quest.id);
                 const isActive = !!this.activeQuests[quest.id];
-                const isDiscovered = this.discoveredQuests?.includes(quest.id);
-                return isCompleted || isActive || isDiscovered;
+                // 🖤 STRICT: Only active or completed - NOT just discovered! 💀
+                return isCompleted || isActive;
             });
 
-            // 🖤 Skip chains where player has NO known quests 💀
-            if (knownQuests.length === 0) continue;
+            // 🖤 Skip chains where player has NO engaged quests 💀
+            if (engagedQuests.length === 0) continue;
 
             const chainExpanded = this.expandedChains[chainName] || false;
             const chainDisplayName = this.getChainDisplayName(chainName);
 
             // Count quest statuses in this chain
-            const completedCount = knownQuests.filter(q => this.completedQuests.includes(q.id)).length;
-            const activeCount = knownQuests.filter(q => this.activeQuests[q.id]).length;
-            const totalCount = knownQuests.length;
+            const completedCount = engagedQuests.filter(q => this.completedQuests.includes(q.id)).length;
+            const activeCount = engagedQuests.filter(q => this.activeQuests[q.id]).length;
+            const totalCount = engagedQuests.length;
 
             // 🖤 Auto-expand chains with active quests
             const hasActiveQuest = activeCount > 0;
@@ -2378,28 +2375,27 @@ const QuestSystem = {
                         <span class="chain-progress ${activeCount > 0 ? 'active' : ''}">${completedCount}/${totalCount}</span>
                     </div>
                     <div class="chain-quests ${chainExpanded ? 'visible' : 'hidden'}">
-                        ${this.buildChainQuestList(knownQuests)}
+                        ${this.buildChainQuestList(engagedQuests)}
                     </div>
                 </div>
             `;
         }
 
-        return html || '<div class="no-quests">No quest chains discovered</div>';
+        return html || '<div class="no-quests">No active quests</div>';
     },
 
     // 🖤💀 BUILD QUEST LIST FOR A CHAIN 💀
-    // NOTE: Only receives KNOWN quests (completed, active, or discovered) - NO spoilers!
+    // NOTE: Only receives ENGAGED quests (completed or active) - NO discovered-only spoilers!
     buildChainQuestList(quests) {
         return quests.map((quest, index) => {
             const isCompleted = this.completedQuests.includes(quest.id);
             const isActive = !!this.activeQuests[quest.id];
             const isTracked = this.trackedQuestId === quest.id;
-            const isDiscovered = this.discoveredQuests?.includes(quest.id);
 
-            // 🦇 Determine quest status for styling - NO locked status possible here!
-            let status = 'discovered'; // Default for known but not started
-            let statusIcon = '📜';
-            let statusClass = 'quest-discovered';
+            // 🦇 Determine quest status for styling - only active or completed possible here!
+            let status = 'active';
+            let statusIcon = '📍';
+            let statusClass = 'quest-active';
 
             if (isCompleted) {
                 status = 'completed';
@@ -2411,13 +2407,9 @@ const QuestSystem = {
                     status = 'ready';
                     statusIcon = '🎉';
                     statusClass = 'quest-ready';
-                } else {
-                    status = 'active';
-                    statusIcon = '📍';
-                    statusClass = 'quest-active';
                 }
+                // else: uses default active status set above
             }
-            // else: discovered but not started - uses default above
 
             // 🖤 Build connector line (except for first quest)
             const connector = index > 0 ? '<div class="quest-connector">│</div>' : '';
