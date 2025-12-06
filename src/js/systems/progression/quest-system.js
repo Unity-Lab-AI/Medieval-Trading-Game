@@ -969,9 +969,8 @@ const QuestSystem = {
             questCompletionTimes: this.questCompletionTimes,
             questItemInventory: this.getQuestItemInventory(),
             // 🖤 v0.90+ Save tracked quest
-            trackedQuestId: this.trackedQuestId,
-            // 🖤💀 SAVE TRACKER VISIBILITY STATE 💀
-            trackerHidden: this.trackerHidden || false
+            trackedQuestId: this.trackedQuestId
+            // 🖤💀 DON'T save trackerHidden - tracker should always show on load 💀
         };
         try {
             localStorage.setItem('medievalTradingGameQuests', JSON.stringify(saveData));
@@ -990,8 +989,8 @@ const QuestSystem = {
                 this.failedQuests = data.failedQuests || [];
                 this.discoveredQuests = data.discoveredQuests || [];
                 this.questCompletionTimes = data.questCompletionTimes || {};
-                // 🖤💀 RESTORE TRACKER VISIBILITY STATE 💀
-                this.trackerHidden = data.trackerHidden === true;
+                // 🖤💀 Tracker always shows on load - user can hide it manually if desired 💀
+                this.trackerHidden = false;
                 // 🖤 v0.90+ Restore tracked quest
                 if (data.trackedQuestId && this.activeQuests[data.trackedQuestId]) {
                     this.trackedQuestId = data.trackedQuestId;
@@ -2648,7 +2647,7 @@ const QuestSystem = {
         style.textContent = `
             /* 🖤 Tracker content area */
             .tracker-content {
-                max-height: 500px;
+                max-height: 80vh;
                 overflow-y: auto;
             }
 
