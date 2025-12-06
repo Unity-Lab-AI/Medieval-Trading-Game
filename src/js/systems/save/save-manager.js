@@ -798,6 +798,25 @@ const SaveManager = {
             if (gameData.questState.questMetrics) {
                 QuestSystem.questMetrics = gameData.questState.questMetrics;
             }
+
+            // 🖤💀 MIGRATION: Patch Strange Cargo quest with new talk objective 💀
+            // Quest was updated to require returning to Harbormaster after finding manifest
+            if (QuestSystem.activeQuests['act1_quest5']) {
+                const quest = QuestSystem.activeQuests['act1_quest5'];
+                const hasTalkObjective = quest.objectives && quest.objectives.some(o => o.type === 'talk' && o.npc === 'harbormaster');
+
+                if (!hasTalkObjective) {
+                    console.log('🔧 Migrating Strange Cargo quest: adding return to Harbormaster objective');
+                    if (!quest.objectives) quest.objectives = [];
+                    quest.objectives.push({
+                        type: 'talk',
+                        npc: 'harbormaster',
+                        location: 'sunhaven',
+                        completed: false,
+                        description: 'Return to Harbormaster Elena'
+                    });
+                }
+            }
         }
 
         // 🖤 Restore faction reputation - alliances from the darkness 💀

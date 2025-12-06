@@ -7280,6 +7280,26 @@ function updateLocationPanelMain() {
         <button id="people-btn" title="Toggle people panel">People</button>
     `;
 
+    // 🖤💀 RE-ATTACH EVENT LISTENERS to the new buttons! 💀
+    // The old buttons were cached in elements object, but we just created new ones
+    // Need to re-cache them and re-attach their event listeners
+    const newVisitMarketBtn = document.getElementById('visit-market-btn');
+    const newTravelBtn = document.getElementById('travel-btn');
+    const newPeopleBtn = document.getElementById('people-btn');
+
+    if (newVisitMarketBtn && typeof EventManager !== 'undefined' && typeof openMarket === 'function') {
+        EventManager.addEventListener(newVisitMarketBtn, 'click', openMarket);
+        elements.visitMarketBtn = newVisitMarketBtn; // Update cache
+    }
+    if (newTravelBtn && typeof EventManager !== 'undefined' && typeof toggleTravel === 'function') {
+        EventManager.addEventListener(newTravelBtn, 'click', toggleTravel);
+        elements.travelBtn = newTravelBtn; // Update cache
+    }
+    if (newPeopleBtn && typeof EventManager !== 'undefined' && typeof togglePeople === 'function') {
+        EventManager.addEventListener(newPeopleBtn, 'click', togglePeople);
+        elements.peopleBtn = newPeopleBtn; // Update cache
+    }
+
     // Update market button visibility based on location
     updateMarketButtonVisibility();
 
