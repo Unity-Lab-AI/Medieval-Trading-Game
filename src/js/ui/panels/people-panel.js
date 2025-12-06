@@ -1424,7 +1424,33 @@ const PeoplePanel = {
                     const talkLocation = talkObj.location;
                     const npcMatches = QuestSystem._npcMatchesObjective?.(npcType, talkTarget);
                     const locationMatches = !talkLocation || talkLocation === location || talkLocation === 'any';
-                    if (npcMatches && locationMatches) {
+
+                    // 🖤💀 SEQUENTIAL CHECK: Ensure all PREVIOUS objectives are complete! 💀
+                    const talkObjIndex = q.objectives?.indexOf(talkObj) ?? -1;
+                    let previousObjectivesComplete = true;
+                    if (talkObjIndex > 0) {
+                        for (let i = 0; i < talkObjIndex; i++) {
+                            const prevObj = q.objectives[i];
+                            if (prevObj.type === 'collect' || prevObj.type === 'buy' || prevObj.type === 'sell' || prevObj.type === 'trade' || prevObj.type === 'defeat') {
+                                if ((prevObj.current || 0) < prevObj.count) {
+                                    previousObjectivesComplete = false;
+                                    break;
+                                }
+                            } else if (prevObj.type === 'explore') {
+                                if ((prevObj.current || 0) < prevObj.rooms) {
+                                    previousObjectivesComplete = false;
+                                    break;
+                                }
+                            } else if (prevObj.type === 'visit' || prevObj.type === 'talk' || prevObj.type === 'investigate' || prevObj.type === 'gold') {
+                                if (!prevObj.completed) {
+                                    previousObjectivesComplete = false;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (npcMatches && locationMatches && previousObjectivesComplete) {
                         return true; // 🖤 Talking to them IS the completion action!
                     }
                 }
