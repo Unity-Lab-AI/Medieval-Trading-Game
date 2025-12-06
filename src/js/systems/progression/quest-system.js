@@ -1404,8 +1404,14 @@ const QuestSystem = {
                 }
 
                 // 🖤 Normal collection quest - verify player has items
-                const playerHas = game?.player?.inventory?.[obj.item] || 0;
+                // 🎯 Quest items are in questItems inventory, regular items in inventory
+                const isQuestItemCheck = this.isQuestItem(obj.item);
+                const playerHas = isQuestItemCheck
+                    ? (game?.player?.questItems?.[obj.item] || 0)
+                    : (game?.player?.inventory?.[obj.item] || 0);
+
                 if (playerHas < obj.count) {
+                    console.log(`❌ Quest validation failed: need ${obj.count}x ${obj.item}, player has ${playerHas} (isQuestItem: ${isQuestItemCheck})`);
                     return {
                         success: false,
                         error: 'missing_collection_items',
