@@ -97,7 +97,7 @@ const MainQuests = {
                 dialogue: {
                     offer: "Welcome to Greendale, young traveler. I sense great potential in you. But first, prove you understand the ways of trade - make a purchase from one of our merchants, then come speak with me.",
                     progress: "Have you made a purchase yet? The merchants eagerly await customers.",
-                    complete: "Excellent! You have the instincts of a true trader. The Merchant Guild has taken notice of your potential - speak with their representative, the merchant here in Greendale. They wish to test your trading skills."
+                    complete: "Excellent! You have the instincts of a true trader. The Merchant Guild has taken notice of your potential - speak with Cassia the Merchant here in Greendale. She wishes to test your trading skills."
                 }
             },
 
@@ -107,9 +107,9 @@ const MainQuests = {
                 name: 'Establishing Trade',
                 description: 'Prove your trading skills by completing profitable trades. The merchant guild is watching potential members.',
                 giver: 'merchant',
-                giverName: 'Merchant Guild Representative',
+                giverName: 'Cassia the Merchant',
                 turnInNpc: 'merchant',
-                turnInNpcName: 'Merchant Guild Representative',
+                turnInNpcName: 'Cassia the Merchant',
                 turnInLocation: 'greendale',
                 location: 'greendale',
                 type: 'main',
@@ -119,7 +119,7 @@ const MainQuests = {
                 difficulty: 'easy',
                 objectives: [
                     { type: 'trade', count: 3, current: 0, minValue: 50, description: 'Complete 3 trades worth at least 50 gold each' },
-                    { type: 'talk', npc: 'merchant', location: 'greendale', completed: false, description: 'Return to Guild Representative Marcus (Merchant) in Greendale' }
+                    { type: 'talk', npc: 'merchant', location: 'greendale', completed: false, description: 'Return to Cassia the Merchant in Greendale' }
                 ],
                 rewards: { gold: 50, reputation: 15, experience: 30 },
                 prerequisite: 'act1_quest1',
@@ -155,7 +155,7 @@ const MainQuests = {
                 prerequisite: 'act1_quest2',
                 nextQuest: 'act1_quest4',
                 dialogue: {
-                    offer: "Ah, the Guild sent you! They speak highly of your trading skills. But I have a different task for you. Strange whispers reach my ears from Sunhaven to the south. Ships arriving with sealed cargo, merchants who speak in hushed tones. I need someone I can trust to investigate. Travel there and speak with the Harbormaster - they see everything that passes through that port.",
+                    offer: "Ah, Cassia sent you! She speaks highly of your trading skills. But I have a different task for you. Strange whispers reach my ears from Sunhaven to the south. Ships arriving with sealed cargo, merchants who speak in hushed tones. I need someone I can trust to investigate. Travel there and speak with the Harbormaster - they see everything that passes through that port.",
                     progress: "The road south is safe enough. Sunhaven awaits. Find the Harbormaster when you arrive.",
                     complete: "You found me! Good. The Elder sent you, yes? I've been expecting someone to ask about the strange cargo... come, let me tell you what I've seen."
                 }
