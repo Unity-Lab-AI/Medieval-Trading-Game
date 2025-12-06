@@ -973,14 +973,15 @@ const GameWorld = {
 
             return {
                 id: npcId,
-                type: npcType,
                 name: generatedName, // 🖤 Now uses unique location-seeded name!
                 title: persona?.title || this.getNPCTitle(npcType),
                 voice: persona?.voice || 'nova',
                 personality: persona?.personality || 'friendly',
                 location: locationId,
                 locationName: location?.name || locationId,
-                ...persona
+                ...persona,
+                // 🖤💀 CRITICAL: Set type AFTER persona spread to prevent overwrite from fallback personas
+                type: npcType
             };
         });
     },
