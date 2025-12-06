@@ -884,7 +884,7 @@
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     display: flex;
     flex-direction: column;
-    max-height: min(250px, 35vh); /* 🖤 Shrink height on small viewports */
+    max-height: min(375px, 50vh); /* 🖤💀 50% taller (was 250px/35vh) 💀 */
     pointer-events: auto;
     /* 🖤 Draggable via header - cursor set there */
 }
