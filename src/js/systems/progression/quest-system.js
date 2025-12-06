@@ -1184,7 +1184,7 @@ const QuestSystem = {
         const totalObjectives = quest.objectives.length;
 
         quest.objectives.forEach(obj => {
-            if (obj.type === 'collect' || obj.type === 'defeat' || obj.type === 'buy' || obj.type === 'trade') {
+            if (obj.type === 'collect' || obj.type === 'defeat' || obj.type === 'buy' || obj.type === 'trade' || obj.type === 'sell') {
                 if ((obj.current || 0) >= obj.count) completedObjectives++;
             } else if (obj.type === 'explore') {
                 if ((obj.current || 0) >= obj.rooms) completedObjectives++;

@@ -143,6 +143,7 @@ const TimeMachine = {
 
     init() {
         console.log('⏰ TIME MACHINE initializing...');
+        console.log(`⏰ TIME MACHINE DEBUG: _timeLoadedFromSave=${this._timeLoadedFromSave}, isRunning=${this.isRunning}, currentTime=${JSON.stringify(this.currentTime)}`);
 
         // 🖤💀 DON'T reset time if it was loaded from a save! 💀
         // This prevents game.start() -> game.init() -> TimeMachine.init() from wiping saved time
@@ -151,6 +152,13 @@ const TimeMachine = {
             this._timeLoadedFromSave = false; // Clear flag for next new game
             // Still setup UI controls
             this.setupTimeControls();
+            return true;
+        }
+
+        // 🖤💀 ADDITIONAL GUARD: Don't reset if already initialized and running! 💀
+        // This prevents double-init from resetting time after load
+        if (this.isRunning) {
+            console.log('⏰ TIME MACHINE: Already running - skipping reset');
             return true;
         }
 
@@ -1154,11 +1162,15 @@ const TimeMachine = {
     loadSaveData(data) {
         if (!data) return;
 
+        console.log(`⏰ TIME MACHINE loadSaveData called with currentTime:`, data.currentTime);
+
         // 🖤💀 Set flag to prevent init() from resetting this loaded time! 💀
         this._timeLoadedFromSave = true;
+        console.log(`⏰ TIME MACHINE: _timeLoadedFromSave flag SET to true`);
 
         if (data.currentTime) {
             this.currentTime = { ...data.currentTime };
+            console.log(`⏰ TIME MACHINE: currentTime restored to ${JSON.stringify(this.currentTime)}`);
 
             // 🖤 Migrate old saves
             if (this.currentTime.year < 1111) {
@@ -1195,6 +1207,7 @@ const TimeMachine = {
         }
 
         console.log(`⏰ TIME MACHINE restored: ${this.getFormattedTime()} (${this.SEASONS[season].icon} ${season})`);
+        console.log(`⏰ TIME MACHINE: loadSaveData complete. _timeLoadedFromSave=${this._timeLoadedFromSave}, isRunning=${this.isRunning}`);
     }
 };
 

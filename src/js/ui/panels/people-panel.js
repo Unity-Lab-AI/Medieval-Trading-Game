@@ -1345,6 +1345,7 @@ const PeoplePanel = {
 
         const result = uniqueQuests.filter(q => {
             const progress = QuestSystem.checkProgress(q.id);
+            console.log(`    ${q.id} progress:`, progress.status, 'objectives:', q.objectives?.map(o => `${o.type}:${o.completed}`));
 
             // 🖤💀 Standard check - all objectives complete
             if (progress.status === 'ready_to_complete') return true;
