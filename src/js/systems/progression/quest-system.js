@@ -3691,8 +3691,9 @@ const QuestSystem = {
 
         // 🖤 Fixed: was 'location-changed' but travel fires 'player-location-changed' 💀
         document.addEventListener('player-location-changed', (e) => {
-            this.updateProgress('visit', { location: e.detail.location });
-            this.updateProgress('travel', { location: e.detail.location }); // 🖤💀 Also trigger travel objectives 💀
+            // 🖤💀 CRITICAL FIX: Event detail uses locationId, not location!
+            this.updateProgress('visit', { location: e.detail.locationId });
+            this.updateProgress('travel', { location: e.detail.locationId }); // 🖤💀 Also trigger travel objectives 💀
         });
 
         document.addEventListener('npc-interaction', (e) => {

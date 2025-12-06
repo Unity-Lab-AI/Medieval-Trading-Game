@@ -173,7 +173,7 @@ const GameWorld = {
             mapPosition: { x: 520, y: 460 },
             sells: ['wine', 'fish', 'oil', 'salt', 'rope', 'canvas', 'rum'],
             buys: ['grapes', 'olives', 'wheat', 'timber', 'iron_bar', 'glass'],
-            npcs: ['merchant', 'fisherman', 'vintner', 'guard', 'sailor', 'villager'] // Quest: main_rumors, sunhaven_lighthouse needs villager
+            npcs: ['merchant', 'fisherman', 'vintner', 'guard', 'sailor', 'villager', 'harbormaster'] // Quest: act1_quest3 needs harbormaster, main_rumors/sunhaven_lighthouse needs villager
         },
 
         // ═══════════════════════════════════════════════════════════
