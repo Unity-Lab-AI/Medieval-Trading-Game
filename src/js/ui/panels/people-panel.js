@@ -1311,9 +1311,11 @@ const PeoplePanel = {
             // 🖤💀 FIX: More precise matching for turn-in NPCs 💀
             // Check if turnInNpc EXACTLY matches (use strict comparison)
             const turnInMatches = q.turnInNpc && q.turnInNpc === npcType;
-            // Check if final talk objective EXACTLY targets this NPC type
+            // Check if final talk objective EXACTLY targets this NPC type AND location
             const talkObj = q.objectives?.find(o => o.type === 'talk' && !o.completed);
-            const talkMatches = talkObj && talkObj.npc === npcType;
+            const talkNpcMatches = talkObj && talkObj.npc === npcType;
+            const talkLocationMatches = !talkObj || !talkObj.location || talkObj.location === location || talkObj.location === 'any';
+            const talkMatches = talkNpcMatches && talkLocationMatches;
             // 🖤 LOCATION CHECK: Ensure turn-in is at THIS location
             const locationMatches = !location || !q.turnInLocation || q.turnInLocation === location || q.turnInLocation === 'any';
 
@@ -2738,7 +2740,14 @@ Speak cryptically and briefly. You offer passage to the ${inDoom ? 'normal world
         // 🦇 Also check if this NPC is the turn-in target for any active quest
         const turnInQuests = Object.values(QuestSystem.activeQuests || {}).filter(q => {
             // 🖤 Check if NPC type matches AND location matches (for multiple merchants/NPCs of same type)
-            const npcMatches = (q.turnInNpc === npcType) || q.objectives?.some(o => o.type === 'talk' && !o.completed && o.npc === npcType);
+            const turnInNpcMatches = q.turnInNpc === npcType;
+            const talkObjMatches = q.objectives?.some(o =>
+                o.type === 'talk' &&
+                !o.completed &&
+                o.npc === npcType &&
+                (!o.location || o.location === location || o.location === 'any')
+            );
+            const npcMatches = turnInNpcMatches || talkObjMatches;
             const locationMatches = !location || !q.turnInLocation || q.turnInLocation === location || q.turnInLocation === 'any';
             return npcMatches && locationMatches;
         });
