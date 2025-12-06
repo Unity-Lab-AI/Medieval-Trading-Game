@@ -2168,8 +2168,8 @@ const DungeonExplorationSystem = {
             * diffMult.staminaMult
         );
 
-        // Select outcome based on weights
-        const outcome = this.selectOutcome(choice.outcomes);
+        // Select outcome based on weights (with quest override)
+        const outcome = this.selectOutcome(choice.outcomes, event, choice);
 
         // Calculate final health/stamina changes
         let totalHealthLoss = healthCost + (outcome.healthPenalty || 0);
@@ -2209,7 +2209,27 @@ const DungeonExplorationSystem = {
     },
 
     // Select outcome based on weights
-    selectOutcome(outcomes) {
+    selectOutcome(outcomes, event = null, choice = null) {
+        // 🎯 QUEST OVERRIDE: Strange Cargo quest requires shipping_manifest
+        // If the quest is active and we're at harbor_warehouse, force the manifest outcome
+        if (event && event.id === 'harbor_warehouse') {
+            const hasStrangeCargoQuest = typeof QuestSystem !== 'undefined' &&
+                QuestSystem.hasActiveQuest?.('act1_quest5');
+
+            if (hasStrangeCargoQuest) {
+                // Find the outcome that gives shipping_manifest
+                const manifestOutcome = outcomes.find(o =>
+                    o.loot && o.loot.includes('shipping_manifest')
+                );
+
+                if (manifestOutcome) {
+                    console.log('🎯 Quest override: forcing shipping_manifest outcome for Strange Cargo quest');
+                    return manifestOutcome;
+                }
+            }
+        }
+
+        // Normal random selection based on weights
         const totalWeight = outcomes.reduce((sum, o) => sum + o.weight, 0);
         let random = Math.random() * totalWeight;
 

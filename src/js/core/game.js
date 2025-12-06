@@ -7259,6 +7259,30 @@ function updateLocationPanelMain() {
 
     actionsSection.innerHTML = navButtonsHTML;
 
+    // 🖤💀 RESTORE LOCATION ACTION BUTTONS if they're missing! 💀
+    // These are the Visit Market, Travel, People buttons
+    // They get wiped when exploration/gathering views take over
+    let actionsDiv = locationPanel.querySelector('#location-actions');
+    if (!actionsDiv) {
+        actionsDiv = document.createElement('div');
+        actionsDiv.id = 'location-actions';
+        // Insert at the end of location-panel-content
+        const content = locationPanel.querySelector('#location-panel-content');
+        if (content) {
+            content.appendChild(actionsDiv);
+        }
+    }
+
+    // Always rebuild the action buttons to ensure they're present
+    actionsDiv.innerHTML = `
+        <button id="visit-market-btn" title="Visit the local market">Visit Market</button>
+        <button id="travel-btn" title="Toggle travel panel">Travel</button>
+        <button id="people-btn" title="Toggle people panel">People</button>
+    `;
+
+    // Update market button visibility based on location
+    updateMarketButtonVisibility();
+
     // 🎵 Update music based on location type
     if (typeof MusicSystem !== 'undefined') {
         const locationType = location.type?.toLowerCase() || '';

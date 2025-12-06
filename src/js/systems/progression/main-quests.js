@@ -210,7 +210,8 @@ const MainQuests = {
                 difficulty: 'easy',
                 objectives: [
                     { type: 'explore', dungeon: 'sunhaven', rooms: 1, current: 0, description: 'Search the harbor warehouse' },
-                    { type: 'collect', item: 'shipping_manifest', count: 1, current: 0, description: 'Find evidence of suspicious cargo' }
+                    { type: 'collect', item: 'shipping_manifest', count: 1, current: 0, description: 'Find evidence of suspicious cargo' },
+                    { type: 'talk', npc: 'harbormaster', location: 'sunhaven', completed: false, description: 'Return to Harbormaster Elena' }
                 ],
                 rewards: { gold: 100, reputation: 25, experience: 50 },
                 givesQuestItem: 'shipping_manifest',
