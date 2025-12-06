@@ -96,7 +96,11 @@ const QuestSystem = {
         // special quest keys
         shadow_key: { name: 'Shadow Key', description: 'Opens the inner sanctum', quest: 'shadow_tower_chain', icon: '🗝️' },
         mine_pass: { name: 'Mining Pass', description: 'Authorization to enter deep mines', quest: 'deep_mine_access', icon: '🎫' },
-        guild_token: { name: 'Guild Token', description: 'Proof of guild membership', quest: 'join_guild', icon: '🏅' }
+        guild_token: { name: 'Guild Token', description: 'Proof of guild membership', quest: 'join_guild', icon: '🏅' },
+
+        // main story quest items (Act 1: The Shadow Rising)
+        shipping_manifest: { name: 'Shipping Manifest', description: 'Coded manifest revealing suspicious cargo shipments', quest: 'act1_quest5', icon: '📋' },
+        traders_journal: { name: "Trader's Journal", description: 'Final entries mention the Shadow Tower and The Black Ledger', quest: 'act1_quest6', icon: '📖' }
     },
 
     // ═══════════════════════════════════════════════════════════════

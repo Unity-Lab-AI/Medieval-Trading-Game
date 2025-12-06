@@ -241,7 +241,7 @@ const MainQuests = {
                 chain: 'shadow_rising',
                 difficulty: 'easy',
                 objectives: [
-                    { type: 'talk', npc: 'innkeeper', completed: false, description: 'Ask the innkeeper about the missing trader' },
+                    { type: 'talk', npc: 'innkeeper', location: 'lighthouse_inn', completed: false, description: 'Ask the innkeeper about the missing trader' },
                     { type: 'collect', item: 'traders_journal', count: 1, current: 0, description: 'Find the trader\'s abandoned journal' }
                 ],
                 rewards: { gold: 80, reputation: 20, experience: 45 },

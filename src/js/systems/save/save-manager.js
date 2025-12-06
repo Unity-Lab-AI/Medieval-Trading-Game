@@ -817,6 +817,18 @@ const SaveManager = {
                     });
                 }
             }
+
+            // 🖤💀 MIGRATION: Patch Missing Trader quest talk objective with location 💀
+            // Talk objective was missing location field, causing it to target wrong NPC
+            if (QuestSystem.activeQuests['act1_quest6']) {
+                const quest = QuestSystem.activeQuests['act1_quest6'];
+                const talkObjective = quest.objectives && quest.objectives.find(o => o.type === 'talk' && o.npc === 'innkeeper');
+
+                if (talkObjective && !talkObjective.location) {
+                    console.log('🔧 Migrating Missing Trader quest: adding location to innkeeper talk objective');
+                    talkObjective.location = 'lighthouse_inn';
+                }
+            }
         }
 
         // 🖤 Restore faction reputation - alliances from the darkness 💀
