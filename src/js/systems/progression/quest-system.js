@@ -2373,7 +2373,7 @@ const QuestSystem = {
 
             html += `
                 <div class="chain-section ${chainExpanded ? 'expanded' : ''} ${hasActiveQuest ? 'has-active' : ''}">
-                    <div class="chain-header" onclick="QuestSystem.toggleChainExpand('${chainName}')">
+                    <div class="chain-header" onclick="event.stopPropagation(); QuestSystem.toggleChainExpand('${chainName}')">
                         <span class="chain-arrow">${chainExpanded ? '▼' : '▶'}</span>
                         <span class="chain-name">${chainDisplayName}</span>
                         <span class="chain-progress ${activeCount > 0 ? 'active' : ''}">${completedCount}/${totalCount}</span>
@@ -2429,7 +2429,7 @@ const QuestSystem = {
             return `
                 ${connector}
                 <div class="chain-quest ${statusClass} ${isTracked ? 'tracked' : ''} ${isRepeatable ? 'repeatable' : ''} ${isExpanded ? 'expanded' : ''}"
-                     onclick="QuestSystem.handleChainQuestClick('${quest.id}', '${status}')"
+                     onclick="event.stopPropagation(); QuestSystem.handleChainQuestClick('${quest.id}', '${status}')"
                      data-quest-id="${quest.id}">
                     <div class="quest-row-header">
                         ${expandArrow}
