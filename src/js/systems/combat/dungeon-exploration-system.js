@@ -441,6 +441,11 @@ const DungeonExplorationSystem = {
                     preview: 'Risk: Low health drain. Could receive blessing or curse.',
                     healthCost: { min: 5, max: 15 },
                     staminaCost: { min: 5, max: 10 },
+                    // 🖤 Outcome weight distribution (must total 100): 💀
+                    // 40% blessing - reward the faithful with health + decent loot
+                    // 35% neutral - gods are AFK, you get participation trophy (dusty tome)
+                    // 25% curse - dark gods demand sacrifice, health penalty but consolation loot
+                    // This creates a risk/reward that slightly favors the player while keeping tension high
                     outcomes: [
                         { weight: 40, type: 'blessing', message: 'The altar glows warmly. You feel... blessed? Weird.', healthBonus: 20, loot: ['ancient_coin', 'ancient_coin'] },
                         { weight: 35, type: 'neutral', message: 'Nothing happens. The gods are busy or just dont care.', loot: ['dusty_tome'] },
@@ -1757,6 +1762,9 @@ const DungeonExplorationSystem = {
     // ⏰ COOLDOWN TRACKING - even dungeons need beauty sleep
     // ═══════════════════════════════════════════════════════════════
 
+    // 🖤 12-hour cooldown ensures dungeons feel special, not farmable 💀
+    // Balancing act: long enough to prevent exploitation, short enough to keep players engaged
+    // Players can still explore multiple locations, just not spam the same one repeatedly
     COOLDOWN_HOURS: 12,
     locationCooldowns: {},
 

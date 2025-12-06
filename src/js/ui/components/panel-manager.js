@@ -669,8 +669,11 @@ const PanelManager = {
             });
 
             if (needsUpdate) {
-                // Debounce updates
-                clearTimeout(this._updateTimeout);
+                // 🖤 Debounce updates with guard - no clearing null timeouts 💀
+                if (this._updateTimeout) {
+                    clearTimeout(this._updateTimeout);
+                    this._updateTimeout = null;
+                }
                 this._updateTimeout = setTimeout(() => {
                     this.syncOpenPanels();
                     this.updateToolbarButtons();

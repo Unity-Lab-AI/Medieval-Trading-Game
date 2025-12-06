@@ -11,6 +11,7 @@ const DraggablePanels = {
     dragState: null,
     STORAGE_KEY: 'trader-claude-panel-positions',
     eventsSetup: false,
+    _questTrackerRetries: 0, // 🖤 Track setupQuestTracker retry attempts (max 10) 💀
 
     // 🖤 Map of panel IDs/classes to their drag handle selectors
     // If not listed, will try common header selectors
@@ -143,9 +144,18 @@ const DraggablePanels = {
     setupQuestTracker() {
         const questTracker = document.querySelector('.quest-tracker');
         if (!questTracker) {
+            // 🖤 Prevent infinite retry loop - max 10 attempts 💀
+            this._questTrackerRetries++;
+            if (this._questTrackerRetries >= 10) {
+                console.warn('🖤 Quest tracker not found after 10 retries - giving up 💀');
+                return;
+            }
             setTimeout(() => this.setupQuestTracker(), 1000);
             return;
         }
+
+        // 🖤 Reset retry counter on success 💀
+        this._questTrackerRetries = 0;
 
         if (questTracker.dataset.draggable === 'true') return;
         questTracker.dataset.draggable = 'true';

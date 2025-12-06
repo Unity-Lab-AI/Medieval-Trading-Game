@@ -252,7 +252,7 @@ const TradingSystem = {
     },
     
     // 📜 Record trade - documenting our financial journey
-    recordTrade(type, items) {
+    recordTrade(type, items, price) {
         const trade = {
             type: type, // 'buy' or 'sell'
             timestamp: Date.now(),
@@ -261,7 +261,9 @@ const TradingSystem = {
                 itemId: id,
                 quantity: qty,
                 itemName: ItemDatabase.getItemName(id)
-            }))
+            })),
+            // 🖤 Track price to remember what we paid/earned 💀
+            price: price || 0
         };
         
         this.tradeHistory.unshift(trade);

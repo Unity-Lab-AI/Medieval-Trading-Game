@@ -48,6 +48,7 @@ const PropertyStorage = {
             if (typeof ItemDatabase !== 'undefined') {
                 totalWeight += ItemDatabase.calculateWeight(itemId, quantity);
             } else {
+                // 🖤 Fallback: 1 unit weight per item when ItemDatabase unavailable 💀
                 totalWeight += quantity * 1;
             }
         }

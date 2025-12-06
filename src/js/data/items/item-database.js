@@ -51,6 +51,10 @@ const ItemDatabase = {
             icon: '💰',
             category: 'currency',
             rarity: 'common',
+            // 🖤 Gold weight is INTENTIONALLY this low 💀
+            // 0.0001 means 10,000 gold coins = 1 weight unit
+            // This is a DESIGN CHOICE so gold doesn't fuck up your inventory capacity
+            // Don't "fix" this unless Gee says so - gold needs to be light as air
             weight: 0.0001, // Very light - 10,000 gold = 1 weight unit
             basePrice: 1, // 1 gold = 1 gold (for reference)
             stackable: true,

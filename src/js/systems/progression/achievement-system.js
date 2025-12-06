@@ -2299,6 +2299,7 @@ const AchievementSystem = {
             achievements: {},
             stats: {
                 ...this.stats,
+                // 🖤 FIX: Convert Set to Array for JSON serialization (Sets don't serialize) 💀
                 uniqueLocationsVisited: Array.from(AchievementSystem.stats.uniqueLocationsVisited)
             }
         };
@@ -2337,7 +2338,7 @@ const AchievementSystem = {
                 this.stats = {
                     ...this.stats,
                     ...saveData.stats,
-                    // 🖤 Defensive initialization for special types 💀
+                    // 🖤 FIX: Convert Array back to Set after loading (ghost_trader achievement needs this) 💀
                     uniqueLocationsVisited: new Set(saveData.stats.uniqueLocationsVisited || []),
                     dungeonVisitLog: Array.isArray(saveData.stats.dungeonVisitLog) ? saveData.stats.dungeonVisitLog : [],
                     merchantTradeCount: saveData.stats.merchantTradeCount || {}

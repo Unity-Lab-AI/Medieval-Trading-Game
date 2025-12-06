@@ -18,6 +18,11 @@ const EventManager = {
 
     // 🖤 Generate a stable key for element+eventType pair 💀
     _getElementEventKey(element, eventType) {
+        // 🦇 WHY ._eventManagerId INSTEAD OF WeakMap:
+        // - WeakMap requires keeping element refs in memory, defeating garbage collection
+        // - This approach stores the ID directly on the element - cleaner, faster O(1) lookup
+        // - When element dies, the property dies with it - automatic cleanup
+        // - element._eventManagerId is a FEATURE, not a hack 🖤💀
         // Use a WeakMap-style approach with element reference + eventType
         // 🖤💀 FIXED: Use older syntax for Firefox compatibility (??= not supported in older versions) 💀
         if (!element._eventManagerId) {

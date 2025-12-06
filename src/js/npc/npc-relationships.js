@@ -201,6 +201,12 @@ const NPCRelationshipSystem = {
      * Reset relationships for new game
      */
     resetForNewGame() {
+        // 🖤 Clear any pending save timeout - the darkness must be purged before rebirth 💀
+        if (this._saveTimeout) {
+            clearTimeout(this._saveTimeout);
+            this._saveTimeout = null;
+        }
+
         this.relationships = {};
         this.factionReputation = {};
         this.playerTitle = null;
@@ -759,6 +765,12 @@ const NPCRelationshipSystem = {
      * Reset all relationships (use with caution!)
      */
     resetAll() {
+        // 🖤 Clear any pending save timeout - kill the timers before the purge 💀
+        if (this._saveTimeout) {
+            clearTimeout(this._saveTimeout);
+            this._saveTimeout = null;
+        }
+
         this.relationships = {};
         this.factionReputation = {};
         this.playerTitle = null;

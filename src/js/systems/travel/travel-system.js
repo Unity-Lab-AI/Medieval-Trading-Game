@@ -6,6 +6,11 @@
 // www.unityailab.com | github.com/Unity-Lab-AI/Medieval-Trading-Game
 // unityailabcontact@gmail.com
 // ═══════════════════════════════════════════════════════════════
+//
+// 🖤 LOGGING APPROACH 💀
+// This file uses extensive console.log statements for debugging and state tracking.
+// Logs include emojis (🗺️, 🛤️, 🌑, 🌍) to distinguish different world states and path discovery events.
+// All logs are kept intentionally verbose to track world transitions, path discoveries, and travel state.
 
 const TravelSystem = {
     // world map config - the universe is vast, uncaring, and probably laughing at us

@@ -30,6 +30,8 @@ const GameWorldRenderer = {
     },
 
     // 🖤 Map dimensions - the size of our suffering
+    // 💀 NOTE: These are FIXED dimensions, not responsive to viewport size
+    // The map is rendered at this exact pixel size, then scaled/panned via transform
     MAP_WIDTH: 2400,
     MAP_HEIGHT: 1800,
 
