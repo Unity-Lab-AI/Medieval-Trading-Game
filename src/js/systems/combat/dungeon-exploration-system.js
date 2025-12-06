@@ -2278,13 +2278,25 @@ const DungeonExplorationSystem = {
             game.player.gold = Math.max(0, game.player.gold + results.goldChange);
         }
 
-        // Add loot to inventory
+        // Add loot to inventory (check if quest item vs regular item)
         results.loot.forEach(item => {
-            if (!game.player.inventory) game.player.inventory = {};
-            game.player.inventory[item.id] = (game.player.inventory[item.id] || 0) + item.quantity;
+            // 🎯 Check if this is a quest item
+            const isQuestItem = typeof QuestSystem !== 'undefined' && QuestSystem.isQuestItem?.(item.id);
+
+            if (isQuestItem) {
+                // 📦 Quest items go into questItems inventory
+                if (!game.player.questItems) game.player.questItems = {};
+                game.player.questItems[item.id] = (game.player.questItems[item.id] || 0) + item.quantity;
+                console.log(`📦 Quest item found in loot: ${item.id} x${item.quantity}`);
+            } else {
+                // 🎒 Regular items go into normal inventory
+                if (!game.player.inventory) game.player.inventory = {};
+                game.player.inventory[item.id] = (game.player.inventory[item.id] || 0) + item.quantity;
+            }
+
             // 🖤 Emit item-received for quest progress tracking 💀
             document.dispatchEvent(new CustomEvent('item-received', {
-                detail: { item: item.id, quantity: item.quantity, source: 'dungeon_loot' }
+                detail: { item: item.id, quantity: item.quantity, source: 'dungeon_loot', isQuestItem }
             }));
         });
 
@@ -3438,13 +3450,25 @@ const DungeonExplorationSystem = {
         if (typeof game !== 'undefined' && game.player) {
             game.player.gold = (game.player.gold || 0) + boss.rewards.gold;
 
-            // Add items to inventory
+            // Add items to inventory (check if quest item vs regular item)
             boss.rewards.items.forEach(itemId => {
-                if (!game.player.inventory) game.player.inventory = {};
-                game.player.inventory[itemId] = (game.player.inventory[itemId] || 0) + 1;
+                // 🎯 Check if this is a quest item
+                const isQuestItem = typeof QuestSystem !== 'undefined' && QuestSystem.isQuestItem?.(itemId);
+
+                if (isQuestItem) {
+                    // 📦 Quest items go into questItems inventory
+                    if (!game.player.questItems) game.player.questItems = {};
+                    game.player.questItems[itemId] = (game.player.questItems[itemId] || 0) + 1;
+                    console.log(`📦 Quest item found in boss loot: ${itemId}`);
+                } else {
+                    // 🎒 Regular items go into normal inventory
+                    if (!game.player.inventory) game.player.inventory = {};
+                    game.player.inventory[itemId] = (game.player.inventory[itemId] || 0) + 1;
+                }
+
                 // 🖤 Emit item-received for quest progress tracking 💀
                 document.dispatchEvent(new CustomEvent('item-received', {
-                    detail: { item: itemId, quantity: 1, source: 'boss_loot' }
+                    detail: { item: itemId, quantity: 1, source: 'boss_loot', isQuestItem }
                 }));
             });
         }

@@ -7108,8 +7108,17 @@ function updateLocationPanelMain() {
     // Update location name and description
     const h2 = locationPanel.querySelector('h2');
     if (h2) h2.textContent = locationName;
-    const descElement = locationPanel.querySelector('#location-description');
-    if (descElement) {
+
+    // 🖤💀 If description element is missing, rebuild the entire content structure! 💀
+    // This happens when exploration/gathering views wipe the content div
+    let descElement = locationPanel.querySelector('#location-description');
+    if (!descElement) {
+        const content = locationPanel.querySelector('#location-panel-content');
+        if (content) {
+            content.innerHTML = `<p id="location-description">${locationDesc}</p>`;
+            descElement = content.querySelector('#location-description');
+        }
+    } else {
         descElement.textContent = locationDesc;
     }
     
