@@ -845,6 +845,11 @@ const QuestSystem = {
         this.setupEventListeners();
         this.initialized = true;
 
+        // 🖤💀 CRITICAL: Initialize quest tracker to ensure visibility on page load! 💀
+        setTimeout(() => {
+            this.updateQuestTracker();
+        }, 500);
+
         // Count quests by type
         const mainCount = Object.values(this.quests).filter(q => q.type === 'main').length;
         const sideCount = Object.values(this.quests).filter(q => q.type === 'side').length;
@@ -2472,21 +2477,26 @@ const QuestSystem = {
             // 🖤💀 FIX: Show details INLINE when this specific quest is clicked/expanded 💀
             const showDetails = isExpanded && (isActive || isCompleted);
 
-            // 🖤💀 Build quest row with expand arrow indicator
+            // 🖤💀 Build quest row with expand arrow indicator for inline details
             const isRepeatable = quest.repeatable;
-            const expandArrow = (isActive || isCompleted) ? `<span class="quest-expand-arrow">${isExpanded ? '▼' : '▶'}</span>` : '';
+            const expandArrow = (isActive || isCompleted) ? `<span class="quest-expand-arrow" onclick="event.stopPropagation(); QuestSystem.handleChainQuestExpand('${quest.id}')">${isExpanded ? '▼' : '▶'}</span>` : '';
+
+            // 🖤💀 Bullseye badge toggles tracking - clickable!
+            const trackingBadge = isTracked
+                ? `<span class="tracked-badge clickable" onclick="event.stopPropagation(); QuestSystem.untrackQuest(); QuestSystem.updateQuestTracker();" title="Untrack quest">🎯</span>`
+                : '';
 
             return `
                 ${connector}
                 <div class="chain-quest ${statusClass} ${isTracked ? 'tracked' : ''} ${isRepeatable ? 'repeatable' : ''} ${isExpanded ? 'expanded' : ''}"
-                     onclick="event.stopPropagation(); QuestSystem.handleChainQuestClick('${quest.id}', '${status}')"
+                     onclick="event.stopPropagation(); QuestSystem.showQuestInfo('${quest.id}')"
                      data-quest-id="${quest.id}">
                     <div class="quest-row-header">
                         ${expandArrow}
                         <span class="quest-status-icon">${statusIcon}</span>
                         <span class="quest-chain-name">${quest.name}</span>
                         ${isRepeatable && !isActive && !isCompleted ? '<span class="repeat-icon">🔄</span>' : ''}
-                        ${isTracked ? '<span class="tracked-badge">🎯</span>' : ''}
+                        ${trackingBadge}
                     </div>
                     ${showDetails ? this.buildQuestDetailsInline(quest) : ''}
                 </div>
@@ -2523,15 +2533,10 @@ const QuestSystem = {
             return `<div class="detail-objective ${isComplete ? 'done' : ''}">${icon} ${obj.description}${countText}</div>`;
         }).join('');
 
-        // 🖤 Add Track/Untrack button inline
-        const isTracked = this.trackedQuestId === quest.id;
-        const trackBtn = isTracked
-            ? `<button class="inline-track-btn untrack" onclick="event.stopPropagation(); QuestSystem.untrackQuest(); QuestSystem.updateQuestTracker();">🚫 Untrack</button>`
-            : `<button class="inline-track-btn track" onclick="event.stopPropagation(); QuestSystem.trackQuest('${quest.id}'); QuestSystem.updateQuestTracker();">🎯 Track</button>`;
+        // 🖤💀 NO TRACK BUTTON - bullseye badge handles tracking! 💀
 
         return `<div class="quest-details-inline">
             <div class="detail-objectives">${objHTML}</div>
-            <div class="detail-actions">${trackBtn}</div>
         </div>`;
     },
 
@@ -2562,9 +2567,14 @@ const QuestSystem = {
         return `<div class="quest-details">${objHTML}</div>`;
     },
 
-    // 🖤💀 HANDLE CLICK ON QUEST IN CHAIN VIEW 💀
-    // 🖤💀 FIX: Toggle inline details instead of opening a full overlay panel 💀
+    // 🖤💀 HANDLE CLICK ON QUEST CARD - Opens full quest details panel 💀
     handleChainQuestClick(questId, status) {
+        // This function is no longer used - clicking quest card calls showQuestInfo directly
+        this.showQuestInfo(questId);
+    },
+
+    // 🖤💀 HANDLE CLICK ON EXPAND ARROW - Toggles inline details 💀
+    handleChainQuestExpand(questId) {
         // 🖤 Toggle this quest's expanded state INLINE (no overlay!)
         if (this._expandedQuestId === questId) {
             // Clicking same quest - collapse it
