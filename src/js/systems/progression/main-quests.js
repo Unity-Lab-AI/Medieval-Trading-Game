@@ -97,7 +97,7 @@ const MainQuests = {
                 dialogue: {
                     offer: "Welcome to Greendale, young traveler. I sense great potential in you. But first, prove you understand the ways of trade - make a purchase from one of our merchants, then come speak with me.",
                     progress: "Have you made a purchase yet? The merchants eagerly await customers.",
-                    complete: "Excellent! You have the instincts of a true trader. The Merchant Guild has taken notice of your potential - speak with their representative Marcus, the merchant here in Greendale. He wishes to test your trading skills."
+                    complete: "Excellent! You have the instincts of a true trader. The Merchant Guild has taken notice of your potential - speak with their representative, the merchant here in Greendale. They wish to test your trading skills."
                 }
             },
 
@@ -107,9 +107,9 @@ const MainQuests = {
                 name: 'Establishing Trade',
                 description: 'Prove your trading skills by completing profitable trades. The merchant guild is watching potential members.',
                 giver: 'merchant',
-                giverName: 'Guild Representative Marcus',
+                giverName: 'Merchant Guild Representative',
                 turnInNpc: 'merchant',
-                turnInNpcName: 'Guild Representative Marcus',
+                turnInNpcName: 'Merchant Guild Representative',
                 turnInLocation: 'greendale',
                 location: 'greendale',
                 type: 'main',
@@ -155,7 +155,7 @@ const MainQuests = {
                 prerequisite: 'act1_quest2',
                 nextQuest: 'act1_quest4',
                 dialogue: {
-                    offer: "Ah, Marcus sent you! The Guild speaks highly of your trading skills. But I have a different task for you. Strange whispers reach my ears from Sunhaven to the south. Ships arriving with sealed cargo, merchants who speak in hushed tones. I need someone I can trust to investigate. Travel there and speak with the Harbormaster - they see everything that passes through that port.",
+                    offer: "Ah, the Guild sent you! They speak highly of your trading skills. But I have a different task for you. Strange whispers reach my ears from Sunhaven to the south. Ships arriving with sealed cargo, merchants who speak in hushed tones. I need someone I can trust to investigate. Travel there and speak with the Harbormaster - they see everything that passes through that port.",
                     progress: "The road south is safe enough. Sunhaven awaits. Find the Harbormaster when you arrive.",
                     complete: "You found me! Good. The Elder sent you, yes? I've been expecting someone to ask about the strange cargo... come, let me tell you what I've seen."
                 }
