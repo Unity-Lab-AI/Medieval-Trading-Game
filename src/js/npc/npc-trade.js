@@ -2311,17 +2311,17 @@ const NPCTradeWindow = {
     },
 
     getItemPrice(itemId) {
-        // 🐟💰 SPECIAL CASE: Harbor Dealings quest - Cassia pays premium for fish in Greendale
+        // 🐟💰 SPECIAL CASE: Harbor Dealings quest - small premium for fish in Greendale
         if (itemId === 'fish' &&
             typeof QuestSystem !== 'undefined' &&
             QuestSystem.activeQuests?.act1_quest4 &&
-            this.currentNPC?.type === 'merchant' &&
             typeof game !== 'undefined' &&
             game.currentLocation?.id === 'greendale') {
-            // Return 18g base price for fish (normally 8g)
-            // Player will get 50% = 9g per fish in trade value
-            // With 10 fish at 9g each = 90g total value (vs 84g cost = 6g profit)
-            return 18;
+            // Return 19g base price for fish (normally 8g)
+            // Player will get 50% = 9.5g per fish in trade value
+            // With 10 fish at 9.5g each = 95g total value (vs 84g cost = 11g profit)
+            console.log('🐟 QUEST PRICING: Fish valued at 19g base (quest active, Greendale)');
+            return 19;
         }
 
         // 🖤💀 PRIORITY 1: Check ItemDatabase - the authoritative source 💀
