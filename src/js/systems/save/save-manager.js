@@ -347,6 +347,7 @@ const SaveManager = {
                     discoveredQuests: QuestSystem.discoveredQuests || [],
                     questCompletionTimes: QuestSystem.questCompletionTimes || {},
                     trackedQuestId: QuestSystem.trackedQuestId || null,
+                    trackerHidden: QuestSystem.trackerHidden || false,
                     // 🖤 v0.90+ Quest metrics for leaderboard
                     questMetrics: {
                         mainQuestsCompleted: QuestSystem.completedQuests?.filter(q => q.startsWith('act'))?.length || 0,
@@ -791,6 +792,8 @@ const SaveManager = {
             QuestSystem.questCompletionTimes = gameData.questState.questCompletionTimes || {};
             QuestSystem.discoveredQuests = gameData.questState.discoveredQuests || [];
             QuestSystem.trackedQuestId = gameData.questState.trackedQuestId || null;
+            // 🖤 Restore quest tracker visibility state
+            QuestSystem.trackerHidden = gameData.questState.trackerHidden || false;
             // 🦇 Restore quest metrics for leaderboard
             if (gameData.questState.questMetrics) {
                 QuestSystem.questMetrics = gameData.questState.questMetrics;
