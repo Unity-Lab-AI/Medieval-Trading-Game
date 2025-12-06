@@ -320,7 +320,8 @@ const MainQuests = {
                 wealthGateCheck: true,
                 objectives: [
                     { type: 'gold', amount: 5000, description: 'Accumulate 5,000 gold wealth' },
-                    { type: 'visit', location: 'ironforge_city', completed: false, description: 'Travel to Ironforge City (pay northern gatehouse toll)' }
+                    { type: 'visit', location: 'ironforge_city', completed: false, description: 'Travel to Ironforge City (pay northern gatehouse toll)' },
+                    { type: 'talk', npc: 'blacksmith', location: 'ironforge_city', completed: false, description: 'Report to Forgemaster Grimjaw' }
                 ],
                 rewards: { gold: 200, reputation: 35, experience: 100 },
                 prerequisite: 'act1_quest7',

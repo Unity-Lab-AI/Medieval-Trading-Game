@@ -825,7 +825,7 @@ const SaveManager = {
                 const quest = QuestSystem.activeQuests['act1_quest6'];
                 console.log('🔧 Migrating Missing Trader quest to new structure');
 
-                // Replace objectives entirely with new structure
+                // Check if player has the journal (if so, they already talked to innkeeper)
                 const hasJournal = (game.player?.questItems?.traders_journal || 0) > 0;
 
                 quest.objectives = [
@@ -833,7 +833,7 @@ const SaveManager = {
                         type: 'talk',
                         npc: 'innkeeper',
                         location: 'lighthouse_inn',
-                        completed: true, // Already done if quest is active
+                        completed: hasJournal, // Only mark complete if player already has journal
                         description: 'Ask the innkeeper about the missing trader',
                         givesItem: 'traders_journal'
                     },
@@ -846,11 +846,33 @@ const SaveManager = {
                     }
                 ];
 
-                // If player doesn't have journal yet, give it to them
-                if (!hasJournal) {
-                    if (!game.player.questItems) game.player.questItems = {};
-                    game.player.questItems.traders_journal = 1;
-                    console.log('🔧 Gave traders_journal to player as part of migration');
+                    // If player doesn't have journal yet, they still need to talk to innkeeper
+                // Don't give it automatically - let them get it from the conversation
+                if (hasJournal) {
+                    console.log('🔧 Player already has journal, marked innkeeper talk complete');
+                } else {
+                    console.log('🔧 Player needs to talk to innkeeper to get journal');
+                }
+            }
+
+            // 🖤💀 MIGRATION: Add turn-in objective to Eastern Expansion quest 💀
+            // Quest was missing final "talk to Forgemaster" objective
+            if (QuestSystem.activeQuests['act2_quest1']) {
+                const quest = QuestSystem.activeQuests['act2_quest1'];
+                const hasTurnInObjective = quest.objectives && quest.objectives.some(o =>
+                    o.type === 'talk' && o.npc === 'blacksmith' && o.location === 'ironforge_city'
+                );
+
+                if (!hasTurnInObjective) {
+                    console.log('🔧 Migrating Eastern Expansion: adding turn-in objective');
+                    if (!quest.objectives) quest.objectives = [];
+                    quest.objectives.push({
+                        type: 'talk',
+                        npc: 'blacksmith',
+                        location: 'ironforge_city',
+                        completed: false,
+                        description: 'Report to Forgemaster Grimjaw'
+                    });
                 }
             }
         }
