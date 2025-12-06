@@ -317,7 +317,8 @@ const DynamicMarketSystem = {
             try {
                 this.marketSaturation = JSON.parse(saved);
             } catch (e) {
-                // 🖤 Corrupt data? Nuke it and start fresh - silent fallback
+                // 🖤 Corrupt data? Nuke it and start fresh 💀
+                console.warn('⚠️ DynamicMarketSystem: localStorage data corrupted, clearing and resetting');
                 localStorage.removeItem('tradingGameMarketSaturation');
                 this.marketSaturation = {};
             }
@@ -634,6 +635,7 @@ const DynamicMarketSystem = {
     // - NPCs refresh their inventory
 
     lastRefreshHour: -1,
+    // 🌅 Market refreshes at 8am each day - merchants restock, gold resets, NPCs refresh 💀
     REFRESH_HOUR: 8, // 8am daily refresh
 
     // Check if it's time for the daily 8am refresh

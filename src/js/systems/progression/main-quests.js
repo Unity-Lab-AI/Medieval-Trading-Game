@@ -68,8 +68,10 @@ const MainQuests = {
         wealthGate: 0,
 
         quests: {
+            // 🖤💀 NOTE: All giverName/turnInNpcName values are descriptive titles
+            // The actual NPC's name is randomly generated when they spawn 💀
+
             // 1.1 - First Steps (Tutorial)
-            // 🖤💀 Note: giverName is descriptive - actual NPC name is randomly generated 💀
             act1_quest1: {
                 id: 'act1_quest1',
                 name: 'First Steps',

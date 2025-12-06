@@ -1137,6 +1137,12 @@ const QuestSystem = {
             console.log(`📜 Dynamic quest location set to: ${activeQuest.location}`);
         }
 
+        // 🖤 Null check - objectives might be fucked up 💀
+        if (!activeQuest.objectives || !Array.isArray(activeQuest.objectives)) {
+            console.warn(`⚠️ Quest ${questId} has invalid objectives array`);
+            activeQuest.objectives = [];
+        }
+
         activeQuest.objectives.forEach(obj => {
             if (obj.current !== undefined) obj.current = 0;
             if (obj.completed !== undefined) obj.completed = false;

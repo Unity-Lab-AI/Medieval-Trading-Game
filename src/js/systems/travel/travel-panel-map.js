@@ -807,6 +807,9 @@ const TravelPanelMap = {
             return;
         }
 
+        // 🖤 Guard against missing mapElement - can happen during initialization or cleanup 💀
+        if (!this.mapElement) return;
+
         const location = typeof GameWorld !== 'undefined' ? GameWorld.locations[this.currentDestination.id] : null;
         if (!location || !location.mapPosition) return;
 

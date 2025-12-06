@@ -109,6 +109,7 @@ const PropertyIncome = {
                 PropertyEmployeeBridge?.getEmployee?.(empId)
             ).filter(emp => emp && emp.assignedProperty === property.id);
 
+            // 🖤 Note: employeeBonus has no upper limit - this is intentional game design 💀
             let employeeBonus = 1;
             assignedEmployees.forEach(employee => {
                 if (employee.skills?.management) {

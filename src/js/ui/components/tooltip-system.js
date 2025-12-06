@@ -553,6 +553,7 @@ const TooltipSystem = {
                 opacity: 0;
                 transform: translateY(5px);
                 transition: opacity 0.2s ease, transform 0.2s ease;
+                will-change: transform; /* 🖤 GPU acceleration for smoother tooltip animations 💀 */
                 box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 215, 0, 0.1);
                 font-family: inherit;
             }
