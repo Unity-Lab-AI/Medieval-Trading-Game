@@ -18,3 +18,7 @@ Thumbs.db
 # Environment
 .env
 .env.local
+
+# Personal files
+TODO-TheREV.md
+SOP.md

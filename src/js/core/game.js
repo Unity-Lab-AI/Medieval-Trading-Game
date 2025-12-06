@@ -6964,9 +6964,10 @@ const LocationPanelStack = {
                 </div>
             `;
         } else {
-            // Full exploration panel with survival preview and begin button
+            // Full exploration panel with manual encounter selection + random option
             const diffColors = { easy: '#4caf50', medium: '#ff9800', hard: '#f44336', deadly: '#9c27b0', unknown: '#888' };
             const diffColor = diffColors[difficulty] || '#888';
+            const canSurvive = survival.canSurvive || false;
 
             mainContent = `
                 <div style="margin-bottom: 15px;">
@@ -6988,18 +6989,55 @@ const LocationPanelStack = {
                         <div style="background: rgba(0,0,0,0.3); height: 8px; border-radius: 4px; overflow: hidden;">
                             <div style="background: ${survival.tierColor}; height: 100%; width: ${survival.chance || 50}%; transition: width 0.3s;"></div>
                         </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 0.85em; margin-top: 8px;">
+                            <span>❤️ ${game?.player?.health || 0}/${survival.requirements?.minHealth || 50}</span>
+                            <span>⚡ ${game?.player?.stamina || 0}/${survival.requirements?.minStamina || 50}</span>
+                            <span>🛡️ ${game?.player?.armor || 0}/${survival.requirements?.recommendedArmor || 0}</span>
+                            <span>⚔️ ${game?.player?.weapon || 0}/${survival.requirements?.recommendedWeapon || 0}</span>
+                        </div>
                     </div>
                 </div>
-                <div style="margin-bottom: 15px; padding: 10px; background: rgba(79, 195, 247, 0.1); border-radius: 6px;">
-                    <div style="color: #888; font-size: 0.9em; margin-bottom: 6px;">Available Encounters:</div>
-                    <div style="color: #e0e0e0; font-weight: bold;">${availableEvents.length} types of encounters</div>
+                <div style="margin-bottom: 10px;">
+                    <div style="color: #4fc3f7; font-size: 0.95em; font-weight: bold; margin-bottom: 8px;">📍 Choose Encounter or Random Explore:</div>
+                    <div style="max-height: 250px; overflow-y: auto; border: 1px solid rgba(79, 195, 247, 0.2); border-radius: 6px;">
+                        ${availableEvents.map((event, idx) => {
+                            const eventDiffColors = { easy: '#4caf50', medium: '#ff9800', hard: '#f44336', deadly: '#9c27b0' };
+                            const eventDiffColor = eventDiffColors[event.difficulty] || '#888';
+                            return `
+                                <div class="exploration-encounter-item" data-event-id="${event.id}"
+                                     style="padding: 10px 12px; border-bottom: ${idx < availableEvents.length - 1 ? '1px solid rgba(79, 195, 247, 0.1)' : 'none'};
+                                            display: flex; justify-content: space-between; align-items: center;
+                                            cursor: ${canSurvive ? 'pointer' : 'not-allowed'}; opacity: ${canSurvive ? '1' : '0.5'};
+                                            transition: background 0.2s ease;"
+                                     onmouseenter="if(${canSurvive}) this.style.background='rgba(79, 195, 247, 0.1)'"
+                                     onmouseleave="this.style.background='transparent'"
+                                     onclick="if(${canSurvive}) DungeonExplorationSystem.showSpecificExplorationPanel('${locationId}', '${event.id}')">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <span style="font-size: 1.3em;">${event.icon}</span>
+                                        <div>
+                                            <div style="font-weight: bold; color: #e0e0e0;">${event.name}</div>
+                                            <div style="font-size: 0.8em; color: #888; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                                ${event.description.substring(0, 50)}...
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <span style="padding: 2px 8px; border-radius: 4px; font-size: 0.75em; background: ${eventDiffColor}30; color: ${eventDiffColor}; border: 1px solid ${eventDiffColor}50;">
+                                        ${(event.difficulty || 'easy').toUpperCase()}
+                                    </span>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
                 </div>
-                <button class="explore-full-btn"
-                    style="width: 100%; padding: 15px; background: linear-gradient(135deg, #ff8c00 0%, #cc5500 100%);
-                           border: none; border-radius: 8px; color: white; font-size: 1.1em;
-                           font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;"
-                    onclick="DungeonExplorationSystem.showExplorationPanel('${locationId}')">
-                    ⚔️ Begin Exploration
+                <button class="explore-random-btn"
+                    style="width: 100%; padding: 15px; background: ${canSurvive ? 'linear-gradient(135deg, #ff8c00 0%, #cc5500 100%)' : '#333'};
+                           border: 1px solid ${canSurvive ? '#ff8c00' : '#555'}; border-radius: 8px;
+                           color: ${canSurvive ? 'white' : '#666'}; font-size: 1.1em;
+                           font-weight: bold; cursor: ${canSurvive ? 'pointer' : 'not-allowed'};
+                           display: flex; align-items: center; justify-content: center; gap: 8px;"
+                    onclick="${canSurvive ? `DungeonExplorationSystem.showExplorationPanel('${locationId}')` : ''}"
+                    ${canSurvive ? '' : 'disabled'}>
+                    ${canSurvive ? '🎲 Random Exploration' : '💀 Too Weak to Explore'}
                 </button>
             `;
         }
@@ -7070,8 +7108,17 @@ function updateLocationPanelMain() {
     // Update location name and description
     const h2 = locationPanel.querySelector('h2');
     if (h2) h2.textContent = locationName;
-    const descElement = locationPanel.querySelector('#location-description');
-    if (descElement) {
+
+    // 🖤💀 If description element is missing, rebuild the entire content structure! 💀
+    // This happens when exploration/gathering views wipe the content div
+    let descElement = locationPanel.querySelector('#location-description');
+    if (!descElement) {
+        const content = locationPanel.querySelector('#location-panel-content');
+        if (content) {
+            content.innerHTML = `<p id="location-description">${locationDesc}</p>`;
+            descElement = content.querySelector('#location-description');
+        }
+    } else {
         descElement.textContent = locationDesc;
     }
     
@@ -7211,6 +7258,50 @@ function updateLocationPanelMain() {
     }
 
     actionsSection.innerHTML = navButtonsHTML;
+
+    // 🖤💀 RESTORE LOCATION ACTION BUTTONS if they're missing! 💀
+    // These are the Visit Market, Travel, People buttons
+    // They get wiped when exploration/gathering views take over
+    let actionsDiv = locationPanel.querySelector('#location-actions');
+    if (!actionsDiv) {
+        actionsDiv = document.createElement('div');
+        actionsDiv.id = 'location-actions';
+        // Insert at the end of location-panel-content
+        const content = locationPanel.querySelector('#location-panel-content');
+        if (content) {
+            content.appendChild(actionsDiv);
+        }
+    }
+
+    // Always rebuild the action buttons to ensure they're present
+    actionsDiv.innerHTML = `
+        <button id="visit-market-btn" title="Visit the local market">Visit Market</button>
+        <button id="travel-btn" title="Toggle travel panel">Travel</button>
+        <button id="people-btn" title="Toggle people panel">People</button>
+    `;
+
+    // 🖤💀 RE-ATTACH EVENT LISTENERS to the new buttons! 💀
+    // The old buttons were cached in elements object, but we just created new ones
+    // Need to re-cache them and re-attach their event listeners
+    const newVisitMarketBtn = document.getElementById('visit-market-btn');
+    const newTravelBtn = document.getElementById('travel-btn');
+    const newPeopleBtn = document.getElementById('people-btn');
+
+    if (newVisitMarketBtn && typeof EventManager !== 'undefined' && typeof openMarket === 'function') {
+        EventManager.addEventListener(newVisitMarketBtn, 'click', openMarket);
+        elements.visitMarketBtn = newVisitMarketBtn; // Update cache
+    }
+    if (newTravelBtn && typeof EventManager !== 'undefined' && typeof toggleTravel === 'function') {
+        EventManager.addEventListener(newTravelBtn, 'click', toggleTravel);
+        elements.travelBtn = newTravelBtn; // Update cache
+    }
+    if (newPeopleBtn && typeof EventManager !== 'undefined' && typeof togglePeople === 'function') {
+        EventManager.addEventListener(newPeopleBtn, 'click', togglePeople);
+        elements.peopleBtn = newPeopleBtn; // Update cache
+    }
+
+    // Update market button visibility based on location
+    updateMarketButtonVisibility();
 
     // 🎵 Update music based on location type
     if (typeof MusicSystem !== 'undefined') {

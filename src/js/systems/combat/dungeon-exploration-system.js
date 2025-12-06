@@ -1514,6 +1514,51 @@ const DungeonExplorationSystem = {
                     ]
                 }
             ]
+        },
+
+        // === CITY/PORT EVENTS - Urban Exploration ===
+        harbor_warehouse: {
+            id: 'harbor_warehouse',
+            name: 'The Harbor Warehouse',
+            description: 'A dimly lit warehouse filled with stacked crates and barrels. Some shipments are marked with strange symbols.',
+            icon: '📦',
+            locationType: ['city', 'port'],
+            difficulty: 'easy',
+            choices: [
+                {
+                    id: 'search_crates',
+                    text: '🔍 Search the suspicious crates',
+                    preview: 'Risk: Low. Might find evidence... or trouble.',
+                    healthCost: { min: 0, max: 5 },
+                    staminaCost: { min: 10, max: 15 },
+                    outcomes: [
+                        { weight: 50, type: 'manifest', message: 'A shipping manifest slips from between two crates. The entries are coded - definitely suspicious.', loot: ['shipping_manifest'] },
+                        { weight: 30, type: 'valuables', message: '"Agricultural supplies" that clink like coins. You pocket a few loose items.', loot: ['ancient_coin', 'ancient_coin', 'ancient_coin'] },
+                        { weight: 20, type: 'nothing', message: 'Just farming tools and sacks of grain. Boring but legitimate.', loot: [] }
+                    ]
+                },
+                {
+                    id: 'check_ledger',
+                    text: '📋 Check the warehouse ledger',
+                    preview: 'Risk: None. Official records might reveal patterns.',
+                    healthCost: { min: 0, max: 0 },
+                    staminaCost: { min: 5, max: 10 },
+                    outcomes: [
+                        { weight: 60, type: 'clues', message: 'Monthly deliveries, always paid in advance. Always the same coded name: "The Black Ledger". Interesting...', loot: ['shipping_manifest'] },
+                        { weight: 40, type: 'normal', message: 'Standard trade logs. Nothing suspicious here.', loot: [] }
+                    ]
+                },
+                {
+                    id: 'leave_quick',
+                    text: '🚪 Leave before someone sees you',
+                    preview: 'Risk: None. Better safe than sorry.',
+                    healthCost: { min: 0, max: 0 },
+                    staminaCost: { min: 5, max: 5 },
+                    outcomes: [
+                        { weight: 100, type: 'safe', message: 'You slip out quietly. Sometimes discretion really is the better part of valor.', loot: [] }
+                    ]
+                }
+            ]
         }
     },
 
@@ -2123,8 +2168,8 @@ const DungeonExplorationSystem = {
             * diffMult.staminaMult
         );
 
-        // Select outcome based on weights
-        const outcome = this.selectOutcome(choice.outcomes);
+        // Select outcome based on weights (with quest override)
+        const outcome = this.selectOutcome(choice.outcomes, event, choice);
 
         // Calculate final health/stamina changes
         let totalHealthLoss = healthCost + (outcome.healthPenalty || 0);
@@ -2164,7 +2209,27 @@ const DungeonExplorationSystem = {
     },
 
     // Select outcome based on weights
-    selectOutcome(outcomes) {
+    selectOutcome(outcomes, event = null, choice = null) {
+        // 🎯 QUEST OVERRIDE: Strange Cargo quest requires shipping_manifest
+        // If the quest is active and we're at harbor_warehouse, force the manifest outcome
+        if (event && event.id === 'harbor_warehouse') {
+            const hasStrangeCargoQuest = typeof QuestSystem !== 'undefined' &&
+                QuestSystem.hasActiveQuest?.('act1_quest5');
+
+            if (hasStrangeCargoQuest) {
+                // Find the outcome that gives shipping_manifest
+                const manifestOutcome = outcomes.find(o =>
+                    o.loot && o.loot.includes('shipping_manifest')
+                );
+
+                if (manifestOutcome) {
+                    console.log('🎯 Quest override: forcing shipping_manifest outcome for Strange Cargo quest');
+                    return manifestOutcome;
+                }
+            }
+        }
+
+        // Normal random selection based on weights
         const totalWeight = outcomes.reduce((sum, o) => sum + o.weight, 0);
         let random = Math.random() * totalWeight;
 
@@ -2233,13 +2298,25 @@ const DungeonExplorationSystem = {
             game.player.gold = Math.max(0, game.player.gold + results.goldChange);
         }
 
-        // Add loot to inventory
+        // Add loot to inventory (check if quest item vs regular item)
         results.loot.forEach(item => {
-            if (!game.player.inventory) game.player.inventory = {};
-            game.player.inventory[item.id] = (game.player.inventory[item.id] || 0) + item.quantity;
+            // 🎯 Check if this is a quest item
+            const isQuestItem = typeof QuestSystem !== 'undefined' && QuestSystem.isQuestItem?.(item.id);
+
+            if (isQuestItem) {
+                // 📦 Quest items go into questItems inventory
+                if (!game.player.questItems) game.player.questItems = {};
+                game.player.questItems[item.id] = (game.player.questItems[item.id] || 0) + item.quantity;
+                console.log(`📦 Quest item found in loot: ${item.id} x${item.quantity}`);
+            } else {
+                // 🎒 Regular items go into normal inventory
+                if (!game.player.inventory) game.player.inventory = {};
+                game.player.inventory[item.id] = (game.player.inventory[item.id] || 0) + item.quantity;
+            }
+
             // 🖤 Emit item-received for quest progress tracking 💀
             document.dispatchEvent(new CustomEvent('item-received', {
-                detail: { item: item.id, quantity: item.quantity, source: 'dungeon_loot' }
+                detail: { item: item.id, quantity: item.quantity, source: 'dungeon_loot', isQuestItem }
             }));
         });
 
@@ -3393,13 +3470,25 @@ const DungeonExplorationSystem = {
         if (typeof game !== 'undefined' && game.player) {
             game.player.gold = (game.player.gold || 0) + boss.rewards.gold;
 
-            // Add items to inventory
+            // Add items to inventory (check if quest item vs regular item)
             boss.rewards.items.forEach(itemId => {
-                if (!game.player.inventory) game.player.inventory = {};
-                game.player.inventory[itemId] = (game.player.inventory[itemId] || 0) + 1;
+                // 🎯 Check if this is a quest item
+                const isQuestItem = typeof QuestSystem !== 'undefined' && QuestSystem.isQuestItem?.(itemId);
+
+                if (isQuestItem) {
+                    // 📦 Quest items go into questItems inventory
+                    if (!game.player.questItems) game.player.questItems = {};
+                    game.player.questItems[itemId] = (game.player.questItems[itemId] || 0) + 1;
+                    console.log(`📦 Quest item found in boss loot: ${itemId}`);
+                } else {
+                    // 🎒 Regular items go into normal inventory
+                    if (!game.player.inventory) game.player.inventory = {};
+                    game.player.inventory[itemId] = (game.player.inventory[itemId] || 0) + 1;
+                }
+
                 // 🖤 Emit item-received for quest progress tracking 💀
                 document.dispatchEvent(new CustomEvent('item-received', {
-                    detail: { item: itemId, quantity: 1, source: 'boss_loot' }
+                    detail: { item: itemId, quantity: 1, source: 'boss_loot', isQuestItem }
                 }));
             });
         }

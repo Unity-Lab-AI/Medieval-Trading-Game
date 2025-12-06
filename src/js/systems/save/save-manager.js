@@ -347,6 +347,7 @@ const SaveManager = {
                     discoveredQuests: QuestSystem.discoveredQuests || [],
                     questCompletionTimes: QuestSystem.questCompletionTimes || {},
                     trackedQuestId: QuestSystem.trackedQuestId || null,
+                    trackerHidden: QuestSystem.trackerHidden || false,
                     // 🖤 v0.90+ Quest metrics for leaderboard
                     questMetrics: {
                         mainQuestsCompleted: QuestSystem.completedQuests?.filter(q => q.startsWith('act'))?.length || 0,
@@ -791,9 +792,88 @@ const SaveManager = {
             QuestSystem.questCompletionTimes = gameData.questState.questCompletionTimes || {};
             QuestSystem.discoveredQuests = gameData.questState.discoveredQuests || [];
             QuestSystem.trackedQuestId = gameData.questState.trackedQuestId || null;
+            // 🖤 Restore quest tracker visibility state
+            QuestSystem.trackerHidden = gameData.questState.trackerHidden || false;
             // 🦇 Restore quest metrics for leaderboard
             if (gameData.questState.questMetrics) {
                 QuestSystem.questMetrics = gameData.questState.questMetrics;
+            }
+
+            // 🖤💀 MIGRATION: Patch Strange Cargo quest with new talk objective 💀
+            // Quest was updated to require returning to Harbormaster after finding manifest
+            if (QuestSystem.activeQuests['act1_quest5']) {
+                const quest = QuestSystem.activeQuests['act1_quest5'];
+                const hasTalkObjective = quest.objectives && quest.objectives.some(o => o.type === 'talk' && o.npc === 'harbormaster');
+
+                if (!hasTalkObjective) {
+                    console.log('🔧 Migrating Strange Cargo quest: adding return to Harbormaster objective');
+                    if (!quest.objectives) quest.objectives = [];
+                    quest.objectives.push({
+                        type: 'talk',
+                        npc: 'harbormaster',
+                        location: 'sunhaven',
+                        completed: false,
+                        description: 'Return to Harbormaster Elena'
+                    });
+                }
+            }
+
+            // 🖤💀 MIGRATION: Restructure Missing Trader quest entirely 💀
+            // Old: talk to innkeeper + collect journal (no source for journal!)
+            // New: talk to innkeeper (gives journal) + return to guard
+            if (QuestSystem.activeQuests['act1_quest6']) {
+                const quest = QuestSystem.activeQuests['act1_quest6'];
+                console.log('🔧 Migrating Missing Trader quest to new structure');
+
+                // Check if player has the journal (if so, they already talked to innkeeper)
+                const hasJournal = (game.player?.questItems?.traders_journal || 0) > 0;
+
+                quest.objectives = [
+                    {
+                        type: 'talk',
+                        npc: 'innkeeper',
+                        location: 'lighthouse_inn',
+                        completed: hasJournal, // Only mark complete if player already has journal
+                        description: 'Ask the innkeeper about the missing trader',
+                        givesItem: 'traders_journal'
+                    },
+                    {
+                        type: 'talk',
+                        npc: 'guard',
+                        location: 'sunhaven',
+                        completed: false,
+                        description: 'Return to Guard Captain Theron'
+                    }
+                ];
+
+                    // If player doesn't have journal yet, they still need to talk to innkeeper
+                // Don't give it automatically - let them get it from the conversation
+                if (hasJournal) {
+                    console.log('🔧 Player already has journal, marked innkeeper talk complete');
+                } else {
+                    console.log('🔧 Player needs to talk to innkeeper to get journal');
+                }
+            }
+
+            // 🖤💀 MIGRATION: Add turn-in objective to Eastern Expansion quest 💀
+            // Quest was missing final "talk to Forgemaster" objective
+            if (QuestSystem.activeQuests['act2_quest1']) {
+                const quest = QuestSystem.activeQuests['act2_quest1'];
+                const hasTurnInObjective = quest.objectives && quest.objectives.some(o =>
+                    o.type === 'talk' && o.npc === 'blacksmith' && o.location === 'ironforge_city'
+                );
+
+                if (!hasTurnInObjective) {
+                    console.log('🔧 Migrating Eastern Expansion: adding turn-in objective');
+                    if (!quest.objectives) quest.objectives = [];
+                    quest.objectives.push({
+                        type: 'talk',
+                        npc: 'blacksmith',
+                        location: 'ironforge_city',
+                        completed: false,
+                        description: 'Report to Forgemaster Grimjaw'
+                    });
+                }
             }
         }
 
@@ -1118,15 +1198,21 @@ const SaveManager = {
     },
 
     calculateDaysSurvived(saveData) {
-        if (!saveData.gameData?.timeState?.currentTime) return 0;
+        if (!saveData.gameData?.timeState?.currentTime) {
+            console.warn('💾 calculateDaysSurvived: No timeState.currentTime found!');
+            return 0;
+        }
         const t = saveData.gameData.timeState.currentTime;
         // 🖤 Get starting date from config - the single source of truth
         const startDate = typeof GameConfig !== 'undefined' ? GameConfig.time.startingDate : { year: 1111, month: 4, day: 1 };
 
         const startDays = startDate.day + (startDate.month - 1) * 30 + (startDate.year - 1) * 360;
         const currentDays = t.day + (t.month - 1) * 30 + (t.year - 1) * 360;
+        const daysSurvived = Math.max(0, currentDays - startDays);
 
-        return Math.max(0, currentDays - startDays);
+        console.log(`💾 calculateDaysSurvived: Start ${JSON.stringify(startDate)}, Current ${JSON.stringify(t)}, Days: ${daysSurvived}`);
+
+        return daysSurvived;
     },
 
     getSaveSlotInfo(slotNumber) {
@@ -1212,7 +1298,7 @@ const SaveManager = {
                 height: 100%;
                 background: rgba(0, 0, 0, 0.85);
                 backdrop-filter: blur(5px);
-                z-index: 700; /* Z-INDEX STANDARD: System modals */
+                z-index: 3100; /* Z-INDEX FIX: Above .screen (3000) so LOAD GAME dialog is visible from main menu */
                 display: none;
                 align-items: center;
                 justify-content: center;
@@ -1545,6 +1631,9 @@ const SaveManager = {
     },
 
     openLoadDialog() {
+        // 🐛 FIX: Reload metadata from localStorage to show latest saves
+        this.loadSaveSlotsMetadata();
+
         this._selectedLoadSlot = null;
         this._selectedLoadType = 'manual';
         this.renderLoadSlots();

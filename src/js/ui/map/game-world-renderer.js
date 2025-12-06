@@ -1413,15 +1413,25 @@ const GameWorldRenderer = {
         // 🖤 Use getLocationName() to get doom names when in doom world 💀
         label.textContent = isDiscovered ? '???' : this.getLocationName(location.id);
         const labelColor = isDiscovered ? '#aabbcc' : '#fff'; // 🖤 Lighter grey-blue for unexplored - actually visible!
+
+        // 🖤 Check if this is an area label (like GREENDALE) - make it BIG and BOLD 💀
+        const isAreaLabel = location.isAreaLabel || location.type === 'capital';
+        const fontSize = isAreaLabel ? '24px' : '12px'; // 2x bigger for areas
+        const fontWeight = isAreaLabel ? 'bold' : 'normal';
+        const textShadow = isAreaLabel ?
+            '2px 2px 4px #000, -2px -2px 4px #000, 0 0 8px #000, 0 0 12px #000' :
+            '1px 1px 3px #000, -1px -1px 3px #000, 0 0 6px #000';
+
         label.style.cssText = `
             position: absolute;
             left: ${scaledPos.x}px;
             top: ${scaledPos.y + style.size / 2 + 8 + labelOffset}px;
             transform: translateX(-50%);
             color: ${labelColor};
-            font-size: 12px;
+            font-size: ${fontSize};
+            font-weight: ${fontWeight};
             font-style: ${isDiscovered ? 'italic' : 'normal'};
-            text-shadow: 1px 1px 3px #000, -1px -1px 3px #000, 0 0 6px #000;
+            text-shadow: ${textShadow};
             white-space: nowrap;
             pointer-events: none;
             z-index: 18; /* 🖤 ABOVE weather (2-3) - matches --z-map-labels 💀 */
