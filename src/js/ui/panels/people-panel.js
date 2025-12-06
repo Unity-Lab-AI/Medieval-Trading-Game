@@ -1172,23 +1172,51 @@ const PeoplePanel = {
             }
 
             // 💬 COMPLETE TALK OBJECTIVE - Player needs to talk to this NPC for quest progress
-            // Check all active quests for incomplete talk objectives targeting this NPC
+            // 🖤💀 CRITICAL: Only show if ALL PREVIOUS objectives are complete! 💀
             const allActiveQuests = Object.values(QuestSystem.activeQuests || {});
             allActiveQuests.forEach(quest => {
-                const talkObjective = quest.objectives?.find(o =>
+                const talkObjectiveIndex = quest.objectives?.findIndex(o =>
                     o.type === 'talk' &&
                     !o.completed &&
                     o.npc === npcType &&
                     (!o.location || o.location === location || o.location === 'any')
                 );
 
-                if (talkObjective) {
-                    actions.push({
-                        label: `💬 ${talkObjective.description || 'Talk about quest'}`,
-                        action: () => this.completeTalkObjective(quest, talkObjective),
-                        priority: 1.5, // High priority - between turn-in and other actions
-                        questRelated: true
-                    });
+                if (talkObjectiveIndex >= 0) {
+                    const talkObjective = quest.objectives[talkObjectiveIndex];
+
+                    // 🖤💀 Check if ALL previous objectives are complete
+                    let previousObjectivesComplete = true;
+                    for (let i = 0; i < talkObjectiveIndex; i++) {
+                        const prevObj = quest.objectives[i];
+                        // Check completion based on objective type
+                        if (prevObj.type === 'collect' || prevObj.type === 'buy' || prevObj.type === 'sell' || prevObj.type === 'trade' || prevObj.type === 'defeat') {
+                            if ((prevObj.current || 0) < prevObj.count) {
+                                previousObjectivesComplete = false;
+                                break;
+                            }
+                        } else if (prevObj.type === 'visit' || prevObj.type === 'talk' || prevObj.type === 'explore' || prevObj.type === 'investigate') {
+                            if (!prevObj.completed) {
+                                previousObjectivesComplete = false;
+                                break;
+                            }
+                        } else if (prevObj.type === 'gold') {
+                            if (!prevObj.completed) {
+                                previousObjectivesComplete = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    // Only show talk button if previous objectives are done
+                    if (previousObjectivesComplete) {
+                        actions.push({
+                            label: `💬 ${talkObjective.description || 'Talk about quest'}`,
+                            action: () => this.completeTalkObjective(quest, talkObjective),
+                            priority: 1.5, // High priority - between turn-in and other actions
+                            questRelated: true
+                        });
+                    }
                 }
             });
 
@@ -1546,6 +1574,31 @@ const PeoplePanel = {
     async completeTalkObjective(quest, talkObjective) {
         const questId = quest.id || quest.questId;
         const npcType = this.currentNPC?.type || 'stranger';
+
+        // 🖤💀 VALIDATE: Check that ALL previous objectives are complete! 💀
+        const talkObjectiveIndex = quest.objectives?.indexOf(talkObjective) || 0;
+        for (let i = 0; i < talkObjectiveIndex; i++) {
+            const prevObj = quest.objectives[i];
+            let isComplete = false;
+
+            if (prevObj.type === 'collect' || prevObj.type === 'buy' || prevObj.type === 'sell' || prevObj.type === 'trade' || prevObj.type === 'defeat') {
+                isComplete = (prevObj.current || 0) >= prevObj.count;
+            } else if (prevObj.type === 'visit' || prevObj.type === 'talk' || prevObj.type === 'explore' || prevObj.type === 'investigate' || prevObj.type === 'gold') {
+                isComplete = prevObj.completed || false;
+            }
+
+            if (!isComplete) {
+                // Previous objective not complete - can't proceed!
+                const errorMsg = `*shakes head* You haven't completed the previous tasks yet. Come back when you've finished them.`;
+                this.addChatMessage(errorMsg, 'npc');
+                this.chatHistory.push({ role: 'assistant', content: errorMsg });
+                if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.settings?.voiceEnabled) {
+                    const voice = this.getNPCVoice(this.currentNPC);
+                    NPCVoiceChatSystem.playVoice(errorMsg, voice);
+                }
+                return;
+            }
+        }
 
         // 🖤 Display player message
         const message = talkObjective.description || `I need to talk to you about "${quest.name}".`;
@@ -2843,17 +2896,39 @@ Speak cryptically and briefly. You offer passage to the ${inDoom ? 'normal world
         const turnInQuests = Object.values(QuestSystem.activeQuests || {}).filter(q => {
             // 🖤 Check if NPC type matches AND location matches (for multiple merchants/NPCs of same type)
             const turnInNpcMatches = q.turnInNpc === npcType;
-            const talkObjMatches = q.objectives?.some(o =>
+
+            // 🖤💀 CRITICAL: Check for talk objectives, but ONLY if previous objectives are complete! 💀
+            const talkObjectiveIndex = q.objectives?.findIndex(o =>
                 o.type === 'talk' &&
                 !o.completed &&
                 o.npc === npcType &&
                 (!o.location || o.location === location || o.location === 'any')
             );
 
-            // 🖤💀 CRITICAL FIX: If we found a talk objective match, the location is already validated! 💀
-            // Don't check q.turnInLocation - that's for the final turn-in NPC, not in-progress talk objectives
+            let talkObjMatches = false;
+            if (talkObjectiveIndex >= 0) {
+                // Check if all previous objectives are complete
+                let previousComplete = true;
+                for (let i = 0; i < talkObjectiveIndex; i++) {
+                    const prevObj = q.objectives[i];
+                    if (prevObj.type === 'collect' || prevObj.type === 'buy' || prevObj.type === 'sell' || prevObj.type === 'trade' || prevObj.type === 'defeat') {
+                        if ((prevObj.current || 0) < prevObj.count) {
+                            previousComplete = false;
+                            break;
+                        }
+                    } else if (prevObj.type === 'visit' || prevObj.type === 'talk' || prevObj.type === 'explore' || prevObj.type === 'investigate' || prevObj.type === 'gold') {
+                        if (!prevObj.completed) {
+                            previousComplete = false;
+                            break;
+                        }
+                    }
+                }
+                talkObjMatches = previousComplete;
+            }
+
+            // 🖤💀 If we found a valid talk objective match, return true
             if (talkObjMatches) {
-                return true; // Talk objective already checked location
+                return true;
             }
 
             // For turn-in NPCs, check the quest's turn-in location
