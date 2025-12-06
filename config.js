@@ -50,7 +50,7 @@ const GameConfig = {
             { name: 'GFourteen', role: 'Digital Alchemist' }
         ],
         playtesters: [
-            { name: 'The Rev', role: 'Debooger Cleaner' }
+            { name: 'TheREV', role: 'Debooger Cleaner' }
         ],
         year: '2025',
         copyright: '© 2025 Unity AI Lab. Creators: Hackall360, Sponge, GFourteen. All rights reserved. Souls sold separately.'

@@ -1440,6 +1440,41 @@ const DeboogerCommandSystem = {
             return 'NPCEncounterSystem not found';
         });
 
+        // ═══════════════════════════════════════════════════════════════
+        // 🏚️ EXPLORATION CHEATS - dungeon cooldown bypass
+        // ═══════════════════════════════════════════════════════════════
+
+        // resetexplore - Reset exploration cooldown for current location
+        this.registerCommand('resetexplore', 'Reset exploration cooldown for current location', () => {
+            if (typeof DungeonExplorationSystem !== 'undefined') {
+                const currentLocationId = game?.currentLocation?.id;
+                if (!currentLocationId) {
+                    console.warn('🏚️ No current location found');
+                    return 'No current location';
+                }
+
+                // Clear the cooldown for current location
+                if (DungeonExplorationSystem.locationCooldowns) {
+                    delete DungeonExplorationSystem.locationCooldowns[currentLocationId];
+                    DungeonExplorationSystem.saveCooldowns();
+                    console.log(`🏚️ Exploration cooldown reset for ${currentLocationId}`);
+                    return `Cooldown reset for ${currentLocationId}`;
+                }
+            }
+            return 'DungeonExplorationSystem not found';
+        });
+
+        // resetallexplore - Reset ALL exploration cooldowns
+        this.registerCommand('resetallexplore', 'Reset ALL exploration cooldowns', () => {
+            if (typeof DungeonExplorationSystem !== 'undefined') {
+                DungeonExplorationSystem.locationCooldowns = {};
+                DungeonExplorationSystem.saveCooldowns();
+                console.log('🏚️ ALL exploration cooldowns reset!');
+                return 'All cooldowns cleared!';
+            }
+            return 'DungeonExplorationSystem not found';
+        });
+
         console.log(`🎮 Registered ${Object.keys(this.commands).length} commands`);
     },
 

@@ -66,6 +66,7 @@ const QuestSystem = {
     // 🖤 TRACKED QUEST - the one quest to rule them all (only one at a time)
     trackedQuestId: null,
     questMarkerElement: null,
+    trackerHidden: false, // 🖤💀 Track if user manually hid the tracker widget 💀
 
     // ═══════════════════════════════════════════════════════════════
     // 🎒 QUEST ITEMS - special items that exist only for quests
@@ -96,7 +97,11 @@ const QuestSystem = {
         // special quest keys
         shadow_key: { name: 'Shadow Key', description: 'Opens the inner sanctum', quest: 'shadow_tower_chain', icon: '🗝️' },
         mine_pass: { name: 'Mining Pass', description: 'Authorization to enter deep mines', quest: 'deep_mine_access', icon: '🎫' },
-        guild_token: { name: 'Guild Token', description: 'Proof of guild membership', quest: 'join_guild', icon: '🏅' }
+        guild_token: { name: 'Guild Token', description: 'Proof of guild membership', quest: 'join_guild', icon: '🏅' },
+
+        // main story quest items (Act 1: The Shadow Rising)
+        shipping_manifest: { name: 'Shipping Manifest', description: 'Coded manifest revealing suspicious cargo shipments', quest: 'act1_quest5', icon: '📋' },
+        traders_journal: { name: "Trader's Journal", description: 'Final entries mention the Shadow Tower and The Black Ledger', quest: 'act1_quest6', icon: '📖' }
     },
 
     // ═══════════════════════════════════════════════════════════════
@@ -403,7 +408,7 @@ const QuestSystem = {
         // ═══════════════════════════════════════════════════════════
         jade_silk_delivery: {
             id: 'jade_silk_delivery',
-            name: 'Silk Road Express',
+            name: 'Silk Delivery',
             description: 'Deliver precious silk to the Royal Capital.',
             giver: 'merchant',
             giverName: 'Mei Lin',
@@ -841,6 +846,11 @@ const QuestSystem = {
         this.setupEventListeners();
         this.initialized = true;
 
+        // 🖤💀 CRITICAL: Initialize quest tracker to ensure visibility on page load! 💀
+        setTimeout(() => {
+            this.updateQuestTracker();
+        }, 500);
+
         // Count quests by type
         const mainCount = Object.values(this.quests).filter(q => q.type === 'main').length;
         const sideCount = Object.values(this.quests).filter(q => q.type === 'side').length;
@@ -960,6 +970,7 @@ const QuestSystem = {
             questItemInventory: this.getQuestItemInventory(),
             // 🖤 v0.90+ Save tracked quest
             trackedQuestId: this.trackedQuestId
+            // 🖤💀 DON'T save trackerHidden - tracker should always show on load 💀
         };
         try {
             localStorage.setItem('medievalTradingGameQuests', JSON.stringify(saveData));
@@ -978,6 +989,8 @@ const QuestSystem = {
                 this.failedQuests = data.failedQuests || [];
                 this.discoveredQuests = data.discoveredQuests || [];
                 this.questCompletionTimes = data.questCompletionTimes || {};
+                // 🖤💀 Tracker always shows on load - user can hide it manually if desired 💀
+                this.trackerHidden = false;
                 // 🖤 v0.90+ Restore tracked quest
                 if (data.trackedQuestId && this.activeQuests[data.trackedQuestId]) {
                     this.trackedQuestId = data.trackedQuestId;
@@ -1184,7 +1197,7 @@ const QuestSystem = {
         const totalObjectives = quest.objectives.length;
 
         quest.objectives.forEach(obj => {
-            if (obj.type === 'collect' || obj.type === 'defeat' || obj.type === 'buy' || obj.type === 'trade') {
+            if (obj.type === 'collect' || obj.type === 'defeat' || obj.type === 'buy' || obj.type === 'trade' || obj.type === 'sell') {
                 if ((obj.current || 0) >= obj.count) completedObjectives++;
             } else if (obj.type === 'explore') {
                 if ((obj.current || 0) >= obj.rooms) completedObjectives++;
@@ -1261,13 +1274,31 @@ const QuestSystem = {
                         if (data.npc === objective.npc || data.npcType === objective.npc) {
                             objective.completed = true;
                             updated = true;
-                            // 🖤💀 If this talk objective gives an item, add it to player inventory 💀
+                            // 🖤💀 If this talk objective gives an item, add it to correct inventory 💀
                             if (objective.givesItem && typeof game !== 'undefined' && game.player) {
-                                if (!game.player.inventory) game.player.inventory = {};
-                                game.player.inventory[objective.givesItem] = (game.player.inventory[objective.givesItem] || 0) + 1;
-                                if (typeof addMessage === 'function') {
-                                    addMessage(`📜 Received: ${objective.givesItem.replace(/_/g, ' ')}`, 'quest');
+                                const isQuestItemGiven = this.isQuestItem(objective.givesItem);
+                                const itemName = isQuestItemGiven && this.questItems[objective.givesItem]?.name
+                                    ? this.questItems[objective.givesItem].name
+                                    : objective.givesItem.replace(/_/g, ' ');
+
+                                if (isQuestItemGiven) {
+                                    // Quest item goes to questItems
+                                    if (!game.player.questItems) game.player.questItems = {};
+                                    game.player.questItems[objective.givesItem] = (game.player.questItems[objective.givesItem] || 0) + 1;
+                                } else {
+                                    // Regular item goes to inventory
+                                    if (!game.player.inventory) game.player.inventory = {};
+                                    game.player.inventory[objective.givesItem] = (game.player.inventory[objective.givesItem] || 0) + 1;
                                 }
+
+                                if (typeof addMessage === 'function') {
+                                    addMessage(`📜 Received: ${itemName}`, 'quest');
+                                }
+
+                                // 🎯 Dispatch item-received event for quest progress tracking
+                                document.dispatchEvent(new CustomEvent('item-received', {
+                                    detail: { item: objective.givesItem, quantity: 1, source: 'quest_talk', isQuestItem: isQuestItemGiven }
+                                }));
                             }
                         }
                         break;
@@ -1347,6 +1378,7 @@ const QuestSystem = {
             this.saveQuestProgress();
             this.updateQuestLogUI();
             this.updateQuestTracker(); // 🖤 FIX: Update tracker widget when progress changes 💀
+            this.updateQuestMapMarker(); // 🎯 FIX: Update map marker when objectives complete - moves to next objective location! 💀
             this.checkForAutoComplete();
         }
     },
@@ -1383,12 +1415,30 @@ const QuestSystem = {
             return { success: false, error: 'Objectives not complete', progress };
         }
 
-        // Validate all collection objectives have items BEFORE completing
-        // This prevents NPCs from completing quests when player doesn't have items
+        // 🖤 Validate collection objectives - but SKIP if quest requires selling/trading those items! 💀
+        // This prevents false "missing items" errors when quest asked player to sell the items
         for (const obj of quest.objectives || []) {
             if (obj.type === 'collect' && obj.item) {
-                const playerHas = game?.player?.inventory?.[obj.item] || 0;
+                // 🎯 Check if quest has sell/trade objective for the SAME item
+                const hasSellObjective = quest.objectives.some(o =>
+                    (o.type === 'sell' || o.type === 'trade') && o.item === obj.item
+                );
+
+                // 💀 If quest requires selling/trading the item, don't check inventory!
+                if (hasSellObjective) {
+                    console.log(`🎯 Quest has sell/trade objective for ${obj.item} - skipping inventory check`);
+                    continue;
+                }
+
+                // 🖤 Normal collection quest - verify player has items
+                // 🎯 Quest items are in questItems inventory, regular items in inventory
+                const isQuestItemCheck = this.isQuestItem(obj.item);
+                const playerHas = isQuestItemCheck
+                    ? (game?.player?.questItems?.[obj.item] || 0)
+                    : (game?.player?.inventory?.[obj.item] || 0);
+
                 if (playerHas < obj.count) {
+                    console.log(`❌ Quest validation failed: need ${obj.count}x ${obj.item}, player has ${playerHas} (isQuestItem: ${isQuestItemCheck})`);
                     return {
                         success: false,
                         error: 'missing_collection_items',
@@ -1594,16 +1644,19 @@ const QuestSystem = {
         });
     },
 
-    getActiveQuestsForNPC(npcType) {
+    getActiveQuestsForNPC(npcType, location = null) {
         return Object.values(this.activeQuests).filter(quest => {
             // 🖤💀 Use _npcMatchesObjective for flexible NPC matching
-            return this._npcMatchesObjective(npcType, quest.giver);
+            if (!this._npcMatchesObjective(npcType, quest.giver)) return false;
+            // 🖤 LOCATION CHECK: Only show quests from NPCs at THIS location (fixes multiple merchants issue)
+            if (location && quest.location && quest.location !== location && quest.location !== 'any') return false;
+            return true;
         });
     },
 
     getQuestContextForNPC(npcType, location) {
         const available = this.getQuestsForNPC(npcType, location);
-        const active = this.getActiveQuestsForNPC(npcType);
+        const active = this.getActiveQuestsForNPC(npcType, location);
         const readyToComplete = active.filter(q => this.checkProgress(q.id).status === 'ready_to_complete');
 
         // also find quests where this NPC is the delivery TARGET (not the giver)
@@ -1872,6 +1925,8 @@ const QuestSystem = {
             </div>
         `;
 
+        // 🖤💀 CRITICAL: Ensure overlay is HIDDEN by default! 💀
+        overlay.style.display = 'none';
         document.body.appendChild(overlay);
         this.updateQuestLogUI();
     },
@@ -2220,8 +2275,7 @@ const QuestSystem = {
         return `${hours}h ${minutes}m`;
     },
 
-    // 🖤💀 QUEST TRACKER STATE - track expanded/minimized mode 💀
-    trackerExpanded: false,
+    // 🖤💀 QUEST TRACKER STATE 💀
     expandedChains: {}, // Track which chains are expanded in chain view
 
     updateQuestTracker() {
@@ -2259,12 +2313,9 @@ const QuestSystem = {
             <div class="tracker-header">
                 <span class="drag-grip">⋮⋮</span>
                 <span class="tracker-title">Quest Chain 🔗</span>
-                <button class="tracker-expand-btn" onclick="QuestSystem.toggleTrackerExpand()" title="${this.trackerExpanded ? 'Minimize' : 'Expand'}">
-                    ${this.trackerExpanded ? '▼' : '▲'}
-                </button>
                 <button class="tracker-close" onclick="QuestSystem.hideQuestTracker()" title="Close">×</button>
             </div>
-            <div class="tracker-content ${this.trackerExpanded ? 'expanded' : 'minimized'}">
+            <div class="tracker-content">
                 ${chainHTML}
             </div>
         `;
@@ -2428,21 +2479,28 @@ const QuestSystem = {
             // 🖤💀 FIX: Show details INLINE when this specific quest is clicked/expanded 💀
             const showDetails = isExpanded && (isActive || isCompleted);
 
-            // 🖤💀 Build quest row with expand arrow indicator
+            // 🖤💀 Build quest row with expand arrow indicator for inline details
             const isRepeatable = quest.repeatable;
-            const expandArrow = (isActive || isCompleted) ? `<span class="quest-expand-arrow">${isExpanded ? '▼' : '▶'}</span>` : '';
+            const expandArrow = (isActive || isCompleted) ? `<span class="quest-expand-arrow" onclick="event.stopPropagation(); QuestSystem.handleChainQuestExpand('${quest.id}')">${isExpanded ? '▼' : '▶'}</span>` : '';
+
+            // 🖤💀 Bullseye badge toggles tracking - ALWAYS visible, different action based on tracked state 💀
+            const trackingBadge = (isActive || isCompleted)
+                ? (isTracked
+                    ? `<span class="tracked-badge clickable" onclick="event.stopPropagation(); QuestSystem.untrackQuest(); QuestSystem.updateQuestTracker();" title="Untrack quest">🎯</span>`
+                    : `<span class="untracked-badge clickable" onclick="event.stopPropagation(); QuestSystem.trackQuest('${quest.id}'); QuestSystem.updateQuestTracker();" title="Track quest">⭕</span>`)
+                : '';
 
             return `
                 ${connector}
                 <div class="chain-quest ${statusClass} ${isTracked ? 'tracked' : ''} ${isRepeatable ? 'repeatable' : ''} ${isExpanded ? 'expanded' : ''}"
-                     onclick="event.stopPropagation(); QuestSystem.handleChainQuestClick('${quest.id}', '${status}')"
+                     onclick="event.stopPropagation(); QuestSystem.showQuestInfoPanel('${quest.id}')"
                      data-quest-id="${quest.id}">
                     <div class="quest-row-header">
                         ${expandArrow}
                         <span class="quest-status-icon">${statusIcon}</span>
                         <span class="quest-chain-name">${quest.name}</span>
                         ${isRepeatable && !isActive && !isCompleted ? '<span class="repeat-icon">🔄</span>' : ''}
-                        ${isTracked ? '<span class="tracked-badge">🎯</span>' : ''}
+                        ${trackingBadge}
                     </div>
                     ${showDetails ? this.buildQuestDetailsInline(quest) : ''}
                 </div>
@@ -2467,27 +2525,41 @@ const QuestSystem = {
 
         // Active quest - show objectives + actions
         const objectives = activeQuest.objectives || [];
-        const objHTML = objectives.map(obj => {
+        const objHTML = objectives.map((obj, index) => {
             const isCountBased = ['collect', 'defeat', 'buy', 'trade', 'sell'].includes(obj.type);
             const isExplore = obj.type === 'explore';
             const isComplete = isCountBased ? (obj.current || 0) >= obj.count :
                                isExplore ? (obj.current || 0) >= obj.rooms :
                                obj.completed;
-            const icon = isComplete ? '✅' : '⬜';
+
+            // 🖤💀 Check if previous objectives are complete (sequential validation) 💀
+            let previousComplete = true;
+            for (let i = 0; i < index; i++) {
+                const prevObj = objectives[i];
+                const prevCountBased = ['collect', 'defeat', 'buy', 'trade', 'sell'].includes(prevObj.type);
+                const prevExplore = prevObj.type === 'explore';
+                const prevComplete = prevCountBased ? (prevObj.current || 0) >= prevObj.count :
+                                     prevExplore ? (prevObj.current || 0) >= prevObj.rooms :
+                                     prevObj.completed;
+                if (!prevComplete) {
+                    previousComplete = false;
+                    break;
+                }
+            }
+
+            const isLocked = !previousComplete && !isComplete;
+            const isActive = previousComplete && !isComplete;
+            const icon = isComplete ? '✅' : (isLocked ? '🔒' : '⬜');
+            const cssClass = isComplete ? 'done' : (isLocked ? 'locked' : (isActive ? 'active' : ''));
             const countText = obj.count ? ` (${obj.current || 0}/${obj.count})` :
                               obj.rooms ? ` (${obj.current || 0}/${obj.rooms})` : '';
-            return `<div class="detail-objective ${isComplete ? 'done' : ''}">${icon} ${obj.description}${countText}</div>`;
+            return `<div class="detail-objective ${cssClass}">${icon} ${obj.description}${countText}</div>`;
         }).join('');
 
-        // 🖤 Add Track/Untrack button inline
-        const isTracked = this.trackedQuestId === quest.id;
-        const trackBtn = isTracked
-            ? `<button class="inline-track-btn untrack" onclick="event.stopPropagation(); QuestSystem.untrackQuest(); QuestSystem.updateQuestTracker();">🚫 Untrack</button>`
-            : `<button class="inline-track-btn track" onclick="event.stopPropagation(); QuestSystem.trackQuest('${quest.id}'); QuestSystem.updateQuestTracker();">🎯 Track</button>`;
+        // 🖤💀 NO TRACK BUTTON - bullseye badge handles tracking! 💀
 
         return `<div class="quest-details-inline">
             <div class="detail-objectives">${objHTML}</div>
-            <div class="detail-actions">${trackBtn}</div>
         </div>`;
     },
 
@@ -2518,9 +2590,14 @@ const QuestSystem = {
         return `<div class="quest-details">${objHTML}</div>`;
     },
 
-    // 🖤💀 HANDLE CLICK ON QUEST IN CHAIN VIEW 💀
-    // 🖤💀 FIX: Toggle inline details instead of opening a full overlay panel 💀
+    // 🖤💀 HANDLE CLICK ON QUEST CARD - Opens full quest details panel 💀
     handleChainQuestClick(questId, status) {
+        // This function is no longer used - clicking quest card calls showQuestInfo directly
+        this.showQuestInfo(questId);
+    },
+
+    // 🖤💀 HANDLE CLICK ON EXPAND ARROW - Toggles inline details 💀
+    handleChainQuestExpand(questId) {
         // 🖤 Toggle this quest's expanded state INLINE (no overlay!)
         if (this._expandedQuestId === questId) {
             // Clicking same quest - collapse it
@@ -2539,11 +2616,6 @@ const QuestSystem = {
         this.updateQuestTracker();
     },
 
-    // 🖤💀 TOGGLE TRACKER EXPAND/MINIMIZE 💀
-    toggleTrackerExpand() {
-        this.trackerExpanded = !this.trackerExpanded;
-        this.updateQuestTracker();
-    },
 
     // 🖤💀 GET DISPLAY NAME FOR CHAIN 💀
     getChainDisplayName(chainName) {
@@ -2573,29 +2645,26 @@ const QuestSystem = {
         style.id = 'quest-tracker-styles';
         // 🖤💀 QUEST CHAIN TRACKER STYLES 💀
         style.textContent = `
-            /* 🖤 Expand button */
-            .tracker-expand-btn {
-                background: rgba(79, 195, 247, 0.2);
-                border: none;
-                border-radius: 3px;
-                color: #4fc3f7;
-                cursor: pointer;
-                padding: 2px 6px;
-                font-size: 10px;
-                margin-right: 4px;
+            /* 🖤 Tracker content area */
+            .tracker-content {
+                max-height: 500px;
+                overflow-y: auto;
+                overflow-x: hidden;
+                box-sizing: border-box;
+                padding: 4px;
             }
-            .tracker-expand-btn:hover {
+            .tracker-content::-webkit-scrollbar {
+                width: 6px;
+            }
+            .tracker-content::-webkit-scrollbar-track {
+                background: rgba(0, 0, 0, 0.2);
+            }
+            .tracker-content::-webkit-scrollbar-thumb {
                 background: rgba(79, 195, 247, 0.4);
+                border-radius: 3px;
             }
-
-            /* 🖤 Content modes */
-            .tracker-content.minimized {
-                max-height: 200px;
-                overflow-y: auto;
-            }
-            .tracker-content.expanded {
-                max-height: 400px;
-                overflow-y: auto;
+            .tracker-content::-webkit-scrollbar-thumb:hover {
+                background: rgba(79, 195, 247, 0.6);
             }
 
             /* 🔗 Chain Section */
@@ -2657,10 +2726,7 @@ const QuestSystem = {
 
             /* 📜 Individual Quest in Chain */
             .chain-quest {
-                display: flex;
-                flex-wrap: wrap;
-                align-items: center;
-                gap: 6px;
+                display: block;
                 padding: 4px 8px;
                 margin: 2px 0;
                 border-radius: 4px;
@@ -2721,6 +2787,9 @@ const QuestSystem = {
             .quest-chain-name {
                 font-size: 11px;
                 flex: 1;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
 
             /* Quest details (expanded view) */
@@ -2737,6 +2806,14 @@ const QuestSystem = {
                 color: #81c784;
                 text-decoration: line-through;
                 opacity: 0.7;
+            }
+            .detail-objective.active {
+                color: #4fc3f7;
+                font-weight: bold;
+            }
+            .detail-objective.locked {
+                color: #666;
+                opacity: 0.6;
             }
             .detail-complete-msg {
                 color: #81c784;
@@ -2772,6 +2849,9 @@ const QuestSystem = {
                 align-items: center;
                 gap: 4px;
                 width: 100%;
+                flex-wrap: nowrap;
+                white-space: nowrap;
+                overflow: hidden;
             }
             .quest-expand-arrow {
                 font-size: 8px;
@@ -2791,6 +2871,7 @@ const QuestSystem = {
                 background: rgba(0, 0, 0, 0.3);
                 border-radius: 4px;
                 border-left: 2px solid #4fc3f7;
+                box-sizing: border-box;
             }
             .quest-details-inline .detail-objectives {
                 margin-bottom: 8px;
@@ -2804,6 +2885,14 @@ const QuestSystem = {
                 color: #81c784;
                 text-decoration: line-through;
                 opacity: 0.7;
+            }
+            .quest-details-inline .detail-objective.active {
+                color: #4fc3f7;
+                font-weight: bold;
+            }
+            .quest-details-inline .detail-objective.locked {
+                color: #666;
+                opacity: 0.6;
             }
             .quest-details-inline .detail-complete-msg {
                 color: #81c784;
@@ -2861,6 +2950,7 @@ const QuestSystem = {
         }
         const overlay = document.getElementById('quest-overlay');
         if (overlay) {
+            overlay.style.display = 'flex'; // 🖤💀 SHOW overlay 💀
             overlay.classList.add('active');
             this.questLogOpen = true;
             this.updateQuestLogUI();
@@ -2870,6 +2960,7 @@ const QuestSystem = {
     hideQuestLog() {
         const overlay = document.getElementById('quest-overlay');
         if (overlay) {
+            overlay.style.display = 'none'; // 🖤💀 HIDE overlay 💀
             overlay.classList.remove('active');
             this.questLogOpen = false;
         }
@@ -2980,20 +3071,33 @@ const QuestSystem = {
         const quest = this.activeQuests[this.trackedQuestId];
         if (!quest || !quest.objectives) return null;
 
+        // 🎯 Check if ALL objectives are complete - if so, point to turn-in location
+        const progress = this.checkProgress(this.trackedQuestId);
+        if (progress.status === 'ready_to_complete') {
+            // Quest ready to turn in - go to turn-in location!
+            return quest.turnInLocation || quest.location;
+        }
+
         // 🖤 Find the first incomplete objective with a location
         for (const obj of quest.objectives) {
             if (obj.completed) continue;
 
-            // 💀 Visit objective has direct location
-            if (obj.type === 'visit' && obj.location) {
+            // 🎯 PRIORITY 1: If objective has explicit location field, use it (works for ANY type!)
+            if (obj.location) {
+                return obj.location;
+            }
+
+            // 💀 Visit/travel objective has direct location
+            if ((obj.type === 'visit' || obj.type === 'travel') && obj.location) {
                 return obj.location;
             }
 
             // 🦇 Talk objective - need to find where that NPC is
             if (obj.type === 'talk' && obj.npc) {
-                // NPCs are typically at the quest giver location or specific spots
-                // Use quest location, or if null (dynamic), use player's current location
-                if (quest.location) {
+                // Use objective's location if specified, otherwise quest location
+                if (obj.location) {
+                    return obj.location;
+                } else if (quest.location) {
                     return quest.location;
                 } else if (typeof game !== 'undefined' && game.currentLocation) {
                     return game.currentLocation.id;
@@ -3005,14 +3109,14 @@ const QuestSystem = {
                 return obj.dungeon;
             }
 
-            // 🖤 Collect items - player needs to find them, maybe at quest location
-            if (obj.type === 'collect') {
-                return quest.location;
+            // 🖤 Collect/buy/sell/trade - use objective location if specified, otherwise quest location
+            if (obj.type === 'collect' || obj.type === 'buy' || obj.type === 'sell' || obj.type === 'trade') {
+                return obj.location || quest.location;
             }
         }
 
         // 💀 Fallback to quest giver location for turn-in
-        return quest.location;
+        return quest.turnInLocation || quest.location;
     },
 
     // 🖤 Get quest info for a specific location (for tooltips) 💀
@@ -3688,12 +3792,18 @@ const QuestSystem = {
 
         // 🖤 Fixed: was 'location-changed' but travel fires 'player-location-changed' 💀
         document.addEventListener('player-location-changed', (e) => {
-            this.updateProgress('visit', { location: e.detail.location });
-            this.updateProgress('travel', { location: e.detail.location }); // 🖤💀 Also trigger travel objectives 💀
+            // 🖤💀 CRITICAL FIX: Event detail uses locationId, not location!
+            this.updateProgress('visit', { location: e.detail.locationId });
+            this.updateProgress('travel', { location: e.detail.locationId }); // 🖤💀 Also trigger travel objectives 💀
         });
 
+        // 🖤💀 NPC interaction event - DON'T auto-complete talk objectives just from opening chat! 💀
+        // Talk objectives should only complete when player performs quest action (turn-in, accept, etc.)
         document.addEventListener('npc-interaction', (e) => {
-            this.updateProgress('talk', { npc: e.detail.npcType });
+            // 🖤 Only complete talk objectives if this is a quest-related interaction
+            // For now, we'll let quest actions (askAboutQuest, completeQuest, etc.) handle completion
+            // This event can be used for other tracking purposes
+            console.log(`👥 NPC interaction: ${e.detail.npcType} (${e.detail.npcName})`);
         });
 
         // 🖤💀 Investigation events - searching areas for clues/items 💀

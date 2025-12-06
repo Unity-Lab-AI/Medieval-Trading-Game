@@ -97,7 +97,7 @@ const MainQuests = {
                 dialogue: {
                     offer: "Welcome to Greendale, young traveler. I sense great potential in you. But first, prove you understand the ways of trade - make a purchase from one of our merchants, then come speak with me.",
                     progress: "Have you made a purchase yet? The merchants eagerly await customers.",
-                    complete: "Excellent! You have the instincts of a true trader. The Merchant Guild has taken notice of your potential - speak with their representative Marcus, the merchant here in Greendale. He wishes to test your trading skills."
+                    complete: "Excellent! You have the instincts of a true trader. The Merchant Guild has taken notice of your potential - speak with Cassia the Merchant here in Greendale. She wishes to test your trading skills."
                 }
             },
 
@@ -107,9 +107,9 @@ const MainQuests = {
                 name: 'Establishing Trade',
                 description: 'Prove your trading skills by completing profitable trades. The merchant guild is watching potential members.',
                 giver: 'merchant',
-                giverName: 'Guild Representative Marcus',
+                giverName: 'Cassia the Merchant',
                 turnInNpc: 'merchant',
-                turnInNpcName: 'Guild Representative Marcus',
+                turnInNpcName: 'Cassia the Merchant',
                 turnInLocation: 'greendale',
                 location: 'greendale',
                 type: 'main',
@@ -119,7 +119,7 @@ const MainQuests = {
                 difficulty: 'easy',
                 objectives: [
                     { type: 'trade', count: 3, current: 0, minValue: 50, description: 'Complete 3 trades worth at least 50 gold each' },
-                    { type: 'talk', npc: 'merchant', completed: false, description: 'Return to the Merchant in Greendale' }
+                    { type: 'talk', npc: 'merchant', location: 'greendale', completed: false, description: 'Return to Cassia the Merchant in Greendale' }
                 ],
                 rewards: { gold: 50, reputation: 15, experience: 30 },
                 prerequisite: 'act1_quest1',
@@ -149,13 +149,13 @@ const MainQuests = {
                 difficulty: 'easy',
                 objectives: [
                     { type: 'visit', location: 'sunhaven', completed: false, description: 'Travel to Sunhaven in the south' },
-                    { type: 'talk', npc: 'harbormaster', completed: false, description: 'Speak with the Harbormaster in Sunhaven' }
+                    { type: 'talk', npc: 'harbormaster', location: 'sunhaven', completed: false, description: 'Speak with the Harbormaster in Sunhaven' }
                 ],
                 rewards: { gold: 40, reputation: 10, experience: 25 },
                 prerequisite: 'act1_quest2',
                 nextQuest: 'act1_quest4',
                 dialogue: {
-                    offer: "Ah, Marcus sent you! The Guild speaks highly of your trading skills. But I have a different task for you. Strange whispers reach my ears from Sunhaven to the south. Ships arriving with sealed cargo, merchants who speak in hushed tones. I need someone I can trust to investigate. Travel there and speak with the Harbormaster - they see everything that passes through that port.",
+                    offer: "Ah, Cassia sent you! She speaks highly of your trading skills. But I have a different task for you. Strange whispers reach my ears from Sunhaven to the south. Ships arriving with sealed cargo, merchants who speak in hushed tones. I need someone I can trust to investigate. Travel there and speak with the Harbormaster - they see everything that passes through that port.",
                     progress: "The road south is safe enough. Sunhaven awaits. Find the Harbormaster when you arrive.",
                     complete: "You found me! Good. The Elder sent you, yes? I've been expecting someone to ask about the strange cargo... come, let me tell you what I've seen."
                 }
@@ -180,7 +180,7 @@ const MainQuests = {
                 objectives: [
                     { type: 'collect', item: 'fish', count: 10, current: 0, description: 'Purchase 10 fish from Sunhaven' },
                     { type: 'visit', location: 'greendale', completed: false, description: 'Return to Greendale' },
-                    { type: 'sell', item: 'fish', count: 10, current: 0, description: 'Sell the fish at a profit' }
+                    { type: 'sell', item: 'fish', count: 10, current: 0, location: 'greendale', description: 'Sell the fish at a profit' }
                 ],
                 rewards: { gold: 75, reputation: 20, experience: 40 },
                 prerequisite: 'act1_quest3',
@@ -209,8 +209,9 @@ const MainQuests = {
                 chain: 'shadow_rising',
                 difficulty: 'easy',
                 objectives: [
-                    { type: 'explore', location: 'sunhaven', rooms: 1, completed: false, description: 'Search the harbor warehouse' },
-                    { type: 'collect', item: 'shipping_manifest', count: 1, current: 0, description: 'Find evidence of suspicious cargo' }
+                    { type: 'explore', dungeon: 'sunhaven', rooms: 1, current: 0, description: 'Search the harbor warehouse' },
+                    { type: 'collect', item: 'shipping_manifest', count: 1, current: 0, description: 'Find evidence of suspicious cargo' },
+                    { type: 'talk', npc: 'harbormaster', location: 'sunhaven', completed: false, description: 'Return to Harbormaster Elena' }
                 ],
                 rewards: { gold: 100, reputation: 25, experience: 50 },
                 givesQuestItem: 'shipping_manifest',
@@ -240,8 +241,8 @@ const MainQuests = {
                 chain: 'shadow_rising',
                 difficulty: 'easy',
                 objectives: [
-                    { type: 'talk', npc: 'innkeeper', completed: false, description: 'Ask the innkeeper about the missing trader' },
-                    { type: 'collect', item: 'traders_journal', count: 1, current: 0, description: 'Find the trader\'s abandoned journal' }
+                    { type: 'talk', npc: 'innkeeper', location: 'lighthouse_inn', completed: false, description: 'Ask the innkeeper about the missing trader', givesItem: 'traders_journal' },
+                    { type: 'talk', npc: 'guard', location: 'sunhaven', completed: false, description: 'Return to Guard Captain Theron' }
                 ],
                 rewards: { gold: 80, reputation: 20, experience: 45 },
                 givesQuestItem: 'traders_journal',
@@ -319,7 +320,8 @@ const MainQuests = {
                 wealthGateCheck: true,
                 objectives: [
                     { type: 'gold', amount: 5000, description: 'Accumulate 5,000 gold wealth' },
-                    { type: 'visit', location: 'ironforge_city', completed: false, description: 'Travel to Ironforge City (pay northern gatehouse toll)' }
+                    { type: 'visit', location: 'ironforge_city', completed: false, description: 'Travel to Ironforge City (pay northern gatehouse toll)' },
+                    { type: 'talk', npc: 'blacksmith', location: 'ironforge_city', completed: false, description: 'Report to Forgemaster Grimjaw' }
                 ],
                 rewards: { gold: 200, reputation: 35, experience: 100 },
                 prerequisite: 'act1_quest7',

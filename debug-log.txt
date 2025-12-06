@@ -1,0 +1,154 @@
+
+🎵 MusicSystem: Cleaned up debooger-system.js:103:56
+    activeFromNPC: 
+Array []
+debooger-system.js:103:56
+    allActive: 
+Array [ "act1_quest2 (turnIn:merchant, loc:greendale)" ]
+debooger-system.js:103:56
+    turnInQuests: 
+Array []
+debooger-system.js:103:56
+    uniqueQuests (before ready filter): 
+Array []
+debooger-system.js:103:56
+    FINAL result: 
+Array []
+debooger-system.js:103:56
+  readyToComplete: 
+Array []
+debooger-system.js:103:56
+🎴 createNPCCard: NPC "Ford the Farmer" (id: greendale_farmer, type: traveler, using: traveler) debooger-system.js:103:56
+🔍 getQuestMarker('traveler') at location 'greendale' debooger-system.js:103:56
+  📋 getQuestsReadyToComplete('traveler') at 'greendale' debooger-system.js:103:56
+    activeFromNPC: 
+Array []
+debooger-system.js:103:56
+    allActive: 
+Array [ "act1_quest2 (turnIn:merchant, loc:greendale)" ]
+debooger-system.js:103:56
+    turnInQuests: 
+Array []
+debooger-system.js:103:56
+    uniqueQuests (before ready filter): 
+Array []
+debooger-system.js:103:56
+    FINAL result: 
+Array []
+debooger-system.js:103:56
+  readyToComplete: 
+Array []
+debooger-system.js:103:56
+🎴 createNPCCard: NPC "Roderick the Guard" (id: greendale_guard, type: guard_captain, using: guard_captain) debooger-system.js:103:56
+🔍 getQuestMarker('guard_captain') at location 'greendale' debooger-system.js:103:56
+  📋 getQuestsReadyToComplete('guard_captain') at 'greendale' debooger-system.js:103:56
+    activeFromNPC: 
+Array []
+debooger-system.js:103:56
+    allActive: 
+Array [ "act1_quest2 (turnIn:merchant, loc:greendale)" ]
+debooger-system.js:103:56
+    turnInQuests: 
+Array []
+debooger-system.js:103:56
+    uniqueQuests (before ready filter): 
+Array []
+debooger-system.js:103:56
+    FINAL result: 
+Array []
+debooger-system.js:103:56
+  readyToComplete: 
+Array []
+debooger-system.js:103:56
+👥 PeoplePanel: Showing 6 NPCs at GREENDALE debooger-system.js:103:56
+👥 PeoplePanel: Opened debooger-system.js:103:56
+Invalid URI. Load of media resource  failed. 65 index.html
+👥 PeoplePanel: Starting conversation with Cassia the Merchant debooger-system.js:103:56
+💕 Reputation with Cassia the Merchant: 0 → 1 (had conversation) debooger-system.js:103:56
+🏪 NPCTrade: Initialized inventory for greendale_merchant with 15000g debooger-system.js:103:56
+🔍 getQuestMarker('traveler') at location 'greendale' debooger-system.js:103:56
+  📋 getQuestsReadyToComplete('traveler') at 'greendale' debooger-system.js:103:56
+    activeFromNPC: 
+Array []
+debooger-system.js:103:56
+    allActive: 
+Array [ "act1_quest2 (turnIn:merchant, loc:greendale)" ]
+debooger-system.js:103:56
+    turnInQuests: 
+Array []
+debooger-system.js:103:56
+    uniqueQuests (before ready filter): 
+Array []
+debooger-system.js:103:56
+    FINAL result: 
+Array []
+debooger-system.js:103:56
+  readyToComplete: 
+Array []
+debooger-system.js:103:56
+  📋 getQuestsReadyToComplete('traveler') at 'greendale' debooger-system.js:103:56
+    activeFromNPC: 
+Array []
+debooger-system.js:103:56
+    allActive: 
+Array [ "act1_quest2 (turnIn:merchant, loc:greendale)" ]
+debooger-system.js:103:56
+    turnInQuests: 
+Array []
+debooger-system.js:103:56
+    uniqueQuests (before ready filter): 
+Array []
+debooger-system.js:103:56
+    FINAL result: 
+Array []
+debooger-system.js:103:56
+🎙️ Started conversation with Cassia the Merchant (quest NPC) (first meeting) debooger-system.js:103:56
+🎭 PeoplePanel: Sending greeting for traveler debooger-system.js:103:56
+🎭 NPCInstructionTemplates.buildInstruction called: debooger-system.js:103:56
+   - npcType: traveler debooger-system.js:103:56
+   - action: greeting debooger-system.js:103:56
+   - _loaded: true debooger-system.js:103:56
+   - spec found: traveler debooger-system.js:103:56
+🎙️ Using NPCInstructionTemplates for action: greeting debooger-system.js:103:56
+🎙️ Generated systemPrompt (first 200 chars): You are a traveler. Personality: curious. Say ONE short greeting sentence in character. Examples: "Well met, fellow traveler! Where are you headed?"... debooger-system.js:103:56
+🎙️ Sending request to text API... 
+Object { model: "openai", messageCount: 2 }
+debooger-system.js:103:56
+Invalid URI. Load of media resource  failed. 55 index.html
+🎙️ NPC raw response received: Well met, traveler—where are you headed?... debooger-system.js:103:56
+Invalid URI. Load of media resource  failed. 132 index.html
+Invalid URI. Load of media resource  failed. index.html
+🎭 NPCInstructionTemplates.buildInstruction called: debooger-system.js:103:56
+   - npcType: traveler debooger-system.js:103:56
+   - action: chat debooger-system.js:103:56
+   - _loaded: true debooger-system.js:103:56
+   - spec found: traveler debooger-system.js:103:56
+🎙️ Using NPCInstructionTemplates for action: chat debooger-system.js:103:56
+🎙️ Generated systemPrompt (first 200 chars): You are Cassia the Merchant, a traveler in GREENDALE.
+
+CHARACTER:
+- Personality: curious
+- Speaking Style: friendly, shares road stories, asks about destinations
+- Background: Always on the move. Has ... debooger-system.js:103:56
+🎙️ Sending request to text API... 
+Object { model: "openai", messageCount: 4 }
+debooger-system.js:103:56
+Invalid URI. Load of media resource  failed. 103 index.html
+🎙️ NPC raw response received: Sure thing, traveler. Hand me the quest item or te... debooger-system.js:103:56
+  📋 getQuestsReadyToComplete('traveler') at 'greendale' debooger-system.js:103:56
+    activeFromNPC: 
+Array []
+debooger-system.js:103:56
+    allActive: 
+Array [ "act1_quest2 (turnIn:merchant, loc:greendale)" ]
+debooger-system.js:103:56
+    turnInQuests: 
+Array []
+debooger-system.js:103:56
+    uniqueQuests (before ready filter): 
+Array []
+debooger-system.js:103:56
+    FINAL result: 
+Array []
+debooger-system.js:103:56
+Invalid URI. Load of media resource  failed.

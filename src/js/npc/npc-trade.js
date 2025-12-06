@@ -906,21 +906,31 @@ const NPCTradeWindow = {
         const personality = this.currentNPC.personality || 'friendly';
         let acceptanceThreshold = 0; // How much extra value NPC requires
 
-        switch (personality) {
-            case 'greedy':
-                acceptanceThreshold = npcTotalValue * 0.2; // Wants 20% more
-                break;
-            case 'shrewd':
-                acceptanceThreshold = npcTotalValue * 0.1; // Wants 10% more
-                break;
-            case 'desperate':
-                acceptanceThreshold = -npcTotalValue * 0.2; // Accepts 20% less
-                break;
-            case 'friendly':
-                acceptanceThreshold = 0; // Fair trades
-                break;
-            default:
-                acceptanceThreshold = npcTotalValue * 0.05; // Slight advantage
+        // 🐟 QUEST BYPASS: Harbor Dealings quest - accept fair trades in Greendale
+        const isHarborDealingsQuest = typeof QuestSystem !== 'undefined' &&
+                                      QuestSystem.activeQuests?.act1_quest4 &&
+                                      typeof game !== 'undefined' &&
+                                      game.currentLocation?.id === 'greendale';
+
+        if (isHarborDealingsQuest) {
+            acceptanceThreshold = 0; // Accept fair trades during quest
+        } else {
+            switch (personality) {
+                case 'greedy':
+                    acceptanceThreshold = npcTotalValue * 0.2; // Wants 20% more
+                    break;
+                case 'shrewd':
+                    acceptanceThreshold = npcTotalValue * 0.1; // Wants 10% more
+                    break;
+                case 'desperate':
+                    acceptanceThreshold = -npcTotalValue * 0.2; // Accepts 20% less
+                    break;
+                case 'friendly':
+                    acceptanceThreshold = 0; // Fair trades
+                    break;
+                default:
+                    acceptanceThreshold = npcTotalValue * 0.05; // Slight advantage
+            }
         }
 
         if (playerTotalValue >= npcTotalValue + acceptanceThreshold) {
@@ -1123,9 +1133,17 @@ const NPCTradeWindow = {
             }
         }));
 
+        // 📡 Fire item-purchased events for items player received
         for (const itemId of Object.keys(this.npcOffer.items)) {
             document.dispatchEvent(new CustomEvent('item-purchased', {
                 detail: { itemId, npc: this.currentNPC }
+            }));
+        }
+
+        // 📡 Fire item-sold events for items player gave away (for quest tracking)
+        for (const [itemId, quantity] of Object.entries(this.playerOffer.items)) {
+            document.dispatchEvent(new CustomEvent('item-sold', {
+                detail: { item: itemId, quantity: quantity, gold: 0 }
             }));
         }
 
@@ -2311,6 +2329,19 @@ const NPCTradeWindow = {
     },
 
     getItemPrice(itemId) {
+        // 🐟💰 SPECIAL CASE: Harbor Dealings quest - small premium for fish in Greendale
+        if (itemId === 'fish' &&
+            typeof QuestSystem !== 'undefined' &&
+            QuestSystem.activeQuests?.act1_quest4 &&
+            typeof game !== 'undefined' &&
+            game.currentLocation?.id === 'greendale') {
+            // Return 19g base price for fish (normally 8g)
+            // Player will get 50% = 9.5g per fish in trade value
+            // With 10 fish at 9.5g each = 95g total value (vs 84g cost = 11g profit)
+            console.log('🐟 QUEST PRICING: Fish valued at 19g base (quest active, Greendale)');
+            return 19;
+        }
+
         // 🖤💀 PRIORITY 1: Check ItemDatabase - the authoritative source 💀
         if (typeof ItemDatabase !== 'undefined' && ItemDatabase.getItem) {
             const item = ItemDatabase.getItem(itemId);

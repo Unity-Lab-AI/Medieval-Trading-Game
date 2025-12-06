@@ -128,6 +128,13 @@ const KeyBindings = {
         const key = this.getKey(action);
         if (!key) return false;
 
+        // 🖤💀 IGNORE keybindings if Ctrl/Alt/Meta are pressed (allow native browser shortcuts like Ctrl+C, Ctrl+V) 💀
+        // Exception: function keys like F5, F9 should still work
+        if (event.ctrlKey || event.altKey || event.metaKey) {
+            // Only allow function keys to work with modifiers
+            if (!key.startsWith('F')) return false;
+        }
+
         if (key === 'F5' || key === 'F9') return event.key === key;
         return event.key.toLowerCase() === key.toLowerCase() || event.key === key;
     },
