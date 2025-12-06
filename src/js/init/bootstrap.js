@@ -43,6 +43,7 @@ const Bootstrap = {
         'EquipmentSystem': 'optional',
         'PropertySystem': 'optional',
         'EmployeeSystem': 'optional',
+        'CompanionSystem': 'optional',
         'CraftingSystem': 'optional',
         'AchievementSystem': 'optional',
         'DungeonExplorationSystem': 'optional',
@@ -98,6 +99,7 @@ const Bootstrap = {
             'TradingSystem',      // Buy/sell operations
             'PropertySystem',     // Property management
             'EmployeeSystem',     // Employee management
+            'CompanionSystem',    // Companion management (travel/combat)
             'CraftingSystem',     // Crafting
             'QuestSystem',        // Quests
             'AchievementSystem',  // Achievements
