@@ -1926,6 +1926,8 @@ const QuestSystem = {
             </div>
         `;
 
+        // 🖤💀 CRITICAL: Ensure overlay is HIDDEN by default! 💀
+        overlay.style.display = 'none';
         document.body.appendChild(overlay);
         this.updateQuestLogUI();
     },
@@ -2330,11 +2332,6 @@ const QuestSystem = {
 
         // 🎯 Add tracker styles
         this.addTrackerStyles();
-
-        // 🖤💀 SYNC panel button state with actual tracker visibility 💀
-        if (typeof PanelManager !== 'undefined' && PanelManager.updateToolbarButtons) {
-            PanelManager.updateToolbarButtons();
-        }
     },
 
     // 🖤💀 BUILD QUEST CHAIN VISUALIZATION 💀
@@ -2491,15 +2488,17 @@ const QuestSystem = {
             const isRepeatable = quest.repeatable;
             const expandArrow = (isActive || isCompleted) ? `<span class="quest-expand-arrow" onclick="event.stopPropagation(); QuestSystem.handleChainQuestExpand('${quest.id}')">${isExpanded ? '▼' : '▶'}</span>` : '';
 
-            // 🖤💀 Bullseye badge toggles tracking - clickable!
-            const trackingBadge = isTracked
-                ? `<span class="tracked-badge clickable" onclick="event.stopPropagation(); QuestSystem.untrackQuest(); QuestSystem.updateQuestTracker();" title="Untrack quest">🎯</span>`
+            // 🖤💀 Bullseye badge toggles tracking - ALWAYS visible, different action based on tracked state 💀
+            const trackingBadge = (isActive || isCompleted)
+                ? (isTracked
+                    ? `<span class="tracked-badge clickable" onclick="event.stopPropagation(); QuestSystem.untrackQuest(); QuestSystem.updateQuestTracker();" title="Untrack quest">🎯</span>`
+                    : `<span class="untracked-badge clickable" onclick="event.stopPropagation(); QuestSystem.trackQuest('${quest.id}'); QuestSystem.updateQuestTracker();" title="Track quest">⭕</span>`)
                 : '';
 
             return `
                 ${connector}
                 <div class="chain-quest ${statusClass} ${isTracked ? 'tracked' : ''} ${isRepeatable ? 'repeatable' : ''} ${isExpanded ? 'expanded' : ''}"
-                     onclick="event.stopPropagation(); QuestSystem.showQuestInfo('${quest.id}')"
+                     onclick="event.stopPropagation(); QuestSystem.showQuestInfoPanel('${quest.id}')"
                      data-quest-id="${quest.id}">
                     <div class="quest-row-header">
                         ${expandArrow}
@@ -2654,11 +2653,11 @@ const QuestSystem = {
 
             /* 🖤 Content modes */
             .tracker-content.minimized {
-                max-height: 200px;
+                max-height: 300px;
                 overflow-y: auto;
             }
             .tracker-content.expanded {
-                max-height: 400px;
+                max-height: 600px;
                 overflow-y: auto;
             }
 
@@ -2925,6 +2924,7 @@ const QuestSystem = {
         }
         const overlay = document.getElementById('quest-overlay');
         if (overlay) {
+            overlay.style.display = 'flex'; // 🖤💀 SHOW overlay 💀
             overlay.classList.add('active');
             this.questLogOpen = true;
             this.updateQuestLogUI();
@@ -2934,6 +2934,7 @@ const QuestSystem = {
     hideQuestLog() {
         const overlay = document.getElementById('quest-overlay');
         if (overlay) {
+            overlay.style.display = 'none'; // 🖤💀 HIDE overlay 💀
             overlay.classList.remove('active');
             this.questLogOpen = false;
         }
@@ -2945,10 +2946,6 @@ const QuestSystem = {
         if (tracker) {
             tracker.classList.add('hidden');
             this.trackerHidden = true;
-            // 🖤 Update panel button state 💀
-            if (typeof PanelManager !== 'undefined' && PanelManager.updateToolbarButtons) {
-                PanelManager.updateToolbarButtons();
-            }
             console.log('🖤 Quest tracker hidden - find it in the Panels toolbar or press Q');
         }
     },
@@ -2957,10 +2954,6 @@ const QuestSystem = {
     showQuestTracker() {
         this.trackerHidden = false;
         this.updateQuestTracker(); // This will recreate/show it
-        // 🖤 Update panel button state 💀
-        if (typeof PanelManager !== 'undefined' && PanelManager.updateToolbarButtons) {
-            PanelManager.updateToolbarButtons();
-        }
         console.log('🖤 Quest tracker revealed from the shadows');
     },
 
