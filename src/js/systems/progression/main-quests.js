@@ -180,7 +180,7 @@ const MainQuests = {
                 objectives: [
                     { type: 'collect', item: 'fish', count: 10, current: 0, description: 'Purchase 10 fish from Sunhaven' },
                     { type: 'visit', location: 'greendale', completed: false, description: 'Return to Greendale' },
-                    { type: 'sell', item: 'fish', count: 10, current: 0, description: 'Sell the fish at a profit' }
+                    { type: 'sell', item: 'fish', count: 10, current: 0, location: 'greendale', description: 'Sell the fish at a profit' }
                 ],
                 rewards: { gold: 75, reputation: 20, experience: 40 },
                 prerequisite: 'act1_quest3',

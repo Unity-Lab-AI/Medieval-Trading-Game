@@ -1347,6 +1347,7 @@ const QuestSystem = {
             this.saveQuestProgress();
             this.updateQuestLogUI();
             this.updateQuestTracker(); // 🖤 FIX: Update tracker widget when progress changes 💀
+            this.updateQuestMapMarker(); // 🎯 FIX: Update map marker when objectives complete - moves to next objective location! 💀
             this.checkForAutoComplete();
         }
     },
@@ -2983,20 +2984,33 @@ const QuestSystem = {
         const quest = this.activeQuests[this.trackedQuestId];
         if (!quest || !quest.objectives) return null;
 
+        // 🎯 Check if ALL objectives are complete - if so, point to turn-in location
+        const progress = this.checkProgress(this.trackedQuestId);
+        if (progress.status === 'ready_to_complete') {
+            // Quest ready to turn in - go to turn-in location!
+            return quest.turnInLocation || quest.location;
+        }
+
         // 🖤 Find the first incomplete objective with a location
         for (const obj of quest.objectives) {
             if (obj.completed) continue;
 
-            // 💀 Visit objective has direct location
-            if (obj.type === 'visit' && obj.location) {
+            // 🎯 PRIORITY 1: If objective has explicit location field, use it (works for ANY type!)
+            if (obj.location) {
+                return obj.location;
+            }
+
+            // 💀 Visit/travel objective has direct location
+            if ((obj.type === 'visit' || obj.type === 'travel') && obj.location) {
                 return obj.location;
             }
 
             // 🦇 Talk objective - need to find where that NPC is
             if (obj.type === 'talk' && obj.npc) {
-                // NPCs are typically at the quest giver location or specific spots
-                // Use quest location, or if null (dynamic), use player's current location
-                if (quest.location) {
+                // Use objective's location if specified, otherwise quest location
+                if (obj.location) {
+                    return obj.location;
+                } else if (quest.location) {
                     return quest.location;
                 } else if (typeof game !== 'undefined' && game.currentLocation) {
                     return game.currentLocation.id;
@@ -3008,14 +3022,14 @@ const QuestSystem = {
                 return obj.dungeon;
             }
 
-            // 🖤 Collect items - player needs to find them, maybe at quest location
-            if (obj.type === 'collect') {
-                return quest.location;
+            // 🖤 Collect/buy/sell/trade - use objective location if specified, otherwise quest location
+            if (obj.type === 'collect' || obj.type === 'buy' || obj.type === 'sell' || obj.type === 'trade') {
+                return obj.location || quest.location;
             }
         }
 
         // 💀 Fallback to quest giver location for turn-in
-        return quest.location;
+        return quest.turnInLocation || quest.location;
     },
 
     // 🖤 Get quest info for a specific location (for tooltips) 💀
