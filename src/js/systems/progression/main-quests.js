@@ -119,7 +119,7 @@ const MainQuests = {
                 difficulty: 'easy',
                 objectives: [
                     { type: 'trade', count: 3, current: 0, minValue: 50, description: 'Complete 3 trades worth at least 50 gold each' },
-                    { type: 'talk', npc: 'merchant', completed: false, description: 'Return to the Merchant in Greendale' }
+                    { type: 'talk', npc: 'merchant', location: 'greendale', completed: false, description: 'Return to Guild Representative Marcus (Merchant) in Greendale' }
                 ],
                 rewards: { gold: 50, reputation: 15, experience: 30 },
                 prerequisite: 'act1_quest1',
