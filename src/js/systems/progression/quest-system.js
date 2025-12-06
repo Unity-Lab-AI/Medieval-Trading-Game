@@ -3750,8 +3750,13 @@ const QuestSystem = {
             this.updateProgress('travel', { location: e.detail.locationId }); // 🖤💀 Also trigger travel objectives 💀
         });
 
+        // 🖤💀 NPC interaction event - DON'T auto-complete talk objectives just from opening chat! 💀
+        // Talk objectives should only complete when player performs quest action (turn-in, accept, etc.)
         document.addEventListener('npc-interaction', (e) => {
-            this.updateProgress('talk', { npc: e.detail.npcType });
+            // 🖤 Only complete talk objectives if this is a quest-related interaction
+            // For now, we'll let quest actions (askAboutQuest, completeQuest, etc.) handle completion
+            // This event can be used for other tracking purposes
+            console.log(`👥 NPC interaction: ${e.detail.npcType} (${e.detail.npcName})`);
         });
 
         // 🖤💀 Investigation events - searching areas for clues/items 💀

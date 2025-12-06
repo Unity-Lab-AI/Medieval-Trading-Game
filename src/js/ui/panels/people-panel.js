@@ -1171,6 +1171,27 @@ const PeoplePanel = {
                 });
             }
 
+            // 💬 COMPLETE TALK OBJECTIVE - Player needs to talk to this NPC for quest progress
+            // Check all active quests for incomplete talk objectives targeting this NPC
+            const allActiveQuests = Object.values(QuestSystem.activeQuests || {});
+            allActiveQuests.forEach(quest => {
+                const talkObjective = quest.objectives?.find(o =>
+                    o.type === 'talk' &&
+                    !o.completed &&
+                    o.npc === npcType &&
+                    (!o.location || o.location === location || o.location === 'any')
+                );
+
+                if (talkObjective) {
+                    actions.push({
+                        label: `💬 ${talkObjective.description || 'Talk about quest'}`,
+                        action: () => this.completeTalkObjective(quest, talkObjective),
+                        priority: 1.5, // High priority - between turn-in and other actions
+                        questRelated: true
+                    });
+                }
+            });
+
             // ⏳ CHECK PROGRESS - Player has active quests from this NPC
             // 🖤💀 Show INDIVIDUAL buttons for each quest, not one generic button!
             const activeFromNPC = QuestSystem.getActiveQuestsForNPC(npcType, location);
@@ -1180,12 +1201,18 @@ const PeoplePanel = {
             });
             if (inProgress.length > 0) {
                 inProgress.forEach(quest => {
-                    actions.push({
-                        label: `⏳ Progress: ${quest.name}`,
-                        action: () => this.askQuestProgressSpecific(quest),
-                        priority: 4,
-                        questRelated: true
-                    });
+                    // 🖤💀 Don't show progress button if there's already a talk objective button for this quest
+                    const hasTalkButton = actions.some(a =>
+                        a.questRelated && a.label.includes(quest.name) && a.label.startsWith('💬')
+                    );
+                    if (!hasTalkButton) {
+                        actions.push({
+                            label: `⏳ Progress: ${quest.name}`,
+                            action: () => this.askQuestProgressSpecific(quest),
+                            priority: 4,
+                            questRelated: true
+                        });
+                    }
                 });
             }
         }
@@ -1499,6 +1526,55 @@ const PeoplePanel = {
             npcResponse = `*looks at your hands* You don't have the items I need. Come back when you have them.`;
         } else {
             npcResponse = `*looks confused* I'm not sure what you mean. Do you have a quest to turn in?`;
+        }
+
+        this.addChatMessage(npcResponse, 'npc');
+        this.chatHistory.push({ role: 'assistant', content: npcResponse });
+
+        // 🔊 Play TTS
+        if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.settings?.voiceEnabled) {
+            const voice = this.getNPCVoice(this.currentNPC);
+            NPCVoiceChatSystem.playVoice(npcResponse, voice);
+        }
+
+        // 🖤 Update UI
+        this.updateQuestItems();
+        this.updateQuickActions(this.currentNPC);
+    },
+
+    // 💬 COMPLETE TALK OBJECTIVE - Player talks to NPC for mid-quest progression
+    async completeTalkObjective(quest, talkObjective) {
+        const questId = quest.id || quest.questId;
+        const npcType = this.currentNPC?.type || 'stranger';
+
+        // 🖤 Display player message
+        const message = talkObjective.description || `I need to talk to you about "${quest.name}".`;
+        this.addChatMessage(message, 'player');
+        this.chatHistory.push({ role: 'user', content: message });
+
+        // 🖤💀 CRITICAL: Complete the talk objective using QuestSystem 💀
+        if (typeof QuestSystem !== 'undefined') {
+            QuestSystem.updateProgress('talk', { npc: npcType, npcType: npcType });
+            console.log(`💬 Completed talk objective for ${questId} with ${npcType}`);
+        }
+
+        // 🖤 Generate NPC response
+        const questName = quest.name || 'the task';
+        const itemName = talkObjective.givesItem
+            ? (QuestSystem.questItems?.[talkObjective.givesItem]?.name || talkObjective.givesItem.replace(/_/g, ' '))
+            : null;
+
+        let npcResponse = `*nods thoughtfully* Ah, about "${questName}". `;
+
+        if (itemName) {
+            npcResponse += `Here, take this - you'll need it. *hands you ${itemName}* `;
+        }
+
+        // Use quest dialogue if available
+        if (quest.dialogue?.progress) {
+            npcResponse += quest.dialogue.progress;
+        } else {
+            npcResponse += `Continue with your task. You're doing well.`;
         }
 
         this.addChatMessage(npcResponse, 'npc');
