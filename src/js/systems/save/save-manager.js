@@ -1121,15 +1121,21 @@ const SaveManager = {
     },
 
     calculateDaysSurvived(saveData) {
-        if (!saveData.gameData?.timeState?.currentTime) return 0;
+        if (!saveData.gameData?.timeState?.currentTime) {
+            console.warn('💾 calculateDaysSurvived: No timeState.currentTime found!');
+            return 0;
+        }
         const t = saveData.gameData.timeState.currentTime;
         // 🖤 Get starting date from config - the single source of truth
         const startDate = typeof GameConfig !== 'undefined' ? GameConfig.time.startingDate : { year: 1111, month: 4, day: 1 };
 
         const startDays = startDate.day + (startDate.month - 1) * 30 + (startDate.year - 1) * 360;
         const currentDays = t.day + (t.month - 1) * 30 + (t.year - 1) * 360;
+        const daysSurvived = Math.max(0, currentDays - startDays);
 
-        return Math.max(0, currentDays - startDays);
+        console.log(`💾 calculateDaysSurvived: Start ${JSON.stringify(startDate)}, Current ${JSON.stringify(t)}, Days: ${daysSurvived}`);
+
+        return daysSurvived;
     },
 
     getSaveSlotInfo(slotNumber) {
