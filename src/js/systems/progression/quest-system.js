@@ -403,7 +403,7 @@ const QuestSystem = {
         // ═══════════════════════════════════════════════════════════
         jade_silk_delivery: {
             id: 'jade_silk_delivery',
-            name: 'Silk Road Express',
+            name: 'Silk Delivery',
             description: 'Deliver precious silk to the Royal Capital.',
             giver: 'merchant',
             giverName: 'Mei Lin',

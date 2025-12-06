@@ -1514,6 +1514,51 @@ const DungeonExplorationSystem = {
                     ]
                 }
             ]
+        },
+
+        // === CITY/PORT EVENTS - Urban Exploration ===
+        harbor_warehouse: {
+            id: 'harbor_warehouse',
+            name: 'The Harbor Warehouse',
+            description: 'A dimly lit warehouse filled with stacked crates and barrels. Some shipments are marked with strange symbols.',
+            icon: '📦',
+            locationType: ['city', 'port'],
+            difficulty: 'easy',
+            choices: [
+                {
+                    id: 'search_crates',
+                    text: '🔍 Search the suspicious crates',
+                    preview: 'Risk: Low. Might find evidence... or trouble.',
+                    healthCost: { min: 0, max: 5 },
+                    staminaCost: { min: 10, max: 15 },
+                    outcomes: [
+                        { weight: 50, type: 'manifest', message: 'A shipping manifest slips from between two crates. The entries are coded - definitely suspicious.', loot: ['shipping_manifest'] },
+                        { weight: 30, type: 'valuables', message: '"Agricultural supplies" that clink like coins. You pocket a few loose items.', loot: ['ancient_coin', 'ancient_coin', 'ancient_coin'] },
+                        { weight: 20, type: 'nothing', message: 'Just farming tools and sacks of grain. Boring but legitimate.', loot: [] }
+                    ]
+                },
+                {
+                    id: 'check_ledger',
+                    text: '📋 Check the warehouse ledger',
+                    preview: 'Risk: None. Official records might reveal patterns.',
+                    healthCost: { min: 0, max: 0 },
+                    staminaCost: { min: 5, max: 10 },
+                    outcomes: [
+                        { weight: 60, type: 'clues', message: 'Monthly deliveries, always paid in advance. Always the same coded name: "The Black Ledger". Interesting...', loot: ['shipping_manifest'] },
+                        { weight: 40, type: 'normal', message: 'Standard trade logs. Nothing suspicious here.', loot: [] }
+                    ]
+                },
+                {
+                    id: 'leave_quick',
+                    text: '🚪 Leave before someone sees you',
+                    preview: 'Risk: None. Better safe than sorry.',
+                    healthCost: { min: 0, max: 0 },
+                    staminaCost: { min: 5, max: 5 },
+                    outcomes: [
+                        { weight: 100, type: 'safe', message: 'You slip out quietly. Sometimes discretion really is the better part of valor.', loot: [] }
+                    ]
+                }
+            ]
         }
     },
 

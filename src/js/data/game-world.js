@@ -1018,7 +1018,7 @@ const GameWorld = {
         crafty_female: ['Sapphira', 'Lavinia', 'Cordelia', 'Portia', 'Octavia', 'Nerissa', 'Jessamine', 'Ophelia', 'Perdita', 'Rosamund', 'Seraphina', 'Viola'],
         // Merchant types (merchant, banker, general_store)
         merchant_male: ['Marcus', 'Lucius', 'Gaius', 'Quintus', 'Titus', 'Cassius', 'Brutus', 'Octavius', 'Valerius', 'Maximus', 'Crassus', 'Publius'],
-        merchant_female: ['Livia', 'Aurelia', 'Cornelia', 'Flavia', 'Lucilla', 'Marcia', 'Julia', 'Claudia', 'Valeria', 'Cassia', 'Fabia', 'Tullia'],
+        merchant_female: ['Livia', 'Aurelia', 'Cornelia', 'Flavia', 'Lucilla', 'Marcia', 'Julia', 'Claudia', 'Valeria', 'Fabia', 'Tullia', 'Antonia'],
         // Rural types (farmer, shepherd, miller, farmhand)
         rural_male: ['Alden', 'Bran', 'Colby', 'Dale', 'Earle', 'Ford', 'Grove', 'Heath', 'Jasper', 'Keld', 'Lee', 'Marsh'],
         rural_female: ['Daisy', 'Ivy', 'Lily', 'Rose', 'Violet', 'Holly', 'Hazel', 'Fern', 'Laurel', 'Willow', 'Heather', 'Clover'],
@@ -1055,6 +1055,15 @@ const GameWorld = {
         hooded_stranger: 'mysterious', prophet: 'mysterious' // 🖤💀 Quest givers
     },
 
+    // 🖤💀 QUEST NPC NAME OVERRIDES - Ensure quest NPCs have correct canonical names
+    // Maps location_npcType to the specific name that quest expects
+    _questNPCNames: {
+        'greendale_merchant': 'Cassia the Merchant',  // act1_quest2 - Establishing Trade
+        'greendale_elder': 'Elder Morin',             // act1_quest1 - First Steps
+        'sunhaven_harbormaster': 'Harbormaster Elena', // act1_quest3/4 - The Road South / Harbor Dealings
+        // Add more quest-specific NPCs as needed
+    },
+
     // 🖤 Cache for generated NPC names - consistent across sessions
     _npcNameCache: {},
 
@@ -1077,6 +1086,11 @@ const GameWorld = {
     // 🖤💀 Generate a unique NPC name based on location and type
     generateNPCName(locationId, npcType) {
         const cacheKey = `${locationId}_${npcType}`;
+
+        // 🎯 PRIORITY: Check if this NPC has a quest-specific name override
+        if (this._questNPCNames[cacheKey]) {
+            return this._questNPCNames[cacheKey];
+        }
 
         // 🦇 Return cached name if we already generated one
         if (this._npcNameCache[cacheKey]) {

@@ -209,7 +209,7 @@ const MainQuests = {
                 chain: 'shadow_rising',
                 difficulty: 'easy',
                 objectives: [
-                    { type: 'explore', location: 'sunhaven', rooms: 1, completed: false, description: 'Search the harbor warehouse' },
+                    { type: 'explore', dungeon: 'sunhaven', rooms: 1, current: 0, description: 'Search the harbor warehouse' },
                     { type: 'collect', item: 'shipping_manifest', count: 1, current: 0, description: 'Find evidence of suspicious cargo' }
                 ],
                 rewards: { gold: 100, reputation: 25, experience: 50 },
