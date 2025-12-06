@@ -66,6 +66,7 @@ const QuestSystem = {
     // 🖤 TRACKED QUEST - the one quest to rule them all (only one at a time)
     trackedQuestId: null,
     questMarkerElement: null,
+    trackerHidden: false, // 🖤💀 Track if user manually hid the tracker widget 💀
 
     // ═══════════════════════════════════════════════════════════════
     // 🎒 QUEST ITEMS - special items that exist only for quests
@@ -968,7 +969,9 @@ const QuestSystem = {
             questCompletionTimes: this.questCompletionTimes,
             questItemInventory: this.getQuestItemInventory(),
             // 🖤 v0.90+ Save tracked quest
-            trackedQuestId: this.trackedQuestId
+            trackedQuestId: this.trackedQuestId,
+            // 🖤💀 SAVE TRACKER VISIBILITY STATE 💀
+            trackerHidden: this.trackerHidden || false
         };
         try {
             localStorage.setItem('medievalTradingGameQuests', JSON.stringify(saveData));
@@ -987,6 +990,8 @@ const QuestSystem = {
                 this.failedQuests = data.failedQuests || [];
                 this.discoveredQuests = data.discoveredQuests || [];
                 this.questCompletionTimes = data.questCompletionTimes || {};
+                // 🖤💀 RESTORE TRACKER VISIBILITY STATE 💀
+                this.trackerHidden = data.trackerHidden === true;
                 // 🖤 v0.90+ Restore tracked quest
                 if (data.trackedQuestId && this.activeQuests[data.trackedQuestId]) {
                     this.trackedQuestId = data.trackedQuestId;
@@ -2325,6 +2330,11 @@ const QuestSystem = {
 
         // 🎯 Add tracker styles
         this.addTrackerStyles();
+
+        // 🖤💀 SYNC panel button state with actual tracker visibility 💀
+        if (typeof PanelManager !== 'undefined' && PanelManager.updateToolbarButtons) {
+            PanelManager.updateToolbarButtons();
+        }
     },
 
     // 🖤💀 BUILD QUEST CHAIN VISUALIZATION 💀
@@ -2935,6 +2945,11 @@ const QuestSystem = {
         if (tracker) {
             tracker.classList.add('hidden');
             this.trackerHidden = true;
+            this.saveQuestProgress(); // 🖤💀 PERSIST tracker state 💀
+            // 🖤 Update panel button state 💀
+            if (typeof PanelManager !== 'undefined' && PanelManager.updateToolbarButtons) {
+                PanelManager.updateToolbarButtons();
+            }
             console.log('🖤 Quest tracker hidden - find it in the Panels toolbar or press Q');
         }
     },
@@ -2943,6 +2958,11 @@ const QuestSystem = {
     showQuestTracker() {
         this.trackerHidden = false;
         this.updateQuestTracker(); // This will recreate/show it
+        this.saveQuestProgress(); // 🖤💀 PERSIST tracker state 💀
+        // 🖤 Update panel button state 💀
+        if (typeof PanelManager !== 'undefined' && PanelManager.updateToolbarButtons) {
+            PanelManager.updateToolbarButtons();
+        }
         console.log('🖤 Quest tracker revealed from the shadows');
     },
 
