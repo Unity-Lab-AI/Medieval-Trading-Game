@@ -1212,7 +1212,7 @@ const SaveManager = {
                 height: 100%;
                 background: rgba(0, 0, 0, 0.85);
                 backdrop-filter: blur(5px);
-                z-index: 700; /* Z-INDEX STANDARD: System modals */
+                z-index: 3100; /* Z-INDEX FIX: Above .screen (3000) so LOAD GAME dialog is visible from main menu */
                 display: none;
                 align-items: center;
                 justify-content: center;
