@@ -5051,6 +5051,9 @@ function initializeCharacterCreation(difficulty = 'normal') {
     // Calculate stats AFTER setting initial gold (this will recalculate with perks)
     calculateCharacterStats();
 
+    // 🖤💀 Ensure START button is properly disabled on init (no perks selected yet) 💀
+    updateStartGameButton();
+
     console.log('=== Character Creation Initialized ===');
 }
 
@@ -5352,6 +5355,7 @@ function confirmPerkSelection() {
     updatePerkSelection(); // Update the perk counter badge
     displaySelectedPerks(); // Show selected perks in the UI
     calculateCharacterStats(); // Recalculate stats with perk bonuses
+    updateStartGameButton(); // 🖤💀 Check if START button should be enabled 💀
     addMessage(`Selected ${selectedPerks.length} perk(s).`);
 }
 
@@ -5395,6 +5399,7 @@ function removePerk(perkId) {
     updatePerkSelection();
     displaySelectedPerks();
     calculateCharacterStats();
+    updateStartGameButton(); // 🖤💀 Check if START button should be disabled 💀
     addMessage(`Removed perk: ${perks[perkId]?.name || perkId}`);
 }
 
@@ -5667,15 +5672,26 @@ function updateStartGameButton() {
     // Check if all attribute points are spent
     const allPointsSpent = characterCreationState.availableAttributePoints === 0;
 
-    // Enable button only if all points are spent
-    startGameBtn.disabled = !allPointsSpent;
+    // Check if exactly 2 perks are selected
+    const hasRequiredPerks = selectedPerks && selectedPerks.length === 2;
 
-    if (!allPointsSpent) {
+    // Enable button only if all points are spent AND 2 perks selected
+    const canStart = allPointsSpent && hasRequiredPerks;
+    startGameBtn.disabled = !canStart;
+
+    // Set appropriate tooltip message
+    if (!allPointsSpent && !hasRequiredPerks) {
+        startGameBtn.title = `You must spend all ${characterCreationState.availableAttributePoints} attribute points and select 2 character perks before starting`;
+        console.log('Start Game button disabled - points remaining:', characterCreationState.availableAttributePoints, '| perks selected:', selectedPerks?.length || 0);
+    } else if (!allPointsSpent) {
         startGameBtn.title = `You must spend all ${characterCreationState.availableAttributePoints} remaining attribute points before starting`;
         console.log('Start Game button disabled - points remaining:', characterCreationState.availableAttributePoints);
+    } else if (!hasRequiredPerks) {
+        startGameBtn.title = `You must select exactly 2 character perks before starting (${selectedPerks?.length || 0}/2 selected)`;
+        console.log('Start Game button disabled - perks selected:', selectedPerks?.length || 0, '/ 2 required');
     } else {
         startGameBtn.title = 'Start your adventure!';
-        console.log('Start Game button enabled - all points spent');
+        console.log('Start Game button enabled - all requirements met');
     }
 }
 
