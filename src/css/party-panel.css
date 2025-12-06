@@ -1,0 +1,344 @@
+/* ═══════════════════════════════════════════════════════════════
+   PARTY PANEL - manage your traveling companions
+   ═══════════════════════════════════════════════════════════════
+   Version: 0.90.00 | Unity AI Lab
+   ═══════════════════════════════════════════════════════════════ */
+
+#party-panel {
+    width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+/* Party Summary Stats */
+.party-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+}
+
+.party-stat {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+}
+
+.party-stat .stat-icon {
+    font-size: 1.5em;
+}
+
+.party-stat .stat-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.party-stat .stat-label {
+    font-size: 0.85em;
+    color: #888;
+}
+
+.party-stat .stat-value {
+    font-size: 1.1em;
+    color: #4fc3f7;
+    font-weight: bold;
+}
+
+/* Empty Party */
+.empty-party {
+    text-align: center;
+    padding: 40px 20px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.empty-party p {
+    margin: 10px 0;
+}
+
+.empty-party .hint {
+    font-size: 0.9em;
+    color: #888;
+}
+
+/* Companion Card */
+.companion-card {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(79, 195, 247, 0.3);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    transition: all 0.2s;
+}
+
+.companion-card:hover {
+    border-color: rgba(79, 195, 247, 0.6);
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.companion-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(79, 195, 247, 0.2);
+}
+
+.companion-icon {
+    font-size: 2em;
+}
+
+.companion-name-section {
+    flex: 1;
+}
+
+.companion-name {
+    margin: 0;
+    font-size: 1.1em;
+    color: #fff;
+}
+
+.companion-type {
+    font-size: 0.85em;
+    color: #888;
+}
+
+.companion-status {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.85em;
+}
+
+.status-alive {
+    background: rgba(76, 175, 80, 0.2);
+    color: #4caf50;
+}
+
+.status-dead {
+    background: rgba(244, 67, 54, 0.2);
+    color: #f44336;
+}
+
+/* Companion Stats */
+.companion-stats-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.companion-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.companion-stat .stat-label {
+    font-size: 0.85em;
+    color: #888;
+}
+
+.stat-bar-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.stat-bar {
+    flex: 1;
+    height: 8px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.stat-fill {
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.stat-text {
+    font-size: 0.85em;
+    color: #ddd;
+    min-width: 80px;
+    text-align: right;
+}
+
+.companion-stat-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    justify-content: center;
+}
+
+.stat-item .stat-icon {
+    font-size: 1.2em;
+}
+
+.stat-item .stat-value {
+    font-size: 0.9em;
+    color: #4fc3f7;
+    font-weight: bold;
+}
+
+/* Companion Actions */
+.companion-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.companion-btn {
+    flex: 1;
+    padding: 8px 12px;
+    background: linear-gradient(180deg, rgba(79, 195, 247, 0.3), rgba(79, 195, 247, 0.2));
+    border: 1px solid rgba(79, 195, 247, 0.4);
+    border-radius: 6px;
+    color: #4fc3f7;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.85em;
+    white-space: nowrap;
+}
+
+.companion-btn:hover {
+    background: linear-gradient(180deg, rgba(79, 195, 247, 0.4), rgba(79, 195, 247, 0.3));
+    border-color: rgba(79, 195, 247, 0.6);
+    transform: translateY(-1px);
+}
+
+.companion-btn.secondary {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #ddd;
+}
+
+.companion-btn.secondary:hover {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.1));
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Party Actions */
+.party-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(79, 195, 247, 0.2);
+}
+
+.party-actions .panel-btn {
+    flex: 1;
+}
+
+/* Companion Inventory Modal */
+.companion-inventory-view {
+    padding: 10px;
+}
+
+.companion-inventory-view h3,
+.companion-inventory-view h4 {
+    margin: 15px 0 10px 0;
+    color: #4fc3f7;
+}
+
+.inventory-stats {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+}
+
+.inventory-stats p {
+    margin: 5px 0;
+    color: #ddd;
+}
+
+.inventory-grid,
+.player-inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.inventory-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(79, 195, 247, 0.2);
+    border-radius: 6px;
+}
+
+.inventory-item .item-icon {
+    font-size: 1.5em;
+}
+
+.inventory-item .item-name {
+    flex: 1;
+    font-size: 0.9em;
+}
+
+.inventory-item .item-quantity {
+    font-size: 0.85em;
+    color: #888;
+}
+
+.item-transfer-btn {
+    padding: 4px 8px;
+    background: rgba(79, 195, 247, 0.2);
+    border: 1px solid rgba(79, 195, 247, 0.3);
+    border-radius: 4px;
+    color: #4fc3f7;
+    cursor: pointer;
+    font-size: 0.8em;
+    transition: all 0.2s;
+}
+
+.item-transfer-btn:hover {
+    background: rgba(79, 195, 247, 0.3);
+    border-color: rgba(79, 195, 247, 0.5);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    #party-panel {
+        width: 90%;
+        max-width: 500px;
+    }
+
+    .party-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .companion-stat-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .companion-actions {
+        flex-direction: column;
+    }
+
+    .companion-btn {
+        width: 100%;
+    }
+}

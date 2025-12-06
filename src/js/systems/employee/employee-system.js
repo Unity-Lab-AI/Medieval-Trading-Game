@@ -636,23 +636,89 @@ const EmployeeSystem = {
             addMessage('Employee not available for hire!');
             return false;
         }
-        
+
         if (game.player.gold < employee.wage * 7) { // Need 1 week wages upfront
             addMessage(`You need ${employee.wage * 7} gold to hire ${employee.name}!`);
             return false;
         }
-        
+
         // Hire employee
         game.player.gold -= employee.wage * 7;
+
+        // Initialize companion stats if CompanionSystem available
+        if (typeof CompanionSystem !== 'undefined') {
+            if (!employee.mode) employee.mode = 'travel';
+            if (!employee.inventory) employee.inventory = {};
+            if (!employee.gold) employee.gold = 0;
+            if (!employee.carryWeight) employee.carryWeight = 0;
+            if (!employee.maxCarryWeight) employee.maxCarryWeight = CompanionSystem.getBaseCarryWeight(employee.type);
+            if (!employee.health) employee.health = CompanionSystem.getBaseStat(employee.type, 'health');
+            if (!employee.maxHealth) employee.maxHealth = CompanionSystem.getBaseStat(employee.type, 'health');
+            if (!employee.attack) employee.attack = CompanionSystem.getBaseStat(employee.type, 'attack');
+            if (!employee.defense) employee.defense = CompanionSystem.getBaseStat(employee.type, 'defense');
+        }
+
         game.player.ownedEmployees.push(employee);
-        
+
         addMessage(`Hired ${employee.name} (${this.employeeTypes[employee.type].name}) for ${employee.wage} gold/week!`);
-        
+
         // Update UI
         updatePlayerInfo();
         this.updateEmployeeDisplay();
-        
+
+        // Ask where to assign companion
+        this.showCompanionAssignmentChoice(employee.id);
+
         return true;
+    },
+
+    // Show choice for newly hired companion
+    showCompanionAssignmentChoice(employeeId) {
+        const employee = this.getEmployee(employeeId);
+        if (!employee) return;
+
+        if (typeof ModalSystem !== 'undefined' && typeof CompanionSystem !== 'undefined') {
+            ModalSystem.show({
+                title: `${employee.name} - Assignment`,
+                content: `
+                    <p>Where should ${employee.name} go?</p>
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+                        <button class="assignment-choice-btn" onclick="EmployeeSystem.assignNewCompanionToTravel('${employee.id}'); ModalSystem.hide();"
+                            style="padding: 15px; background: rgba(79,195,247,0.2); border: 1px solid rgba(79,195,247,0.4); border-radius: 6px; color: #4fc3f7; cursor: pointer;">
+                            🤝 <strong>Travel with me</strong><br>
+                            <span style="font-size: 0.85em; color: #888;">Join your party, help in combat, carry items</span>
+                        </button>
+                        <button class="assignment-choice-btn" onclick="EmployeeSystem.assignNewCompanionToProperty('${employee.id}'); ModalSystem.hide();"
+                            style="padding: 15px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; color: #ddd; cursor: pointer;">
+                            🏠 <strong>Work at a property</strong><br>
+                            <span style="font-size: 0.85em; color: #888;">Assign to one of your properties</span>
+                        </button>
+                    </div>
+                `,
+                buttons: []
+            });
+        } else {
+            // Default to travel mode if systems not available
+            if (employee.mode) employee.mode = 'travel';
+        }
+    },
+
+    // Assign newly hired companion to travel mode
+    assignNewCompanionToTravel(employeeId) {
+        const employee = this.getEmployee(employeeId);
+        if (!employee) return;
+
+        employee.mode = 'travel';
+        addMessage(`${employee.name} will travel with you!`);
+
+        if (typeof PartyPanel !== 'undefined') {
+            PartyPanel.updatePanel();
+        }
+    },
+
+    // Show property assignment for newly hired companion
+    assignNewCompanionToProperty(employeeId) {
+        this.showAssignmentInterface(employeeId);
     },
     
     // Get player's employees
