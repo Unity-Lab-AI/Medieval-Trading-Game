@@ -149,7 +149,7 @@ const MainQuests = {
                 difficulty: 'easy',
                 objectives: [
                     { type: 'visit', location: 'sunhaven', completed: false, description: 'Travel to Sunhaven in the south' },
-                    { type: 'talk', npc: 'harbormaster', completed: false, description: 'Speak with the Harbormaster in Sunhaven' }
+                    { type: 'talk', npc: 'harbormaster', location: 'sunhaven', completed: false, description: 'Speak with the Harbormaster in Sunhaven' }
                 ],
                 rewards: { gold: 40, reputation: 10, experience: 25 },
                 prerequisite: 'act1_quest2',
