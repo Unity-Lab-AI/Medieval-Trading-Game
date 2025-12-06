@@ -2653,11 +2653,11 @@ const QuestSystem = {
 
             /* 🖤 Content modes */
             .tracker-content.minimized {
-                max-height: 200px;
+                max-height: 300px;
                 overflow-y: auto;
             }
             .tracker-content.expanded {
-                max-height: 400px;
+                max-height: 600px;
                 overflow-y: auto;
             }
 
