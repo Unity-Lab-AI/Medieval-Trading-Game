@@ -142,3 +142,78 @@ Comprehensive feature roadmap for the trading game to reach 100% completion.
 - [ ] Test edge cases and error handling
 - [ ] Perform final polish (text, tooltips, visual consistency)
 - [ ] Create comprehensive testing report
+
+---
+
+## P0: OLLAMA LOCAL LLM INTEGRATION (ACTIVE)
+
+**Priority:** P0 - CRITICAL
+**Decision:** Ollama is PRIMARY and ONLY. Pollinations is REMOVED COMPLETELY.
+
+### Architecture
+- **Ollama**: PRIMARY text generation for ALL NPCs
+- **Pollinations**: REMOVED - delete all references
+- **Model**: Local mistral (~4GB) ships with game
+- **Fallbacks**: Creative pre-written responses when Ollama slow/unavailable
+
+### Why This Architecture
+- No API rate limits or 402 errors
+- Works completely offline
+- Game ships with everything needed
+- Fast local responses
+- When Ollama is slow (>3sec) or down, smart fallbacks kick in
+
+### Files to REMOVE Pollinations From
+| File | Action |
+|------|--------|
+| `config.js:76-118` | DELETE pollinations section, ADD ollama config |
+| `src/js/npc/npc-voice.js` | REWRITE to use Ollama only |
+| `src/js/npc/npc-dialogue.js` | REWRITE for local model |
+| `src/js/ui/panels/settings-panel.js` | REMOVE model selector, ADD Ollama status |
+
+### TASK LIST
+
+#### P0 - Critical (Do First)
+- [ ] **TASK-001**: Delete ALL Pollinations code from `config.js`
+- [ ] **TASK-002**: Add Ollama config to `config.js` (localhost:11434, mistral, timeout 3000ms)
+- [ ] **TASK-003**: Rewrite `npc-voice.js` generateNPCResponse() for Ollama
+- [ ] **TASK-004**: Build fallback system - if Ollama >3sec or fails, use creative fallback
+
+#### P1 - Fallback Content
+- [ ] **TASK-005**: Create `src/data/npc-fallbacks.json` with NPC type + action structure
+- [ ] **TASK-006**: Write 20+ fallback lines per NPC type per category
+- [ ] **TASK-007**: Fallback selector uses: NPC type, location, player reputation, quest state
+
+#### P2 - Settings & Polish
+- [ ] **TASK-008**: Update `settings-panel.js` - remove Pollinations UI
+- [ ] **TASK-009**: Add Ollama connection status indicator (green/red dot)
+- [ ] **TASK-010**: Add "Ollama not running" helpful message with install link
+
+#### P3 - Distribution
+- [ ] **TASK-011**: Document Ollama install for players (or bundle installer)
+- [ ] **TASK-012**: Create first-run check - if Ollama not found, show setup guide
+
+### Fallback System Design
+```
+Player talks to NPC
+        |
+        v
+Call Ollama (localhost:11434)
+        |
+   [<3 sec?] ---YES---> Return AI response
+        |
+       NO (timeout/error)
+        |
+        v
+Get creative fallback based on:
+  - NPC type (merchant, guard, innkeeper...)
+  - Action (greeting, trade, quest, idle)
+  - Location
+  - Player reputation
+        |
+        v
+Return contextual medieval dialogue
+(NOT error messages)
+```
+
+The fallback should feel natural - not "ERROR: AI unavailable" but actual medieval NPC dialogue.
