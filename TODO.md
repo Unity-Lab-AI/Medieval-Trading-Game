@@ -266,139 +266,249 @@ TTS integration would require significant refactoring and may slow down tutorial
 
 ---
 
-# 🔮 FUTURE: Migrate Pollinations API to Local Ollama
+# 🚀 P0: OLLAMA LOCAL LLM INTEGRATION (MANDATORY)
 
-**Priority:** FUTURE ENHANCEMENT
-**Status:** 📋 INVESTIGATION COMPLETE
+> **CRITICAL DECISION:** Ollama is the PRIMARY and ONLY text generation system.
+> **Pollinations is REMOVED COMPLETELY** - not a fallback, not an option, GONE.
 
-## Current Pollinations Integration Points
+## Architecture Overview
 
-The game uses Pollinations.ai for NPC dialogue generation and TTS. Here's what would need to change:
-
-### Files That Reference Pollinations API:
-
-| File | Purpose | Lines |
-|------|---------|-------|
-| `config.js` | API endpoint config | 76-118 |
-| `src/js/npc/npc-voice.js` | Main NPC voice/chat system | 19-40, 1041 |
-| `src/js/npc/npc-dialogue.js` | Dialogue generation | 19-28 |
-| `src/js/ui/panels/settings-panel.js` | Model selection UI | 433-437, 2618-2620 |
-
-### Files That USE the API (via NPCVoiceChatSystem):
-
-| File | Usage | Function |
-|------|-------|----------|
-| `src/js/npc/npc-encounters.js` | Encounter greetings | `generateNPCResponse()` |
-| `src/js/ui/panels/people-panel.js` | NPC chat, quest completion | `generateNPCResponse()` |
-| `src/js/npc/npc-trade.js` | Trade dialogue | `generateNPCResponse()` |
-| `src/js/systems/combat/dungeon-exploration-system.js` | Dungeon NPC dialogue | `generateNPCResponse()` |
-| `src/js/systems/world/doom-world-system.js` | Doom NPC dialogue | `generateNPCResponse()` |
-| `src/js/systems/world/city-event-system.js` | City event NPCs | `generateNPCResponse()` |
-| `src/js/npc/npc-manager.js` | NPC management | `generateNPCResponse()` |
-| `src/js/npc/npc-chat-ui.js` | Chat UI | `generateNPCResponse()` |
-| `src/js/ui/panels/trade-cart-panel.js` | Trade cart dialogue | `generateNPCResponse()` |
-| `src/js/debooger/api-command-system.js` | Debug commands | Direct API calls |
-
-### Migration Steps Required:
-
-#### 1. Install Ollama Locally
-```bash
-# Windows
-winget install Ollama.Ollama
-# or download from https://ollama.ai
-
-# Pull a model (e.g., mistral, llama2, or a roleplay model)
-ollama pull mistral
-ollama pull nous-hermes-2  # Good for roleplay
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     TEXT GENERATION FLOW                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  Player Action ──► NPC System ──► Ollama (localhost:11434)     │
+│                         │              │                        │
+│                         │         [SUCCESS] ──► AI Response     │
+│                         │              │                        │
+│                         │         [TIMEOUT/FAIL]                │
+│                         │              │                        │
+│                         │              ▼                        │
+│                         └──► Hardcoded Fallbacks               │
+│                              (npc-fallbacks.json)              │
+│                                                                 │
+│  MODEL: mistral (~4GB) - Ships with game                       │
+│  TIMEOUT: 3000ms - If Ollama slow, use fallback               │
+│  POLLINATIONS: DELETED - No references anywhere                │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-#### 2. Update config.js - Add Ollama Config
+## Files to MODIFY (Delete Pollinations, Add Ollama)
+
+| File | Action | What to Do |
+|------|--------|------------|
+| `config.js:76-118` | **REPLACE** | Delete ALL Pollinations config, add Ollama ONLY |
+| `src/js/npc/npc-voice.js` | **REWRITE** | Ollama-only with fallback system |
+| `src/js/npc/npc-dialogue.js` | **REWRITE** | Ollama-only dialogue generation |
+| `src/js/ui/panels/settings-panel.js:433-437, 2618-2620` | **DELETE** | Remove Pollinations UI completely |
+
+## Files that USE generateNPCResponse() (Keep interface, change backend)
+
+| File | Usage | No Changes Needed (same interface) |
+|------|-------|-----------------------------------|
+| `src/js/npc/npc-encounters.js` | Encounter greetings | ✅ |
+| `src/js/ui/panels/people-panel.js` | NPC chat, quest completion | ✅ |
+| `src/js/npc/npc-trade.js` | Trade dialogue | ✅ |
+| `src/js/systems/combat/dungeon-exploration-system.js` | Dungeon NPCs | ✅ |
+| `src/js/systems/world/doom-world-system.js` | Doom NPCs | ✅ |
+| `src/js/systems/world/city-event-system.js` | City events | ✅ |
+| `src/js/npc/npc-manager.js` | NPC management | ✅ |
+| `src/js/npc/npc-chat-ui.js` | Chat UI | ✅ |
+| `src/js/ui/panels/trade-cart-panel.js` | Trade cart | ✅ |
+| `src/js/debooger/api-command-system.js` | Debug | Update to Ollama |
+
+---
+
+## TASK LIST - OLLAMA INTEGRATION
+
+### P0 Tasks (CRITICAL - Do First)
+
+- [ ] **TASK-001: DELETE ALL Pollinations Code from config.js**
+  - Remove lines 76-118 (pollinations config)
+  - Remove any `pollinations` references
+  - Status: PENDING
+
+- [ ] **TASK-002: Add Ollama Config to config.js**
+  ```javascript
+  api: {
+      ollama: {
+          baseUrl: 'http://localhost:11434',
+          generateEndpoint: 'http://localhost:11434/api/generate',
+          chatEndpoint: 'http://localhost:11434/api/chat',
+          model: 'mistral',
+          timeout: 3000,  // 3 seconds max
+          useFallbackOnTimeout: true
+      }
+  }
+  ```
+  - Status: PENDING
+
+- [ ] **TASK-003: Rewrite npc-voice.js generateNPCResponse() for Ollama ONLY**
+  - DELETE all Pollinations fetch code
+  - Add Ollama fetch with 3000ms timeout
+  - On timeout/error → return fallback from npc-fallbacks.json
+  - Keep existing NPC personality system prompts
+  - Status: PENDING
+
+- [ ] **TASK-004: Build Hardcoded Fallback System**
+  - Create fallback response selector
+  - Select based on: NPC type, action, location, reputation
+  - Fallbacks must feel natural, not robotic
+  - Status: PENDING
+
+### P1 Tasks (Fallback Content Creation)
+
+- [ ] **TASK-005: Create src/data/npc-fallbacks.json**
+  - Structure: `{ npcType: { action: { location: [responses] } } }`
+  - NPC Types: merchant, guard, innkeeper, blacksmith, scholar, peasant, noble, beggar, etc.
+  - Actions: greet, trade, quest, gossip, farewell, refuse, angry, friendly
+  - Status: PENDING
+
+- [ ] **TASK-006: Write 20+ Fallback Lines Per NPC Type Per Action**
+  - Each NPC type needs ~20 responses per action type
+  - Must match medieval tone/personality
+  - Include reputation variants (hostile, neutral, friendly, honored)
+  - Status: PENDING
+
+- [ ] **TASK-007: Fallback Selector Logic**
+  ```javascript
+  function getFallback(npcType, action, location, reputation) {
+      // 1. Try exact match: npcType + action + location
+      // 2. Try npcType + action
+      // 3. Try generic action
+      // 4. Return ultimate fallback
+      return randomFrom(matchedFallbacks);
+  }
+  ```
+  - Status: PENDING
+
+### P2 Tasks (UI & Settings)
+
+- [ ] **TASK-008: DELETE Pollinations UI from settings-panel.js**
+  - Remove model selection dropdown (was for Pollinations models)
+  - Remove API key input (Ollama is local, no key)
+  - Remove provider toggle (there is no toggle, Ollama ONLY)
+  - Status: PENDING
+
+- [ ] **TASK-009: Add Ollama Status Indicator**
+  - Green dot: Ollama running and responsive
+  - Red dot: Ollama not running or timeout
+  - Show in settings panel header
+  - Status: PENDING
+
+- [ ] **TASK-010: Add "Ollama Not Running" Message**
+  - If Ollama connection fails, show helpful message
+  - "Ollama is not running. NPCs will use preset dialogue."
+  - Link to Ollama download
+  - Status: PENDING
+
+### P3 Tasks (Distribution & First-Run)
+
+- [ ] **TASK-011: Document Ollama Install for Players**
+  - Add to README.md
+  - Step-by-step: Download Ollama → Install → Pull mistral → Run
+  - Windows/Mac/Linux instructions
+  - Status: PENDING
+
+- [ ] **TASK-012: First-Run Ollama Check**
+  - On game start, check if Ollama is running
+  - If not running, show setup wizard/guide
+  - Allow player to continue without Ollama (fallbacks only)
+  - Status: PENDING
+
+---
+
+## NPC System Prompts (Keep These - They Work)
+
+The existing NPC personality prompts in npc-voice.js are GOOD. Keep them for Ollama:
+
 ```javascript
-api: {
-    // Provider selection
-    provider: 'ollama', // 'pollinations' or 'ollama'
-
-    ollama: {
-        baseUrl: 'http://localhost:11434',
-        chatEndpoint: 'http://localhost:11434/api/chat',
-        model: 'mistral',  // or 'nous-hermes-2', 'llama2', etc.
-        // Ollama doesn't have built-in TTS - need separate solution
-    },
-
-    pollinations: { /* existing config */ }
-}
+// Example NPC system prompt structure (KEEP THIS)
+const npcPrompt = `You are ${npcName}, a ${npcType} in a medieval fantasy world.
+Personality: ${personality}
+Location: ${location}
+Current reputation with player: ${reputation}
+Speak in character. Keep responses under 3 sentences.
+${actionContext}`;
 ```
 
-#### 3. Create API Abstraction Layer
-Create `src/js/api/llm-provider.js`:
-```javascript
-const LLMProvider = {
-    async generateResponse(messages, options) {
-        const provider = GameConfig.api.provider;
-        if (provider === 'ollama') {
-            return this.ollamaGenerate(messages, options);
-        } else {
-            return this.pollinationsGenerate(messages, options);
-        }
-    },
+---
 
-    async ollamaGenerate(messages, options) {
-        const response = await fetch(GameConfig.api.ollama.chatEndpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: GameConfig.api.ollama.model,
-                messages: messages,
-                stream: false
-            })
-        });
-        const data = await response.json();
-        return { text: data.message.content };
+## Fallback Response Examples
+
+```json
+{
+  "merchant": {
+    "greet": {
+      "friendly": [
+        "Ah, a valued customer returns! What catches your eye today?",
+        "Welcome back, friend! I've set aside some fine wares for you.",
+        "Good to see you! Business has been slow without you."
+      ],
+      "neutral": [
+        "Welcome to my shop. Looking to buy or sell?",
+        "Greetings, traveler. See anything you like?",
+        "Ah, a customer. Have a look around."
+      ],
+      "hostile": [
+        "*eyes you suspiciously* What do you want?",
+        "You again. Make it quick.",
+        "I'm watching you. No funny business."
+      ]
+    },
+    "trade": {
+      "friendly": [
+        "For you? I'll make a special price.",
+        "Excellent choice! You have a good eye.",
+        "Deal! Pleasure doing business with you."
+      ]
     }
+  },
+  "guard": {
+    "greet": {
+      "neutral": [
+        "Move along, citizen.",
+        "Keep your weapons sheathed in the city.",
+        "No trouble today, understood?"
+      ]
+    }
+  }
 }
 ```
 
-#### 4. Update npc-voice.js
-- Replace direct Pollinations calls with `LLMProvider.generateResponse()`
-- Keep existing prompt formatting (system prompts, NPC personality, etc.)
+---
 
-#### 5. TTS Solution (Ollama doesn't include TTS)
-Options:
-- **Coqui TTS** (local, free): Python-based, runs locally
-- **Piper TTS** (local, fast): C++ based, very fast
-- **Browser Web Speech API**: Built-in, no install needed
-- **Keep Pollinations TTS**: Just migrate text generation, keep TTS remote
+## Why Ollama is PRIMARY and ONLY
 
-#### 6. Settings Panel Updates
-- Add provider toggle (Ollama vs Pollinations)
-- Add Ollama model selection dropdown
-- Add connection test button for local Ollama
+| Pollinations (REMOVED) | Ollama (ONLY OPTION) |
+|------------------------|----------------------|
+| ❌ Rate limited | ✅ No limits |
+| ❌ 402 payment errors | ✅ Free forever |
+| ❌ Requires internet | ✅ Works offline |
+| ❌ Data sent to cloud | ✅ 100% local/private |
+| ❌ Variable latency | ✅ Consistent ~500ms |
+| ❌ Service can go down | ✅ Always available |
+| ❌ Model changes randomly | ✅ You control the model |
 
-### Estimated Effort:
+**There is no fallback TO Pollinations. Pollinations is DEAD.**
 
-| Task | Effort |
-|------|--------|
-| config.js updates | 30 min |
-| LLMProvider abstraction | 2-3 hours |
-| npc-voice.js refactor | 2-3 hours |
-| npc-dialogue.js refactor | 1-2 hours |
-| Settings panel UI | 1-2 hours |
-| TTS solution (if replacing) | 3-4 hours |
-| Testing all NPC interactions | 2-3 hours |
-| **TOTAL** | **12-18 hours** |
+The fallback system uses HARDCODED responses, not another API.
 
-### Benefits of Ollama:
-- ✅ No API rate limits
-- ✅ Works offline
-- ✅ No 402 payment errors
-- ✅ Full control over model
-- ✅ Privacy - data stays local
-- ✅ Faster responses (no network latency)
+---
 
-### Drawbacks:
-- ❌ Requires local GPU for good performance
-- ❌ User must install Ollama separately
-- ❌ No built-in TTS (need separate solution)
-- ❌ Model quality varies
+## TTS Note (Separate Concern)
+
+Ollama does NOT include TTS. Options for voice:
+1. **Browser Web Speech API** - Built-in, no install
+2. **Piper TTS** - Fast local TTS
+3. **No TTS** - Text only is fine for now
+
+TTS is a SEPARATE task, not part of core Ollama integration.
+
+---
+
+*Unity AI Lab - Ollama PRIMARY, Pollinations DELETED, Hardcoded fallbacks when needed.* 🖤
 
 ---

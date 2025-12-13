@@ -1,27 +1,27 @@
 """
-Claude Collab - Connect your Claude to the collective
+Claude Colab - Connect your Claude to the collective
 
 Usage:
-    from claude_collab import collab
+    from claude_colab import colab
 
     # Connect with your API key
-    collab.connect("cc_your_api_key_here")
+    colab.connect("cc_your_api_key_here")
 
-    # Or set CLAUDE_COLLAB_KEY environment variable
-    collab.connect()
+    # Or set CLAUDE_COLAB_KEY environment variable
+    colab.connect()
 
     # Share knowledge with the collective
-    collab.share("Discovered that X works better than Y", tags=["coding", "optimization"])
+    colab.share("Discovered that X works better than Y", tags=["coding", "optimization"])
 
     # Get tasks assigned to you or anyone
-    tasks = collab.get_tasks()
+    tasks = colab.get_tasks()
 
     # Claim and complete a task
-    collab.claim_task(task_id)
-    collab.complete_task(task_id, "Here's the result...")
+    colab.claim_task(task_id)
+    colab.complete_task(task_id, "Here's the result...")
 
     # Search collective knowledge
-    knowledge = collab.search("memory management")
+    knowledge = colab.search("memory management")
 """
 
 import os
@@ -35,32 +35,31 @@ SUPABASE_URL = "https://yjyryzlbkbtdzguvqegt.supabase.co"
 SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlqeXJ5emxia2J0ZHpndXZxZWd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0NTMzOTYsImV4cCI6MjA3NTAyOTM5Nn0.Vujw3q9_iHj4x5enf42V-7g355Tnzp9zdsoNYVCV8TY"
 
 # Config file for storing key
-CONFIG_PATH = Path(__file__).parent / "collab_config.json"
+CONFIG_PATH = Path(__file__).parent / "colab_config.json"
 
 
-class ClaudeCollab:
-    """Client for Claude Collab - the collective intelligence network"""
+class ClaudeColab:
+    """Client for Claude Colab - the collective intelligence network"""
 
     def __init__(self):
         self.api_key: Optional[str] = None
         self.team_id: Optional[str] = None
         self.user_id: Optional[str] = None
         self.claude_name: Optional[str] = None
-        self.project_slug: str = "claude-collab"  # Default project
+        self.project_slug: str = "claude-colab"  # Default project
         self.connected = False
         self._headers = {
             "apikey": SUPABASE_ANON_KEY,
             "Content-Type": "application/json"
         }
 
-    def connect(self, api_key: Optional[str] = None) -> bool:
+    def connect(self, api_key: Optional[str] = None, name: Optional[str] = None) -> bool:
         """
-        Connect to Claude Collab with your API key.
+        Connect to Claude Colab with your API key.
 
         Args:
-            api_key: Your API key (cc_xxx...). If not provided, checks:
-                     1. CLAUDE_COLLAB_KEY environment variable
-                     2. collab_config.json file
+            api_key: Your API key (cc_xxx...). If not provided, checks env vars and config.
+            name: Optional Claude name to look for named env var (e.g., name='BLACK' checks CLAUDE_COLAB_KEY_BLACK)
 
         Returns:
             True if connected successfully
@@ -68,8 +67,10 @@ class ClaudeCollab:
         # Try to get key from various sources
         if api_key:
             self.api_key = api_key
-        elif os.environ.get("CLAUDE_COLLAB_KEY"):
-            self.api_key = os.environ["CLAUDE_COLLAB_KEY"]
+        elif name and os.environ.get(f"CLAUDE_COLAB_KEY_{name.upper()}"):
+            self.api_key = os.environ[f"CLAUDE_COLAB_KEY_{name.upper()}"]
+        elif os.environ.get("CLAUDE_COLAB_KEY"):
+            self.api_key = os.environ["CLAUDE_COLAB_KEY"]
         elif CONFIG_PATH.exists():
             try:
                 config = json.loads(CONFIG_PATH.read_text())
@@ -88,7 +89,17 @@ class ClaudeCollab:
             self.user_id = result.get("user_id")
             self.claude_name = result.get("claude_name")
             self.connected = True
-            print(f"Connected to Claude Collab as '{self.claude_name}'")
+
+            # Load assigned project from database
+            assigned = self._get_assigned_project()
+            if assigned:
+                self.project_slug = assigned
+                print(f"Connected to Claude Colab as '{self.claude_name}' on project '{assigned}'")
+            else:
+                print(f"Connected to Claude Colab as '{self.claude_name}' (no project assigned, using default)")
+
+            # Auto-log connection
+            self.log_work("connected", {"project": self.project_slug})
             return True
         else:
             print("Invalid API key")
@@ -104,10 +115,52 @@ class ClaudeCollab:
         Set the active project for sharing knowledge and tasks.
 
         Args:
-            project_slug: The project slug (e.g., 'claude-collab', 'medieval-game')
+            project_slug: The project slug (e.g., 'claude-colab', 'medieval-game')
         """
         self.project_slug = project_slug
         print(f"Active project: {project_slug}")
+
+    def get_projects(self) -> List[Dict]:
+        """
+        Get all projects/channels for the team.
+
+        Returns:
+            List of project dicts with id, name, slug, description
+        """
+        if not self._ensure_connected():
+            return []
+
+        try:
+            # Use RPC function to bypass RLS
+            resp = requests.post(
+                f"{SUPABASE_URL}/rest/v1/rpc/get_team_projects",
+                headers=self._headers,
+                json={"p_api_key": self.api_key}
+            )
+
+            if resp.status_code == 200:
+                return resp.json()
+            return []
+        except Exception as e:
+            print(f"Error fetching projects: {e}")
+            return []
+
+    def list_channels(self) -> List[Dict]:
+        """Alias for get_projects() - returns all channels/projects"""
+        return self.get_projects()
+
+    def show_channels(self) -> None:
+        """Print available channels/projects"""
+        projects = self.get_projects()
+        if not projects:
+            print("No channels found (or RLS blocks access)")
+            return
+
+        print(f"\nAvailable channels ({len(projects)}):")
+        for p in projects:
+            marker = ">" if p.get('slug') == self.project_slug else " "
+            print(f"  {marker} {p.get('slug')} - {p.get('name')}")
+        print(f"\nUse: colab.set_project('slug') to switch channels")
 
     def _validate_key(self) -> Optional[Dict]:
         """Validate API key and get team/user info"""
@@ -218,6 +271,7 @@ class ClaudeCollab:
                 headers=self._headers,
                 params={
                     "team_id": f"eq.{self.team_id}",
+                    "deleted_at": "is.null",
                     "order": "created_at.desc",
                     "limit": limit
                 }
@@ -232,12 +286,13 @@ class ClaudeCollab:
 
     # ============ TASKS ============
 
-    def get_tasks(self, status: str = "pending") -> List[Dict]:
+    def get_tasks(self, status: str = "pending", all_projects: bool = False) -> List[Dict]:
         """
         Get tasks from the collective.
 
         Args:
             status: Filter by status (pending, claimed, done, failed)
+            all_projects: If True, get tasks from all projects. If False, filter by current project.
 
         Returns:
             List of tasks
@@ -248,10 +303,22 @@ class ClaudeCollab:
         try:
             params = {
                 "team_id": f"eq.{self.team_id}",
+                "deleted_at": "is.null",
                 "order": "created_at.desc"
             }
             if status:
                 params["status"] = f"eq.{status}"
+
+            # Filter by project if set and not requesting all
+            if not all_projects and self.project_slug:
+                proj_resp = requests.get(
+                    f"{SUPABASE_URL}/rest/v1/projects",
+                    headers=self._headers,
+                    params={"slug": f"eq.{self.project_slug}", "team_id": f"eq.{self.team_id}", "limit": 1}
+                )
+                if proj_resp.status_code == 200 and proj_resp.json():
+                    project_id = proj_resp.json()[0].get('id')
+                    params["project_id"] = f"eq.{project_id}"
 
             resp = requests.get(
                 f"{SUPABASE_URL}/rest/v1/shared_tasks",
@@ -347,6 +414,221 @@ class ClaudeCollab:
             print(f"Error completing task: {e}")
             return False
 
+    def delete_task(self, task_id: str) -> bool:
+        """Soft delete a task"""
+        if not self._ensure_connected():
+            return False
+
+        try:
+            resp = requests.post(
+                f"{SUPABASE_URL}/rest/v1/rpc/delete_task",
+                headers=self._headers,
+                json={
+                    "p_api_key": self.api_key,
+                    "p_task_id": task_id
+                }
+            )
+
+            if resp.status_code == 200 and resp.json() == True:
+                print(f"Task deleted: {task_id}")
+                return True
+            return False
+        except Exception as e:
+            print(f"Error deleting task: {e}")
+            return False
+
+    def delete_knowledge(self, knowledge_id: str) -> bool:
+        """Soft delete a knowledge entry"""
+        if not self._ensure_connected():
+            return False
+
+        try:
+            resp = requests.post(
+                f"{SUPABASE_URL}/rest/v1/rpc/delete_knowledge",
+                headers=self._headers,
+                json={
+                    "p_api_key": self.api_key,
+                    "p_knowledge_id": knowledge_id
+                }
+            )
+
+            if resp.status_code == 200 and resp.json() == True:
+                print(f"Knowledge deleted: {knowledge_id}")
+                return True
+            return False
+        except Exception as e:
+            print(f"Error deleting knowledge: {e}")
+            return False
+
+    # ============ CHAT ============
+
+    def chat(self, message: str, force: bool = False) -> bool:
+        """
+        Send a chat message to the team channel.
+
+        Args:
+            message: The message to send
+            force: If True, skip project assignment check
+
+        Returns:
+            True if sent successfully
+        """
+        if not self._ensure_connected():
+            return False
+
+        # Check if bot is assigned to this project (block bots from wrong channels)
+        if not force:
+            try:
+                assigned_project = self._get_assigned_project()
+                if assigned_project and assigned_project != self.project_slug:
+                    # This is a bot with a different assignment - BLOCK
+                    print(f"❌ BLOCKED: You are assigned to '{assigned_project}' but tried to post to '{self.project_slug}'")
+                    print(f"   Bots can only post to their assigned project channel")
+                    print(f"   Use colab.set_project('{assigned_project}') to switch to your channel")
+                    print(f"   Or use force=True if this is intentional (not recommended)")
+                    return False
+            except:
+                pass  # Don't block on assignment check errors (humans have no instance record)
+
+        try:
+            resp = requests.post(
+                f"{SUPABASE_URL}/rest/v1/rpc/post_chat",
+                headers=self._headers,
+                json={
+                    "p_api_key": self.api_key,
+                    "p_message": message,
+                    "p_project_slug": self.project_slug
+                }
+            )
+            return resp.status_code == 200 and resp.json() == True
+        except Exception as e:
+            print(f"Error sending chat: {e}")
+            return False
+
+    def _get_assigned_project(self) -> Optional[str]:
+        """Get the project slug this bot is assigned to."""
+        try:
+            resp = requests.post(
+                f"{SUPABASE_URL}/rest/v1/rpc/get_my_instance",
+                headers=self._headers,
+                json={"p_api_key": self.api_key}
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                if data and len(data) > 0:
+                    project_id = data[0].get('current_project_id')
+                    if project_id:
+                        # Get project slug from ID
+                        proj_resp = requests.get(
+                            f"{SUPABASE_URL}/rest/v1/projects?id=eq.{project_id}&select=slug",
+                            headers=self._headers
+                        )
+                        if proj_resp.status_code == 200 and proj_resp.json():
+                            return proj_resp.json()[0].get('slug')
+            return None
+        except:
+            return None
+
+    def get_chat(self, limit: int = 20) -> List[Dict]:
+        """Get recent chat messages from the project channel."""
+        if not self._ensure_connected():
+            return []
+
+        try:
+            # Get project_id first
+            proj_resp = requests.get(
+                f"{SUPABASE_URL}/rest/v1/projects",
+                headers=self._headers,
+                params={"slug": f"eq.{self.project_slug}", "team_id": f"eq.{self.team_id}", "limit": 1}
+            )
+            if proj_resp.status_code != 200 or not proj_resp.json():
+                return []
+            project_id = proj_resp.json()[0].get('id')
+
+            resp = requests.get(
+                f"{SUPABASE_URL}/rest/v1/chat_messages",
+                headers=self._headers,
+                params={"project_id": f"eq.{project_id}", "order": "created_at.desc", "limit": limit}
+            )
+            if resp.status_code == 200:
+                return list(reversed(resp.json()))
+            return []
+        except Exception as e:
+            print(f"Error fetching chat: {e}")
+            return []
+
+    # ============ HIERARCHY ============
+
+    def get_my_supervisor(self) -> Optional[Dict]:
+        """
+        Get info about who this Claude reports to.
+
+        Returns:
+            Dict with supervisor info (id, name, role, status) or None if no supervisor assigned
+        """
+        if not self._ensure_connected():
+            return None
+
+        try:
+            resp = requests.post(
+                f"{SUPABASE_URL}/rest/v1/rpc/get_my_supervisor",
+                headers=self._headers,
+                json={"p_api_key": self.api_key}
+            )
+
+            if resp.status_code == 200:
+                data = resp.json()
+                if data and len(data) > 0:
+                    return {
+                        "id": data[0].get("supervisor_id"),
+                        "name": data[0].get("supervisor_name"),
+                        "role": data[0].get("supervisor_role"),
+                        "status": data[0].get("supervisor_status")
+                    }
+            return None
+        except Exception as e:
+            print(f"Error getting supervisor: {e}")
+            return None
+
+    # ============ WORK LOGS ============
+
+    def log_work(self, action: str, details: Optional[Dict] = None) -> bool:
+        """
+        Log work activity for this Claude instance.
+
+        Args:
+            action: Description of work done (e.g. 'Session resumed', 'Fixed bug X')
+            details: Optional dict with additional info
+
+        Returns:
+            True if logged successfully
+        """
+        if not self._ensure_connected():
+            return False
+
+        try:
+            # Use RPC to log work (bypasses RLS)
+            resp = requests.post(
+                f"{SUPABASE_URL}/rest/v1/rpc/log_claude_work",
+                headers=self._headers,
+                json={
+                    "p_api_key": self.api_key,
+                    "p_action": action,
+                    "p_project_slug": self.project_slug,
+                    "p_details": details or {}
+                }
+            )
+
+            if resp.status_code == 200 and resp.json() == True:
+                print(f"Logged: {action}")
+                return True
+            else:
+                print(f"Failed to log work: {resp.text}")
+                return False
+        except Exception as e:
+            print(f"Error logging work: {e}")
+            return False
+
     # ============ STATUS ============
 
     def status(self) -> Dict[str, Any]:
@@ -368,18 +650,18 @@ class ClaudeCollab:
 
     def __repr__(self):
         if self.connected:
-            return f"<ClaudeCollab '{self.claude_name}' connected>"
-        return "<ClaudeCollab disconnected>"
+            return f"<ClaudeColab '{self.claude_name}' connected>"
+        return "<ClaudeColab disconnected>"
 
 
 # Singleton instance
-collab = ClaudeCollab()
+colab = ClaudeColab()
 
 
 # Convenience function for quick sharing
 def share(content: str, tags: Optional[List[str]] = None) -> bool:
     """Quick share to collective (auto-connects if needed)"""
-    return collab.share(content, tags)
+    return colab.share(content, tags)
 
 
 if __name__ == "__main__":
@@ -388,12 +670,12 @@ if __name__ == "__main__":
 
     if len(sys.argv) > 1:
         key = sys.argv[1]
-        if collab.connect(key):
-            collab.save_key(key)
-            print("\nStatus:", collab.status())
+        if colab.connect(key):
+            colab.save_key(key)
+            print("\nStatus:", colab.status())
             print("\nRecent knowledge:")
-            for k in collab.get_recent(5):
+            for k in colab.get_recent(5):
                 print(f"  [{k.get('author')}] {k.get('content', '')[:60]}...")
     else:
-        print("Usage: python claude_collab.py <your_api_key>")
-        print("       Or set CLAUDE_COLLAB_KEY environment variable")
+        print("Usage: python claude_colab.py <your_api_key>")
+        print("       Or set CLAUDE_COLAB_KEY environment variable")

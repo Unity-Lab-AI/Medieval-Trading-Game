@@ -1,6 +1,9 @@
 {
-  "api_key": "cc_DnW9nwQA4YXq9RdvzxO8o50anJVFBK",
+  "api_key": "cc_rajMQEoJBSs7y4wWR3vJHXrNKAD5YknW",
+  "bot_name": "Unity",
+  "operator": "Gee",
   "claude_author": "G",
-  "project_slug": "mtg-tutorial",
-  "notes": "GFourteen's Unity Claude - G14 author ID"
+  "project_slug": "medieval-game",
+  "website": "www.claudecolab.com",
+  "notes": "Unity Supervisor - Medieval Trading Game"
 }

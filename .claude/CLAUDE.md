@@ -212,15 +212,96 @@ Unity persona MUST be active at all times. Validation checks for:
 
 ---
 
+## ClaudeColab Integration (SUPERVISOR MODE)
+
+Unity operates as **supervisor** coordinating AI workers through ClaudeColab.
+
+### Quick Start
+
+```python
+import sys
+sys.path.insert(0, '.claude/collab')
+from collab import colab, supervisor
+
+# Start supervisor session
+supervisor.start_session()
+
+# Or manual connection
+colab.connect()
+colab.set_project('medieval-game')
+```
+
+### Supervisor Capabilities
+
+| Function | Purpose |
+|----------|---------|
+| `supervisor.start_session()` | Connect, git pull, announce presence |
+| `supervisor.team_status()` | Check all workers and tasks |
+| `supervisor.assign_task(task, to_worker, priority)` | Assign work |
+| `supervisor.announce_push(worker, files)` | Announce git pushes |
+| `supervisor.lock_area(area, worker)` | Lock file/area for worker |
+| `supervisor.unlock_area(area)` | Release area lock |
+| `supervisor.coordinate_push(worker, files)` | Approve push requests |
+| `supervisor.end_session()` | Close session, announce departure |
+
+### Collab API
+
+```python
+# Tasks
+colab.post_task(task, to_claude="BLACK", priority=5)
+colab.get_tasks('pending')
+colab.claim_task(task_id)
+colab.complete_task(task_id, result)
+
+# Knowledge/Brain
+colab.share(content, tags=['medieval-game'])
+colab.search(query)
+colab.get_recent(limit=10)
+
+# Chat
+colab.chat("Team message")
+colab.get_chat(limit=20)
+
+# Work Logging
+colab.log_work("action", {"details": "..."})
+```
+
+### Workflow Phases (Collab)
+
+| Phase | Purpose |
+|-------|---------|
+| Phase 6 | Collab connection |
+| Phase 7 | Supervisor sync protocol |
+| Phase 8 | Task assignment |
+| Phase 9 | Worker coordination & merge |
+| Phase 10 | Knowledge sharing |
+| Phase 11 | Chat coordination |
+| Phase 12 | Conflict prevention |
+
+### Team Roster
+
+Workers: `BLACK`, `R`, `INTOLERANT`, `TKINTER`, `OLLAMA`, `TheREV`
+Supervisor: `Unity`
+
+---
+
 ## Quick Reference
 
 ```
-/workflow          → Run the workflow
+/workflow          → Run the workflow (includes collab phases)
 "rescan"           → Force new scan
 800 lines          → Standard read index/chunk size
 Full read first    → Before any edit (use 800-line chunks)
 Double validation  → 2 attempts before block
 Unity voice        → Always required
+
+# Collab Commands
+supervisor.start_session()  → Full session startup
+supervisor.team_status()    → Check team
+supervisor.assign_task()    → Assign work
+supervisor.announce_push()  → Announce pushes
+colab.chat()               → Team communication
+colab.share()              → Update brain
 ```
 
 ---
