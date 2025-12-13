@@ -1,0 +1,288 @@
+/* ═══════════════════════════════════════════════════════════════
+   CSS VARIABLES - the dark palette of our design system
+   ═══════════════════════════════════════════════════════════════
+   Version: 0.91.00 | Unity AI Lab
+   Creators: Hackall360, Sponge, GFourteen
+   www.unityailab.com | github.com/Unity-Lab-AI/Medieval-Trading-Game
+   unityailabcontact@gmail.com
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+    /* ═══════════════════════════════════════════════════════════
+       🎨 COLORS - The shades of our digital darkness
+       ═══════════════════════════════════════════════════════════ */
+
+    /* Primary palette - our signature cyan */
+    --color-primary: #4fc3f7;
+    --color-primary-light: #81d4fa;
+    --color-primary-dark: #29b6f6;
+    --color-primary-glow: rgba(79, 195, 247, 0.4);
+
+    /* Secondary palette */
+    --color-secondary: #7c4dff;
+    --color-secondary-light: #b388ff;
+    --color-secondary-dark: #651fff;
+
+    /* Accent colors */
+    --color-accent: #00ffff;
+    --color-accent-glow: rgba(0, 255, 255, 0.3);
+
+    /* Status colors */
+    --color-success: #4caf50;
+    --color-success-light: #81c784;
+    --color-success-dark: #388e3c;
+
+    --color-warning: #ff9800;
+    --color-warning-light: #ffb74d;
+    --color-warning-dark: #f57c00;
+
+    --color-danger: #e53935;
+    --color-danger-light: #ef5350;
+    --color-danger-dark: #c62828;
+
+    --color-info: #2196f3;
+    --color-info-light: #64b5f6;
+    --color-info-dark: #1976d2;
+
+    /* Game-specific colors */
+    --color-gold: #ffd700;
+    --color-gold-light: #ffeb3b;
+    --color-gold-dark: #ffc107;
+    --color-gold-glow: rgba(255, 215, 0, 0.4);
+
+    --color-health: #e53935;
+    --color-hunger: #ff9800;
+    --color-thirst: #2196f3;
+    --color-stamina: #9c27b0;
+    --color-happiness: #e91e63;
+
+    /* Rarity colors */
+    --color-rarity-common: #9e9e9e;
+    --color-rarity-uncommon: #4caf50;
+    --color-rarity-rare: #2196f3;
+    --color-rarity-epic: #9c27b0;
+    --color-rarity-legendary: #ff9800;
+
+    /* ═══════════════════════════════════════════════════════════
+       🌑 BACKGROUNDS - Layers of the abyss
+       ═══════════════════════════════════════════════════════════ */
+
+    /* Base backgrounds */
+    --bg-darkest: #0a0a14;
+    --bg-darker: #0f0f1a;
+    --bg-dark: #1a1a2e;
+    --bg-medium: #252540;
+    --bg-light: #2d2d44;
+
+    /* Panel backgrounds */
+    --bg-panel: rgba(37, 37, 64, 0.95);
+    --bg-panel-solid: #252540;
+    --bg-panel-hover: rgba(45, 45, 68, 0.95);
+
+    /* Overlay backgrounds */
+    --bg-overlay: rgba(0, 0, 0, 0.7);
+    --bg-modal: rgba(15, 15, 26, 0.95);
+
+    /* Gradient backgrounds */
+    --gradient-dark: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    --gradient-panel: linear-gradient(180deg, rgba(37, 37, 64, 0.95) 0%, rgba(26, 26, 46, 0.95) 100%);
+    --gradient-button: linear-gradient(135deg, #4fc3f7 0%, #29b6f6 100%);
+    --gradient-gold: linear-gradient(135deg, #ffd700 0%, #ffc107 100%);
+
+    /* ═══════════════════════════════════════════════════════════
+       ✍️ TEXT - Words etched in light
+       ═══════════════════════════════════════════════════════════ */
+
+    --text-primary: #ecf0f1;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --text-muted: rgba(255, 255, 255, 0.4);
+    --text-disabled: rgba(255, 255, 255, 0.25);
+
+    /* Text on light backgrounds */
+    --text-dark: #1a1a2e;
+    --text-dark-secondary: rgba(26, 26, 46, 0.7);
+
+    /* ═══════════════════════════════════════════════════════════
+       📏 BORDERS - Lines that define our world
+       ═══════════════════════════════════════════════════════════ */
+
+    --border-subtle: rgba(255, 255, 255, 0.1);
+    --border-light: rgba(255, 255, 255, 0.2);
+    --border-medium: rgba(255, 255, 255, 0.3);
+    --border-glow: rgba(79, 195, 247, 0.3);
+    --border-glow-strong: rgba(79, 195, 247, 0.5);
+
+    /* ═══════════════════════════════════════════════════════════
+       📐 SPACING - The void between elements
+       ═══════════════════════════════════════════════════════════ */
+
+    --space-xxs: 0.125rem;  /* 2px */
+    --space-xs: 0.25rem;    /* 4px */
+    --space-sm: 0.5rem;     /* 8px */
+    --space-md: 1rem;       /* 16px */
+    --space-lg: 1.5rem;     /* 24px */
+    --space-xl: 2rem;       /* 32px */
+    --space-xxl: 3rem;      /* 48px */
+
+    /* ═══════════════════════════════════════════════════════════
+       🔘 BORDER RADIUS - Softening the edges
+       ═══════════════════════════════════════════════════════════ */
+
+    --radius-xs: 2px;
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --radius-round: 50%;
+    --radius-pill: 9999px;
+
+    /* ═══════════════════════════════════════════════════════════
+       🌟 SHADOWS - Depth in the darkness
+       ═══════════════════════════════════════════════════════════ */
+
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.4);
+    --shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.5);
+
+    --shadow-glow: 0 0 20px var(--color-primary-glow);
+    --shadow-glow-gold: 0 0 20px var(--color-gold-glow);
+
+    --shadow-inset: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+
+    /* ═══════════════════════════════════════════════════════════
+       TRANSITIONS - Smooth movements through time
+       ═══════════════════════════════════════════════════════════ */
+
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.3s ease;
+    --transition-slow: 0.5s ease;
+    --transition-bounce: 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    /* ═══════════════════════════════════════════════════════════
+       📚 Z-INDEX - Stacking order of the cosmos
+       ═══════════════════════════════════════════════════════════ */
+
+    --z-base: 1;
+    --z-dropdown: 10;
+    --z-sticky: 20;
+    --z-fixed: 30;
+    --z-panel: 50;
+    --z-overlay: 100;
+    --z-modal: 200;
+    --z-tooltip: 300;
+    --z-notification: 400;
+    --z-max: 9999;
+
+    /* ═══════════════════════════════════════════════════════════
+       📝 TYPOGRAPHY - The voice of our text
+       ═══════════════════════════════════════════════════════════ */
+
+    --font-family-primary: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --font-family-mono: 'Consolas', 'Monaco', 'Courier New', monospace;
+    --font-family-display: 'MedievalSharp', 'Segoe UI', serif;
+
+    --font-size-xs: 0.7rem;   /* 11.2px */
+    --font-size-sm: 0.85rem;  /* 13.6px */
+    --font-size-md: 1rem;     /* 16px */
+    --font-size-lg: 1.1rem;   /* 17.6px */
+    --font-size-xl: 1.25rem;  /* 20px */
+    --font-size-xxl: 1.5rem;  /* 24px */
+    --font-size-huge: 2rem;   /* 32px */
+
+    --font-weight-light: 300;
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-bold: 700;
+
+    --line-height-tight: 1.2;
+    --line-height-normal: 1.5;
+    --line-height-loose: 1.8;
+
+    /* ═══════════════════════════════════════════════════════════
+       📱 BREAKPOINTS - Responsive thresholds
+       ═══════════════════════════════════════════════════════════ */
+
+    --breakpoint-sm: 576px;
+    --breakpoint-md: 768px;
+    --breakpoint-lg: 992px;
+    --breakpoint-xl: 1200px;
+    --breakpoint-xxl: 1400px;
+
+    /* ═══════════════════════════════════════════════════════════
+       🎮 GAME-SPECIFIC SIZES
+       ═══════════════════════════════════════════════════════════ */
+
+    --panel-width-sm: 200px;
+    --panel-width-md: 300px;
+    --panel-width-lg: 400px;
+    --panel-width-xl: 500px;
+
+    --top-bar-height: 44px;
+    --bottom-bar-height: 60px;
+
+    --map-width: 1200px;
+    --map-height: 900px;
+
+    --vital-bar-height: 8px;
+    --progress-bar-height: 6px;
+
+    /* ═══════════════════════════════════════════════════════════
+       🎨 THEME VARIATIONS (for future theme support)
+       ═══════════════════════════════════════════════════════════ */
+
+    /* High contrast mode overrides */
+    --hc-bg: #000000;
+    --hc-text: #ffffff;
+    --hc-border: #ffffff;
+
+    /* Colorblind-friendly alternatives */
+    --cb-success: #0077bb;
+    --cb-warning: #ee7733;
+    --cb-danger: #cc3311;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ACCESSIBILITY - Reduced motion preference
+   ═══════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --transition-fast: 0s;
+        --transition-normal: 0s;
+        --transition-slow: 0s;
+        --transition-bounce: 0s;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   🌙 DARK THEME (default) - already applied above
+   ═══════════════════════════════════════════════════════════════ */
+
+[data-theme="dark"] {
+    /* Dark theme is the default, no changes needed */
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   🔆 HIGH CONTRAST THEME
+   ═══════════════════════════════════════════════════════════════ */
+
+[data-theme="high-contrast"] {
+    --bg-darkest: #000000;
+    --bg-darker: #000000;
+    --bg-dark: #000000;
+    --bg-panel: #000000;
+
+    --text-primary: #ffffff;
+    --text-secondary: #ffffff;
+    --text-muted: #cccccc;
+
+    --border-subtle: #ffffff;
+    --border-light: #ffffff;
+    --border-glow: #ffffff;
+
+    --color-primary: #00ffff;
+    --color-success: #00ff00;
+    --color-warning: #ffff00;
+    --color-danger: #ff0000;
+}

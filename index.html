@@ -3,110 +3,418 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trading Game</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Medieval Trading Game</title>
+
+    <!-- SEO & Social Media Meta Tags -->
+    <meta name="description" content="A browser-based medieval trading simulation by Unity AI Lab. Buy low, sell high, build your empire, and try not to starve. 42 locations, 200+ items, quests, combat, and existential dread.">
+    <meta name="author" content="Unity AI Lab - Hackall360, Sponge, GFourteen">
+    <meta name="keywords" content="medieval, trading, game, browser game, simulation, rpg, economy, merchant, unity ai lab">
+    <meta name="creator" content="Hackall360, Sponge, GFourteen">
+    <meta name="publisher" content="Unity AI Lab">
+
+    <!-- Open Graph (Facebook, Discord, LinkedIn, etc.) -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.unityailab.com/Medieval-Trading-Game/">
+    <meta property="og:title" content="Medieval Trading Game | Unity AI Lab">
+    <meta property="og:description" content="A browser-based medieval trading simulation. Buy low, sell high, build your empire, and try not to starve. Created by Hackall360, Sponge, GFourteen.">
+    <meta property="og:image" content="https://www.unityailab.com/Medieval-Trading-Game/assets/images/SocialImage.jpg">
+    <meta property="og:image:alt" content="Medieval Trading Game - Unity AI Lab">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name" content="Unity AI Lab">
+    <meta property="og:see_also" content="https://www.unityailab.com">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://www.unityailab.com/Medieval-Trading-Game/">
+    <meta name="twitter:title" content="Medieval Trading Game | Unity AI Lab">
+    <meta name="twitter:description" content="A browser-based medieval trading simulation. Buy low, sell high, build your empire. Created by Hackall360, Sponge, GFourteen.">
+    <meta name="twitter:image" content="https://www.unityailab.com/Medieval-Trading-Game/assets/images/SocialImage.jpg">
+    <meta name="twitter:image:alt" content="Medieval Trading Game - Unity AI Lab">
+    <meta name="twitter:creator" content="@UnityAILab">
+
+    <!-- Contact & Support -->
+    <meta name="contact" content="unityailabcontact@gmail.com">
+    <link rel="author" href="https://www.unityailab.com">
+    <link rel="canonical" href="https://www.unityailab.com/Medieval-Trading-Game/">
+    <!-- CSS Variables (must load first) -->
+    <link rel="stylesheet" href="src/css/base/variables.css?v=0.91.00">
+    <!-- Main stylesheets -->
+    <link rel="stylesheet" href="src/css/styles.css?v=0.91.00">
+    <link rel="stylesheet" href="src/css/ui-enhancements.css?v=0.91.00">
+    <link rel="stylesheet" href="src/css/npc-systems.css?v=0.91.00">
+    <!-- Z-Index System - MUST be last to override everything -->
+    <link rel="stylesheet" href="src/css/z-index-system.css?v=0.91.00">
+    <!-- 🎓 Tutorial System Styles -->
+    <link rel="stylesheet" href="src/css/tutorial.css?v=0.91.00">
+    <!-- CONFIG MUST LOAD FIRST - All other scripts depend on it -->
+    <script src="config.js?v=0.91.00"></script>
+    <!-- Z-INDEX CONSTANTS - JS mirror of z-index-system.css -->
+    <script src="src/js/config/z-index-constants.js?v=0.91.00"></script>
+    <script>
+        // Update document title from config immediately
+        if (typeof GameConfig !== 'undefined') {
+            document.title = GameConfig.game.name;
+        }
+    </script>
+    <!-- Debooger visibility controlled by config -->
+    <script>
+        // NUCLEAR OPTION - Remove debooger elements entirely when disabled
+        (function() {
+            var deboogerEnabled = (typeof GameConfig !== 'undefined' && GameConfig.debooger && GameConfig.debooger.enabled === true);
+            console.log('🔒 Debooger config check: enabled =', deboogerEnabled);
+            if (!deboogerEnabled) {
+                // Inject CSS to hide AND run script to DELETE elements after DOM loads
+                var style = document.createElement('style');
+                style.id = 'debooger-hide-style';
+                style.innerHTML = '#toggle-debooger-console, #debooger-console { display: none !important; visibility: hidden !important; }';
+                document.head.appendChild(style);
+
+                // DELETE the elements entirely once DOM is ready
+                document.addEventListener('DOMContentLoaded', function() {
+                    var btn = document.getElementById('toggle-debooger-console');
+                    var panel = document.getElementById('debooger-console');
+                    if (btn) btn.remove();
+                    if (panel) panel.remove();
+                    console.log('🔒 Debooger elements REMOVED from DOM');
+                });
+                console.log('🔒 Debooger DISABLED - will remove elements');
+            } else {
+                console.log('🐛 Debooger ENABLED - visible for development');
+            }
+        })();
+    </script>
 </head>
 <body>
-    <div id="game-container">
-        <header id="game-header">
-            <h1>Trading Game</h1>
-            <div id="player-info">
-                <div class="player-main-info">
-                    <span id="player-name">Player</span>
-                    <span id="player-gold">Gold: 100</span>
-                    <span id="game-time" class="time-display">Day 1, 08:00</span>
-                </div>
-                <div class="player-attributes">
-                    <span class="attribute-display" title="Strength">💪 <span id="player-strength">5</span></span>
-                    <span class="attribute-display" title="Intelligence">🧠 <span id="player-intelligence">5</span></span>
-                    <span class="attribute-display" title="Charisma">😊 <span id="player-charisma">5</span></span>
-                    <span class="attribute-display" title="Endurance">🏃 <span id="player-endurance">5</span></span>
-                    <span class="attribute-display" title="Luck">🍀 <span id="player-luck">5</span></span>
-                </div>
-                <div class="quick-actions" aria-label="Quick actions">
-                    <button id="quick-save-btn" class="quick-action-btn" title="Quick Save (Ctrl+S)">💾 Quick Save</button>
-                    <button id="quick-load-btn" class="quick-action-btn" title="Quick Load (Ctrl+L)">📂 Quick Load</button>
-                    <button id="undo-btn" class="quick-action-btn" title="Undo last action (Ctrl+Z)">↩️ Undo</button>
-                    <button id="redo-btn" class="quick-action-btn" title="Redo last action (Ctrl+Shift+Z)">↪️ Redo</button>
-                    <button id="controls-help-btn" class="quick-action-btn" title="Show control help (Shift + /)">❔ Controls</button>
-                    <button id="onboarding-btn" class="quick-action-btn" title="Replay the guided tour">🎓 Tour</button>
-                    <button id="in-game-settings-btn" class="quick-action-btn" title="Adjust accessibility and preferences">⚙️ Settings</button>
-                    <div id="status-banner" class="status-banner hidden" role="status" aria-live="polite">Saved</div>
-                    <div id="controller-status" class="controller-status" role="status" aria-live="polite">Controller: None</div>
-                </div>
-                <div class="save-indicators" aria-live="polite">
-                    <span id="autosave-indicator" class="save-indicator hidden">
-                        <span class="spinner" aria-hidden="true"></span>
-                        <span class="autosave-text">Auto-saving...</span>
-                    </span>
-                    <span id="last-save-time" class="save-indicator subtle">Last save: never</span>
-                </div>
-            </div>
-        </header>
-
-        <section id="world-status" aria-label="World status">
-            <div class="status-pill">
-                <span class="pill-label">Weather</span>
-                <span id="weather-label">Calm Skies</span>
-            </div>
-            <div class="status-pill">
-                <span class="pill-label">Season</span>
-                <span id="season-label">Spring</span>
-            </div>
-            <div class="status-pill">
-                <span class="pill-label">Cycle</span>
-                <span id="cycle-label">Dawn</span>
-            </div>
-            <div class="status-pill">
-                <span class="pill-label">Stance</span>
-                <span id="animation-state">Idle</span>
-            </div>
-            <div class="status-pill">
-                <span class="pill-label">Momentum</span>
-                <span id="animation-momentum">Stable</span>
-            </div>
-            <div class="status-pill atmosphere" id="atmosphere-note">Atmosphere steady and safe.</div>
-            <div class="status-pill fidelity">
-                <span class="pill-label">Fidelity</span>
-                <span id="quality-label">High</span>
-            </div>
-        </section>
-
-        <main id="game-main">
-            <!-- Game World Area -->
-            <section id="game-world">
-                <!-- World Map Container -->
-                <div id="map-container" class="map-container">
-                    <canvas id="world-map-canvas" width="800" height="600"></canvas>
-                    <div id="map-controls" class="map-controls">
-                        <button id="zoom-in-btn" title="Zoom In">+</button>
-                        <button id="zoom-out-btn" title="Zoom Out">-</button>
-                        <button id="reset-view-btn" title="Reset View">⟲</button>
-                        <button id="toggle-grid-btn" title="Toggle Grid">⊞</button>
+    <!-- Overlay Container for all modals and overlays -->
+    <div id="overlay-container">
+        <!-- World Map Overlay -->
+        <div id="world-map-overlay" class="overlay">
+            <div class="overlay-content">
+                <button class="overlay-close" data-close-overlay="world-map-overlay">×</button>
+                <div class="map-container">
+                    <!-- HTML-based map container - GameWorldRenderer renders here -->
+                    <div id="world-map-overlay-html" class="html-map-container"></div>
+                    <div class="map-controls">
+                        <button id="overlay-zoom-in-btn">+</button>
+                        <button id="overlay-zoom-out-btn">-</button>
+                        <button id="overlay-reset-view-btn">⟲</button>
+                        <button id="overlay-toggle-grid-btn">⊞</button>
+                        <button id="overlay-center-player-btn">🎯</button>
                     </div>
                 </div>
-                
-                <!-- Location Details Panel -->
-                <div id="location-details" class="location-details-panel hidden">
-                    <!-- Location details will be populated by JavaScript -->
+                <div id="overlay-location-details" class="location-details-panel hidden">
+                    <!-- ✨ JS fills this with location info -->
                 </div>
-                
-                <!-- Legacy game canvas (kept for compatibility) -->
-                <canvas id="game-canvas" width="800" height="600" class="hidden"></canvas>
-            </section>
+            </div>
+        </div>
 
-            <!-- UI Panels Container -->
+        <!-- ⚙️ Settings Panel is now dynamically created by settings-panel.js -->
+        <!-- The unified SettingsPanel handles all settings with proper z-index -->
+
+        <!-- 👤 Character Creation Overlay - define your tragic protagonist -->
+        <div id="character-creation-overlay" class="overlay">
+            <div class="overlay-content">
+                <button class="overlay-close" data-close-overlay="character-creation-overlay">×</button>
+                <h2>Create Your Character</h2>
+                <div id="character-creation-content">
+                    <!-- Character creation will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Market Overlay -->
+        <div id="market-overlay" class="overlay">
+            <div class="overlay-content">
+                <button class="overlay-close" data-close-overlay="market-overlay">×</button>
+                <h2>Market</h2>
+                <div id="market-overlay-content">
+                    <!-- Market content will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Exploration Overlay REMOVED - moved outside overlay-container for visibility -->
+
+        <!-- Inventory Overlay -->
+        <div id="inventory-overlay" class="overlay">
+            <div class="overlay-content">
+                <button class="overlay-close" data-close-overlay="inventory-overlay">×</button>
+                <h2>Inventory</h2>
+                <div id="inventory-overlay-content">
+                    <!-- Inventory content will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 🚶 Travel Progress Overlay - the journey (and the suffering) -->
+        <div id="travel-progress-overlay" class="overlay">
+            <div class="overlay-content">
+                <h2>Travel Progress</h2>
+                <div class="travel-progress">
+                    <h3 id="travel-destination">Traveling to...</h3>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="travel-progress-fill"></div>
+                    </div>
+                    <p>Distance: <span id="travel-distance">0</span> / <span id="travel-total-distance">0</span> miles</p>
+                    <p>Time Remaining: <span id="travel-time-remaining">0</span> hours</p>
+                    <p>Stats Drained:</p>
+                    <div class="stat-drain">
+                        <p>Hunger: <span id="hunger-drain">0</span></p>
+                        <p>Thirst: <span id="thirst-drain">0</span></p>
+                        <p>Fatigue: <span id="fatigue-drain">0</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🎲 Random Encounter Overlay - plot twists incoming -->
+        <div id="random-encounter-overlay" class="overlay">
+            <div class="overlay-content">
+                <h2>Random Encounter</h2>
+                <div class="encounter-content">
+                    <h3 id="encounter-title">Encounter Title</h3>
+                    <p id="encounter-description">Encounter description</p>
+                    <div class="encounter-choices" id="encounter-choices">
+                        <!-- Encounter choices will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🏆 Achievement Panel - flex your accomplishments -->
+        <div id="achievement-overlay" class="achievement-overlay" onclick="if(event.target === this) closeAchievementPanel()">
+            <div class="achievement-panel" onclick="event.stopPropagation()">
+                <button class="panel-close-x" onclick="closeAchievementPanel(); event.stopPropagation();">×</button>
+                <div class="achievement-panel-header">
+                    <div>
+                        <h2 class="achievement-panel-title">🏆 Achievements</h2>
+                        <div class="achievement-progress">
+                            <span id="achievement-progress-text">0 / 0 (0%)</span>
+                            <div class="achievement-progress-bar">
+                                <div id="achievement-progress-fill" class="achievement-progress-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="achievement-categories">
+                    <button class="achievement-category-btn active" data-category="all" onclick="filterAchievements(this, 'all')" title="Show all achievements">All</button>
+                    <button class="achievement-category-btn" data-category="wealth" onclick="filterAchievements(this, 'wealth')" title="Show wealth-related achievements">💰 Wealth</button>
+                    <button class="achievement-category-btn" data-category="trading" onclick="filterAchievements(this, 'trading')" title="Show trading-related achievements">🤝 Trading</button>
+                    <button class="achievement-category-btn" data-category="travel" onclick="filterAchievements(this, 'travel')" title="Show travel-related achievements">🗺️ Travel</button>
+                    <button class="achievement-category-btn" data-category="survival" onclick="filterAchievements(this, 'survival')" title="Show survival-related achievements">🛡️ Survival</button>
+                    <button class="achievement-category-btn" data-category="collection" onclick="filterAchievements(this, 'collection')" title="Show collection-related achievements">🎒 Collection</button>
+                    <button class="achievement-category-btn" data-category="time" onclick="filterAchievements(this, 'time')" title="Show time-based achievements">⏰ Time</button>
+                    <button class="achievement-category-btn" data-category="special" onclick="filterAchievements(this, 'special')" title="Show special achievements">✨ Special</button>
+                    <button class="achievement-category-btn leaderboard-btn" onclick="showLeaderboardPanel()" title="View global leaderboard">🏆 Hall of Champions</button>
+                </div>
+
+                <div id="achievement-grid" class="achievement-grid">
+                    <!-- Achievements will be populated by JavaScript -->
+                </div>
+
+                <div class="panel-footer">
+                    <button class="panel-close-btn-footer" onclick="closeAchievementPanel(); event.stopPropagation();" title="Close achievement panel">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 💀 Game Over Screen - the final curtain -->
+        <div id="game-over-overlay" class="game-over-overlay hidden">
+            <div class="game-over-panel">
+                <div class="game-over-header">
+                    <h1 id="game-over-title">💀 GAME OVER 💀</h1>
+                    <p id="game-over-cause" class="game-over-cause">your journey ends here...</p>
+                </div>
+                <div class="game-over-stats">
+                    <h3>📊 Final Reckoning</h3>
+                    <div class="stats-grid" id="game-over-stats-grid">
+                        <!-- Stats populated by JavaScript -->
+                    </div>
+                </div>
+                <div class="game-over-ranking" id="game-over-ranking">
+                    <!-- Ranking info populated by JavaScript -->
+                </div>
+                <div class="game-over-actions">
+                    <button class="game-over-btn primary" onclick="closeGameOverAndRestart()" title="Start a new game">🔄 Try Again</button>
+                    <button class="game-over-btn" onclick="closeGameOverToMenu()" title="Return to main menu">🏠 Main Menu</button>
+                    <button class="game-over-btn" onclick="showLeaderboardFromGameOver()" title="View the Hall of Champions">🏆 View Leaderboard</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🏚️ Exploration Panel - OUTSIDE overlay-container for guaranteed visibility -->
+    <div id="exploration-overlay" class="exploration-modal hidden">
+        <div class="exploration-modal-content">
+            <button class="exploration-close-btn" onclick="DungeonExplorationSystem.closeExploration()">&times;</button>
+            <div id="exploration-overlay-content">
+                <!-- Populated by DungeonExplorationSystem.renderExplorationUI() -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ✨ Perk Selection Modal - OUTSIDE overlay-container so it works during game setup -->
+    <div id="perk-selection-modal" class="overlay">
+        <div class="overlay-content perk-modal-content">
+            <div class="perk-modal-header">
+                <h2>⚡ Choose Your Perks</h2>
+                <button class="overlay-close" onclick="closePerkModal()">×</button>
+            </div>
+            <div class="perk-modal-body">
+                <div class="perk-modal-info">
+                    <p>Select up to 2 perks that will shape your character's journey. Each perk provides unique bonuses and penalties.</p>
+                    <div class="perk-selection-counter">
+                        <span class="counter-label">Selected:</span>
+                        <span class="counter-value"><span id="modal-selected-count">0</span> / 2</span>
+                    </div>
+                    <p class="scroll-hint">Scroll down for more perks</p>
+                </div>
+                <div id="perks-container" class="perks-modal-grid">
+                    <!-- Perks will be populated by JavaScript -->
+                </div>
+            </div>
+            <div class="perk-modal-footer">
+                <button type="button" class="btn-secondary" onclick="closePerkModal()" title="Cancel perk selection">Cancel</button>
+                <button type="button" id="confirm-perk-btn" class="btn-primary" onclick="confirmPerkSelection()" title="Confirm your perk choices">Confirm Selection</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-container" class="hidden">
+        <!-- 🖤 TOP BAR - Time controls, title, and info widgets -->
+        <div id="top-bar">
+            <div class="time-controls-top">
+                <button id="pause-btn" class="time-btn">⏸️</button>
+                <select id="speed-selector" class="speed-dropdown" title="Select game speed multiplier">
+                    <option value="NORMAL">1x Normal</option>
+                    <option value="FAST">2x Fast</option>
+                    <option value="VERY_FAST">4x Faster</option>
+                </select>
+            </div>
+            <div class="top-bar-title" id="top-bar-title">Medieval Trading Game</div>
+            <div class="top-bar-widgets" id="top-bar-widgets">
+                <!-- Date and weather indicators will be added here by JS -->
+            </div>
+        </div>
+
+        <!-- 🎮 MAIN GAME LAYOUT - side by side -->
+        <div id="game-layout">
+            <!-- 🗺️ GAME WORLD - now takes up most of the screen -->
+            <main id="game-main">
+                <section id="game-world">
+                    <!-- World Map Container - EXPANDED -->
+                    <div id="map-container" class="map-container">
+                        <!-- 🖤 Using HTML-based GameWorldRenderer - canvas removed -->
+                        <div id="map-controls" class="map-controls">
+                            <button id="zoom-in-btn" onclick="if(GameWorldRenderer) GameWorldRenderer.zoomIn()">+</button>
+                            <button id="zoom-out-btn" onclick="if(GameWorldRenderer) GameWorldRenderer.zoomOut()">-</button>
+                            <button id="reset-view-btn" onclick="if(GameWorldRenderer) GameWorldRenderer.resetView()">⟲</button>
+                            <button id="fullscreen-btn" onclick="if(GameWorldRenderer) GameWorldRenderer.toggleFullscreen()">⛶</button>
+                            <button id="center-on-player-btn" onclick="if(GameWorldRenderer) GameWorldRenderer.centerOnPlayer()">📍</button>
+                        </div>
+                    </div>
+
+                    <!-- 📍 Location Details Panel -->
+                    <div id="location-details" class="location-details-panel hidden"></div>
+                </section>
+            </main>
+
+            <!-- 📊 RIGHT SIDE PANEL - Player info, stats, gold, time -->
+            <aside id="side-panel">
+                <div class="side-panel-section player-section">
+                    <div class="player-name-gold-row">
+                        <span id="player-name">Player</span>
+                        <div class="gold-display">
+                            <span class="gold-icon">💰</span>
+                            <span id="player-gold">100</span>
+                        </div>
+                    </div>
+                    <!-- 🖤 Bug #11 Fix: Show player reputation -->
+                    <div class="player-reputation-row" id="player-reputation-row">
+                        <span class="reputation-icon" title="Your Reputation">👑</span>
+                        <span class="reputation-tier" id="player-rep-tier">Neutral</span>
+                        <span class="reputation-value" id="player-rep-value">(0)</span>
+                    </div>
+                </div>
+
+                <div class="side-panel-section stats-section">
+                    <div class="section-title">Stats</div>
+                    <!-- 🖤 Two-row layout: icons on top, values below -->
+                    <div class="stats-two-row">
+                        <div class="stats-icons-row">
+                            <span class="stat-icon" title="Strength">💪</span>
+                            <span class="stat-icon" title="Intelligence">🧠</span>
+                            <span class="stat-icon" title="Charisma">😊</span>
+                            <span class="stat-icon" title="Endurance">🏃</span>
+                            <span class="stat-icon" title="Luck">🍀</span>
+                        </div>
+                        <div class="stats-values-row">
+                            <span class="stat-value" id="player-strength" title="Strength">5</span>
+                            <span class="stat-value" id="player-intelligence" title="Intelligence">5</span>
+                            <span class="stat-value" id="player-charisma" title="Charisma">5</span>
+                            <span class="stat-value" id="player-endurance" title="Endurance">5</span>
+                            <span class="stat-value" id="player-luck" title="Luck">5</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="side-panel-section vitals-section">
+                    <div class="section-title">Vitals</div>
+                    <div class="vital-bar">
+                        <span class="vital-icon">❤️</span>
+                        <div class="vital-progress health-bar">
+                            <div class="vital-fill" id="health-fill" style="width: 100%"></div>
+                        </div>
+                        <span class="vital-value" id="player-health-display">100</span>
+                    </div>
+                    <div class="vital-bar">
+                        <span class="vital-icon">🍖</span>
+                        <div class="vital-progress hunger-bar">
+                            <div class="vital-fill" id="hunger-fill" style="width: 100%"></div>
+                        </div>
+                        <span class="vital-value" id="player-hunger-display">100</span>
+                    </div>
+                    <div class="vital-bar">
+                        <span class="vital-icon">💧</span>
+                        <div class="vital-progress thirst-bar">
+                            <div class="vital-fill" id="thirst-fill" style="width: 100%"></div>
+                        </div>
+                        <span class="vital-value" id="player-thirst-display">100</span>
+                    </div>
+                    <div class="vital-bar">
+                        <span class="vital-icon">😴</span>
+                        <div class="vital-progress energy-bar">
+                            <div class="vital-fill" id="energy-fill" style="width: 100%"></div>
+                        </div>
+                        <span class="vital-value" id="player-energy-display">100</span>
+                    </div>
+                </div>
+
+                <!-- 🖤 Buttons removed - use bottom action bar or ESC for menu -->
+            </aside>
+
+            <!-- UI Panels Container - FLOATING over map -->
             <div id="ui-panels">
                 <!-- Game Setup Panel -->
                 <section id="game-setup-panel" class="panel hidden">
-                    <h2>New Game Setup</h2>
-                    <form id="game-setup-form">
-                        <div class="form-group">
+                    <div class="setup-header">
+                        <h2>New Game Setup</h2>
+                    </div>
+                    <form id="game-setup-form" onsubmit="event.preventDefault(); return false;">
+                        <div class="form-group character-name-row">
                             <label for="character-name-input">Character Name:</label>
-                            <input type="text" id="character-name-input" required placeholder="Enter your character name">
+                            <div class="name-gold-inputs">
+                                <input type="text" id="character-name-input" required placeholder="Enter your character name">
+                                <div class="setup-gold-display">
+                                    <span class="gold-icon">💰</span>
+                                    <span id="setup-gold-amount" class="gold-value">100</span>
+                                </div>
+                            </div>
                         </div>
                         
-                        <!-- Difficulty Selection -->
+                        <!-- ⚔️ Difficulty Selection - how much do you want to suffer? -->
                         <div class="form-group">
                             <label>Select Difficulty:</label>
                             <div class="difficulty-selection">
@@ -114,90 +422,104 @@
                                     <input type="radio" id="difficulty-easy" name="difficulty" value="easy">
                                     <label for="difficulty-easy">
                                         <h3>Easy</h3>
-                                        <p>20% better prices, more starting gold, easier progression</p>
+                                        <p>+20% starting gold, better prices, easier progression</p>
                                     </label>
                                 </div>
                                 <div class="difficulty-option" data-difficulty="normal">
                                     <input type="radio" id="difficulty-normal" name="difficulty" value="normal" checked>
                                     <label for="difficulty-normal">
                                         <h3>Normal</h3>
-                                        <p>Standard gameplay experience</p>
+                                        <p>Standard gameplay experience (100 gold)</p>
                                     </label>
                                 </div>
                                 <div class="difficulty-option" data-difficulty="hard">
                                     <input type="radio" id="difficulty-hard" name="difficulty" value="hard">
                                     <label for="difficulty-hard">
                                         <h3>Hard</h3>
-                                        <p>20% worse prices, less starting gold, harder progression</p>
+                                        <p>-20% starting gold, worse prices, harder progression</p>
                                     </label>
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- Character Visual Representation -->
-                        <div class="character-visual">
-                            <div class="character-avatar" id="character-avatar">
-                                <span class="avatar-icon">🧑</span>
-                            </div>
-                            <div class="character-preview">
-                                <h3 id="preview-name">Your Character</h3>
-                                <div class="starting-gold-display">
-                                    <span class="gold-label">Starting Gold:</span>
-                                    <span id="starting-gold-amount" class="gold-amount">100</span>
-                                </div>
-                            </div>
-                        </div>
                         
-                        <!-- Perk Selection -->
+                        <!-- ✨ Perk Selection - your character's special traits -->
                         <div class="form-group">
-                            <label>Select Your Perks (Choose up to 2):</label>
+                            <label>Character Perks:</label>
                             <div class="perk-selection-info">
-                                <p>Perks provide unique advantages and disadvantages that affect your gameplay.</p>
-                                <div class="perk-counter">
-                                    <span id="selected-perks-count">0</span> / 2 perks selected
-                                </div>
+                                <p>Choose unique advantages and disadvantages that shape your character.</p>
                             </div>
-                            <div id="perks-container" class="perks-grid">
-                                <!-- Perks will be populated by JavaScript -->
+                            <button type="button" id="open-perk-modal-btn" class="perk-selection-button" onclick="openPerkModal()">
+                                <span class="perk-button-icon">⚡</span>
+                                <span class="perk-button-text">Select Perks</span>
+                                <span class="perk-counter-badge">
+                                    <span id="selected-perks-count">0</span>/2
+                                </span>
+                            </button>
+                            <div id="selected-perks-display" class="selected-perks-display">
+                                <!-- Selected perks will be shown here -->
                             </div>
                         </div>
                         
-                        <!-- Character Attributes Display -->
+                        <!-- 📊 Character Attributes - emoji icons with tooltips 🦇 -->
                         <div class="attributes-display">
-                            <h3>Character Attributes</h3>
+                            <div class="attributes-header">
+                                <span class="attr-header-label">Attributes</span>
+                                <div class="attribute-points-remaining" title="Distribute these points among your attributes">
+                                    <span class="points-value" id="attr-points-remaining">5</span>
+                                    <span class="points-label">pts</span>
+                                </div>
+                            </div>
                             <div class="attributes-grid">
-                                <div class="attribute">
-                                    <span class="attribute-name">Strength</span>
+                                <div class="attribute" title="Strength: Combat damage, carrying capacity, intimidation">
+                                    <span class="attribute-icon">💪</span>
+                                    <button type="button" class="attr-btn attr-down" data-attr="strength" title="Decrease Strength">−</button>
                                     <span class="attribute-value" id="attr-strength">5</span>
+                                    <button type="button" class="attr-btn attr-up" data-attr="strength" title="Increase Strength">+</button>
                                 </div>
-                                <div class="attribute">
-                                    <span class="attribute-name">Intelligence</span>
+                                <div class="attribute" title="Intelligence: Better prices, crafting quality, learning speed">
+                                    <span class="attribute-icon">🧠</span>
+                                    <button type="button" class="attr-btn attr-down" data-attr="intelligence" title="Decrease Intelligence">−</button>
                                     <span class="attribute-value" id="attr-intelligence">5</span>
+                                    <button type="button" class="attr-btn attr-up" data-attr="intelligence" title="Increase Intelligence">+</button>
                                 </div>
-                                <div class="attribute">
-                                    <span class="attribute-name">Charisma</span>
+                                <div class="attribute" title="Charisma: Persuasion, NPC relationships, quest rewards">
+                                    <span class="attribute-icon">💬</span>
+                                    <button type="button" class="attr-btn attr-down" data-attr="charisma" title="Decrease Charisma">−</button>
                                     <span class="attribute-value" id="attr-charisma">5</span>
+                                    <button type="button" class="attr-btn attr-up" data-attr="charisma" title="Increase Charisma">+</button>
                                 </div>
-                                <div class="attribute">
-                                    <span class="attribute-name">Endurance</span>
+                                <div class="attribute" title="Endurance: Max health, stamina, resistance to hardship">
+                                    <span class="attribute-icon">❤️</span>
+                                    <button type="button" class="attr-btn attr-down" data-attr="endurance" title="Decrease Endurance">−</button>
                                     <span class="attribute-value" id="attr-endurance">5</span>
+                                    <button type="button" class="attr-btn attr-up" data-attr="endurance" title="Increase Endurance">+</button>
                                 </div>
-                                <div class="attribute">
-                                    <span class="attribute-name">Luck</span>
+                                <div class="attribute" title="Luck: Critical hits, rare loot, random events favor you">
+                                    <span class="attribute-icon">🍀</span>
+                                    <button type="button" class="attr-btn attr-down" data-attr="luck" title="Decrease Luck">−</button>
                                     <span class="attribute-value" id="attr-luck">5</span>
+                                    <button type="button" class="attr-btn attr-up" data-attr="luck" title="Increase Luck">+</button>
                                 </div>
                             </div>
                         </div>
-                        
+
+                        <div id="start-game-warning" class="start-game-warning">
+                            <span class="warning-icon">!</span>
+                            <span id="start-game-warning-text">Spend all attribute points and select 2 perks to start</span>
+                        </div>
                         <div class="form-actions">
-                            <button type="button" id="randomize-character-btn" class="secondary">Randomize</button>
-                            <button type="submit" id="create-character-btn">Start Adventure</button>
+                            <button type="button" id="randomize-character-btn" class="secondary" title="Randomize all character options" onclick="event.preventDefault(); console.log('📍 Randomize clicked'); if(typeof window.randomizeCharacter === 'function') { window.randomizeCharacter(); } else { console.error('❌ randomizeCharacter not found'); }">🎲</button>
+                            <button type="button" id="start-game-btn" class="primary" title="Begin your journey into darkness" onclick="event.preventDefault(); console.log('📍 Start Game clicked'); if(typeof window.createCharacter === 'function') { window.createCharacter(event); } else { console.error('❌ createCharacter not found'); }">▶ Start</button>
+                            <button type="button" id="setup-settings-btn" class="secondary" title="Open settings menu" onclick="event.preventDefault(); if(typeof SettingsPanel !== 'undefined' && SettingsPanel.show) { SettingsPanel.show(); } else { console.error('SettingsPanel not available'); }">⚙️</button>
+                            <button type="button" id="cancel-setup-btn" class="secondary" title="Return to main menu" onclick="event.preventDefault(); if(typeof cancelGameSetup === 'function') { cancelGameSetup(); } else { document.getElementById('game-setup-panel')?.classList.add('hidden'); document.getElementById('main-menu')?.classList.remove('hidden'); }">✖</button>
                         </div>
                     </form>
                 </section>
 
-                <!-- Market Panel -->
+                <!-- 🏪 Market Panel - medieval stock exchange but make it goth -->
                 <section id="market-panel" class="panel hidden">
+                    <button class="panel-close-x" data-close-overlay="market-panel">×</button>
                     <div class="market-header">
                         <h2>Market</h2>
                         <div class="market-info">
@@ -208,12 +530,46 @@
                             <!-- Market events will be displayed here -->
                         </div>
                     </div>
-                    
+
+                    <!-- Merchant Info -->
+                    <div id="merchant-info-panel" class="merchant-info-panel">
+                        <div class="merchant-greeting">
+                            <span id="merchant-greeting-text">"Welcome to my shop!"</span>
+                        </div>
+                        <div class="merchant-details">
+                            <div class="merchant-detail">
+                                <span class="merchant-label">Merchant:</span>
+                                <span id="merchant-name">Unknown</span>
+                            </div>
+                            <div class="merchant-detail">
+                                <span class="merchant-label">Personality:</span>
+                                <span id="merchant-personality">Friendly</span>
+                            </div>
+                            <div class="merchant-detail">
+                                <span class="merchant-label">Relationship:</span>
+                                <span id="merchant-relationship">⚪ Neutral</span>
+                            </div>
+                            <div class="merchant-detail">
+                                <span class="merchant-label">Specialties:</span>
+                                <span id="merchant-specialties">None</span>
+                            </div>
+                            <div class="merchant-detail merchant-finances">
+                                <span class="merchant-label">💰 Gold:</span>
+                                <span id="merchant-gold" class="merchant-gold">0 gold</span>
+                                <span id="merchant-wealth-status" class="merchant-wealth-status">💵 comfortable</span>
+                            </div>
+                            <div class="merchant-gold-bar-container">
+                                <div id="merchant-gold-bar" class="merchant-gold-bar" style="width: 100%"></div>
+                            </div>
+                        </div>
+                        <!-- 🖤 Talk to Merchant button removed - NPC conversations auto-trigger -->
+                    </div>
+
                     <!-- Trading Controls -->
                     <div class="trading-controls">
                         <div class="trade-mode-toggle">
-                            <button id="single-trade-btn" class="trade-mode-btn active">Single</button>
-                            <button id="bulk-trade-btn" class="trade-mode-btn">Bulk</button>
+                            <button id="single-trade-btn" class="trade-mode-btn active" title="Trade items one at a time">Single</button>
+                            <button id="bulk-trade-btn" class="trade-mode-btn" title="Trade multiple items at once">Bulk</button>
                         </div>
                         <div class="trade-summary" id="trade-summary">
                             <span id="trade-total">Total: 0 gold</span>
@@ -222,20 +578,20 @@
                     </div>
                     
                     <div class="tabs">
-                        <button class="tab-btn active" data-tab="buy">Buy</button>
-                        <button class="tab-btn" data-tab="sell">Sell</button>
-                        <button class="tab-btn" data-tab="compare">Compare</button>
-                        <button class="tab-btn" data-tab="history">History</button>
-                        <button class="tab-btn" data-tab="routes">Routes</button>
-                        <button class="tab-btn" data-tab="alerts">Alerts</button>
-                        <button class="tab-btn" data-tab="news">News</button>
+                        <button class="tab-btn active" data-tab="buy" title="Buy items from the market">Buy</button>
+                        <button class="tab-btn" data-tab="sell" title="Sell your items for gold">Sell</button>
+                        <button class="tab-btn" data-tab="compare" title="Compare prices across locations">Compare</button>
+                        <button class="tab-btn" data-tab="history" title="View your trade history">History</button>
+                        <button class="tab-btn" data-tab="routes" title="Plan profitable trade routes">Routes</button>
+                        <button class="tab-btn" data-tab="alerts" title="Set up price alerts">Alerts</button>
+                        <button class="tab-btn" data-tab="news" title="Read market news and events">News</button>
                     </div>
                     
                     <div id="market-content">
                         <div id="buy-tab" class="tab-content active">
                             <div class="market-controls">
-                                <button id="refresh-market-btn">Refresh Market</button>
-                                <select id="item-filter">
+                                <button id="refresh-market-btn" title="Refresh market prices and inventory">Refresh Market</button>
+                                <select id="item-filter" title="Filter items by category">
                                     <option value="all">All Items</option>
                                     <option value="consumables">Consumables</option>
                                     <option value="resources">Resources</option>
@@ -243,9 +599,9 @@
                                     <option value="luxury">Luxury</option>
                                 </select>
                                 <div class="bulk-controls hidden" id="bulk-buy-controls">
-                                    <button id="select-all-buy-btn">Select All</button>
-                                    <button id="clear-selection-buy-btn">Clear Selection</button>
-                                    <button id="buy-selected-btn">Buy Selected</button>
+                                    <button id="select-all-buy-btn" title="Select all available items">Select All</button>
+                                    <button id="clear-selection-buy-btn" title="Clear your selection">Clear Selection</button>
+                                    <button id="buy-selected-btn" title="Purchase all selected items">Buy Selected</button>
                                 </div>
                             </div>
                             <div id="buy-items" class="items-grid">
@@ -259,8 +615,8 @@
                                     <span>Total Weight: <span id="preview-total-weight">0</span> lbs</span>
                                 </div>
                                 <div class="trade-actions">
-                                    <button id="confirm-trade-btn">Confirm Trade</button>
-                                    <button id="cancel-trade-btn">Cancel</button>
+                                    <button id="confirm-trade-btn" title="Complete this trade">Confirm Trade</button>
+                                    <button id="cancel-trade-btn" title="Cancel this trade">Cancel</button>
                                 </div>
                             </div>
                         </div>
@@ -269,9 +625,9 @@
                             <div class="market-controls">
                                 <span id="sell-info">Sell your items for gold</span>
                                 <div class="bulk-controls hidden" id="bulk-sell-controls">
-                                    <button id="select-all-sell-btn">Select All</button>
-                                    <button id="clear-selection-sell-btn">Clear Selection</button>
-                                    <button id="sell-selected-btn">Sell Selected</button>
+                                    <button id="select-all-sell-btn" title="Select all your items to sell">Select All</button>
+                                    <button id="clear-selection-sell-btn" title="Clear your selection">Clear Selection</button>
+                                    <button id="sell-selected-btn" title="Sell all selected items">Sell Selected</button>
                                 </div>
                             </div>
                             <div id="sell-items" class="items-grid">
@@ -281,11 +637,11 @@
                         
                         <div id="compare-tab" class="tab-content">
                             <div class="market-controls">
-                                <select id="compare-item-select">
+                                <select id="compare-item-select" title="Choose an item to compare prices">
                                     <option value="">Select an item to compare</option>
                                 </select>
-                                <button id="update-comparison-btn">Update Comparison</button>
-                                <button id="add-route-btn">Add to Route Planner</button>
+                                <button id="update-comparison-btn" title="Update price comparison data">Update Comparison</button>
+                                <button id="add-route-btn" title="Add this item to your trade route plan">Add to Route Planner</button>
                             </div>
                             <div id="price-comparison" class="price-comparison">
                                 <!-- Price comparison will be displayed here -->
@@ -294,8 +650,8 @@
                         
                         <div id="history-tab" class="tab-content">
                             <div class="market-controls">
-                                <button id="clear-history-btn">Clear History</button>
-                                <button id="export-history-btn">Export History</button>
+                                <button id="clear-history-btn" title="Clear all trade history">Clear History</button>
+                                <button id="export-history-btn" title="Export trade history data">Export History</button>
                             </div>
                             <div id="trade-history" class="trade-history">
                                 <!-- Trade history will be displayed here -->
@@ -304,8 +660,8 @@
                         
                         <div id="routes-tab" class="tab-content">
                             <div class="market-controls">
-                                <button id="plan-route-btn">Plan New Route</button>
-                                <button id="clear-routes-btn">Clear Routes</button>
+                                <button id="plan-route-btn" title="Plan a new profitable trade route">Plan New Route</button>
+                                <button id="clear-routes-btn" title="Clear all saved routes">Clear Routes</button>
                             </div>
                             <div id="route-planner" class="route-planner">
                                 <!-- Route planning will be displayed here -->
@@ -314,8 +670,8 @@
                         
                         <div id="alerts-tab" class="tab-content">
                             <div class="market-controls">
-                                <button id="add-alert-btn">Add Price Alert</button>
-                                <button id="clear-alerts-btn">Clear Alerts</button>
+                                <button id="add-alert-btn" title="Create a new price alert">Add Price Alert</button>
+                                <button id="clear-alerts-btn" title="Clear all price alerts">Clear Alerts</button>
                             </div>
                             <div id="price-alerts" class="price-alerts">
                                 <!-- Price alerts will be displayed here -->
@@ -324,7 +680,7 @@
                         
                         <div id="news-tab" class="tab-content">
                             <div class="market-controls">
-                                <button id="refresh-news-btn">Refresh News</button>
+                                <button id="refresh-news-btn" title="Refresh market news">Refresh News</button>
                             </div>
                             <div id="market-news" class="market-news">
                                 <!-- Market news will be displayed here -->
@@ -333,32 +689,53 @@
                     </div>
                     
                     <div class="panel-footer">
-                        <button id="close-market-btn">Close</button>
+                        <button id="close-market-btn" class="panel-close-btn-footer" data-close-overlay="market-panel" title="Close the market panel">Close</button>
                     </div>
                 </section>
 
-                <!-- Inventory Panel -->
+                <!-- 🎒 Inventory Panel - all your worldly possessions -->
                 <section id="inventory-panel" class="panel hidden">
+                    <button class="panel-close-x" data-close-overlay="inventory-panel">×</button>
                     <div class="inventory-header">
                         <h2>Inventory</h2>
                         <div class="inventory-controls">
                             <div class="inventory-info">
+                                <span id="inventory-gold" class="inventory-gold-tracker">💰 0 gold</span>
                                 <span id="inventory-weight">Weight: 0/50 lbs</span>
                                 <span id="inventory-value">Value: 0 gold</span>
                             </div>
                             <div class="inventory-actions">
-                                <button id="sort-inventory-btn" title="Sort Inventory">🔤</button>
-                                <button id="filter-inventory-btn" title="Filter Items">🔍</button>
-                                <button id="inventory-settings-btn" title="Inventory Settings">⚙️</button>
+                                <button id="sort-inventory-btn" title="Sort inventory items">🔤</button>
+                                <button id="filter-inventory-btn" title="Filter inventory items">🔍</button>
+                                <button id="inventory-settings-btn" title="Open game settings" onclick="if(typeof SettingsPanel !== 'undefined' && SettingsPanel.show) SettingsPanel.show();">⚙️</button>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Quick Access Slots -->
+                    <!-- Quick Access Slots + Item Info Panel -->
                     <div class="quick-access-container">
                         <h3>Quick Access</h3>
-                        <div id="quick-access-slots" class="quick-access-slots">
-                            <!-- Quick access slots will be populated by JavaScript -->
+                        <div class="quick-access-row">
+                            <div id="quick-access-slots" class="quick-access-slots">
+                                <!-- Quick access slots will be populated by JavaScript -->
+                            </div>
+                            <!-- Item Hover Info Panel - shows full item details on hover -->
+                            <div id="item-hover-info" class="item-hover-info">
+                                <div class="hover-info-header">
+                                    <span id="hover-item-icon" class="hover-icon">📦</span>
+                                    <span id="hover-item-name" class="hover-name">Hover over an item</span>
+                                </div>
+                                <div class="hover-info-body">
+                                    <p id="hover-item-desc" class="hover-desc">Item details will appear here</p>
+                                    <div class="hover-stats">
+                                        <div class="hover-stat"><span class="stat-label">Value:</span> <span id="hover-item-value">-</span></div>
+                                        <div class="hover-stat"><span class="stat-label">Weight:</span> <span id="hover-item-weight">-</span></div>
+                                        <div class="hover-stat"><span class="stat-label">Category:</span> <span id="hover-item-category">-</span></div>
+                                        <div class="hover-stat"><span class="stat-label">Rarity:</span> <span id="hover-item-rarity">-</span></div>
+                                    </div>
+                                    <div id="hover-item-bonuses" class="hover-bonuses hidden"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
@@ -385,7 +762,7 @@
                                 <option value="category">Category</option>
                                 <option value="rarity">Rarity</option>
                             </select>
-                            <button id="inventory-sort-order" title="Toggle Sort Order">⬇️</button>
+                            <button id="inventory-sort-order" title="Toggle sort order (ascending/descending)">⬇️</button>
                         </div>
                     </div>
                     
@@ -400,7 +777,7 @@
                     <div id="item-details-panel" class="item-details-panel hidden">
                         <div class="item-details-header">
                             <h3 id="detail-item-name">Item Name</h3>
-                            <button id="close-item-details" class="close-btn">×</button>
+                            <button id="close-item-details" class="close-btn" data-close-overlay="item-details-panel">×</button>
                         </div>
                         <div class="item-details-content">
                             <div class="item-icon-large" id="detail-item-icon">📦</div>
@@ -435,43 +812,50 @@
                             </div>
                         </div>
                         <div class="item-details-actions">
-                            <button id="use-item-btn" class="action-btn">Use</button>
-                            <button id="equip-item-btn" class="action-btn">Equip</button>
-                            <button id="drop-item-btn" class="action-btn">Drop</button>
-                            <button id="examine-item-btn" class="action-btn">Examine</button>
-                            <button id="gift-item-btn" class="action-btn">Gift</button>
+                            <button id="use-item-btn" class="action-btn" title="Use this item">Use</button>
+                            <button id="equip-item-btn" class="action-btn" title="Equip this item">Equip</button>
+                            <button id="drop-item-btn" class="action-btn" title="Drop this item from inventory">Drop</button>
+                            <button id="examine-item-btn" class="action-btn" title="Examine this item closely">Examine</button>
+                            <button id="gift-item-btn" class="action-btn" title="Gift this item to an NPC">Gift</button>
                         </div>
                     </div>
                     
                     <div class="panel-footer">
-                        <button id="close-inventory-btn">Close</button>
+                        <button id="close-inventory-btn" class="panel-close-btn-footer" data-close-overlay="inventory-panel" title="Close the inventory panel">Close</button>
                     </div>
                 </section>
 
-                <!-- Location Info Panel -->
-                <section id="location-panel" class="panel">
-                    <h2 id="location-name">Town Square</h2>
-                    <p id="location-description">You are in the town square.</p>
-                    <div id="location-actions">
-                        <button id="visit-market-btn">Visit Market</button>
-                        <button id="travel-btn">Travel</button>
-                        <button id="transportation-btn">Transportation</button>
-                    </div>
-                </section>
+                <!-- Location Info Panel - MOVED outside ui-panels, positioned via CSS -->
 
-                <!-- Enhanced Travel Panel -->
+                <!-- 🗺️ Enhanced Travel Panel - journey into the unknown -->
                 <section id="travel-panel" class="panel hidden">
+                    <button class="panel-close-x" data-close-overlay="travel-panel">×</button>
                     <div class="travel-header">
                         <h2>Travel & Exploration</h2>
                         <div class="travel-tabs">
-                            <button class="travel-tab-btn active" data-travel-tab="destinations">Destinations</button>
-                            <button class="travel-tab-btn" data-travel-tab="map">World Map</button>
-                            <button class="travel-tab-btn" data-travel-tab="resources">Resources</button>
-                            <button class="travel-tab-btn" data-travel-tab="history">History</button>
+                            <button class="travel-tab-btn" data-travel-tab="destination" title="View your current destination">🎯 Destination</button>
+                            <button class="travel-tab-btn active" data-travel-tab="destinations" title="Browse all locations">📍 Locations</button>
+                            <button class="travel-tab-btn" data-travel-tab="map" title="View the travel map">🗺️ Map</button>
+                            <button class="travel-tab-btn" id="open-world-map-overlay-btn" title="Open fullscreen world map">⛶ Full Map</button>
+                            <button class="travel-tab-btn" data-travel-tab="history" title="View your travel history">📜 History</button>
                         </div>
                     </div>
-                    
+
                     <div id="travel-content">
+                        <!-- Destination Tab (Current Target) -->
+                        <div id="destination-tab" class="travel-tab-content">
+                            <div id="current-destination-display" class="destination-display">
+                                <div class="no-destination">
+                                    <span class="no-dest-icon">🎯</span>
+                                    <h3>No Destination Set</h3>
+                                    <p>Click on a location in the Locations tab or Map to set a destination.</p>
+                                </div>
+                            </div>
+                            <div id="destination-actions" class="destination-actions hidden">
+                                <button id="clear-destination-btn" class="travel-btn-danger" title="Cancel your current destination">✕ Cancel Destination</button>
+                            </div>
+                        </div>
+
                         <!-- Destinations Tab -->
                         <div id="destinations-tab" class="travel-tab-content active">
                             <div class="travel-controls">
@@ -479,9 +863,15 @@
                                     <label for="destination-filter">Filter:</label>
                                     <select id="destination-filter">
                                         <option value="all">All Locations</option>
-                                        <option value="city">Cities</option>
-                                        <option value="town">Towns</option>
-                                        <option value="village">Villages</option>
+                                        <option value="visited">🏆 Visited Only</option>
+                                        <option value="connected">Connected Only</option>
+                                        <option value="capital">👑 Capitals</option>
+                                        <option value="city">🏰 Cities</option>
+                                        <option value="town">🏘️ Towns</option>
+                                        <option value="village">🏠 Villages</option>
+                                        <option value="mine">⛏️ Mines</option>
+                                        <option value="forest">🌲 Forests</option>
+                                        <option value="port">⚓ Ports</option>
                                     </select>
                                 </div>
                                 <div class="travel-sort">
@@ -490,105 +880,78 @@
                                         <option value="distance">Distance</option>
                                         <option value="name">Name</option>
                                         <option value="type">Type</option>
-                                        <option value="safety">Safety</option>
                                     </select>
+                                </div>
+                                <div class="travel-auto-time">
+                                    <label class="toggle-switch" title="Auto-start time when traveling, auto-stop on arrival">
+                                        <input type="checkbox" id="auto-travel-time-toggle" checked>
+                                        <span class="toggle-slider"></span>
+                                        <span class="toggle-label">⏱️ Auto Time</span>
+                                    </label>
                                 </div>
                             </div>
                             <div id="destinations" class="destinations-list">
                                 <!-- Destinations will be populated by JavaScript -->
                             </div>
                         </div>
-                        
-                        <!-- Map Tab -->
+
+                        <!-- Map Tab with Interactive Mini-Map -->
                         <div id="map-tab" class="travel-tab-content">
-                            <div class="map-controls-expanded">
-                                <div class="map-info">
-                                    <p><strong>Current Location:</strong> <span id="current-location-name">Unknown</span></p>
-                                    <p><strong>Map Position:</strong> <span id="map-position">0, 0</span></p>
-                                    <p><strong>Zoom:</strong> <span id="zoom-level">100%</span></p>
-                                </div>
-                                <div class="map-actions">
-                                    <button id="center-on-player-btn">Center on Player</button>
-                                    <button id="toggle-locations-btn">Toggle Locations</button>
-                                    <button id="toggle-resources-btn">Toggle Resources</button>
-                                    <button id="toggle-poi-btn">Toggle Points of Interest</button>
+                            <!-- Interactive Mini-Map Container -->
+                            <div id="travel-mini-map-container" class="travel-mini-map-container">
+                                <div id="travel-mini-map" class="travel-mini-map"></div>
+                                <div class="mini-map-controls">
+                                    <button onclick="TravelPanelMap.zoomIn()" title="Zoom in on the travel map">+</button>
+                                    <button onclick="TravelPanelMap.zoomOut()" title="Zoom out on the travel map">−</button>
+                                    <button onclick="TravelPanelMap.centerOnPlayer()" title="Center map on your location">📍</button>
+                                    <button onclick="TravelPanelMap.resetView()" title="Reset travel map view">⟲</button>
                                 </div>
                             </div>
-                            <div class="map-legend">
-                                <h4>Map Legend</h4>
-                                <div class="legend-items">
-                                    <div class="legend-item">
-                                        <span class="legend-color" style="background: #FF6B6B;"></span>
-                                        <span>Cities</span>
-                                    </div>
-                                    <div class="legend-item">
-                                        <span class="legend-color" style="background: #4ECDC4;"></span>
-                                        <span>Towns</span>
-                                    </div>
-                                    <div class="legend-item">
-                                        <span class="legend-color" style="background: #95E77E;"></span>
-                                        <span>Villages</span>
-                                    </div>
-                                    <div class="legend-item">
-                                        <span class="legend-icon">🌲</span>
-                                        <span>Forests</span>
-                                    </div>
-                                    <div class="legend-item">
-                                        <span class="legend-icon">⛏️</span>
-                                        <span>Mines</span>
-                                    </div>
-                                    <div class="legend-item">
-                                        <span class="legend-icon">🏠</span>
-                                        <span>Inns</span>
-                                    </div>
-                                    <div class="legend-item">
-                                        <span class="legend-icon">🏪</span>
-                                        <span>Trading Posts</span>
-                                    </div>
-                                    <div class="legend-item">
-                                        <span class="legend-icon">🛡️</span>
-                                        <span>Guard Posts</span>
-                                    </div>
+                            <!-- Map Legend (matches main world map) -->
+                            <div class="travel-map-legend">
+                                <h4>🗺️ Map Legend</h4>
+                                <div class="legend-grid">
+                                    <div class="legend-item"><span class="legend-dot" style="background: #FFD700;"></span><span>👑 Capital</span></div>
+                                    <div class="legend-item"><span class="legend-dot" style="background: #FF6B6B;"></span><span>🏰 City</span></div>
+                                    <div class="legend-item"><span class="legend-dot" style="background: #4ECDC4;"></span><span>🏘️ Town</span></div>
+                                    <div class="legend-item"><span class="legend-dot" style="background: #95E77E;"></span><span>🏠 Village</span></div>
+                                    <div class="legend-item"><span class="legend-dot" style="background: #8B4513;"></span><span>⛏️ Mine</span></div>
+                                    <div class="legend-item"><span class="legend-dot" style="background: #228B22;"></span><span>🌲 Forest</span></div>
+                                    <div class="legend-item"><span class="legend-dot" style="background: #F4A460;"></span><span>🌾 Farm</span></div>
+                                    <div class="legend-item"><span class="legend-dot" style="background: #1E90FF;"></span><span>⚓ Port</span></div>
+                                    <div class="legend-item"><span class="legend-dot" style="background: #DAA520;"></span><span>🍺 Inn</span></div>
+                                    <div class="legend-item"><span class="legend-dot" style="background: #708090;"></span><span>🏛️ Ruins</span></div>
+                                    <div class="legend-item"><span class="legend-dot" style="background: #4B0082;"></span><span>💀 Dungeon</span></div>
+                                    <div class="legend-item"><span class="legend-dot" style="background: #CD853F;"></span><span>🛡️ Outpost</span></div>
+                                </div>
+                                <div class="legend-info">
+                                    <p>📍 <strong>You are here</strong> (pulsing marker)</p>
+                                    <p>🎯 <strong>Destination</strong> (if set)</p>
+                                    <p>Click a location to set as destination</p>
                                 </div>
                             </div>
                         </div>
-                        
-                        <!-- Resources Tab -->
-                        <div id="resources-tab" class="travel-tab-content">
-                            <div class="resource-controls">
-                                <label for="resource-filter">Filter Resources:</label>
-                                <select id="resource-filter">
-                                    <option value="all">All Resources</option>
-                                    <option value="forest">Forests</option>
-                                    <option value="mine">Mines</option>
-                                    <option value="herb">Herb Gardens</option>
-                                </select>
-                                <button id="refresh-resources-btn">Refresh Resources</button>
-                            </div>
-                            <div id="resource-nodes" class="resource-nodes-list">
-                                <!-- Resource nodes will be populated by JavaScript -->
-                            </div>
-                        </div>
-                        
+
                         <!-- History Tab -->
                         <div id="history-tab" class="travel-tab-content">
                             <div class="history-controls">
-                                <button id="clear-history-btn">Clear History</button>
-                                <button id="export-history-btn">Export History</button>
+                                <button id="clear-history-btn" title="Clear all travel history">🗑️ Clear History</button>
+                                <button id="export-history-btn" title="Export travel history data">📤 Export</button>
                             </div>
                             <div id="travel-history" class="travel-history-list">
                                 <!-- Travel history will be populated by JavaScript -->
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="panel-footer">
-                        <button id="close-travel-btn">Close</button>
+                        <button id="close-travel-btn" class="panel-close-btn-footer" data-close-overlay="travel-panel" title="Close the travel panel">Close</button>
                     </div>
                 </section>
 
-                <!-- Transportation Panel -->
+                <!-- 🐴 Transportation Panel - upgrade from walking sadly -->
                 <section id="transportation-panel" class="panel hidden">
+                    <button class="panel-close-x" data-close-overlay="transportation-panel">×</button>
                     <h2>Transportation</h2>
                     <div class="transportation-info">
                         <p>Current Transport: <span id="current-transport">Backpack</span></p>
@@ -600,12 +963,13 @@
                         <!-- Transportation options will be populated by JavaScript -->
                     </div>
                     <div class="panel-footer">
-                        <button id="close-transportation-btn">Close</button>
+                        <button id="close-transportation-btn" class="panel-close-btn-footer" data-close-overlay="transportation-panel" title="Close the transportation panel">Close</button>
                     </div>
                 </section>
 
-                <!-- Property & Employee Management Panel -->
+                <!-- 🏰 Property & Employee Management - your medieval empire -->
                 <section id="property-employee-panel" class="panel hidden">
+                    <button class="panel-close-x" data-close-overlay="property-employee-panel">×</button>
                     <div class="property-employee-header">
                         <h2>Property & Employee Management</h2>
                         <div class="financial-summary">
@@ -616,19 +980,19 @@
                     </div>
                     
                     <div class="tabs">
-                        <button class="tab-btn active" data-tab="properties">Properties</button>
-                        <button class="tab-btn" data-tab="employees">Employees</button>
-                        <button class="tab-btn" data-tab="trade-routes">Trade Routes</button>
-                        <button class="tab-btn" data-tab="financial">Financial</button>
+                        <button class="tab-btn active" data-tab="properties" title="Manage your properties">Properties</button>
+                        <button class="tab-btn" data-tab="employees" title="Manage your employees">Employees</button>
+                        <button class="tab-btn" data-tab="trade-routes" title="View and manage trade routes">Trade Routes</button>
+                        <button class="tab-btn" data-tab="financial" title="View financial information">Financial</button>
                     </div>
                     
                     <div id="property-employee-content">
                         <!-- Properties Tab -->
                         <div id="properties-tab" class="tab-content active">
                             <div class="properties-controls">
-                                <button id="buy-property-btn">Buy Property</button>
-                                <button id="property-upgrades-btn">Manage Upgrades</button>
-                                <button id="repair-all-btn">Repair All</button>
+                                <button id="buy-property-btn" title="Purchase a new property">Buy Property</button>
+                                <button id="property-upgrades-btn" title="Manage property upgrades">Manage Upgrades</button>
+                                <button id="repair-all-btn" title="Repair all damaged properties">Repair All</button>
                             </div>
                             <div id="owned-properties" class="properties-grid">
                                 <!-- Owned properties will be populated by JavaScript -->
@@ -638,9 +1002,9 @@
                         <!-- Employees Tab -->
                         <div id="employees-tab" class="tab-content">
                             <div class="employees-controls">
-                                <button id="hire-employee-btn">Hire Employee</button>
-                                <button id="employee-training-btn">Training</button>
-                                <button id="pay-wages-btn">Pay Wages</button>
+                                <button id="hire-employee-btn" title="Hire a new employee">Hire Employee</button>
+                                <button id="employee-training-btn" title="Train your employees">Training</button>
+                                <button id="pay-wages-btn" title="Pay employee wages">Pay Wages</button>
                             </div>
                             <div id="hired-employees" class="employees-grid">
                                 <!-- Hired employees will be populated by JavaScript -->
@@ -650,9 +1014,9 @@
                         <!-- Trade Routes Tab -->
                         <div id="trade-routes-tab" class="tab-content">
                             <div class="trade-routes-controls">
-                                <button id="create-route-btn">Create Route</button>
-                                <button id="optimize-routes-btn">Optimize Routes</button>
-                                <button id="route-history-btn">Route History</button>
+                                <button id="create-route-btn" title="Create a new trade route">Create Route</button>
+                                <button id="optimize-routes-btn" title="Optimize existing trade routes">Optimize Routes</button>
+                                <button id="route-history-btn" title="View route history">Route History</button>
                             </div>
                             <div id="active-routes" class="routes-grid">
                                 <!-- Active trade routes will be populated by JavaScript -->
@@ -692,7 +1056,7 @@
                     </div>
                     
                     <div class="panel-footer">
-                        <button id="close-property-employee-btn">Close</button>
+                        <button id="close-property-employee-btn" class="panel-close-btn-footer" data-close-overlay="property-employee-panel" title="Close the property panel">Close</button>
                     </div>
                 </section>
 
@@ -701,7 +1065,7 @@
                     <div class="modal-content">
                         <div class="modal-header">
                             <h3 id="property-details-name">Property Name</h3>
-                            <button id="close-property-details" class="close-btn">×</button>
+                            <button id="close-property-details" class="close-btn" data-close-overlay="property-details-modal">×</button>
                         </div>
                         <div class="modal-body">
                             <div class="property-info">
@@ -745,9 +1109,9 @@
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button id="repair-property-btn" class="action-btn">Repair</button>
-                            <button id="upgrade-property-btn" class="action-btn">Upgrade</button>
-                            <button id="sell-property-btn" class="action-btn danger">Sell</button>
+                            <button id="repair-property-btn" class="action-btn" title="Repair this property">Repair</button>
+                            <button id="upgrade-property-btn" class="action-btn" title="Upgrade this property">Upgrade</button>
+                            <button id="sell-property-btn" class="action-btn danger" title="Sell this property">Sell</button>
                         </div>
                     </div>
                 </div>
@@ -757,7 +1121,7 @@
                     <div class="modal-content">
                         <div class="modal-header">
                             <h3 id="employee-details-name">Employee Name</h3>
-                            <button id="close-employee-details" class="close-btn">×</button>
+                            <button id="close-employee-details" class="close-btn" data-close-overlay="employee-details-modal">×</button>
                         </div>
                         <div class="modal-body">
                             <div class="employee-info">
@@ -799,482 +1163,474 @@
                                     <!-- Assignment info will be populated by JavaScript -->
                                 </div>
                                 <div class="assignment-controls">
-                                    <select id="assignment-property-select">
+                                    <select id="assignment-property-select" title="Choose a property to assign">
                                         <option value="">Select Property</option>
                                     </select>
-                                    <button id="assign-employee-btn">Assign</button>
-                                    <button id="unassign-employee-btn">Unassign</button>
+                                    <button id="assign-employee-btn" title="Assign employee to selected property">Assign</button>
+                                    <button id="unassign-employee-btn" title="Unassign employee from current property">Unassign</button>
                                 </div>
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button id="train-employee-btn" class="action-btn">Train</button>
-                            <button id="promote-employee-btn" class="action-btn">Promote</button>
-                            <button id="fire-employee-btn" class="action-btn danger">Fire</button>
+                            <button id="train-employee-btn" class="action-btn" title="Train this employee">Train</button>
+                            <button id="promote-employee-btn" class="action-btn" title="Promote this employee">Promote</button>
+                            <button id="fire-employee-btn" class="action-btn danger" title="Fire this employee">Fire</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Message Log -->
-                <section id="message-log">
-                    <h3>Messages</h3>
-                    <div id="messages" aria-live="polite">
-                        <p class="message">Welcome to the Trading Game!</p>
-                    </div>
-                </section>
-                <section id="insights-panel" class="panel compact">
-                    <div class="insights-grid">
-                        <div class="insight-card" aria-live="polite">
-                            <div class="insight-header">
-                                <h4>Game Statistics</h4>
-                                <span class="insight-subtitle">Live progress tracker</span>
-                            </div>
-                            <dl id="game-stats-list" class="insight-list">
-                                <div class="insight-row">
-                                    <dt>Gold on hand</dt>
-                                    <dd id="stat-gold">0</dd>
-                                </div>
-                                <div class="insight-row">
-                                    <dt>Days survived</dt>
-                                    <dd id="stat-days">0</dd>
-                                </div>
-                                <div class="insight-row">
-                                    <dt>Properties owned</dt>
-                                    <dd id="stat-properties">0</dd>
-                                </div>
-                                <div class="insight-row">
-                                    <dt>Employees hired</dt>
-                                    <dd id="stat-employees">0</dd>
-                                </div>
-                                <div class="insight-row">
-                                    <dt>Locations visited</dt>
-                                    <dd id="stat-locations">0</dd>
-                                </div>
-                            </dl>
-                        </div>
-                        <div class="insight-card" aria-live="polite">
-                            <div class="insight-header">
-                                <h4>Achievements</h4>
-                                <span class="insight-subtitle">Complete milestones to earn rewards</span>
-                            </div>
-                            <div id="achievement-list" class="achievement-list">
-                                <!-- Achievements populated by JavaScript -->
-                            </div>
-                        </div>
-                        <div class="insight-card" aria-live="polite">
-                            <div class="insight-header">
-                                <h4>Quick Navigation</h4>
-                                <span class="insight-subtitle">Jump between nearby hubs</span>
-                            </div>
-                            <div id="quick-navigation" class="quick-navigation">
-                                <div class="minimap" aria-hidden="true">
-                                    <div class="minimap-overlay">
-                                        <span class="minimap-dot" title="Current position"></span>
-                                        <span class="minimap-ring"></span>
-                                    </div>
-                                </div>
-                                <div class="navigation-details">
-                                    <p class="nav-location">Current: <span id="nav-current-location">Unknown</span></p>
-                                    <div id="nav-connections" class="nav-connections" role="list">
-                                        <p class="nav-hint">Connections will appear once you start traveling.</p>
-                                    </div>
-                                    <button id="open-travel-from-nav" class="secondary">Open Travel Planner</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
+                <!-- Message Log - MOVED outside ui-panels, positioned via CSS -->
             </div>
-        </main>
+        </div>
 
-        <!-- Game Controls -->
-        <footer id="game-controls">
-            <div class="control-group">
-                <button id="menu-btn">📜 Menu</button>
-                <button id="inventory-btn">🎒 Inventory</button>
-                <button id="property-employee-btn">🏠 Properties</button>
-                <button id="transportation-quick-btn">🚚 Transport</button>
-                <button id="save-btn">💾 Save</button>
-                <button id="load-btn">📂 Load</button>
+        <!-- 🖤 Location Panel - FIXED bottom-left, COLLAPSIBLE -->
+        <section id="location-panel" class="panel">
+            <div id="location-panel-header" class="location-panel-header" title="Click to expand/collapse">
+                <span id="location-collapse-icon" class="collapse-icon">▼</span>
+                <h2 id="location-name">Town Square</h2>
             </div>
-            <div class="time-controls">
-                <button id="pause-btn" class="time-control-btn">⏸️ Pause</button>
-                <button id="normal-speed-btn" class="time-control-btn active">⏱️ Normal</button>
-                <button id="fast-speed-btn" class="time-control-btn">⏩ Fast</button>
-                <button id="very-fast-speed-btn" class="time-control-btn">⏭️ Very Fast</button>
+            <div id="location-panel-content" class="location-panel-content">
+                <p id="location-description">You are in the town square.</p>
+                <div id="location-actions">
+                    <button id="visit-market-btn" title="Visit the local market">Visit Market</button>
+                    <button id="travel-btn" title="Toggle travel panel">Travel</button>
+                    <button id="people-btn" title="Toggle people panel">People</button>
+                </div>
             </div>
+        </section>
+
+        <!-- 📜 Message Log - FIXED bottom-right, outside ui-panels -->
+        <section id="message-log">
+            <h3>Messages</h3>
+            <div id="messages">
+                <p class="message" id="welcome-message">Welcome to Medieval Trading Game!</p>
+            </div>
+        </section>
+
+        <!-- 🎮 Bottom Action Bar - compact row of action buttons -->
+        <footer id="bottom-action-bar">
+            <button id="bottom-menu-btn" class="action-btn-bottom menu-btn-highlight" onclick="KeyBindings.openMenu();">⚙️</button>
+            <button id="bottom-market-btn" class="action-btn-bottom" onclick="KeyBindings.openMarket();">🏪</button>
+            <button id="bottom-travel-btn" class="action-btn-bottom" onclick="KeyBindings.openTravel();">🗺️</button>
+            <button id="bottom-transport-btn" class="action-btn-bottom" onclick="KeyBindings.openTransportation();">🐴</button>
+            <button id="bottom-inventory-btn" class="action-btn-bottom" onclick="KeyBindings.openInventory();">🧺</button>
+            <button id="bottom-character-btn" class="action-btn-bottom" onclick="KeyBindings.openCharacterSheet();">👤</button>
+            <button id="bottom-people-btn" class="action-btn-bottom" onclick="KeyBindings.openPeople();">👥</button>
+            <button id="bottom-financial-btn" class="action-btn-bottom" onclick="KeyBindings.openFinancialSheet();">💰</button>
+            <button id="bottom-quests-btn" class="action-btn-bottom" onclick="KeyBindings.openQuests();">📜</button>
+            <button id="bottom-achievements-btn" class="action-btn-bottom" onclick="KeyBindings.openAchievements();">🏆</button>
         </footer>
     </div>
 
-    <div id="controls-help-overlay" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="controls-help-title">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="controls-help-title">Controls & Shortcuts</h2>
-                <button id="close-controls-help" class="close-btn" aria-label="Close controls help">×</button>
-            </div>
-            <div class="modal-body">
-                <p class="modal-lead">Use these shortcuts and quick actions to stay efficient. Tooltips on every button remind you what they do.</p>
-                <div class="controls-help-grid">
-                    <div class="controls-section">
-                        <h3>Core Shortcuts</h3>
-                        <ul class="shortcut-list">
-                            <li><strong>Ctrl + S</strong> — Quick Save anywhere</li>
-                            <li><strong>Ctrl + L</strong> — Quick Load (confirms during play)</li>
-                            <li><strong>Shift + /</strong> — Toggle this help overlay</li>
-                            <li><strong>Esc</strong> — Toggle menu / close panels</li>
-                            <li><strong>1-7 in Market</strong> — Jump between tabs</li>
-                        </ul>
-                    </div>
-                    <div class="controls-section">
-                        <h3>Panel Navigation</h3>
-                        <ul class="shortcut-list">
-                            <li><strong>I</strong> — Inventory</li>
-                            <li><strong>M</strong> — Market</li>
-                            <li><strong>T</strong> — Transportation</li>
-                            <li><strong>B</strong> — Bulk trade toggle</li>
-                            <li><strong>Tab</strong> — Move between inputs/buttons</li>
-                        </ul>
-                    </div>
-                    <div class="controls-section">
-                        <h3>Starter Play Guide</h3>
-                        <ol class="tutorial-steps">
-                            <li>Open <strong>🎮 New Game</strong> and pick a difficulty that matches your experience.</li>
-                            <li>Choose perks, then press <strong>Start Adventure</strong> to enter the world.</li>
-                            <li>Use <strong>M</strong> to visit the market and buy low; check <strong>History</strong> for trends.</li>
-                            <li>Travel with <strong>T</strong> when prices stagnate; time controls in the footer adjust pace.</li>
-                            <li>Quick Save before risky trades or travel, and Quick Load if you need to rewind.</li>
-                        </ol>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="onboarding-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="onboarding-title">Welcome to Trading Game</h2>
-                <button id="skip-onboarding-btn" class="close-btn" aria-label="Close onboarding">×</button>
-            </div>
-            <div class="modal-body onboarding-body">
-                <p class="modal-lead">Follow these quick steps to get comfortable. You can replay this tour anytime.</p>
-                <div class="onboarding-stepper" role="list" aria-live="polite">
-                    <div class="onboarding-step" data-step="0" role="listitem">
-                        <h3>1. Create your trader</h3>
-                        <p>Choose a name, difficulty, and perks. Watch the preview to see starting gold and attributes update.</p>
-                    </div>
-                    <div class="onboarding-step" data-step="1" role="listitem">
-                        <h3>2. Learn the panels</h3>
-                        <p>Use <strong>M</strong> for Market, <strong>I</strong> for Inventory, and <strong>T</strong> for Transportation. Tabs are keyboard-accessible.</p>
-                    </div>
-                    <div class="onboarding-step" data-step="2" role="listitem">
-                        <h3>3. Trade and travel smart</h3>
-                        <p>Check History and Alerts, set routes, and travel when prices stagnate. Quick save before risky trips.</p>
-                    </div>
-                </div>
-                <div class="onboarding-progress" role="progressbar" aria-valuemin="1" aria-valuemax="3" aria-valuenow="1">
-                    <div class="onboarding-progress-fill"></div>
-                </div>
-            </div>
-            <div class="modal-footer onboarding-actions">
-                <button id="onboarding-prev-btn" class="secondary" aria-label="Previous step">Previous</button>
-                <button id="onboarding-next-btn" aria-label="Next step">Next</button>
-                <button id="onboarding-done-btn" class="primary">Got it</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="settings-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="settings-title">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="settings-title">Settings</h2>
-                <button id="close-settings-btn" class="close-btn" aria-label="Close settings">×</button>
-            </div>
-            <div class="modal-body settings-body">
-                <div class="settings-tabs" role="tablist">
-                    <button class="settings-tab active" data-settings-tab="accessibility" role="tab">Accessibility</button>
-                    <button class="settings-tab" data-settings-tab="audio" role="tab">Audio</button>
-                    <button class="settings-tab" data-settings-tab="visual" role="tab">Visual</button>
-                    <button class="settings-tab" data-settings-tab="controls" role="tab">Controls</button>
-                </div>
-
-                <section class="settings-section settings-tab-content active" id="settings-accessibility" role="tabpanel">
-                    <h3>Accessibility</h3>
-                    <label class="toggle">
-                        <input type="checkbox" id="high-contrast-toggle">
-                        <span>High contrast mode</span>
-                    </label>
-                    <label class="toggle">
-                        <input type="checkbox" id="colorblind-toggle">
-                        <span>Colorblind-friendly palette</span>
-                    </label>
-                    <label class="toggle">
-                        <input type="checkbox" id="keyboard-nav-toggle" checked>
-                        <span>Enhanced keyboard navigation</span>
-                    </label>
-                    <label class="toggle">
-                        <input type="checkbox" id="reduced-motion-toggle">
-                        <span>Reduce motion & flashes</span>
-                    </label>
-                    <div class="setting-control">
-                        <label for="font-size-range">Font size</label>
-                        <input type="range" id="font-size-range" min="90" max="120" step="5" value="100">
-                        <div class="setting-hint" id="font-size-label">100%</div>
-                    </div>
-                </section>
-
-                <section class="settings-section settings-tab-content" id="settings-audio" role="tabpanel">
-                    <h3>Audio & Atmosphere</h3>
-                    <p class="setting-hint">Changes apply instantly and save to your browser.</p>
-                    <div class="setting-control slider-control">
-                        <div class="setting-label">
-                            <span>Master Volume</span>
-                            <span id="master-volume-label" class="setting-value">80%</span>
-                        </div>
-                        <input type="range" id="master-volume-range" min="0" max="100" step="5" value="80">
-                    </div>
-                    <div class="setting-control slider-control">
-                        <div class="setting-label">
-                            <span>Music</span>
-                            <span id="music-volume-label" class="setting-value">60%</span>
-                        </div>
-                        <input type="range" id="music-volume-range" min="0" max="100" step="5" value="60">
-                    </div>
-                    <div class="setting-control slider-control">
-                        <div class="setting-label">
-                            <span>Sound Effects</span>
-                            <span id="sfx-volume-label" class="setting-value">75%</span>
-                        </div>
-                        <input type="range" id="sfx-volume-range" min="0" max="100" step="5" value="75">
-                    </div>
-                    <div class="setting-control slider-control">
-                        <div class="setting-label">
-                            <span>Ambient</span>
-                            <span id="ambient-volume-label" class="setting-value">50%</span>
-                        </div>
-                        <input type="range" id="ambient-volume-range" min="0" max="100" step="5" value="50">
-                    </div>
-                    <label class="toggle">
-                        <input type="checkbox" id="mute-toggle">
-                        <span>Mute all audio</span>
-                    </label>
-                    <label class="toggle">
-                        <input type="checkbox" id="music-mute-toggle">
-                        <span>Mute music</span>
-                    </label>
-                    <label class="toggle">
-                        <input type="checkbox" id="sfx-mute-toggle">
-                        <span>Mute sound effects</span>
-                    </label>
-                    <label class="toggle">
-                        <input type="checkbox" id="ambient-toggle" checked>
-                        <span>Enable ambient soundscapes</span>
-                    </label>
-                </section>
-
-                <section class="settings-section settings-tab-content" id="settings-visual" role="tabpanel">
-                    <h3>Visual</h3>
-                    <div class="setting-control">
-                        <label for="vfx-quality-select">Graphics Quality</label>
-                        <select id="vfx-quality-select">
-                            <option value="low">Low</option>
-                            <option value="medium">Medium</option>
-                            <option value="high" selected>High</option>
-                        </select>
-                    </div>
-                    <div class="setting-control slider-control">
-                        <div class="setting-label">
-                            <span>Particle Density</span>
-                            <span id="particle-density-label" class="setting-value">100%</span>
-                        </div>
-                        <input type="range" id="particle-density-range" min="25" max="150" step="5" value="100">
-                    </div>
-                    <div class="setting-control slider-control">
-                        <div class="setting-label">
-                            <span>Screen Shake</span>
-                            <span id="screen-shake-label" class="setting-value">70%</span>
-                        </div>
-                        <input type="range" id="screen-shake-range" min="0" max="100" step="5" value="70">
-                    </div>
-                    <div class="setting-control slider-control">
-                        <div class="setting-label">
-                            <span>Animation Speed</span>
-                            <span id="animation-speed-label" class="setting-value">100%</span>
-                        </div>
-                        <input type="range" id="animation-speed-range" min="70" max="130" step="5" value="100">
-                    </div>
-                    <div class="setting-control">
-                        <label for="environment-quality-select">Environment Fidelity</label>
-                        <select id="environment-quality-select">
-                            <option value="low">Low</option>
-                            <option value="medium">Medium</option>
-                            <option value="high" selected>High</option>
-                        </select>
-                    </div>
-                    <label class="toggle">
-                        <input type="checkbox" id="performance-overlay-toggle">
-                        <span>Show performance overlay</span>
-                    </label>
-                    <label class="toggle">
-                        <input type="checkbox" id="auto-quality-toggle" checked>
-                        <span>Auto-adjust quality to protect FPS</span>
-                    </label>
-                    <label class="toggle">
-                        <input type="checkbox" id="flash-warning-toggle">
-                        <span>Soften flashes and screen shake</span>
-                    </label>
-                    <label class="toggle">
-                        <input type="checkbox" id="cinematic-toggle" checked>
-                        <span>Enable cinematic sweeps for key moments</span>
-                    </label>
-                    <label class="toggle">
-                        <input type="checkbox" id="minimal-mode-toggle">
-                        <span>Minimal effects mode (performance & comfort)</span>
-                    </label>
-                </section>
-
-                <section class="settings-section settings-tab-content" id="settings-controls" role="tabpanel">
-                    <h3>Controls</h3>
-                    <p class="setting-hint">Click a binding, then press the new key or combo. Escape cancels.</p>
-                    <div class="control-binding-grid">
-                        <label class="control-binding">
-                            <span>Open Inventory</span>
-                            <input type="text" class="control-binding-input" data-action="openInventory" aria-label="Inventory key" readonly>
-                        </label>
-                        <label class="control-binding">
-                            <span>Open Market</span>
-                            <input type="text" class="control-binding-input" data-action="openMarket" aria-label="Market key" readonly>
-                        </label>
-                        <label class="control-binding">
-                            <span>Transportation</span>
-                            <input type="text" class="control-binding-input" data-action="openTransportation" aria-label="Transportation key" readonly>
-                        </label>
-                        <label class="control-binding">
-                            <span>Toggle Menu</span>
-                            <input type="text" class="control-binding-input" data-action="toggleMenu" aria-label="Menu key" readonly>
-                        </label>
-                        <label class="control-binding">
-                            <span>Quick Save</span>
-                            <input type="text" class="control-binding-input" data-action="quickSave" aria-label="Quick save key" readonly>
-                        </label>
-                        <label class="control-binding">
-                            <span>Quick Load</span>
-                            <input type="text" class="control-binding-input" data-action="quickLoad" aria-label="Quick load key" readonly>
-                        </label>
-                        <label class="control-binding">
-                            <span>Controls Help</span>
-                            <input type="text" class="control-binding-input" data-action="controlsHelp" aria-label="Controls help key" readonly>
-                        </label>
-                        <label class="control-binding">
-                            <span>Undo</span>
-                            <input type="text" class="control-binding-input" data-action="undoAction" aria-label="Undo key" readonly>
-                        </label>
-                        <label class="control-binding">
-                            <span>Redo</span>
-                            <input type="text" class="control-binding-input" data-action="redoAction" aria-label="Redo key" readonly>
-                        </label>
-                    </div>
-                    <label class="toggle">
-                        <input type="checkbox" id="touch-mode-toggle">
-                        <span>Touch-friendly layout & larger hit targets</span>
-                    </label>
-                    <div class="control-binding-actions">
-                        <button id="reset-bindings-btn" class="secondary">Reset Bindings</button>
-                        <span id="binding-hint" class="setting-hint" aria-live="polite">Select a binding to change it.</span>
-                    </div>
-                </section>
-            </div>
-            <div class="modal-footer settings-actions">
-                <button id="reset-settings-btn" class="secondary">Reset to Default</button>
-                <button id="save-settings-btn" class="primary">Save & Close</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="live-region" class="sr-only" aria-live="polite"></div>
-
-    <div id="performance-overlay" class="performance-overlay hidden" aria-live="polite">
-        <div class="perf-row"><span>FPS</span><strong id="perf-fps">60</strong></div>
-        <div class="perf-row"><span>Frame Time</span><strong id="perf-frame">16 ms</strong></div>
-        <div class="perf-row"><span>Quality</span><strong id="perf-quality">High • 100%</strong></div>
-        <div class="perf-row"><span>Memory</span><strong id="perf-memory">—</strong></div>
-    </div>
-
-    <div id="atmosphere-layer" aria-hidden="true"></div>
-    <div id="environment-overlay" aria-hidden="true"></div>
-    <div id="highlight-layer" aria-hidden="true"></div>
-    <div id="particle-layer" aria-hidden="true"></div>
-
-    <div id="cinematic-overlay" class="cinematic-overlay hidden" role="dialog" aria-live="polite" aria-label="Cinematic sequence">
-        <div class="cinematic-frame">
-            <div class="cinematic-pan"></div>
-            <div class="cinematic-content">
-                <div class="cinematic-title">Epic Moment</div>
-                <div class="cinematic-lines" id="cinematic-lines"></div>
-                <div class="cinematic-progress">
-                    <div id="cinematic-progress-fill"></div>
-                </div>
-            </div>
-            <button id="skip-cinematic-btn" class="close-btn" aria-label="Skip cinematic">Skip</button>
-        </div>
-    </div>
-
-    <div id="screen-fader" aria-hidden="true"></div>
-
-    <div id="notification-tray" aria-live="polite" role="status"></div>
-
-    <div id="controls-help-overlay" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="controls-help-title">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="controls-help-title">Controls & Shortcuts</h2>
-                <button id="close-controls-help" class="close-btn" aria-label="Close controls help">×</button>
-            </div>
-            <div class="modal-body">
-                <p>Use these shortcuts for faster navigation:</p>
-                <ul>
-                    <li><strong>Ctrl + S</strong>: Quick Save</li>
-                    <li><strong>Ctrl + L</strong>: Quick Load (asks for confirmation during play)</li>
-                    <li><strong>I</strong>: Open Inventory</li>
-                    <li><strong>M</strong>: Open Market</li>
-                    <li><strong>T</strong>: Open Transportation</li>
-                    <li><strong>Escape</strong>: Toggle menu or return to game</li>
-                    <li><strong>1-7 (in Market)</strong>: Switch between market tabs</li>
-                    <li><strong>Shift + /</strong>: Toggle this help panel</li>
-                </ul>
-                <p>Use button tooltips to learn what each action does.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Loading Screen -->
+    <!-- Loading Screen - shows real system loading progress -->
     <div id="loading-screen" class="screen">
-        <div class="loading-content">
-            <h2>Loading Trading Game...</h2>
-            <p id="loading-message" class="loading-message">Preparing your journey</p>
-            <div class="progress-bar">
-                <div id="loading-progress-fill" class="progress-fill"></div>
+        <div class="loading-content" style="min-width: 420px; width: auto; max-width: 90vw; text-align: center; padding: 2rem;">
+            <h1 style="color: #4fc3f7; margin-bottom: 0.5rem;">Medieval Trading Game</h1>
+            <h2 id="loading-title" style="color: #888; font-weight: normal; white-space: nowrap; margin: 0.5rem 0;">Initializing Systems...</h2>
+            <div class="progress-bar" style="width: 300px; height: 20px; background: #222; border-radius: 10px; overflow: hidden; margin: 1rem auto;">
+                <div id="loading-progress-fill" class="progress-fill" style="width: 0%; height: 100%; background: linear-gradient(90deg, #4fc3f7, #29b6f6); transition: width 0.3s ease-out;"></div>
             </div>
+            <p id="loading-status" style="color: #666; font-size: 0.9rem; white-space: nowrap; margin: 0;">0 of 28 systems</p>
+            <p id="loading-tip" style="color: #4fc3f7; font-size: 0.85rem; margin-top: 1.5rem; font-style: italic; min-height: 2.5em; max-width: 350px; margin-left: auto; margin-right: auto; transition: opacity 0.2s ease;"></p>
         </div>
     </div>
 
-    <!-- Main Menu -->
-    <div id="main-menu" class="screen">
+    <!-- 🏠 Main Menu - where it all begins (again) -->
+    <div id="main-menu" class="screen hidden">
+        <!-- 🌦️ Weather Effects Container - random seasonal magic -->
+        <div id="menu-weather-container" class="menu-weather-container"></div>
         <div class="menu-content">
-            <h1>Trading Game</h1>
+            <h1 id="main-menu-title">Medieval Trading Game</h1>
+            <p id="main-menu-version" class="version-text"></p>
             <div class="menu-buttons">
-                <button id="new-game-btn">🎮 New Game</button>
-                <button id="load-game-btn" disabled>📂 Load Game</button>
-                <button id="settings-btn">⚙️ Settings</button>
+                <button id="new-game-btn" onclick="if(typeof startNewGame==='function'){startNewGame();}else if(window.startNewGame){window.startNewGame();}else{console.error('startNewGame not found');}" title="Start a new game">New Game</button>
+                <button id="load-game-btn" onclick="if(typeof loadGame === 'function') loadGame();" disabled title="Load a saved game">Load Game</button>
+                <button id="settings-btn" onclick="if(typeof SettingsPanel !== 'undefined' && SettingsPanel.show) SettingsPanel.show(); else console.error('SettingsPanel not loaded');" title="Open game settings">Settings</button>
+            </div>
+
+            <!-- 🏆 Hall of Champions is created dynamically by save-ui-system.js -->
+            <!-- It includes the "View All Champions" button -->
+
+            <!-- 🔗 Social Links - escape routes -->
+            <div id="menu-social-links" class="menu-social-links">
+                <!-- Will be populated by JavaScript from GameConfig -->
+            </div>
+
+            <div class="menu-footer">
+                <span id="menu-copyright"></span>
             </div>
         </div>
     </div>
 
-    <script src="audio-system.js"></script>
-    <script src="property-system.js"></script>
-    <script src="employee-system.js"></script>
-    <script src="trade-route-system.js"></script>
-    <script src="property-employee-ui.js"></script>
-    <script src="travel-system.js"></script>
-    <script src="game.js"></script>
+    <!-- 🏆 Leaderboard Panel - Hall of Champions overlay (MUST be outside overlay-container for z-index to work above main-menu) -->
+    <div id="leaderboard-overlay" class="leaderboard-overlay hidden" onclick="if(event.target === this) { if(typeof SaveUISystem !== 'undefined') SaveUISystem.closeHallOfChampions(); else closeLeaderboardPanel(); }">
+        <div class="leaderboard-panel" onclick="event.stopPropagation()">
+            <button class="panel-close-x" onclick="if(typeof SaveUISystem !== 'undefined') SaveUISystem.closeHallOfChampions(); else closeLeaderboardPanel(); event.stopPropagation();" title="Close">×</button>
+            <div class="leaderboard-panel-header">
+                <h2>🏆 Hall of Champions</h2>
+                <p class="leaderboard-subtitle">top 100 merchants of all time</p>
+            </div>
+            <div id="leaderboard-panel-content" class="leaderboard-panel-content">
+                <!-- Populated by JavaScript -->
+            </div>
+            <div class="panel-footer">
+                <button class="panel-close-btn-footer" onclick="if(typeof SaveUISystem !== 'undefined') SaveUISystem.closeHallOfChampions(); else closeLeaderboardPanel();" title="Close the Hall of Champions">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🐛 DEBOOGER CONSOLE - ON-SCREEN CONSOLE LOG (z-index above main menu) -->
+    <div id="debooger-console" style="position: fixed; bottom: 0; right: 0; width: 600px; height: 80vh; max-height: 800px; background: rgba(0,0,0,0.95); color: #0f0; font-family: monospace; font-size: 11px; z-index: 999998; border: 2px solid #0f0; display: none; flex-direction: column;">
+        <!-- Header -->
+        <div style="display: flex; justify-content: space-between; padding: 8px 10px; border-bottom: 1px solid #0f0; background: rgba(0,0,0,0.98); flex-shrink: 0;">
+            <strong style="color: #0ff;">🐛 DEBOOGER CONSOLE</strong>
+            <button onclick="document.getElementById('debooger-console').style.display='none'" style="background: #f00; color: #fff; border: none; padding: 2px 8px; cursor: pointer;" title="Close the debugger console">Close</button>
+        </div>
+        <!-- Scrollable Log Content -->
+        <div id="debooger-console-content" style="flex: 1; overflow-y: auto; padding: 10px; font-size: 10px; line-height: 1.4;"></div>
+        <!-- Command Input (Fixed at Bottom) -->
+        <div id="debooger-command-container" style="display: flex; gap: 8px; align-items: center; padding: 8px 10px; border-top: 2px solid #0f0; background: rgba(0,20,0,0.98); flex-shrink: 0;">
+            <span style="color: #0ff; font-weight: bold; font-size: 14px;">></span>
+            <input type="text"
+                   id="debooger-command-input"
+                   placeholder="Type command... (Enter to run, Tab to autocomplete)"
+                   style="flex: 1; background: rgba(0,40,0,0.8); border: 1px solid #0f0; color: #0f0; font-family: monospace; font-size: 12px; padding: 8px 10px; outline: none; border-radius: 4px;"
+                   autocomplete="off"
+                   spellcheck="false"
+            />
+            <button id="debooger-command-execute" style="background: #0a0; border: 1px solid #0f0; color: #fff; padding: 8px 12px; cursor: pointer; font-family: monospace; font-size: 12px; border-radius: 4px;" title="Execute the command">Run</button>
+            <button id="debooger-command-help" style="background: #005; border: 1px solid #0ff; color: #0ff; padding: 8px 12px; cursor: pointer; font-family: monospace; font-size: 12px; border-radius: 4px;" title="Show available commands">?</button>
+        </div>
+    </div>
+    <button id="toggle-debooger-console" onclick="var dc=document.getElementById('debooger-console');if(dc){dc.style.display=(dc.style.display==='none'||dc.style.display==='')?'flex':'none';}" style="position: fixed; bottom: 10px; right: 10px; z-index: 999999; background: #000; color: #0f0; border: 2px solid #0f0; padding: 10px; cursor: pointer; font-family: monospace;" title="Toggle developer debugger console">
+        🐛 Debooger
+    </button>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         🖤 BOOTSTRAP - MUST LOAD FIRST so other scripts can register
+         All systems call Bootstrap.register() at load time
+         ═══════════════════════════════════════════════════════ -->
+    <script src="src/js/init/bootstrap.js?v=0.91.00"></script>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         🖤 LOADING MANAGER - tracks progress and shows loading bar
+         ═══════════════════════════════════════════════════════ -->
+    <script src="src/js/init/loading-manager.js?v=0.91.00"></script>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         ⚡⚡⚡ CRITICAL: CORE DEPENDENCIES - MUST LOAD FIRST ⚡⚡⚡
+         EventManager and TimerManager are used by ALL other systems
+         ═══════════════════════════════════════════════════════ -->
+    <script src="src/js/core/event-manager.js?v=0.91.00"></script>
+    <script src="src/js/core/timer-manager.js?v=0.91.00"></script>
+    <!-- 🔇 Session #77: DedupeLogger extracted from game.js -->
+    <script src="src/js/core/dedupe-logger.js?v=0.91.00"></script>
+    <!-- 📝 Session #77: GameLogger extracted from game.js -->
+    <script src="src/js/core/game-logger.js?v=0.91.00"></script>
+    <!-- 🏆 Session #77: LeaderboardFeatures extracted from game.js -->
+    <script src="src/js/core/leaderboard-features.js?v=0.91.00"></script>
+    <!-- 🪙 Session #77: GoldManager extracted from game.js -->
+    <script src="src/js/core/gold-manager.js?v=0.91.00"></script>
+    <!-- 🎮 Session #78: PlayerStateManager - single source of truth -->
+    <script src="src/js/core/player-state-manager.js?v=0.91.00"></script>
+    <!-- 🎲 Session #78: EventSystem extracted from game.js -->
+    <script src="src/js/core/event-system.js?v=0.91.00"></script>
+    <!-- 🚗 Session #78: TransportSystem extracted from game.js -->
+    <script src="src/js/systems/economy/transport-system.js?v=0.91.00"></script>
+
+    <!-- 🖤 NEW: Core utilities from refactor -->
+    <script src="src/js/core/system-registry.js?v=0.91.00"></script>
+    <script src="src/js/core/event-bus.js?v=0.91.00"></script>
+    <script src="src/js/utils/color-utils.js?v=0.91.00"></script>
+    <script src="src/js/utils/virtual-list.js?v=0.91.00"></script>
+    <!-- ⏰ THE TIME MACHINE - Unified time engine (replaces time-system.js + game-engine.js) -->
+    <script src="src/js/core/time-machine.js?v=0.91.00"></script>
+
+    <!-- 📊 Data Systems - MUST load before GameWorld so markets populate! 🖤 -->
+    <script src="src/js/data/items/item-database.js?v=0.91.00"></script>
+    <script src="src/js/data/items/unified-item-system.js?v=0.91.00"></script>
+
+    <!-- 🗺️ Game World - depends on ItemDatabase for market prices -->
+    <script src="src/js/data/game-world.js?v=0.91.00"></script>
+    <!-- 🎓 Tutorial World Data - isolated training area -->
+    <script src="src/js/data/tutorial-world.js?v=0.91.00"></script>
+
+    <!-- 💀 DOOM WORLD DATA - Config and NPCs for apocalyptic alternate reality -->
+    <script src="src/js/data/doom-world-config.js?v=0.91.00"></script>
+    <script src="src/js/data/doom-world-npcs.js?v=0.91.00"></script>
+
+    <!-- 🛠️ Browser Utilities (depend on EventManager) -->
+    <script src="src/js/init/browser-compatibility.js?v=0.91.00"></script>
+    <script src="src/js/ui/components/modal-system.js?v=0.91.00"></script>
+    <script src="src/js/systems/crafting/crafting-economy-system.js?v=0.91.00"></script>
+
+    <!-- 🔨 NEW: Crafting Engine (implements actual crafting logic) -->
+    <script src="src/js/systems/crafting/crafting-engine.js?v=0.91.00"></script>
+
+    <!-- ⚔️ NEW: Combat System (full combat resolution) -->
+    <script src="src/js/systems/combat/combat-system.js?v=0.91.00"></script>
+    <script src="src/js/npc/npc-combat-stats.js?v=0.91.00"></script>
+    <script src="src/js/ui/components/combat-modal.js?v=0.91.00"></script>
+    <script src="src/js/systems/trading/market-price-history.js?v=0.91.00"></script>
+    <script src="src/js/systems/trading/dynamic-market-system.js?v=0.91.00"></script>
+
+    <!-- 🏛️ City Systems -->
+    <script src="src/js/systems/world/city-reputation-system.js?v=0.91.00"></script>
+    <script src="src/js/systems/world/city-event-system.js?v=0.91.00"></script>
+    <script src="src/js/systems/world/dungeon-bonanza-system.js?v=0.91.00"></script>
+
+    <!-- 💼 Business Systems -->
+    <script src="src/js/systems/trading/trading-system.js?v=0.91.00"></script>
+    <script src="src/js/systems/trading/financial-tracker.js?v=0.91.00"></script>
+    <script src="src/js/ui/panels/inventory-panel.js?v=0.91.00"></script>
+
+    <!-- 👤 NPC System - consolidated into npc/ folder 🖤 -->
+    <script src="src/js/npc/npc-manager.js?v=0.91.00"></script>
+    <script src="src/js/npc/npc-merchants.js?v=0.91.00"></script>
+    <script src="src/js/npc/npc-dialogue.js?v=0.91.00"></script>
+    <script src="src/js/npc/npc-workflow.js?v=0.91.00"></script>
+    <script src="src/js/npc/npc-data-embedded.js?v=0.91.00"></script>
+    <script src="src/js/npc/npc-instruction-templates.js?v=0.91.00"></script>
+    <!-- 💀 Doom NPC Instructions - apocalyptic dialogue templates -->
+    <script src="src/js/npc/doom-npc-instruction-templates.js?v=0.91.00"></script>
+    <script src="src/js/npc/npc-voice.js?v=0.91.00"></script>
+    <script src="src/js/npc/npc-chat-ui.js?v=0.91.00"></script>
+    <script src="src/js/npc/npc-encounters.js?v=0.91.00"></script>
+    <!-- 🎓 Tutorial System - NPCs, Manager, UI Highlighter -->
+    <script src="src/js/npc/tutorial-npcs.js?v=0.91.00"></script>
+    <script src="src/js/systems/tutorial/tutorial-manager.js?v=0.91.00"></script>
+    <script src="src/js/ui/tutorial-highlighter.js?v=0.91.00"></script>
+    <script src="src/js/systems/story/initial-encounter.js?v=0.91.00"></script>
+    <script src="src/js/npc/npc-relationships.js?v=0.91.00"></script>
+    <script src="src/js/npc/npc-trade.js?v=0.91.00"></script>
+    <script src="src/js/ui/panels/trade-cart-panel.js?v=0.91.00"></script>
+
+    <!-- 🤖 Command & Quest Systems (v0.90) -->
+    <script src="src/js/debooger/api-command-system.js?v=0.91.00"></script>
+    <!-- 📜 Quest Data Files (must load BEFORE quest-system.js) -->
+    <script src="src/js/systems/progression/main-quests.js?v=0.91.00"></script>
+    <script src="src/js/systems/progression/side-quests.js?v=0.91.00"></script>
+    <script src="src/js/systems/progression/doom-quests.js?v=0.91.00"></script>
+    <!-- 🎓 Tutorial Quest Data (must load BEFORE quest-system.js) -->
+    <script src="src/js/systems/progression/tutorial-quests.js?v=0.91.00"></script>
+    <!-- 💀 Doom Quest System - Additional doom world quest logic -->
+    <script src="src/js/systems/progression/doom-quest-system.js?v=0.91.00"></script>
+    <script src="src/js/systems/progression/quest-system.js?v=0.91.00"></script>
+
+    <!-- 👑 Merchant Rank System - defines property/employee limits -->
+    <script src="src/js/systems/trading/merchant-rank-system.js?v=0.91.00"></script>
+
+    <!-- ⚔️ Equipment System - gear up for adventure -->
+    <script src="src/js/ui/panels/equipment-panel.js?v=0.91.00"></script>
+
+    <!-- 🏗️ Property System - modular architecture 🖤 -->
+    <script src="src/js/property/property-types.js?v=0.91.00"></script>
+    <script src="src/js/property/property-storage.js?v=0.91.00"></script>
+    <script src="src/js/property/property-purchase.js?v=0.91.00"></script>
+    <script src="src/js/property/property-income.js?v=0.91.00"></script>
+    <script src="src/js/property/property-upgrades.js?v=0.91.00"></script>
+    <script src="src/js/property/property-map-picker.js?v=0.91.00"></script>
+    <script src="src/js/property/property-ui.js?v=0.91.00"></script>
+    <script src="src/js/property/property-system-facade.js?v=0.91.00"></script>
+    <!-- 👥 Employee & Companion Systems -->
+    <script src="src/js/systems/employee/employee-system.js?v=0.91.00"></script>
+    <script src="src/js/systems/employee/companion-system.js?v=0.91.00"></script>
+    <script src="src/js/systems/employee/property-employee-bridge.js?v=0.91.00"></script>
+    <script src="src/js/systems/employee/property-employee-ui.js?v=0.91.00"></script>
+
+    <!-- 🗺️ Travel & Routes -->
+    <script src="src/js/systems/travel/travel-system.js?v=0.91.00"></script>
+    <script src="src/js/systems/trading/trade-route-system.js?v=0.91.00"></script>
+
+    <!-- 🏰 Gatehouse & Resource Gathering Systems -->
+    <script src="src/js/systems/travel/gatehouse-system.js?v=0.91.00"></script>
+    <script src="src/js/systems/crafting/resource-gathering-system.js?v=0.91.00"></script>
+    <script src="src/js/systems/combat/dungeon-exploration-system.js?v=0.91.00"></script>
+    <script src="src/js/data/exploration-config.js?v=0.91.00"></script>
+    <script src="src/js/ui/panels/exploration-panel.js?v=0.91.00"></script>
+
+    <!-- 🖤 Game World Renderer - where the map magic happens -->
+    <!-- 🗺️ Map rendering - base class + implementations -->
+    <script src="src/js/ui/map/map-renderer-base.js?v=0.91.00"></script>
+    <script src="src/js/ui/map/game-world-renderer.js?v=0.91.00"></script>
+    <script src="src/js/systems/travel/travel-panel-map.js?v=0.91.00"></script>
+
+    <!-- 🎯 Achievement System -->
+    <script src="src/js/systems/progression/achievement-system.js?v=0.91.00"></script>
+
+    <!-- 🏆 Global Leaderboard System -->
+    <script src="src/js/ui/panels/leaderboard-panel.js?v=0.91.00"></script>
+
+    <!-- 💀 Death Cause System - tracks how your journey ends -->
+    <script src="src/js/systems/combat/death-cause-system.js?v=0.91.00"></script>
+
+    <!-- 💀 Game Over System -->
+    <script src="src/js/systems/combat/game-over-system.js?v=0.91.00"></script>
+
+    <!-- 🎨 UI & Polish Systems -->
+    <script src="src/js/ui/ui-enhancements.js?v=0.91.00"></script>
+    <script src="src/js/ui/ui-polish-system.js?v=0.91.00"></script>
+    <script src="src/js/ui/button-fix.js?v=0.91.00"></script>
+    <script src="src/js/ui/credits-system.js?v=0.91.00"></script>
+    <script src="src/js/ui/panels/settings-panel.js?v=0.91.00"></script>
+    <script src="src/js/ui/panels/people-panel.js?v=0.91.00"></script>
+    <script src="src/js/ui/panels/random-event-panel.js?v=0.91.00"></script>
+    <script src="src/js/ui/components/tooltip-system.js?v=0.91.00"></script>
+    <script src="src/js/ui/components/draggable-panels.js?v=0.91.00"></script>
+    <script src="src/js/ui/components/panel-manager.js?v=0.91.00"></script>
+    <script src="src/js/ui/components/ui-state-manager.js?v=0.91.00"></script>
+    <script src="src/js/ui/components/panel-update-manager.js?v=0.91.00"></script>
+
+    <!-- 💾 UNIFIED Save/Load System 🖤 -->
+    <script src="src/js/systems/save/save-manager.js?v=0.91.00"></script>
+
+    <!-- 🌦️ NEW: Weather & Day/Night Systems -->
+    <script src="src/js/systems/world/weather-system.js?v=0.91.00"></script>
+    <script src="src/js/systems/world/day-night-cycle.js?v=0.91.00"></script>
+
+    <!-- 💀 DOOM WORLD SYSTEM - Master controller for apocalyptic alternate reality -->
+    <script src="src/js/systems/world/doom-world-system.js?v=0.91.00"></script>
+
+    <!-- 🌍 WORLD STATE MANAGER - Single source of truth for location/world state -->
+    <script src="src/js/systems/world/world-state-manager.js?v=0.91.00"></script>
+
+    <!-- 🏛️ NEW: Faction System -->
+    <script src="src/js/systems/progression/faction-system.js?v=0.91.00"></script>
+
+    <!-- 🎓 NEW: Skill System (full skill tree UI) -->
+    <script src="src/js/systems/progression/skill-system.js?v=0.91.00"></script>
+
+    <!-- 🏆 NEW: Reputation Consequences (reputation now affects gameplay) -->
+    <script src="src/js/systems/progression/reputation-system.js?v=0.91.00"></script>
+
+    <!-- 📅 NEW: NPC Schedule System (NPCs follow daily routines) -->
+    <script src="src/js/systems/npc/npc-schedule-system.js?v=0.91.00"></script>
+
+    <!-- 🐴 NEW: Mount System (mounts for travel and cargo) -->
+    <script src="src/js/systems/travel/mount-system.js?v=0.91.00"></script>
+
+    <!-- ⛵ NEW: Ship Trading System (sea routes and maritime trade) -->
+    <script src="src/js/systems/travel/ship-system.js?v=0.91.00"></script>
+
+    <!-- 🎬 Immersive Experience Systems -->
+    <script src="src/js/effects/visual-effects-system.js?v=0.91.00"></script>
+    <script src="src/js/audio/audio-system.js?v=0.91.00"></script>
+    <script src="src/js/audio/music-system.js?v=0.91.00"></script>
+    <script src="src/js/effects/animation-system.js?v=0.91.00"></script>
+    <script src="src/js/effects/environmental-effects-system.js?v=0.91.00"></script>
+    <script src="src/js/effects/immersive-experience-integration.js?v=0.91.00"></script>
+    <script src="src/js/effects/menu-weather-system.js?v=0.91.00"></script>
+
+    <!-- ⚡ Performance Optimizer -->
+    <script src="src/js/debooger/performance-optimizer.js?v=0.91.00"></script>
+
+    <!-- 🐛 Debooger System - ON by default for Super Hacker achievement 🖤 -->
+    <script src="src/js/core/debooger-system.js?v=0.91.00"></script>
+
+    <!-- 🎯 Current Task System - tracks player activity 💀 -->
+    <script src="src/js/systems/current-task-system.js?v=0.91.00"></script>
+
+    <!-- ⌨️ Key Bindings - your keyboard is your weapon 🦇 -->
+    <script src="src/js/ui/key-bindings.js?v=0.91.00"></script>
+    <!-- 📍 Session #77: LocationPanelStack extracted from game.js -->
+    <script src="src/js/ui/location-panel-stack.js?v=0.91.00"></script>
+
+    <!-- 🎭 Session #78: PerkSystem extracted from game.js -->
+    <script src="src/js/ui/perk-system.js?v=0.91.00"></script>
+
+    <!-- 🎮 CORE GAME - Must load LAST (depends on all systems above) -->
+    <script src="src/js/core/game.js?v=0.91.00"></script>
+
+    <!-- 🎮 GAME ENGINE - NOW HANDLED BY TIME MACHINE (time-machine.js loaded earlier) -->
+
+    <!-- 🎮 DEBOOGER COMMAND SYSTEM - Cheat codes and developer tools -->
+    <script src="src/js/debooger/debooger-command-system.js?v=0.91.00"></script>
+
+    <!-- 🖤 Bootstrap.init() is called automatically via DOMContentLoaded in bootstrap.js -->
+
+    <script>
+        // Initialize the property-employee bridge after all systems are loaded
+        if (typeof PropertyEmployeeBridge !== 'undefined') {
+            PropertyEmployeeBridge.init();
+        }
+
+        // Apply GameConfig values to UI elements
+        if (typeof GameConfig !== 'undefined') {
+            // Update document title
+            document.title = GameConfig.game.name;
+
+            // Update main menu title and version
+            const mainMenuTitle = document.getElementById('main-menu-title');
+            if (mainMenuTitle) mainMenuTitle.textContent = GameConfig.game.name;
+
+            const versionText = document.getElementById('main-menu-version');
+            if (versionText) versionText.textContent = GameConfig.getVersionString();
+
+            // Update top bar title
+            const topBarTitle = document.getElementById('top-bar-title');
+            if (topBarTitle) topBarTitle.textContent = GameConfig.ui.topBarTitle;
+
+            // Update loading title
+            const loadingTitle = document.getElementById('loading-title');
+            if (loadingTitle) loadingTitle.textContent = GameConfig.ui.loadingMessage;
+
+            // Update welcome message
+            const welcomeMsg = document.getElementById('welcome-message');
+            if (welcomeMsg) welcomeMsg.textContent = GameConfig.ui.welcomeMessage;
+
+            // Update copyright
+            const menuCopyright = document.getElementById('menu-copyright');
+            if (menuCopyright) menuCopyright.textContent = GameConfig.credits.copyright;
+
+            // Populate social links (including About button for credits)
+            const socialLinksContainer = document.getElementById('menu-social-links');
+            if (socialLinksContainer && GameConfig.links) {
+                const links = GameConfig.links;
+                let linksHTML = '';
+
+                // 🖤 About button - triggers rolling credits 💀
+                linksHTML += `<button class="menu-social-link about-btn" onclick="if(typeof CreditsSystem !== 'undefined') CreditsSystem.showCredits(); else console.error('CreditsSystem not loaded');" title="About"><span class="link-icon">ℹ️</span></button>`;
+
+                if (links.website) {
+                    linksHTML += `<a href="${links.website}" target="_blank" class="menu-social-link" title="Website"><span class="link-icon">🌐</span></a>`;
+                }
+                if (links.github) {
+                    linksHTML += `<a href="${links.github}" target="_blank" class="menu-social-link" title="GitHub"><span class="link-icon">💻</span></a>`;
+                }
+                if (links.discord) {
+                    linksHTML += `<a href="${links.discord}" target="_blank" class="menu-social-link" title="Discord"><span class="link-icon">💬</span></a>`;
+                }
+                if (links.support) {
+                    linksHTML += `<a href="mailto:${links.support}" class="menu-social-link" title="Contact Us"><span class="link-icon">✉️</span></a>`;
+                }
+
+                socialLinksContainer.innerHTML = linksHTML;
+
+                // Hide if no links
+                if (!linksHTML) {
+                    socialLinksContainer.style.display = 'none';
+                }
+            }
+
+            console.log(`🎮 ${GameConfig.game.name} v${GameConfig.version.game} initialized`);
+            console.log(`🏢 Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com`);
+        }
+    </script>
+
+    <!-- 🐛 DEBOOGER TOGGLE - Global helper function (only if enabled) -->
+    <script>
+        // 🐛 Global toggle function - ONLY works when debooger enabled in config
+        if (typeof GameConfig !== 'undefined' && GameConfig.debooger && GameConfig.debooger.enabled === true) {
+            window.toggleDebooger = function() {
+                var dc = document.getElementById('debooger-console');
+                if (dc) {
+                    dc.style.display = (dc.style.display === 'none' || dc.style.display === '') ? 'flex' : 'none';
+                }
+            };
+            console.log('🐛 Debooger toggle ready');
+        } else {
+            window.toggleDebooger = function() {}; // no-op when disabled
+        }
+    </script>
 </body>
 </html>

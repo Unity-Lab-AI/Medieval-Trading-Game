@@ -1,0 +1,168 @@
+
+---
+
+## SYSTEM IMPACT SUMMARY
+
+### Quest System (6 bugs total: 1 BROKEN, 2 BUGGY, 3 FIXED ✅)
+**Files Affected:**
+- `quest-system.js` (BUG #6, #9 FIXED, #12 FIXED)
+- `main-quests.js` (BUG #6, #10 FIXED)
+- `panel-manager.js` (BUG #6)
+
+**Remaining Bugs:** BUG #6 (BROKEN - quest exploit)
+**Fixed Bugs:** BUG #9 (Agent 7 - auto-untrack), BUG #10 (Agent 8 - missing objective), BUG #12 (Agent 7 - hide completed)
+**Critical Impact:** 1 BROKEN bug allows quest completion bypass - MUST FIX
+
+---
+
+### NPC Dialog System (3 bugs total: 2 BUGGY, 1 FIXED ✅)
+**Files Affected:**
+- `npc-chat-ui.js` (BUG #1, #5)
+- `modal-system.js` (BUG #1, #2, #5)
+- `people-panel.js` (BUG #1, #5, #3 FIXED)
+
+**Remaining Bugs:** BUG #1 (BUGGY - Hooded Stranger scroll), BUG #5 (BUGGY - NPC scroll persist), BUG #2 (BUGGY - dialog position)
+**Fixed Bugs:** BUG #3 (Agent 2 - approaching message)
+**Critical Impact:** Low - UX annoyances only, same root cause for #1 and #5
+
+---
+
+### Reputation System (1 bug total: 1 BROKEN)
+**Files Affected:**
+- `reputation-system.js` (BUG #11)
+- `city-reputation-system.js` (BUG #11)
+- `npc-relationships.js` (BUG #11)
+- `quest-system.js` (reward distribution)
+
+**Remaining Bugs:** BUG #11 (BROKEN - reputation invisibility)
+**Fixed Bugs:** None
+**Critical Impact:** HIGH - core progression broken, rep shown but not saved
+
+---
+
+### Trading/Inventory System (2 bugs total: 2 FIXED ✅)
+**Files Affected:**
+- `inventory-panel.js` (BUG #4 FIXED)
+- `trading-system.js` (BUG #8 FIXED)
+- `gold-manager.js` (BUG #8 FIXED)
+- `item-database.js` (BUG #8 FIXED)
+- `styles.css` (BUG #4 FIXED)
+
+**Remaining Bugs:** None
+**Fixed Bugs:** BUG #4 (Agent 1 - width issue), BUG #8 (Agent 6 - gold icon)
+**Critical Impact:** None - all bugs squashed ✅
+
+---
+
+### UI/Modal/Tooltip System (2 bugs total: 1 BUGGY, 1 FIXED ✅)
+**Files Affected:**
+- `tooltip-system.js` (BUG #7 FIXED)
+- `draggable-panels.js` (BUG #2)
+- `panel-manager.js` (BUG #2)
+
+**Remaining Bugs:** BUG #2 (BUGGY - dialog positioning)
+**Fixed Bugs:** BUG #7 (Agent 5 - tooltip quotes)
+**Critical Impact:** Low - only positioning issue remains
+
+---
+
+## RECOMMENDED FIX PRIORITY
+
+### 🔴 CRITICAL (Fix ASAP - Game Broken)
+1. **BUG #11** (BROKEN - Reputation) - Core progression mechanic completely broken. Reputation awards show in notifications but never save to player state or NPC relationships. Affects entire game economy and progression.
+2. **BUG #6** (BROKEN - Quest exploit) - Players can complete quests without finishing objectives. Click "Complete Quest" button before all objectives done = instant quest complete. Breaks game balance, allows content skip.
+
+### 🟡 HIGH (Fix Soon - Major UX Issues)
+3. **BUG #1** (BUGGY - Hooded Stranger scroll) - First impression bug, new players see scrolled dialog on game start. Must scroll up to read intro text. Affects onboarding experience.
+4. **BUG #5** (BUGGY - NPC scroll persist) - Same root cause as #1. All NPC dialogs remember scroll position from previous opens. Should always open scrolled to top. Fix #1 and #5 together.
+
+### 🟢 MEDIUM (Fix When Possible - Quality of Life)
+5. **BUG #2** (BUGGY - Dialog position) - Quest dialogs spawn off-center, require manual drag to correct position. Only affects first quest notification. Minor annoyance.
+
+---
+
+### ✅ COMPLETED (7 bugs squashed)
+- **BUG #3** (Agent 2) - NPC encounter "Approaching..." stuck text
+- **BUG #4** (Agent 1) - Inventory Quick Access width issue
+- **BUG #7** (Agent 5) - Tooltip excessive quote marks
+- **BUG #8** (Agent 6) - Gold icon inconsistency in trade
+- **BUG #9** (Agent 7) - Quest tracking toggle broken
+- **BUG #10** (Agent 8) - Missing fish quest return objective
+- **BUG #12** (Agent 7) - Completed quests cluttering tracker
+
+---
+
+## NOTES FOR FIXING AGENTS
+
+### BUG #6: Quest Completion Exploit (CRITICAL)
+**Root Cause:** Quest completion button not validating objective completion state
+**Fix Strategy:**
+- Find "Complete Quest" button click handler in `quest-system.js`
+- Add validation: check ALL objectives marked `completed: true` before allowing completion
+- Button should be disabled/greyed until all objectives complete
+- Possibly also in `panel-manager.js` if UI controls quest completion
+
+**Files to Check:**
+- `C:\Users\gfour\Desktop\MTGv0.91.00\src\js\systems\progression\quest-system.js` - `completeQuest()` function
+- `C:\Users\gfour\Desktop\MTGv0.91.00\src\js\ui\components\panel-manager.js` - Quest panel UI controls
+- Look for: button click handlers, objective validation loops
+
+---
+
+### BUG #11: Reputation Invisibility (CRITICAL)
+**Root Cause:** Reputation awarded and shown in notification but not persisted to state
+**Fix Strategy:** Trace the reputation award → save flow
+1. Find where quest rewards are distributed in `quest-system.js`
+2. Check if reputation is being passed to correct manager
+3. Verify `reputation-system.js` or `city-reputation-system.js` is receiving the award
+4. Check if manager is calling `player-state-manager.js` to save the value
+5. Verify property name consistency (rep vs reputation vs faction_rep)
+6. Ensure SaveManager is triggered after rep update
+
+**Critical Path:**
+- Quest complete → Reward distribution → Reputation manager → Player state → Save
+
+**Files to Audit:**
+- `C:\Users\gfour\Desktop\MTGv0.91.00\src\js\systems\progression\quest-system.js` - Lines with reputation rewards
+- `C:\Users\gfour\Desktop\MTGv0.91.00\src\js\systems\progression\reputation-system.js` - Award functions
+- `C:\Users\gfour\Desktop\MTGv0.91.00\src\js\systems\world\city-reputation-system.js` - City-specific rep
+- `C:\Users\gfour\Desktop\MTGv0.91.00\src\js\npc\npc-relationships.js` - NPC-specific rep
+- `C:\Users\gfour\Desktop\MTGv0.91.00\src\js\core\player-state-manager.js` - Where rep should be stored
+
+---
+
+### BUG #1 & #5: Dialog Scroll Position (HIGH)
+**Root Cause:** Dialog content populated before scroll reset, or scroll state cached
+**Fix Strategy:**
+- Add `scrollTop = 0` after content injection in dialog open handlers
+- For BUG #1: Fix `initial-encounter.js` Hooded Stranger specific code
+- For BUG #5: Fix general NPC dialog in `npc-chat-ui.js` and `people-panel.js`
+- Ensure scroll reset happens AFTER DOM content is injected
+
+**Implementation Pattern:**
+```javascript
+// After populating dialog content:
+dialogElement.scrollTop = 0;
+```
+
+**Files to Modify:**
+- `C:\Users\gfour\Desktop\MTGv0.91.00\src\js\systems\story\initial-encounter.js` (Hooded Stranger)
+- `C:\Users\gfour\Desktop\MTGv0.91.00\src\js\npc\npc-chat-ui.js` (General NPC dialog opening)
+- `C:\Users\gfour\Desktop\MTGv0.91.00\src\js\ui\panels\people-panel.js` (Dialog display functions)
+
+---
+
+### BUG #2: Dialog Positioning (MEDIUM)
+**Root Cause:** Window position calculated after render or only on drag
+**Fix Strategy:**
+- Calculate position BEFORE first display in `modal-system.js`
+- Check `draggable-panels.js` initialization timing
+- Verify quest notification positioning in `panel-manager.js`
+- Position should be set during creation, not deferred
+
+**Files to Review:**
+- `C:\Users\gfour\Desktop\MTGv0.91.00\src\js\ui\components\draggable-panels.js` - Initialization sequence
+- `C:\Users\gfour\Desktop\MTGv0.91.00\src\js\ui\components\modal-system.js` - show/display methods
+- `C:\Users\gfour\Desktop\MTGv0.91.00\src\js\ui\components\panel-manager.js` - Quest dialog specific code
+
+---

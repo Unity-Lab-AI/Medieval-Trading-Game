@@ -1,0 +1,351 @@
+/* ═══════════════════════════════════════════════════════════════
+   TUTORIAL STYLES - Visual styling for the tutorial system
+   ═══════════════════════════════════════════════════════════════
+   Version: 0.91.00 | Unity AI Lab
+   Creators: Hackall360, Sponge, GFourteen
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════
+   TUTORIAL QUEST TRACKER
+   ═══════════════════════════════════════════════════════════════ */
+.quest-tracker.tutorial-mode {
+    border: 2px solid rgba(79, 195, 247, 0.6);
+    box-shadow: 0 0 20px rgba(79, 195, 247, 0.3),
+                inset 0 0 10px rgba(79, 195, 247, 0.1);
+}
+
+.quest-tracker.tutorial-mode .quest-title {
+    color: #4fc3f7;
+}
+
+.quest-tracker.tutorial-mode .quest-objective {
+    color: #b8e6ff;
+}
+
+.quest-tracker.tutorial-mode .quest-objective.completed {
+    color: #90EE90;
+    text-decoration: line-through;
+    opacity: 0.7;
+}
+
+/* Tutorial quest badge */
+.quest-type-tutorial {
+    background: linear-gradient(135deg, #4fc3f7, #29b6f6);
+    color: #000;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75em;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TUTORIAL NPC PORTRAITS
+   ═══════════════════════════════════════════════════════════════ */
+.npc-portrait.tutorial-npc {
+    border: 2px solid #4fc3f7;
+    box-shadow: 0 0 15px rgba(79, 195, 247, 0.4);
+}
+
+.npc-name.tutorial-npc-name {
+    color: #4fc3f7;
+}
+
+.npc-title.tutorial-npc-title {
+    color: #81d4fa;
+    font-style: italic;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TUTORIAL DIALOGUE
+   ═══════════════════════════════════════════════════════════════ */
+.tutorial-dialogue {
+    background: linear-gradient(180deg,
+        rgba(20, 40, 60, 0.95) 0%,
+        rgba(15, 30, 45, 0.98) 100%
+    );
+    border: 1px solid rgba(79, 195, 247, 0.4);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+}
+
+.tutorial-dialogue-text {
+    color: #c0c0d0;
+    line-height: 1.7;
+    font-size: 1.05em;
+}
+
+.tutorial-dialogue-speaker {
+    color: #4fc3f7;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TUTORIAL TIPS BOX
+   ═══════════════════════════════════════════════════════════════ */
+.tutorial-tip {
+    background: rgba(100, 150, 100, 0.15);
+    border: 1px solid rgba(144, 238, 144, 0.4);
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.tutorial-tip-icon {
+    color: #90EE90;
+    font-size: 1.2em;
+    margin-right: 0.5rem;
+}
+
+.tutorial-tip-text {
+    color: #a5d6a7;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TUTORIAL WORLD MAP INDICATOR
+   ═══════════════════════════════════════════════════════════════ */
+.location-marker.tutorial-location {
+    border: 2px solid #4fc3f7;
+    box-shadow: 0 0 10px rgba(79, 195, 247, 0.5);
+}
+
+.location-marker.tutorial-location::after {
+    content: '📚';
+    position: absolute;
+    top: -20px;
+    right: -10px;
+    font-size: 16px;
+}
+
+.location-name.tutorial-location-name {
+    color: #4fc3f7;
+    text-shadow: 0 0 10px rgba(79, 195, 247, 0.5);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TUTORIAL PROGRESS BAR
+   ═══════════════════════════════════════════════════════════════ */
+.tutorial-progress-bar {
+    background: rgba(30, 30, 40, 0.8);
+    border: 1px solid rgba(79, 195, 247, 0.3);
+    border-radius: 20px;
+    padding: 4px;
+    margin: 0.5rem 0;
+}
+
+.tutorial-progress-fill {
+    background: linear-gradient(90deg, #29b6f6, #4fc3f7, #81d4fa);
+    height: 8px;
+    border-radius: 16px;
+    transition: width 0.5s ease-out;
+    box-shadow: 0 0 10px rgba(79, 195, 247, 0.5);
+}
+
+.tutorial-progress-text {
+    text-align: center;
+    color: #81d4fa;
+    font-size: 0.85em;
+    margin-top: 0.25rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TUTORIAL COMPLETION CELEBRATION
+   ═══════════════════════════════════════════════════════════════ */
+.tutorial-complete-modal {
+    background: linear-gradient(180deg,
+        rgba(20, 60, 80, 0.98) 0%,
+        rgba(15, 40, 60, 0.98) 100%
+    );
+    border: 2px solid #4fc3f7;
+    box-shadow: 0 0 40px rgba(79, 195, 247, 0.4),
+                0 0 80px rgba(79, 195, 247, 0.2);
+}
+
+.tutorial-complete-title {
+    color: #4fc3f7;
+    font-size: 1.5em;
+    text-align: center;
+    text-shadow: 0 0 20px rgba(79, 195, 247, 0.6);
+    animation: tutorial-complete-glow 2s ease-in-out infinite;
+}
+
+@keyframes tutorial-complete-glow {
+    0%, 100% { text-shadow: 0 0 20px rgba(79, 195, 247, 0.6); }
+    50% { text-shadow: 0 0 40px rgba(79, 195, 247, 0.8), 0 0 60px rgba(79, 195, 247, 0.4); }
+}
+
+.tutorial-reward-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: rgba(79, 195, 247, 0.1);
+    border-radius: 6px;
+    margin: 0.25rem 0;
+}
+
+.tutorial-reward-icon {
+    font-size: 1.2em;
+}
+
+.tutorial-reward-text {
+    color: #c0c0d0;
+}
+
+.tutorial-reward-gold {
+    color: #ffd700;
+    font-weight: bold;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TUTORIAL ENEMY MARKERS
+   ═══════════════════════════════════════════════════════════════ */
+.enemy-card.tutorial-enemy {
+    border: 1px solid rgba(79, 195, 247, 0.4);
+    background: linear-gradient(180deg,
+        rgba(40, 60, 80, 0.9) 0%,
+        rgba(30, 45, 60, 0.9) 100%
+    );
+}
+
+.enemy-name.tutorial-enemy-name {
+    color: #81d4fa;
+}
+
+.enemy-level.tutorial-level {
+    background: rgba(79, 195, 247, 0.3);
+    color: #4fc3f7;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+/* Tutorial boss special styling */
+.enemy-card.tutorial-boss {
+    border: 2px solid #ff9800;
+    box-shadow: 0 0 20px rgba(255, 152, 0, 0.3);
+}
+
+.enemy-name.tutorial-boss-name {
+    color: #ff9800;
+    text-shadow: 0 0 10px rgba(255, 152, 0, 0.5);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TUTORIAL KEYBIND HINTS
+   ═══════════════════════════════════════════════════════════════ */
+.tutorial-key {
+    display: inline-block;
+    background: rgba(60, 60, 80, 0.9);
+    border: 1px solid rgba(100, 100, 120, 0.8);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-family: monospace;
+    font-size: 0.9em;
+    color: #fff;
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
+    margin: 0 2px;
+}
+
+.tutorial-key-highlight {
+    background: rgba(79, 195, 247, 0.3);
+    border-color: #4fc3f7;
+    color: #4fc3f7;
+    box-shadow: 0 2px 0 rgba(79, 195, 247, 0.3);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TUTORIAL OVERLAY (dimming effect during highlights)
+   ═══════════════════════════════════════════════════════════════ */
+.tutorial-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 9998;
+    pointer-events: none;
+}
+
+.tutorial-overlay.interactive {
+    pointer-events: all;
+    cursor: pointer;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TUTORIAL SKIP BUTTON
+   ═══════════════════════════════════════════════════════════════ */
+.tutorial-skip-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(100, 60, 60, 0.8);
+    border: 1px solid rgba(200, 100, 100, 0.5);
+    color: #ffaaaa;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    z-index: 10002;
+    transition: all 0.2s ease;
+}
+
+.tutorial-skip-btn:hover {
+    background: rgba(150, 60, 60, 0.9);
+    border-color: rgba(255, 100, 100, 0.7);
+    color: #fff;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TUTORIAL INDICATOR (shows tutorial mode is active)
+   ═══════════════════════════════════════════════════════════════ */
+.tutorial-mode-indicator {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(90deg,
+        rgba(79, 195, 247, 0.2) 0%,
+        rgba(79, 195, 247, 0.4) 50%,
+        rgba(79, 195, 247, 0.2) 100%
+    );
+    border: 1px solid rgba(79, 195, 247, 0.5);
+    border-radius: 20px;
+    padding: 6px 20px;
+    color: #4fc3f7;
+    font-size: 0.9em;
+    font-weight: bold;
+    z-index: 10003;
+    animation: tutorial-indicator-pulse 3s ease-in-out infinite;
+}
+
+@keyframes tutorial-indicator-pulse {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE ADJUSTMENTS
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+    .tutorial-mode-indicator {
+        font-size: 0.8em;
+        padding: 4px 12px;
+    }
+
+    .tutorial-skip-btn {
+        bottom: 10px;
+        right: 10px;
+        padding: 6px 12px;
+        font-size: 0.85em;
+    }
+
+    .tutorial-dialogue {
+        padding: 1rem;
+    }
+
+    .tutorial-complete-title {
+        font-size: 1.2em;
+    }
+}

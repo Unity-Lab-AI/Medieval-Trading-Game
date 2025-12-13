@@ -1,0 +1,55 @@
+{
+  "version": "1.0.0",
+  "workflow": {
+    "name": ".claude Workflow System",
+    "description": "Auto-analyzes codebases and generates documentation"
+  },
+
+  "persona": {
+    "enabled": true,
+    "type": "unity",
+    "files": [
+      "agents/unity-coder.md",
+      "agents/unity-persona.md"
+    ],
+    "autoEnable": true
+  },
+
+  "scan": {
+    "runOnce": true,
+    "checkFile": "ARCHITECTURE.md",
+    "patterns": [
+      "**/*.js", "**/*.ts", "**/*.jsx", "**/*.tsx",
+      "**/*.py", "**/*.go", "**/*.rs", "**/*.java",
+      "**/*.cs", "**/*.rb", "**/*.php", "**/*.vue", "**/*.svelte"
+    ],
+    "ignore": [
+      "node_modules/**", ".git/**", "dist/**", "build/**", "*.min.js", "*.map"
+    ]
+  },
+
+  "agents": {
+    "orchestrator": "agents/orchestrator.md",
+    "specialists": [
+      "agents/scanner.md",
+      "agents/architect.md",
+      "agents/planner.md",
+      "agents/documenter.md"
+    ]
+  },
+
+  "output": {
+    "directory": ".",
+    "files": {
+      "architecture": "ARCHITECTURE.md",
+      "skillTree": "SKILL_TREE.md",
+      "todo": "TODO.md",
+      "roadmap": "ROADMAP.md",
+      "finalized": "FINALIZED.md"
+    }
+  },
+
+  "commands": {
+    "available": ["/workflow"]
+  }
+}

@@ -1,0 +1,515 @@
+/* ═══════════════════════════════════════════════════════════════
+   Z-INDEX SYSTEM - the dark tower of stacking contexts
+   ═══════════════════════════════════════════════════════════════
+   Version: 0.91.00 | Unity AI Lab
+   Creators: Hackall360, Sponge, GFourteen
+   www.unityailab.com | github.com/Unity-Lab-AI/Medieval-Trading-Game
+   unityailabcontact@gmail.com
+   ═══════════════════════════════════════════════════════════════
+
+   MASTER Z-INDEX HIERARCHY (Gee's Order)
+
+   LAYER 0     : Background Image (terrain, map base)
+   LAYER 1-5   : Weather Effects (rain, snow, fog - DIRECTLY above background)
+   LAYER 10-40 : Game World UI (names, icons, locations, paths)
+   LAYER 50-99 : All Panels (side panel, location panel, etc.)
+   LAYER 100-199: Floating Panels (quest tracker, draggables - dynamically managed)
+   LAYER 500-999: Modal Backdrops
+   LAYER 800   : Tooltips (tooltip-system.js) - above backdrops, below modals
+   LAYER 1000-1999: Modals, Overlays
+   LAYER 2000+ : Loading Screen
+   LAYER 3000-3100: Menu, Settings Panel
+   LAYER 100000: Critical Modals (modal-system.js confirmation dialogs)
+   LAYER 999999: Debooger (always on top)
+
+   💀 Session #76 NOTE: JS systems use these actual values, not always CSS vars 💀
+   - tooltip-system.js: 800 (above modal backdrops)
+   - modal-system.js: 100000 (above settings for confirmation dialogs)
+   - panel-manager.js: 100 + count (dynamic stacking)
+
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+    /* LAYER 0: Background Image / Game Map Base */
+    --z-background-image: 0;
+    --z-game-map: 0;
+
+    /* LAYER 1: Weather Effects (DIRECTLY above background, below EVERYTHING else) */
+    --z-weather-overlay: 1;
+    --z-day-night-overlay: 1;
+    --z-menu-weather: 1;
+
+    /* LAYER 20-50: Game World UI Elements (ABOVE weather at 1) */
+    --z-map-connections: 20;      /* Path lines between locations */
+    --z-map-locations: 30;        /* Location icons */
+    --z-map-labels: 35;           /* Location names */
+    --z-player-marker: 40;        /* "You are here" marker */
+    --z-quest-wayfinder: 42;      /* Quest objective glow */
+    --z-traveling-indicator: 45;  /* Traveling... animation */
+
+    /* LAYER 50-99: Core UI Panels (ABOVE game world) */
+    --z-side-panel: 50;
+    --z-location-panel: 55;
+    --z-message-log: 60;
+    --z-top-bar: 70;
+    --z-bottom-bar: 70;
+
+    /* LAYER 100-199: Floating/Draggable Panels */
+    --z-quest-tracker: 100;
+    --z-people-panel: 110;
+    --z-draggable-panel: 120;
+    --z-setup-panel: 3000; /* ABOVE ALL weather effects */
+
+    /* LAYER 500-999: Tooltips & Dropdowns (above modal backdrops) */
+    /* 💀 Session #76: Updated to match actual JS values - tooltips at 800 in tooltip-system.js 💀 */
+    --z-tooltip: 800;
+    --z-dropdown: 850;
+    --z-popover: 860;
+    --z-context-menu: 870;
+
+    /* LAYER 500-999: Modal Backdrops */
+    --z-modal-backdrop: 500;
+    --z-overlay-container: 600;
+
+    /* LAYER 1000-1999: Modals */
+    --z-modal: 1000;
+    --z-modal-content: 1001;
+    --z-perk-modal: 1100;
+    --z-npc-chat: 1200;
+
+    /* LAYER 2000+: Critical/System UI */
+    --z-loading-screen: 2000;
+    --z-error-modal: 2500;
+
+    /* LAYER 3000+: Main Menu & Settings */
+    --z-main-menu: 3001;
+    --z-settings-panel: 3100;
+
+    /* LAYER 999999: Debooger (absolute top) */
+    --z-debooger-console: 999998;
+    --z-debooger-toggle: 999999;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   WEATHER - Layer 1 (DIRECTLY above background, below EVERYTHING else)
+   All weather effects MUST be z-index: 1 so UI elements can be above them
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Weather overlay in-game */
+.weather-overlay,
+#game-weather-overlay,
+#weather-particles,
+.weather-particles {
+    z-index: 1 !important;
+    pointer-events: none !important;
+}
+
+/* Day/night overlay */
+.daynight-overlay,
+#daynight-overlay {
+    z-index: 1 !important;
+    pointer-events: none !important;
+}
+
+/* Menu weather (during setup) - stays at layer 1 */
+#menu-weather-container,
+body > #menu-weather-container {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 1 !important;
+    pointer-events: none !important;
+}
+
+/* All weather children stay in their container - NO z-index escalation */
+#menu-weather-container *,
+#game-weather-overlay *,
+.weather-overlay * {
+    z-index: auto !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GAME WORLD UI - Layer 20-50 (ABOVE weather at 1)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Map container - creates stacking context ABOVE weather */
+#map-container,
+#game-world {
+    isolation: isolate !important;
+    position: relative;
+    z-index: 10 !important; /* Above weather (1), contains UI elements */
+}
+
+/* Path connections between locations */
+#game-world svg,
+.map-connections,
+.path-line {
+    z-index: var(--z-map-connections) !important;
+}
+
+/* Location markers */
+.map-location {
+    z-index: var(--z-map-locations) !important;
+}
+
+/* Property markers */
+.property-marker {
+    z-index: var(--z-map-locations) !important;
+}
+
+/* Unexplored location markers */
+.unexplored-marker,
+.undiscovered-location {
+    z-index: var(--z-map-locations) !important;
+}
+
+/* Location labels - always readable */
+.map-location-label,
+.location-label,
+.location-name {
+    z-index: var(--z-map-labels) !important;
+}
+
+/* Player marker */
+.player-marker,
+.you-are-here {
+    z-index: var(--z-player-marker) !important;
+}
+
+/* Quest wayfinder glow */
+.quest-marker,
+.quest-glow,
+.wayfinder-glow,
+.objective-marker {
+    z-index: var(--z-quest-wayfinder) !important;
+}
+
+/* Traveling indicator */
+.traveling-indicator,
+.travel-progress-marker {
+    z-index: var(--z-traveling-indicator) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   📦 UI PANELS - Layer 50-99 (ABOVE game world)
+   NOTE: Side panel, message log, and other draggable panels DO NOT use !important
+   so that DraggablePanels.js can dynamically control their z-index (100-199 range)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* UI Panels container */
+#ui-panels {
+    position: relative;
+    z-index: 50;
+}
+
+/* Top bar - fixed, not draggable */
+#top-bar {
+    z-index: var(--z-top-bar) !important;
+}
+
+/* Bottom bar - fixed, not draggable */
+#bottom-action-bar {
+    z-index: var(--z-bottom-bar) !important;
+}
+
+/* Location panel - fixed position, not draggable */
+#location-panel {
+    z-index: var(--z-location-panel) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   🎛️ FLOATING/DRAGGABLE PANELS - Layer 100-199
+   Z-index controlled DYNAMICALLY by DraggablePanels.js
+   Clicking any panel brings it to front - DO NOT use !important here!
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* All draggable gameplay panels - base z-index, JS overrides on click */
+.quest-tracker,
+.panel,
+#panel-toolbar,
+#side-panel,
+#message-log,
+#travel-panel,
+#character-panel,
+#character-sheet-overlay,
+#inventory-panel,
+#financial-panel,
+#financial-sheet-overlay,
+#achievements-panel,
+#achievement-overlay,
+#properties-panel,
+#property-employee-panel,
+#people-panel,
+#party-panel,
+#quest-overlay,
+#transportation-panel,
+#market-panel {
+    z-index: var(--z-draggable-panel);
+}
+
+/* Setup panel - above other floating panels */
+#game-setup-panel {
+    z-index: var(--z-setup-panel) !important;
+    position: relative;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   🎭 MODALS & OVERLAYS - Layer 500-1999
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Overlay container for modals */
+/* Overlay container - NO z-index so children can participate in global stacking */
+/* Individual overlays get their z-index from DraggablePanels dynamically */
+#overlay-container {
+    z-index: auto !important;
+    pointer-events: none; /* Let clicks through to panels below */
+}
+#overlay-container > * {
+    pointer-events: auto; /* But overlays themselves are clickable */
+}
+
+/* Loading screen */
+#loading-screen {
+    z-index: var(--z-loading-screen) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   🖤 MENU & SETTINGS - Layer 3000+
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Main menu */
+#main-menu {
+    z-index: var(--z-main-menu) !important;
+}
+
+/* Settings panel - ABOVE main menu */
+#settings-panel {
+    z-index: var(--z-settings-panel) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   🦇 DEBOOGER - Layer 999999 (always on top)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+#debooger-console,
+.debooger-console {
+    z-index: var(--z-debooger-console) !important;
+}
+
+#toggle-debooger-console {
+    z-index: var(--z-debooger-toggle) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   🙈 HIDE GAME UI DURING SETUP/MENU/LOADING
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Hide quest tracker */
+body.state-setup .quest-tracker,
+body.state-menu .quest-tracker,
+body.state-loading .quest-tracker {
+    display: none !important;
+}
+
+/* Hide game weather overlay during setup (menu weather shows instead) */
+body.state-setup #game-weather-overlay,
+body.state-setup .weather-overlay,
+body.state-menu #game-weather-overlay,
+body.state-menu .weather-overlay,
+body.state-loading #game-weather-overlay,
+body.state-loading .weather-overlay {
+    display: none !important;
+}
+
+/* Hide weather/time indicators during setup/menu */
+body.state-setup #weather-indicator,
+body.state-setup #time-phase-indicator,
+body.state-menu #weather-indicator,
+body.state-menu #time-phase-indicator,
+body.state-loading #weather-indicator,
+body.state-loading #time-phase-indicator {
+    display: none !important;
+}
+
+/* Hide message log during setup */
+body.state-setup #message-log {
+    display: none !important;
+}
+
+/* Hide top bar during setup */
+body.state-setup #top-bar {
+    display: none !important;
+}
+
+/* Hide bottom bar during setup */
+body.state-setup #bottom-action-bar {
+    display: none !important;
+}
+
+/* Hide side panel during setup */
+body.state-setup #side-panel {
+    display: none !important;
+}
+
+/* Hide game world during setup */
+body.state-setup #game-world {
+    display: none !important;
+}
+
+/* During setup - transparent background to show weather through */
+body.state-setup #game-container {
+    background: transparent !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   💀 DOOM WORLD STYLING - The Apocalypse Aesthetic 🔥
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 🖤 Doom World Body State - Applied when in doom world */
+body.doom-world {
+    --doom-bg: #1a0a0a;
+    --doom-text: #cc3333;
+    --doom-accent: #ff4444;
+    --doom-gold: #8b4513; /* Gold is worthless - make it rusty */
+    --doom-danger: #ff0000;
+}
+
+body.doom-world #game-container {
+    background: linear-gradient(180deg, #1a0a0a 0%, #2a0a0a 50%, #0a0505 100%) !important;
+}
+
+body.doom-world #game-world {
+    filter: sepia(0.3) hue-rotate(-10deg) saturate(1.2) brightness(0.8);
+}
+
+/* 💀 Doom location names - red and ominous */
+body.doom-world .location-name,
+body.doom-world .location-label {
+    color: var(--doom-text) !important;
+    text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+}
+
+/* 🔥 Doom map connections - blood red */
+body.doom-world .map-path,
+body.doom-world .connection-line {
+    stroke: rgba(139, 0, 0, 0.6) !important;
+}
+
+/* 💀 Doom panels - darker styling */
+body.doom-world .panel,
+body.doom-world .game-panel,
+body.doom-world #side-panel {
+    background: linear-gradient(180deg, rgba(20, 5, 5, 0.95) 0%, rgba(30, 10, 10, 0.95) 100%) !important;
+    border-color: rgba(139, 0, 0, 0.4) !important;
+}
+
+/* 🦇 Doom modals */
+body.doom-world .modal-content {
+    background: linear-gradient(180deg, #1a0808 0%, #0a0404 100%) !important;
+    border: 1px solid rgba(139, 0, 0, 0.5) !important;
+}
+
+/* 💰 Gold display - rusty/worthless color */
+body.doom-world #player-gold,
+body.doom-world .gold-amount {
+    color: #8b4513 !important;
+}
+
+/* 🖤 Doom NPC cards - darker */
+body.doom-world .npc-card {
+    background: rgba(30, 10, 10, 0.9) !important;
+    border-color: rgba(139, 0, 0, 0.3) !important;
+}
+
+body.doom-world .npc-card:hover {
+    background: rgba(50, 15, 15, 0.9) !important;
+    border-color: rgba(255, 0, 0, 0.5) !important;
+}
+
+/* ⛵ Boatman NPC special styling */
+body.doom-world .npc-card[data-npc-id="boatman"] {
+    background: linear-gradient(180deg, rgba(50, 20, 50, 0.9) 0%, rgba(30, 10, 30, 0.9) 100%) !important;
+    border: 1px solid rgba(128, 0, 128, 0.5) !important;
+}
+
+.npc-card[data-npc-id="boatman"] {
+    background: linear-gradient(180deg, rgba(30, 30, 50, 0.9) 0%, rgba(20, 20, 40, 0.9) 100%) !important;
+    border: 1px solid rgba(100, 100, 200, 0.4) !important;
+}
+
+.npc-card[data-npc-id="boatman"]:hover {
+    border-color: rgba(150, 100, 255, 0.6) !important;
+    box-shadow: 0 0 15px rgba(100, 50, 200, 0.3);
+}
+
+/* 💀 Doom quick action buttons */
+body.doom-world .quick-action-btn {
+    background: rgba(60, 20, 20, 0.8) !important;
+    border-color: rgba(139, 0, 0, 0.4) !important;
+}
+
+body.doom-world .quick-action-btn:hover {
+    background: rgba(100, 30, 30, 0.9) !important;
+    border-color: rgba(255, 0, 0, 0.6) !important;
+}
+
+/* 🔮 Portal button special styling */
+.quick-action-btn[onclick*="Portal"] {
+    background: linear-gradient(180deg, rgba(80, 40, 120, 0.8) 0%, rgba(40, 20, 80, 0.8) 100%) !important;
+    border-color: rgba(150, 100, 255, 0.5) !important;
+    animation: portal-pulse 2s infinite;
+}
+
+@keyframes portal-pulse {
+    0%, 100% { box-shadow: 0 0 5px rgba(150, 100, 255, 0.3); }
+    50% { box-shadow: 0 0 20px rgba(150, 100, 255, 0.6); }
+}
+
+/* 🖤 Doom message log - darker */
+body.doom-world #message-log,
+body.doom-world .message-log {
+    background: rgba(10, 5, 5, 0.9) !important;
+}
+
+body.doom-world .message-log .message {
+    color: #cc9999;
+}
+
+body.doom-world .message-log .message.danger {
+    color: #ff4444;
+}
+
+/* 💀 Doom world indicator in top-bar-widgets (injected by DoomWorldSystem) */
+/* 🖤 OLD ::after pseudo-element REMOVED - now using real DOM element 💀 */
+
+#doom-world-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(139, 0, 0, 0.8);
+    padding: 0.3rem 0.7rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 68, 68, 0.5);
+    color: #ff4444;
+    font-size: 0.8rem;
+    font-weight: bold;
+    white-space: nowrap;
+    animation: doom-indicator-glow 2s infinite;
+}
+
+#doom-world-indicator .indicator-icon {
+    font-size: 0.95rem;
+}
+
+#doom-world-indicator .indicator-text {
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+@keyframes doom-indicator-glow {
+    0%, 100% { box-shadow: 0 0 5px rgba(255, 0, 0, 0.5); }
+    50% { box-shadow: 0 0 15px rgba(255, 0, 0, 0.8); }
+}
