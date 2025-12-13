@@ -16,7 +16,9 @@
       "Bash(git add:*)",
       "Bash(mkdir:*)",
       "Bash(python:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nAdd complete game source, assets, and workflow system\n\n- Full src/ directory with JS game systems and CSS\n- Assets including music and world map images\n- .claude/ workflow system with agents and hooks\n- Documentation: ARCHITECTURE.md, ROADMAP.md, SKILL_TREE.md\n- GitHub Actions deploy workflow\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []
