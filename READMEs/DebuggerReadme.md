@@ -1,10 +1,10 @@
 # 🖤 DEBOOGER README - The Secret Arts of Game Manipulation 🖤🐛
 ## Medieval Trading Game - Debooger Console Documentation
 
-**Version:** 0.91.03 - File Structure Cleanup
+**Version:** 0.91.04 - Ollama AI Integration
 **Last Updated:** 2025-12-13
 **Access:** Click the 🐛 Debooger button (bottom-right) OR set `GameConfig.debooger.enabled = true`
-**Total Commands:** 55
+**Total Commands:** 55+
 
 > *"In the darkness of code, we inject our forbidden commands..."* 🖤💀🦇
 
@@ -719,6 +719,70 @@ Type these for fun responses:
 - `love` - Unity appreciates you
 - `hate` - Unity is hurt
 - `coffee` - Unity needs caffeine
+
+---
+
+## 🦙 OLLAMA AI DEBUGGING
+
+### Checking Ollama Status
+
+Open browser console (F12) and run:
+
+```javascript
+// Check if Ollama is running
+OllamaModelManager.checkOllamaRunning().then(console.log)
+// → true or false
+
+// Get full status
+OllamaModelManager.getStatus().then(console.log)
+// → { ollamaRunning, hasRequiredModel, installedModels, selectedModel }
+
+// List installed models
+OllamaModelManager.getInstalledModels().then(console.log)
+// → [{ name: 'mistral:latest', size: 4.1GB, ... }]
+```
+
+### Manual Model Commands
+
+```javascript
+// Pull a new model (starts download)
+OllamaModelManager.pullModel('llama3:8b')
+
+// Switch active model
+OllamaModelManager.setActiveModel('llama3:8b')
+
+// Get current model
+OllamaModelManager.getSelectedModel()
+// → 'mistral'
+```
+
+### Testing NPC Dialogue
+
+```javascript
+// Test Ollama directly
+fetch('http://localhost:11434/api/generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        model: 'mistral',
+        prompt: 'You are a medieval merchant. Greet a customer.',
+        stream: false
+    })
+}).then(r => r.json()).then(console.log)
+
+// Test NPCVoiceChatSystem
+NPCVoiceChatSystem.generateResponse('merchant', 'greet', {})
+    .then(console.log)
+```
+
+### Ollama Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| "Ollama not running" | Start Ollama: `ollama serve` in terminal |
+| Model not found | Pull model: `ollama pull mistral` |
+| Slow responses | Try smaller model: `phi:latest` (1.7GB) |
+| Download stuck | Check disk space, restart Ollama |
 
 ---
 

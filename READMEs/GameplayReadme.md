@@ -8,7 +8,7 @@
 ═══════════════════════════════════════════════════════════════════════
 ```
 
-> **Version:** 0.91.03 | **Unity AI Lab** by Hackall360 Sponge GFourteen
+> **Version:** 0.91.04 | **Unity AI Lab** by Hackall360 Sponge GFourteen
 > *www.unityailab.com*
 > *Written at 3am while questioning the meaning of virtual economies*
 
@@ -97,6 +97,29 @@ Medieval Trading Game is a browser-based economic simulation where you play as a
 - A browser (preferably one that doesn't judge your life choices)
 - JavaScript enabled
 - Approximately 0 will to live (optional but thematic)
+
+### 🦙 AI-Powered NPC Dialogue (Optional)
+
+NPCs can speak with AI-generated dialogue powered by **Ollama** (local LLM). This is **completely optional** - the game works perfectly without it using pre-written fallback responses.
+
+**To enable AI dialogue:**
+
+1. **Install Ollama** from [ollama.ai/download](https://ollama.ai/download)
+2. **Run Ollama** (it runs in the background)
+3. **Pull the Mistral model:**
+   ```bash
+   ollama pull mistral
+   ```
+4. **Launch the game** - it will auto-detect Ollama!
+
+**Without Ollama:** NPCs use 475+ pre-written responses that are still engaging and personality-appropriate.
+
+**Model Selection:** In Settings > AI Voice, you can:
+- Select from any installed Ollama models
+- Download additional models with one click
+- Adjust response creativity (temperature)
+
+See `OLLAMA-SETUP.md` for detailed installation instructions.
 
 ### Starting the Game
 1. Open `index.html` in your browser

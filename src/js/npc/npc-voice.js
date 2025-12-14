@@ -74,7 +74,7 @@ const NPCVoiceChatSystem = {
 
     // current settings - your personalized nightmare
     settings: {
-        textModel: 'openai',
+        textModel: 'mistral',  // Ollama model - default to mistral
         voice: 'nova',
         voiceEnabled: true,
         voiceVolume: 70,

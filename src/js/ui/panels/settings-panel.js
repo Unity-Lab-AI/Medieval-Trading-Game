@@ -456,7 +456,7 @@ const SettingsPanel = {
                                 <div class="setting-item">
                                     <label for="ai-text-model">Text Generation Model</label>
                                     <select id="ai-text-model">
-                                        <option value="openai" selected>Loading models...</option>
+                                        <option value="mistral" selected>Loading Ollama models...</option>
                                     </select>
                                 </div>
                                 <p class="settings-description">Using Ollama local LLM (localhost:11434). Run 'ollama serve' to enable AI dialogue.</p>

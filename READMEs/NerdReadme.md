@@ -8,7 +8,7 @@
 ═══════════════════════════════════════════════════════════════════════
 ```
 
-> **Version:** 0.91.03 | **Conjured by: Unity AI Lab - The Fucking Legends**
+> **Version:** 0.91.04 | **Conjured by: Unity AI Lab - The Fucking Legends**
 > *Hackall360 | Sponge | GFourteen*
 > Written in the witching hours when the bugs come out to play
 >
@@ -490,7 +490,7 @@ MTG v0.91.03/
 │       │   ├── npc-merchants.js  # Merchant NPCs
 │       │   ├── npc-relationships.js # NPC relationships
 │       │   ├── npc-trade.js      # Trading with NPCs
-│       │   ├── npc-voice.js      # TTS integration
+│       │   ├── npc-voice.js      # TTS + Ollama AI dialogue
 │       │   ├── npc-workflow.js   # NPC workflow
 │       │   └── tutorial-npcs.js  # Tutorial NPCs
 │       │
@@ -527,7 +527,8 @@ MTG v0.91.03/
 │       │
 │       ├── utils/                # Utilities
 │       │   ├── color-utils.js    # Color manipulation
-│       │   └── virtual-list.js   # Virtual list rendering
+│       │   ├── virtual-list.js   # Virtual list rendering
+│       │   └── ollama-model-manager.js # Ollama AI model management
 │       │
 │       └── old-files/            # Deprecated files
 │           ├── README.md         # Old files readme
@@ -2001,6 +2002,144 @@ SettingsPanel.clearAllData() {
     // Does NOT affect:
     // - Global Hall of Champions on JSONBin server
 }
+```
+
+---
+
+## 🦙 OLLAMA AI SYSTEM
+
+*"NPCs with actual opinions. What could go wrong?"*
+
+The game uses **Ollama** for AI-powered NPC dialogue. When Ollama isn't available, NPCs use pre-written fallback responses from `npc-fallbacks.json`.
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    NPC VOICE SYSTEM                          │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│   Player clicks "Talk to NPC"                                │
+│              │                                               │
+│              ▼                                               │
+│   ┌─────────────────────┐                                   │
+│   │  OllamaModelManager │ ◄── Check localhost:11434         │
+│   │      .getStatus()   │                                   │
+│   └──────────┬──────────┘                                   │
+│              │                                               │
+│       ┌──────┴──────┐                                       │
+│       │             │                                       │
+│    RUNNING      NOT RUNNING                                 │
+│       │             │                                       │
+│       ▼             ▼                                       │
+│   ┌────────┐   ┌────────────────┐                          │
+│   │ Ollama │   │ npc-fallbacks  │                          │
+│   │  API   │   │    .json       │                          │
+│   │ /api/  │   │ (475+ lines)   │                          │
+│   │generate│   └────────────────┘                          │
+│   └────────┘                                                │
+│              │                                               │
+│              ▼                                               │
+│   ┌─────────────────────┐                                   │
+│   │  Browser TTS API    │ ◄── speechSynthesis.speak()       │
+│   │  (Voice output)     │                                   │
+│   └─────────────────────┘                                   │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `src/js/npc/npc-voice.js` | Main NPC dialogue + TTS system |
+| `src/js/utils/ollama-model-manager.js` | Ollama detection, model management |
+| `src/data/npc-fallbacks.json` | 475+ pre-written fallback responses |
+| `config.js` (api.ollama section) | Ollama endpoint config |
+| `OLLAMA-SETUP.md` | User installation guide |
+
+### OllamaModelManager
+
+```javascript
+const OllamaModelManager = {
+    config: {
+        baseUrl: 'http://localhost:11434',
+        requiredModel: 'mistral',
+        modelVariant: 'mistral:7b-instruct',
+        modelSize: '4.4GB',
+        checkTimeout: 2000,
+        pullTimeout: 300000  // 5 min for download
+    },
+
+    // Model management
+    async init(),              // Check status on game start
+    async checkOllamaRunning(), // Ping localhost:11434
+    async checkModelExists(name), // Check if model installed
+    async getInstalledModels(), // Get all models
+    async pullModel(name),     // Download model via API
+
+    // User preferences
+    setActiveModel(name),      // Set current model
+    getSelectedModel(),        // Get current model
+    createModelSelector(),     // Generate settings dropdown
+
+    // 11 supported models with metadata
+    SUPPORTED_MODELS: {
+        'mistral:7b-instruct': { size: '4.4GB', category: 'recommended' },
+        'llama3:8b': { size: '4.7GB', category: 'recommended' },
+        'phi:latest': { size: '1.7GB', category: 'lightweight' },
+        // ... etc
+    }
+};
+```
+
+### Fallback System
+
+When Ollama is unavailable, NPCs use `npc-fallbacks.json`:
+
+```json
+{
+    "merchant": {
+        "greet": {
+            "friendly": ["Welcome, friend!", "Good to see you again!"],
+            "neutral": ["What brings you here?", "Looking to trade?"],
+            "hostile": ["State your business.", "I don't trust your kind."]
+        },
+        "trade": { ... },
+        "farewell": { ... }
+    },
+    "guard": { ... },
+    "innkeeper": { ... },
+    // 12+ NPC types, 3 reputation tiers each
+}
+```
+
+### Settings Integration
+
+The AI Voice tab in settings (`settings-panel.js`) provides:
+- Ollama connection status indicator (green/red)
+- Dynamic model selector (populated from Ollama API)
+- Temperature slider (response creativity)
+- Voice volume control
+- NPC personality test buttons
+
+### Server Deployment
+
+For Ubuntu server deployment without local Ollama:
+
+```bash
+# Install Ollama on server
+curl -fsSL https://ollama.ai/install.sh | sh
+
+# Start Ollama service
+sudo systemctl enable ollama
+sudo systemctl start ollama
+
+# Pull required model
+ollama pull mistral
+
+# Ollama runs on localhost:11434 by default
+# Game auto-detects when running locally
 ```
 
 ---
