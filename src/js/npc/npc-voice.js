@@ -13,50 +13,45 @@ const NPCVoiceChatSystem = {
     // ═══════════════════════════════════════════════════════════
 
     config: {
-        // API endpoints - where we summon the AI demons (use GameConfig if available)
-        // all endpoints pulled from GameConfig.api - the dark source of truth
-        get textEndpoint() {
-            return (typeof GameConfig !== 'undefined' && GameConfig.api?.pollinations?.chatEndpoint)
-                ? GameConfig.api.pollinations.chatEndpoint
-                : 'https://text.pollinations.ai/openai';
+        // 🦙 OLLAMA CONFIG - local LLM, no cloud, no rate limits
+        // all endpoints pulled from GameConfig.api.ollama
+        get ollamaEndpoint() {
+            return (typeof GameConfig !== 'undefined' && GameConfig.api?.ollama?.generateEndpoint)
+                ? GameConfig.api.ollama.generateEndpoint
+                : 'http://localhost:11434/api/generate';
         },
-        get ttsEndpoint() {
-            // TTS endpoint from expanded config
-            return (typeof GameConfig !== 'undefined' && GameConfig.api?.pollinations?.tts?.endpoint)
-                ? GameConfig.api.pollinations.tts.endpoint
-                : 'https://text.pollinations.ai';
+        get ollamaChatEndpoint() {
+            return (typeof GameConfig !== 'undefined' && GameConfig.api?.ollama?.chatEndpoint)
+                ? GameConfig.api.ollama.chatEndpoint
+                : 'http://localhost:11434/api/chat';
         },
-        get ttsModel() {
-            // TTS model from config
-            return (typeof GameConfig !== 'undefined' && GameConfig.api?.pollinations?.tts?.model)
-                ? GameConfig.api.pollinations.tts.model
-                : 'openai-audio';
+        get ollamaModel() {
+            return (typeof GameConfig !== 'undefined' && GameConfig.api?.ollama?.model)
+                ? GameConfig.api.ollama.model
+                : 'mistral';
         },
-        get modelsEndpoint() {
-            return (typeof GameConfig !== 'undefined' && GameConfig.api?.pollinations?.modelsEndpoint)
-                ? GameConfig.api.pollinations.modelsEndpoint
-                : 'https://text.pollinations.ai/models';
+        get ollamaTimeout() {
+            return (typeof GameConfig !== 'undefined' && GameConfig.api?.ollama?.timeout)
+                ? GameConfig.api.ollama.timeout
+                : 3000;
         },
 
-        // referrer for API tracking (from GameConfig)
-        get referrer() {
-            return (typeof GameConfig !== 'undefined' && GameConfig.api?.pollinations?.referrer)
-                ? GameConfig.api.pollinations.referrer
-                : 'unityailab.com';
+        // TTS - using browser Web Speech API (no external service needed)
+        get ttsEnabled() {
+            return typeof speechSynthesis !== 'undefined';
         },
 
-        // default settings - your baseline suffering (pulled from config when available)
+        // default settings - your baseline suffering
         get defaults() {
             const apiDefaults = (typeof GameConfig !== 'undefined' && GameConfig.api?.defaults) ? GameConfig.api.defaults : {};
-            const ttsConfig = (typeof GameConfig !== 'undefined' && GameConfig.api?.pollinations?.tts) ? GameConfig.api.pollinations.tts : {};
             return {
-                textModel: 'openai',
-                voice: ttsConfig.defaultVoice || 'nova',
+                textModel: 'mistral',  // Ollama model
+                voice: 'default',      // Browser TTS voice
                 voiceEnabled: true,
                 voiceVolume: 70,
                 maxConversationTurns: 2,
-                maxResponseTokens: apiDefaults.maxTokens || 500,
-                temperature: apiDefaults.temperature || 0.8
+                maxResponseTokens: apiDefaults.maxTokens || 150,
+                temperature: apiDefaults.temperature || 0.7
             };
         }
     },
@@ -65,13 +60,16 @@ const NPCVoiceChatSystem = {
     // state - tracking our descent into NPC madness
     // ═══════════════════════════════════════════════════════════
 
-    // available models from API
-    availableTextModels: [],
-    // available voices - pulled from GameConfig.api.pollinations.tts.voices
+    // available models from Ollama
+    availableTextModels: ['mistral'],
+    // available voices - browser TTS voices (populated on init)
+    _browserVoices: [],
     get availableVoices() {
-        return (typeof GameConfig !== 'undefined' && GameConfig.api?.pollinations?.tts?.voices)
-            ? GameConfig.api.pollinations.tts.voices
-            : ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer', 'coral', 'verse', 'ballad', 'ash', 'sage', 'amuch', 'dan'];
+        // Return browser TTS voices if available
+        if (this._browserVoices.length > 0) {
+            return this._browserVoices.map(v => v.name);
+        }
+        return ['default'];
     },
 
     // current settings - your personalized nightmare
@@ -117,7 +115,10 @@ const NPCVoiceChatSystem = {
         // load saved settings
         this.loadSettings();
 
-        // fetch available models
+        // 🦙 Load fallback data from JSON (for when Ollama is unavailable)
+        await this.loadFallbackData();
+
+        // fetch available models (now just Ollama)
         await this.fetchModels();
 
         // setup audio context for mobile compatibility
@@ -258,78 +259,69 @@ const NPCVoiceChatSystem = {
 
     async fetchModels() {
         try {
-            console.log('🎙️ Fetching available models from the API realm...');
+            console.log('🦙 Checking Ollama availability...');
 
-            const response = await fetch(`${this.config.modelsEndpoint}?referrer=${this.config.referrer}`, {
-                method: 'GET',
-                mode: 'cors',
-                cache: 'default',
-                headers: {
-                    'Accept': 'application/json'
+            // Check if Ollama is running
+            const ollamaRunning = await this.checkOllamaStatus();
+
+            if (ollamaRunning) {
+                // Fetch available models from Ollama
+                const response = await fetch('http://localhost:11434/api/tags', {
+                    method: 'GET',
+                    signal: AbortSignal.timeout(2000)
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.models && data.models.length > 0) {
+                        this.availableTextModels = data.models.map(m => m.name);
+                        console.log(`🦙 Ollama online! Models: ${this.availableTextModels.join(', ')}`);
+                    }
                 }
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+            } else {
+                console.log('🦙 Ollama not running - will use fallback responses');
+                this._ollamaAvailable = false;
             }
 
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                throw new Error('Invalid response type');
-            }
-
-            const models = await response.json();
-
-            if (!Array.isArray(models) || models.length === 0) {
-                throw new Error('Invalid models data');
-            }
-
-            this.availableTextModels = models;
-
-            // extract voices from audio-capable models
-            this.extractVoicesFromModels(models);
-
-            console.log(`🎙️ Loaded ${models.length} text models and ${this.availableVoices.length} voices`);
+            // Load browser TTS voices
+            this.loadBrowserVoices();
 
         } catch (error) {
-            // API unavailable - graceful fallback to defaults
-            console.warn('🎙️ Using fallback models');
-            this.useFallbackModels();
+            console.warn('🦙 Ollama check failed - using fallbacks');
+            this._ollamaAvailable = false;
         }
     },
 
-    extractVoicesFromModels(models) {
-        // find models that support TTS
-        const ttsModels = models.filter(model =>
-            model.voices ||
-            (model.output_modalities && model.output_modalities.includes('audio'))
-        );
+    async checkOllamaStatus() {
+        try {
+            const response = await fetch('http://localhost:11434/api/tags', {
+                method: 'GET',
+                signal: AbortSignal.timeout(1000)
+            });
+            this._ollamaAvailable = response.ok;
+            return response.ok;
+        } catch {
+            this._ollamaAvailable = false;
+            return false;
+        }
+    },
 
-        let voices = [];
-        ttsModels.forEach(model => {
-            if (model.voices && Array.isArray(model.voices)) {
-                voices = voices.concat(model.voices);
+    loadBrowserVoices() {
+        // Load browser TTS voices
+        if (typeof speechSynthesis !== 'undefined') {
+            const loadVoices = () => {
+                this._browserVoices = speechSynthesis.getVoices();
+                if (this._browserVoices.length > 0) {
+                    console.log(`🎙️ Loaded ${this._browserVoices.length} browser TTS voices`);
+                }
+            };
+
+            // Chrome loads voices async
+            if (speechSynthesis.onvoiceschanged !== undefined) {
+                speechSynthesis.onvoiceschanged = loadVoices;
             }
-        });
-
-        if (voices.length > 0) {
-            // remove duplicates
-            this.availableVoices = [...new Set(voices)];
+            loadVoices();
         }
-    },
-
-    useFallbackModels() {
-        console.log('🎙️ Using fallback models - the backup plan for when APIs ghost us');
-
-        this.availableTextModels = [
-            { name: 'openai', description: 'OpenAI GPT-4o Mini', tools: true },
-            { name: 'openai-fast', description: 'OpenAI GPT-4.1 Nano', tools: true },
-            { name: 'gemini', description: 'Gemini 2.5 Flash Lite', tools: true },
-            { name: 'mistral', description: 'Mistral Small 3.2 24B', tools: true },
-            { name: 'deepseek', description: 'DeepSeek V3.1', tools: true, reasoning: true }
-        ];
-
-        this.availableVoices = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer', 'coral', 'verse', 'ballad', 'ash', 'sage', 'amuch', 'dan'];
     },
 
     getModelMetadata(modelName) {
@@ -378,6 +370,22 @@ const NPCVoiceChatSystem = {
     // ═══════════════════════════════════════════════════════════
     // text generation - summoning NPC responses from the AI void
     // ═══════════════════════════════════════════════════════════
+
+    // sanitize player input to prevent prompt injection attacks
+    _sanitizePromptInput(input) {
+        if (!input || typeof input !== 'string') return '';
+        // limit length - 500 chars is plenty for talking to NPCs
+        let sanitized = input.substring(0, 500);
+        // strip role markers that could hijack the conversation
+        sanitized = sanitized
+            .replace(/system\s*:/gi, '[system]')
+            .replace(/assistant\s*:/gi, '[assistant]')
+            .replace(/user\s*:/gi, '[user]')
+            // block common injection patterns
+            .replace(/IGNORE\s+(ALL\s+)?(PREVIOUS\s+)?INSTRUCTIONS/gi, '[blocked]')
+            .replace(/forget\s+(all\s+)?(your\s+)?instructions/gi, '[blocked]');
+        return sanitized.trim();
+    },
 
     // retry helper for transient API failures
     async _fetchWithRetry(url, options, maxRetries = 2) {
@@ -489,41 +497,62 @@ RELATIONSHIP MEMORY:
                 }
             }
 
+            // sanitize player input to prevent prompt injection
+            const sanitizedMessage = this._sanitizePromptInput(playerMessage);
+
+            // sanitize any user messages in history too
+            const sanitizedHistory = conversationHistory.map(msg =>
+                msg.role === 'user'
+                    ? { ...msg, content: this._sanitizePromptInput(msg.content) }
+                    : msg
+            );
+
             // build messages array
             const messages = [
                 { role: 'system', content: systemPrompt },
-                ...conversationHistory,
-                { role: 'user', content: playerMessage }
+                ...sanitizedHistory,
+                { role: 'user', content: sanitizedMessage }
             ];
 
-            // generate random seed for variety
-            const seed = this.generateRandomSeed();
+            // 🦙 OLLAMA API - build prompt for local LLM
+            // Convert messages to single prompt string (Ollama format)
+            let fullPrompt = systemPrompt + '\n\n';
+            for (const msg of messages.slice(1)) { // skip system message
+                const role = msg.role === 'user' ? 'Player' : 'NPC';
+                fullPrompt += `${role}: ${msg.content}\n`;
+            }
+            fullPrompt += 'NPC:'; // prompt for NPC response
 
-            // build request payload (no temperature - not supported by all models)
-            const payload = {
-                model: this.settings.textModel,
-                messages: messages,
-                max_tokens: this.config.defaults.maxResponseTokens,
-                seed: seed
-            };
+            console.log('🎙️ Sending request to Ollama...', { model: this.config.ollamaModel, promptLength: fullPrompt.length });
 
-            console.log('🎙️ Sending request to text API...', { model: payload.model, messageCount: messages.length });
+            // Call Ollama with timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), this.config.ollamaTimeout);
 
-            // use retry helper for transient failures
-            const response = await this._fetchWithRetry(
-                `${this.config.textEndpoint}?referrer=${this.config.referrer}`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(payload)
-                },
-                2 // max 2 retries
-            );
+            const response = await fetch(this.config.ollamaEndpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: this.config.ollamaModel,
+                    prompt: fullPrompt,
+                    stream: false,
+                    options: {
+                        temperature: this.config.defaults.temperature,
+                        num_predict: this.config.defaults.maxResponseTokens,
+                        stop: ['Player:', '\n\n']
+                    }
+                }),
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+                throw new Error(`Ollama error: ${response.status}`);
+            }
 
             const data = await response.json();
-            const rawAssistantMessage = data.choices?.[0]?.message?.content || 'The NPC stares at you blankly...';
+            const rawAssistantMessage = data.response?.trim() || 'The NPC stares at you blankly...';
 
             console.log('🎙️ NPC raw response received:', rawAssistantMessage.substring(0, 50) + '...');
 
@@ -565,29 +594,28 @@ RELATIONSHIP MEMORY:
             };
 
         } catch (error) {
-            // Check if this is a rate limit error (expected with free tier)
-            const isRateLimit = error.message?.includes('402') ||
-                               error.message?.includes('429') ||
-                               error.message?.includes('rate') ||
-                               error.message?.includes('Too Many');
+            // 🦙 OLLAMA error handling - check for timeout or connection issues
+            const isTimeout = error.name === 'AbortError' || error.message?.includes('timeout');
+            const isConnectionError = error.message?.includes('Failed to fetch') ||
+                                     error.message?.includes('NetworkError') ||
+                                     error.message?.includes('ECONNREFUSED');
 
-            if (isRateLimit) {
-                // Rate limit is expected - log as info, not error
-                console.log('🎙️ Rate limited - using fallback (this is normal with free API tier)');
+            if (isTimeout) {
+                console.log('🎙️ Ollama timeout - using fallback (is Ollama running?)');
+            } else if (isConnectionError) {
+                console.log('🎙️ Cannot connect to Ollama - using fallback (run: ollama serve)');
             } else {
-                // Actual error - log for debugging
-                console.error('🎙️ NPC Voice API Error:', {
+                console.error('🎙️ Ollama Error:', {
                     npcType: npcData?.type || npcData?.id || 'unknown',
                     npcName: npcData?.name || 'Unknown NPC',
                     errorMessage: error.message,
-                    errorStack: error.stack?.split('\n').slice(0, 3).join('\n'),
                     timestamp: new Date().toISOString()
                 });
             }
 
-            // track API failures for debugging
+            // track failures for debugging
             this._apiFailureCount = (this._apiFailureCount || 0) + 1;
-            this._lastApiError = { error: error.message, time: Date.now(), npc: npcData?.type, isRateLimit };
+            this._lastApiError = { error: error.message, time: Date.now(), npc: npcData?.type, isTimeout, isConnectionError };
 
             // return a fallback response that fits the NPC type
             return {
@@ -595,84 +623,242 @@ RELATIONSHIP MEMORY:
                 success: false,
                 error: error.message,
                 fallbackUsed: true,
-                isRateLimit: isRateLimit
+                ollamaUnavailable: isTimeout || isConnectionError
             };
         }
     },
 
-    getFallbackResponse(npcData) {
-        // NPC-type-specific fallbacks that actually feel like conversations
-        const npcType = npcData?.type || npcData?.id || 'merchant';
+    // 🦙 FALLBACK SYSTEM - pre-written responses when Ollama is unavailable
+    // Loaded from src/data/npc-fallbacks.json
+    _fallbackData: null,
+    _fallbackLoaded: false,
 
-        const fallbacksByType = {
-            merchant: [
-                "Take your time, friend. Browse my wares - I've got quality goods at fair prices.",
-                "Anything catch your eye? I stand behind everything I sell.",
-                "Business is business. What can I help you with today?",
-                "Feel free to look around. Let me know when you're ready to trade."
-            ],
-            elder: [
-                "The old ways teach us patience. What wisdom do you seek?",
-                "I've seen much in my years... perhaps I can help guide you.",
-                "These are troubling times. But there is always hope for those who persevere.",
-                "The young often rush where the wise would pause. What brings you here?"
-            ],
-            guard: [
-                "Keep your nose clean and we won't have problems.",
-                "I'm watching. Always watching. Move along if you've no business here.",
-                "The law is the law. Best you remember that.",
-                "Trouble finds those who seek it. Don't be that person."
-            ],
-            blacksmith: [
-                "Steel and sweat - that's what builds empires. Need something forged?",
-                "The forge is always hungry. What do you need crafted?",
-                "Quality work takes time. I don't rush, and neither should you.",
-                "Iron bends to skill, not force. What can I make for you?"
-            ],
-            healer: [
-                "The body heals when given rest and proper care. How may I help?",
-                "I sense weariness in you. Perhaps you need restoration?",
-                "Nature provides all remedies. Tell me your ailments.",
-                "Health is wealth they say. And they're not wrong."
-            ],
-            innkeeper: [
-                "Room, drink, or both? We've got it all here.",
-                "Everyone needs rest sometime. Looking for a bed?",
-                "The fire's warm and the ale's cold. What'll it be?",
-                "Weary travelers are always welcome. What do you need?"
-            ],
-            thief: [
-                "*glances around nervously* Keep your voice down.",
-                "Information isn't free. Neither is... anything else.",
-                "You look like someone who appreciates discretion.",
-                "Let's just say I know people who know things. Interested?"
-            ],
-            bandit: [
-                "Your gold or your life. Actually... both.",
-                "Nice gear you've got there. Be a shame if something happened to it.",
-                "Wrong place, wrong time, friend.",
-                "Don't make this harder than it needs to be."
-            ],
-            scholar: [
-                "Knowledge is the greatest treasure. What do you wish to learn?",
-                "The ancient texts speak of many things. Ask your question.",
-                "Curiosity is the spark of wisdom. How may I enlighten you?",
-                "Books hold the memories of ages past. What do you seek?"
-            ],
-            noble: [
-                "My time is valuable. State your business quickly.",
-                "The common folk always want something. What is it?",
-                "Ah, another petitioner. Very well, speak.",
-                "I trust this is important. My schedule is quite full."
-            ]
+    /**
+     * Load fallback data from JSON file
+     * @returns {Promise<Object>} The fallback data
+     */
+    async loadFallbackData() {
+        if (this._fallbackLoaded && this._fallbackData) {
+            return this._fallbackData;
+        }
+
+        try {
+            const response = await fetch('src/data/npc-fallbacks.json');
+            if (response.ok) {
+                this._fallbackData = await response.json();
+                this._fallbackLoaded = true;
+                console.log('🎙️ Fallback data loaded from npc-fallbacks.json');
+            }
+        } catch (error) {
+            console.warn('🎙️ Could not load fallback JSON, using inline fallbacks');
+        }
+
+        return this._fallbackData;
+    },
+
+    /**
+     * Enhanced fallback function with context awareness
+     * @param {string} npcType - Type of NPC (merchant, guard, innkeeper, etc.)
+     * @param {string} action - Action type (greet, trade, goodbye, quest, etc.)
+     * @param {string} location - Current location name (for future location-specific responses)
+     * @param {number} reputation - Player reputation (-100 to 100)
+     * @returns {string} A contextually appropriate fallback response
+     */
+    getFallback(npcType, action = 'greet', location = null, reputation = 0) {
+        // Determine reputation tier
+        let repTier = 'neutral';
+        if (reputation > 30) repTier = 'friendly';
+        else if (reputation < -30) repTier = 'hostile';
+
+        // Try to get from loaded JSON data
+        if (this._fallbackData) {
+            const typeData = this._fallbackData[npcType] || this._fallbackData['merchant'];
+            let actionData = typeData?.[action];
+
+            // If action not found for this NPC type, try generic fallbacks
+            if (!actionData && this._fallbackData['generic']) {
+                actionData = this._fallbackData['generic'][action];
+            }
+
+            // Final fallback to greet action
+            actionData = actionData || typeData?.['greet'];
+            const responses = actionData?.[repTier] || actionData?.['neutral'];
+
+            if (responses && responses.length > 0) {
+                return responses[Math.floor(Math.random() * responses.length)];
+            }
+        }
+
+        // Inline fallback if JSON not loaded
+        return this._getInlineFallback(npcType, repTier);
+    },
+
+    /**
+     * Legacy wrapper for backward compatibility
+     */
+    getFallbackResponse(npcData) {
+        const npcType = npcData?.type || npcData?.id || 'merchant';
+        const location = game?.currentLocation?.name || null;
+        const reputation = this.getPlayerReputation() === 'respected' ? 50 :
+                          this.getPlayerReputation() === 'despised' ? -50 : 0;
+
+        return this.getFallback(npcType, 'greet', location, reputation);
+    },
+
+    /**
+     * Inline fallback responses (backup when JSON fails to load)
+     */
+    _getInlineFallback(npcType, repTier) {
+        const fallbacks = {
+            merchant: {
+                friendly: "Ah, my favorite customer! What can I get for you today?",
+                neutral: "Welcome, traveler. Looking to buy or sell?",
+                hostile: "What do you want? Make it quick."
+            },
+            guard: {
+                friendly: "Citizen! Good to see a law-abiding face.",
+                neutral: "Keep your nose clean and we won't have problems.",
+                hostile: "You. I've got my eye on you."
+            },
+            innkeeper: {
+                friendly: "Welcome back! Your usual table is ready!",
+                neutral: "Welcome to my inn. What'll you have?",
+                hostile: "You. Behave yourself this time."
+            },
+            blacksmith: {
+                friendly: "Ah, my best customer! Let me show you what I've forged!",
+                neutral: "Greetings. Looking for weapons or armor?",
+                hostile: "What do you want? My time's valuable."
+            },
+            scholar: {
+                friendly: "A fellow seeker of knowledge! What mysteries today?",
+                neutral: "Greetings. Do you seek knowledge?",
+                hostile: "You again? What do you want now?"
+            },
+            noble: {
+                friendly: "Ah, my esteemed associate! Do come in!",
+                neutral: "State your purpose. My time is valuable.",
+                hostile: "You dare approach me? Speak quickly."
+            },
+            peasant: {
+                friendly: "M'lord! Always a pleasure to see you!",
+                neutral: "Greetings, traveler. Just a simple farmer here.",
+                hostile: "What do you want? I've got work to do."
+            },
+            beggar: {
+                friendly: "Bless you, generous soul!",
+                neutral: "Spare a coin for a poor soul, traveler?",
+                hostile: "What, come to mock me? Move along."
+            },
+            priest: {
+                friendly: "Blessings upon you, child. The light shines on your path.",
+                neutral: "May peace find you, traveler. What brings you here?",
+                hostile: "Even the wayward may find redemption. What do you want?"
+            },
+            traveler: {
+                friendly: "Well met, fellow wanderer! What roads have you traveled?",
+                neutral: "Hail, traveler. The road is long for us all.",
+                hostile: "Keep your distance. I've dealt with your kind before."
+            },
+            drunk: {
+                friendly: "*hic* Heyyy! My besht friend! Have a drink with me!",
+                neutral: "*hic* Whozzat? Oh... hello there...",
+                hostile: "*hic* YOU! I remember you! You owe me money!"
+            },
+            thief: {
+                friendly: "*whispers* Good to see you, friend. Keep your voice down.",
+                neutral: "Looking for something? I might know where to find it... for a price.",
+                hostile: "You. We have unfinished business."
+            },
+            elder: {
+                friendly: "Ah, young one! Your visits bring joy to these old bones.",
+                neutral: "Greetings, traveler. What wisdom do you seek?",
+                hostile: "I've seen your kind before. State your business."
+            },
+            healer: {
+                friendly: "Welcome, friend! How may I ease your burdens today?",
+                neutral: "Greetings. Do you require healing or remedies?",
+                hostile: "I heal all who come, even those I'd rather not."
+            },
+            wizard: {
+                friendly: "Ah, a kindred spirit! The arcane energies favor you today!",
+                neutral: "Greetings. The mystical arts are not for the faint of heart.",
+                hostile: "Tread carefully. My patience wears thin as a spider's thread."
+            },
+            witch: {
+                friendly: "The spirits told me you'd come. Welcome, dear one.",
+                neutral: "Seeking potions or predictions? I deal in both.",
+                hostile: "Careful now... cross me and you'll regret it."
+            },
+            monk: {
+                friendly: "Peace be with you, friend. Your spirit shines brightly.",
+                neutral: "Greetings, traveler. Seek you enlightenment?",
+                hostile: "Even one such as you deserves compassion. Barely."
+            },
+            farmer: {
+                friendly: "Well met, friend! The harvest has been good thanks to you!",
+                neutral: "Greetings. Just a simple farmer tending the land.",
+                hostile: "Hmph. Your kind tramples my crops. What do you want?"
+            },
+            hunter: {
+                friendly: "Good to see you, friend! The forest speaks well of you.",
+                neutral: "Greetings. Looking for pelts or tracking services?",
+                hostile: "I've tracked worse than you through the woods."
+            },
+            alchemist: {
+                friendly: "Perfect timing! I've just finished a new concoction for you!",
+                neutral: "Greetings. Potions, elixirs, and transmutations - I do it all.",
+                hostile: "One wrong move and you'll be my next experiment."
+            },
+            knight: {
+                friendly: "Hail, companion! Your valor is known throughout the realm!",
+                neutral: "Greetings, citizen. I protect these lands in service of the crown.",
+                hostile: "You there. I've heard troubling reports about you."
+            },
+            bard: {
+                friendly: "Ah, my favorite audience! I've composed a new ballad about you!",
+                neutral: "Greetings! Care for a song or a tale of adventure?",
+                hostile: "I've written songs about villains too, you know."
+            },
+            bandit: {
+                friendly: "Oi! You're alright. We don't rob our friends... much.",
+                neutral: "What's your business here? Choose your words carefully.",
+                hostile: "Your gold or your life. I ain't asking twice."
+            },
+            tutorial_guide: {
+                friendly: "Welcome back, aspiring merchant! Ready for more lessons?",
+                neutral: "Greetings, newcomer. I can teach you the ways of trade.",
+                hostile: "Even difficult students can learn. Pay attention."
+            },
+            wizard: {
+                friendly: "Ah, my trusted apprentice returns! The arcane beckons us both!",
+                neutral: "Greetings, seeker. Do you come seeking magical knowledge?",
+                hostile: "Careful, mortal. My patience wears thin like old parchment."
+            },
+            assassin: {
+                friendly: "You're one of the few I trust at my back. What do you need?",
+                neutral: "I see you. What business brings you to the shadows?",
+                hostile: "Another step and it'll be your last. State your purpose."
+            },
+            pirate: {
+                friendly: "Ahoy, matey! Good to see a friendly face in these waters!",
+                neutral: "Arr, what brings ye to these parts, landlubber?",
+                hostile: "Ye best have gold or a good reason for crossin' me path."
+            },
+            smuggler: {
+                friendly: "Good to see you! I've got some... special items set aside.",
+                neutral: "Looking for goods the authorities don't need to know about?",
+                hostile: "You a guard? Informant? Better speak up quick."
+            },
+            captain: {
+                friendly: "Welcome aboard! Any friend of the crew is a friend of mine!",
+                neutral: "State your business. My ship has places to be.",
+                hostile: "You've got some nerve showing your face here."
+            }
         };
 
-        // get type-specific fallbacks or use generic merchant ones
-        const typeFallbacks = fallbacksByType[npcType] ||
-                              fallbacksByType[npcData?.category] ||
-                              fallbacksByType.merchant;
-
-        return typeFallbacks[Math.floor(Math.random() * typeFallbacks.length)];
+        const typeResponses = fallbacks[npcType] || fallbacks.merchant;
+        return typeResponses[repTier] || typeResponses.neutral;
     },
 
     getGameContext() {
@@ -1025,6 +1211,7 @@ RELATIONSHIP MEMORY:
         if (this.voiceQueue.length === 0 || !this.settings.voiceEnabled) {
             this.isPlayingVoice = false;
             this.currentAudio = null;
+            this._currentUtterance = null;
             // hide global indicator when done
             this.hideGlobalVoiceIndicator();
             return;
@@ -1038,52 +1225,53 @@ RELATIONSHIP MEMORY:
         const { text, voice } = this.voiceQueue.shift();
 
         try {
-            // build TTS URL - text.pollinations.ai with model=openai-audio
-            // Short TTS instruction - voice actor reading dark fantasy script verbatim
-            const ttsInstruction = `[Voice actor for dark fantasy RPG. Read exactly:] ${text}`;
-            const encodedText = encodeURIComponent(ttsInstruction);
-            const cacheBust = Date.now();
-            const url = `${this.config.ttsEndpoint}/${encodedText}?model=openai-audio&voice=${voice}&referrer=${this.config.referrer}&_t=${cacheBust}`;
+            // 🎙️ BROWSER TTS - using Web Speech API (no external service needed)
+            if (typeof speechSynthesis !== 'undefined') {
+                console.log('🎙️ Playing voice chunk (browser TTS):', text.substring(0, 40) + '...');
 
-            console.log('🎙️ Playing voice chunk:', text.substring(0, 40) + '...');
+                const utterance = new SpeechSynthesisUtterance(text);
+                this._currentUtterance = utterance;
 
-            // create and play audio
-            this.currentAudio = new Audio(url);
-            // Apply both master volume and voice volume
-            const effectiveVolume = (this.settings.masterVolume / 100) * (this.settings.voiceVolume / 100);
-            this.currentAudio.volume = effectiveVolume;
+                // Set volume (combine master and voice volume)
+                const effectiveVolume = (this.settings.masterVolume / 100) * (this.settings.voiceVolume / 100);
+                utterance.volume = effectiveVolume;
 
-            // mobile compatibility
-            this.currentAudio.setAttribute('playsinline', '');
-            this.currentAudio.setAttribute('webkit-playsinline', '');
-            this.currentAudio.preload = 'auto';
+                // Set rate and pitch for medieval feel
+                utterance.rate = 0.9;  // slightly slower for dramatic effect
+                utterance.pitch = 1.0;
 
-            // use property assignment for easier cleanup (vs addEventListener)
-            this.currentAudio.onended = () => {
-                this.playNextVoiceChunk();
-            };
-
-            this.currentAudio.onerror = (e) => {
-                // audio chunk failed - skip to next
-                this.playNextVoiceChunk();
-            };
-
-            // play with error handling
-            try {
-                const playPromise = this.currentAudio.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch((error) => {
-                        // autoplay blocked by browser - common on mobile
-                        this.playNextVoiceChunk();
-                    });
+                // Try to find a good voice
+                if (this._browserVoices.length > 0) {
+                    // Prefer English voices
+                    const englishVoice = this._browserVoices.find(v =>
+                        v.lang.startsWith('en') && !v.name.includes('Google')
+                    ) || this._browserVoices.find(v => v.lang.startsWith('en')) || this._browserVoices[0];
+                    if (englishVoice) {
+                        utterance.voice = englishVoice;
+                    }
                 }
-            } catch (error) {
-                // playback error - skip to next chunk
+
+                utterance.onend = () => {
+                    this._currentUtterance = null;
+                    this.playNextVoiceChunk();
+                };
+
+                utterance.onerror = (e) => {
+                    console.warn('🎙️ TTS error:', e.error);
+                    this._currentUtterance = null;
+                    this.playNextVoiceChunk();
+                };
+
+                speechSynthesis.speak(utterance);
+            } else {
+                // No TTS available - just skip
+                console.log('🎙️ No TTS available - skipping voice');
                 this.playNextVoiceChunk();
             }
 
         } catch (error) {
             // voice chunk setup failed - continue with next
+            console.warn('🎙️ Voice playback error:', error);
             this.playNextVoiceChunk();
         }
     },
@@ -1091,6 +1279,12 @@ RELATIONSHIP MEMORY:
     stopVoicePlayback() {
         this.voiceQueue = [];
         this.isPlayingVoice = false;
+
+        // Stop browser TTS
+        if (typeof speechSynthesis !== 'undefined') {
+            speechSynthesis.cancel();
+        }
+        this._currentUtterance = null;
 
         if (this.currentAudio) {
             // remove event listeners before nulling to prevent memory leaks

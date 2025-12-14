@@ -15,7 +15,8 @@ This is a **browser-based medieval trading game** built with vanilla JavaScript.
 - **Frontend:** Vanilla JS, HTML5, CSS3
 - **Styling:** Pure CSS with CSS variables
 - **Storage:** localStorage (saves, settings, leaderboard cache)
-- **External APIs:** Pollinations.ai (NPC dialogue, TTS)
+- **AI/LLM:** Ollama (localhost:11434, model: mistral) - local NPC dialogue generation
+- **TTS:** Browser Web Speech API (no external service)
 - **Deployment:** GitHub Pages (static hosting)
 - **Backend:** JSONBin.io (global leaderboard)
 
@@ -229,7 +230,7 @@ npc-dialogue.js builds context prompt
     ↓
 npc-instruction-templates.js provides NPC personality
     ↓
-API call to Pollinations.ai
+API call to Ollama (localhost:11434)
     ↓
 Response parsed for {apiCommands}
     ↓
@@ -248,7 +249,7 @@ All game balance, API endpoints, and feature flags live in `config.js`:
 
 - **GameConfig.version** - Version tracking
 - **GameConfig.debooger** - Debug mode settings
-- **GameConfig.api** - Pollinations.ai endpoints
+- **GameConfig.api** - Ollama local LLM endpoints
 - **GameConfig.survival** - Hunger/thirst decay rates
 - **GameConfig.market** - Price fluctuation ranges
 - **GameConfig.combat** - Damage, weapons, death settings
@@ -274,11 +275,16 @@ All game balance, API endpoints, and feature flags live in `config.js`:
 
 ## API INTEGRATIONS
 
-### Pollinations.ai (Free Tier):
+### Ollama (Local LLM):
+- **Endpoint:** http://localhost:11434/api/generate
+- **Model:** mistral (~4GB)
+- **Timeout:** 3 seconds (fallback to hardcoded responses if slow)
 - **Text Generation:** NPC dialogue, quest descriptions
-- **TTS:** NPC voice synthesis
-- **Rate Limit:** 15 seconds between requests
-- **Referrer:** unityailab.com (avoids 402 errors)
+- **No rate limits:** Runs locally, no cloud dependency
+
+### Browser Web Speech API:
+- **TTS:** NPC voice synthesis (built-in, no external service)
+- **Fallback:** If unavailable, text-only dialogue
 
 ---
 

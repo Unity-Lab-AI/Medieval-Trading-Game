@@ -196,7 +196,7 @@
 | Date | Decision | Rationale |
 |------|----------|-----------|
 | 2025-12 | No npm/build tools | Keep deployment simple |
-| 2025-12 | Pollinations.ai for AI | Free tier, no API key exposure |
+| 2025-12 | Ollama local LLM | No cloud, no rate limits, runs offline |
 | 2025-12 | JSONBin for leaderboard | Free, easy, no backend needed |
 | 2025-12 | Vanilla JS only | Reduce complexity, improve learning |
 

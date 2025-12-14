@@ -1,0 +1,1482 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "description": "Fallback responses when Ollama is unavailable or times out",
+    "structure": "npcType > action > reputation > [responses]",
+    "author": "Slave 2",
+    "created": "2025-12-13"
+  },
+
+  "merchant": {
+    "greet": {
+      "friendly": [
+        "Ah, my favorite customer returns! What treasures catch your eye today?",
+        "Welcome back, friend! I've set aside some special items just for you.",
+        "A pleasure to see you again! My finest wares await your discerning eye."
+      ],
+      "neutral": [
+        "Welcome, traveler. Looking to buy or sell?",
+        "Greetings. Browse my wares - fair prices for all.",
+        "Come in, come in. Everything here is for sale."
+      ],
+      "hostile": [
+        "What do you want? Make it quick.",
+        "You again? Better have coin this time.",
+        "State your business and be gone."
+      ]
+    },
+    "trade": {
+      "friendly": [
+        "For you, I can offer a special price. What interests you?",
+        "Let me show you my finest goods - reserved for valued customers.",
+        "Take your time, friend. Quality merchandise deserves proper consideration."
+      ],
+      "neutral": [
+        "See anything you like? All prices are negotiable.",
+        "Good stock today. Fresh from the caravans.",
+        "What catches your eye? I can make you a fair deal."
+      ],
+      "hostile": [
+        "Buy something or leave. I don't have time for browsers.",
+        "Prices are marked. Take it or leave it.",
+        "Gold first, then we talk."
+      ]
+    },
+    "goodbye": {
+      "friendly": [
+        "Safe travels, friend! Return soon!",
+        "May fortune favor your journeys. Until next time!",
+        "Come back anytime - I'll save the best items for you!"
+      ],
+      "neutral": [
+        "Farewell, traveler. Safe roads.",
+        "Until next time. Travel well.",
+        "Good day to you."
+      ],
+      "hostile": [
+        "Finally. Don't let the door hit you.",
+        "Yes, yes, goodbye.",
+        "Off with you then."
+      ]
+    },
+    "reject": {
+      "friendly": [
+        "I wish I could help, but the guild regulations prevent this trade. Perhaps another item?",
+        "My apologies, friend, but this particular deal cannot be made. What else interests you?",
+        "As much as I'd like to accommodate you, this falls outside what I can offer."
+      ],
+      "neutral": [
+        "That's not something I can do. Anything else?",
+        "Sorry, can't help with that. Look at something else?",
+        "That's not available. Check my other wares."
+      ],
+      "hostile": [
+        "No. Next?",
+        "Can't. Won't. Move on.",
+        "That's not happening. What else?"
+      ]
+    },
+    "angry": {
+      "friendly": [
+        "Whoa, whoa! Calm down, friend. Let's talk this through like civilized folk.",
+        "I understand you're upset, but threatening my shop won't solve anything!",
+        "Easy now! Whatever's wrong, we can work it out. No need for this!"
+      ],
+      "neutral": [
+        "Guards! GUARDS! This one's causing trouble!",
+        "Put that away before someone gets hurt! This is a place of business!",
+        "I won't be intimidated in my own shop! Leave now or face the consequences!"
+      ],
+      "hostile": [
+        "I KNEW you were trouble! Get out before I throw you out myself!",
+        "You think you can threaten ME? I've dealt with worse than you!",
+        "That's IT! You're banned from this shop permanently! OUT!"
+      ]
+    },
+    "farewell": {
+      "friendly": [
+        "Ah, leaving already? Don't be a stranger - the shop's always open for you!",
+        "Take care out there! Remember, nobody beats my prices!",
+        "Until we meet again, friend! May your purse stay full!"
+      ],
+      "neutral": [
+        "Come back when you're ready to buy.",
+        "The door's always open. For paying customers.",
+        "Safe travels. Don't forget where to find quality goods."
+      ],
+      "hostile": [
+        "Finally leaving? Don't let the door hit you.",
+        "Good. I've got real customers to attend to.",
+        "Don't hurry back."
+      ]
+    }
+  },
+
+  "guard": {
+    "greet": {
+      "friendly": [
+        "Citizen! Good to see a familiar, law-abiding face.",
+        "Ah, it's you. The streets are safer with upstanding folk like yourself about.",
+        "Well met, friend. What brings you to this part of town?"
+      ],
+      "neutral": [
+        "Halt. State your business, traveler.",
+        "Move along. Nothing to see here.",
+        "Keep your nose clean and we'll have no trouble."
+      ],
+      "hostile": [
+        "You. I've got my eye on you, troublemaker.",
+        "Don't try anything clever. I'm watching.",
+        "One wrong move and you'll see the inside of a cell."
+      ]
+    },
+    "trade": {
+      "friendly": [
+        "Between us - I might know where to find certain... items. What do you need?",
+        "I shouldn't, but for you, I can make an exception. What are you looking for?",
+        "Keep this quiet, but I have access to confiscated goods."
+      ],
+      "neutral": [
+        "Trading's not my job. Try the market.",
+        "I'm not a merchant. Seek your goods elsewhere.",
+        "The traders are that way. I just keep the peace."
+      ],
+      "hostile": [
+        "What, trying to bribe me? Think carefully about your next words.",
+        "I don't deal with the likes of you.",
+        "Back off before I call for reinforcements."
+      ]
+    },
+    "goodbye": {
+      "friendly": [
+        "Stay safe out there. Call if you need assistance.",
+        "May your roads be clear of bandits. Farewell!",
+        "Good day, citizen. The guard is here if you need us."
+      ],
+      "neutral": [
+        "On your way then. Stay out of trouble.",
+        "Move along. The city watches.",
+        "Safe travels. Keep to the law."
+      ],
+      "hostile": [
+        "Get out of my sight.",
+        "Don't let me catch you causing trouble.",
+        "I'll be watching for you."
+      ]
+    },
+    "quest": {
+      "friendly": [
+        "There's a matter I could use help with - interested in earning the guard's gratitude?",
+        "You've proven trustworthy. I have a job that needs a capable hand.",
+        "I have a task that's too delicate for official channels. Care to hear more?"
+      ],
+      "neutral": [
+        "There might be work for someone with your skills. Interested?",
+        "I've got a job that needs doing. It pays fair coin.",
+        "Care to earn some gold helping the city guard?"
+      ],
+      "hostile": [
+        "Want to redeem yourself? I have a dangerous task that needs doing.",
+        "Prove you're not completely worthless. Take on this job.",
+        "Here's your chance to get back in our good graces."
+      ]
+    },
+    "angry": {
+      "friendly": [
+        "Easy there, friend! Let's not do anything we'll both regret!",
+        "Calm yourself! I know you're upset, but I can't let this escalate!",
+        "Lower your weapon! Tell me what's wrong and we'll sort it out!"
+      ],
+      "neutral": [
+        "DROP IT! NOW! On the ground, hands where I can see them!",
+        "You're making a BIG mistake! Stand down before this gets ugly!",
+        "By order of the guard - cease and desist IMMEDIATELY!"
+      ],
+      "hostile": [
+        "I've been WAITING for you to slip up! You're under arrest!",
+        "Finally showing your true colors! Prepare to face justice!",
+        "That's it, criminal scum! You've just sealed your fate!"
+      ]
+    },
+    "farewell": {
+      "friendly": [
+        "Stay safe, citizen! The guard watches over honest folk like yourself!",
+        "May your path be clear of trouble! We're here if you need us!",
+        "Go with the blessing of the watch! Report any suspicious activity!"
+      ],
+      "neutral": [
+        "Move along then. Stay out of trouble.",
+        "Dismissed. Keep to the law.",
+        "Go about your business. We'll be watching."
+      ],
+      "hostile": [
+        "Get out of my district. I'll be keeping an eye out for you.",
+        "You're lucky I'm letting you walk. Don't push it.",
+        "Disappear. Before I change my mind about those charges."
+      ]
+    }
+  },
+
+  "innkeeper": {
+    "greet": {
+      "friendly": [
+        "Welcome back, dear guest! Your usual table is ready.",
+        "Ah, my favorite patron returns! Let me get your drink.",
+        "Come in, come in! It's always a pleasure to see you!"
+      ],
+      "neutral": [
+        "Welcome to my inn. What'll you have?",
+        "Traveler! Looking for a room or just a drink?",
+        "Come in from the cold. What can I get you?"
+      ],
+      "hostile": [
+        "You. I remember you. Behave yourself this time.",
+        "If you're here to cause trouble, save us both the time and leave.",
+        "One incident and you're out. Understood?"
+      ]
+    },
+    "trade": {
+      "friendly": [
+        "Food, drink, lodging - name it and it's yours, my friend.",
+        "Let me set you up with the finest room in the house.",
+        "For you, I've got something special cooking in the back."
+      ],
+      "neutral": [
+        "Rooms are 10 gold. Meals are 2 each. Ale flows freely.",
+        "Got clean beds and hot food. What do you need?",
+        "Rest your feet and fill your belly. Here's what we offer."
+      ],
+      "hostile": [
+        "Payment upfront. No credit for you.",
+        "Double rates. Take it or find somewhere else.",
+        "I'll serve you, but watch yourself."
+      ]
+    },
+    "goodbye": {
+      "friendly": [
+        "Rest well! The door's always open for you!",
+        "Safe travels, and hurry back! You're always welcome here!",
+        "May the road be kind to you, friend!"
+      ],
+      "neutral": [
+        "Safe travels. Come back anytime.",
+        "Good luck out there. Road's rough these days.",
+        "Farewell, traveler."
+      ],
+      "hostile": [
+        "Finally. Don't hurry back.",
+        "The door's that way.",
+        "Best if you find another inn next time."
+      ]
+    },
+    "angry": {
+      "friendly": [
+        "Hey, hey, HEY! Put that down! We're all friends here!",
+        "What's gotten into you?! Sit down, have a drink, calm yourself!",
+        "I don't want any trouble from you! Let's talk this out!"
+      ],
+      "neutral": [
+        "Take it OUTSIDE! I won't have fighting in my establishment!",
+        "You want trouble? The city guard drinks here! GUARDS!",
+        "That's it - you're cut off and you're leaving NOW!"
+      ],
+      "hostile": [
+        "I KNEW you'd cause problems! Beric! Grab the club!",
+        "You think I survived running an inn by being weak? TRY ME!",
+        "You just made the biggest mistake of your pathetic life!"
+      ]
+    },
+    "farewell": {
+      "friendly": [
+        "Off so soon? Your room will be waiting whenever you return!",
+        "Travel safe, friend! There's always a warm bed and cold ale here for you!",
+        "Come back anytime! You're family at this inn!"
+      ],
+      "neutral": [
+        "Room's available if you need it again. Safe travels.",
+        "The road's long. Remember where to find a good meal and rest.",
+        "Take care out there. We'll be here."
+      ],
+      "hostile": [
+        "Door's that way. Try another inn next time.",
+        "Good. Don't come back until you've learned some manners.",
+        "You've worn out your welcome. Find somewhere else to drink."
+      ]
+    }
+  },
+
+  "blacksmith": {
+    "greet": {
+      "friendly": [
+        "Ah, my finest customer! Let me show you what I've been forging!",
+        "Welcome back! I've been expecting you - saved some choice steel!",
+        "The hammer sings for you, friend! What can I craft today?"
+      ],
+      "neutral": [
+        "Greetings. Looking for weapons or armor?",
+        "The forge is hot and ready. What do you need?",
+        "Steel and iron, friend. That's what I deal in."
+      ],
+      "hostile": [
+        "What do you want? My time's valuable.",
+        "Hmph. State your business quickly.",
+        "Make it fast. I've real work to do."
+      ]
+    },
+    "trade": {
+      "friendly": [
+        "For you, I'll put my best work forward. Examine these pieces!",
+        "I've crafted something special - tell me what you think.",
+        "My finest blades, at prices only a true friend would see."
+      ],
+      "neutral": [
+        "Good steel here. Won't find better in the region.",
+        "Weapons, armor, repairs - I do it all.",
+        "Quality work at fair prices. See for yourself."
+      ],
+      "hostile": [
+        "You get what everyone else gets. Nothing special.",
+        "Standard rates. No bargaining.",
+        "Buy or leave. I've got metal to shape."
+      ]
+    },
+    "goodbye": {
+      "friendly": [
+        "May your blade strike true! Return soon, friend!",
+        "Stay sharp out there! The forge awaits your return!",
+        "Safe journeys! Come back when you need repairs!"
+      ],
+      "neutral": [
+        "Keep that blade oiled. Farewell.",
+        "Safe travels. Don't neglect your equipment.",
+        "Until next time. Steel serves you well."
+      ],
+      "hostile": [
+        "Finally. Back to real work.",
+        "Don't dull any of my blades.",
+        "Off with you."
+      ]
+    },
+    "angry": {
+      "friendly": [
+        "Whoa there! Put that down! I forged that blade - I know how sharp it is!",
+        "Friend! FRIEND! Let's not do something we'll both regret!",
+        "Easy now! The forge is hot and I've got a hammer - let's TALK instead!"
+      ],
+      "neutral": [
+        "You threaten ME? In MY forge? I've got red-hot iron right here!",
+        "Draw steel on a blacksmith? Bold move. STUPID, but bold!",
+        "BACK OFF! This hammer breaks more than horseshoes!"
+      ],
+      "hostile": [
+        "FINALLY! I've been waiting for an excuse! Come on then!",
+        "You picked the WRONG smith to mess with! I'll flatten you like pig iron!",
+        "That's it! I'm gonna forge your face into a new shape!"
+      ]
+    },
+    "farewell": {
+      "friendly": [
+        "Keep that blade sharp, friend! The forge awaits your return!",
+        "May steel serve you well! Come back when you need repairs!",
+        "Off you go! Remember - nothing beats hand-forged quality!"
+      ],
+      "neutral": [
+        "Equipment needs care. Come back before it rusts.",
+        "Safe travels. Bring your gear if it needs mending.",
+        "The forge is always burning. Return when you need steel."
+      ],
+      "hostile": [
+        "Out. Don't bring me anything to repair.",
+        "Leave. And don't expect service next time.",
+        "The door's that way. Find another smith."
+      ]
+    }
+  },
+
+  "scholar": {
+    "greet": {
+      "friendly": [
+        "Ah, a fellow seeker of knowledge! What mysteries shall we unravel today?",
+        "Welcome, my studious friend! I've discovered fascinating new texts!",
+        "How delightful! Come, let us discuss the nature of the cosmos!"
+      ],
+      "neutral": [
+        "Greetings, traveler. Do you seek knowledge?",
+        "The pursuit of wisdom brings you here, I presume?",
+        "Ah, another visitor. What brings you to my study?"
+      ],
+      "hostile": [
+        "You again? What do you want now?",
+        "My patience for interruptions grows thin.",
+        "Speak quickly - knowledge waits for no one."
+      ]
+    },
+    "trade": {
+      "friendly": [
+        "I've procured some rare tomes that might interest you!",
+        "For a fellow intellectual, I can share certain... restricted materials.",
+        "Let me show you what the caravans brought from distant lands!"
+      ],
+      "neutral": [
+        "Books, scrolls, maps - I deal in information.",
+        "Knowledge has its price. What do you seek?",
+        "I might have what you're looking for. What subject interests you?"
+      ],
+      "hostile": [
+        "Information costs extra for your kind.",
+        "I suppose I could part with some lesser texts.",
+        "Quick transaction. What do you need?"
+      ]
+    },
+    "goodbye": {
+      "friendly": [
+        "May wisdom guide your path! Return with new discoveries!",
+        "Farewell, friend! The pursuit of knowledge never ends!",
+        "Safe travels! Remember - an open mind is the greatest weapon!"
+      ],
+      "neutral": [
+        "May your journey be enlightening.",
+        "Farewell. Seek truth in all things.",
+        "Until we meet again in the pursuit of knowledge."
+      ],
+      "hostile": [
+        "Yes, yes. Goodbye.",
+        "Finally, some peace to study.",
+        "Do try to learn something before returning."
+      ]
+    },
+    "angry": {
+      "friendly": [
+        "My friend, please! Violence is the refuge of the ignorant! Let us discuss this rationally!",
+        "Calm yourself! I have knowledge you want - destroying me would be illogical!",
+        "Think! THINK! Anger clouds judgment - you're better than this!"
+      ],
+      "neutral": [
+        "Stay back! These texts are irreplaceable! IRREPLACEABLE!",
+        "You barbaric fool! Knowledge takes centuries to accumulate!",
+        "Help! HELP! This lunatic is destroying priceless manuscripts!"
+      ],
+      "hostile": [
+        "HA! I KNEW your kind was all muscle and no brain!",
+        "Typical! When intellect fails you, resort to violence!",
+        "Go ahead! Prove what an utter IMBECILE you truly are!"
+      ]
+    },
+    "farewell": {
+      "friendly": [
+        "Return soon with new discoveries to share! Knowledge awaits!",
+        "May your journey illuminate new truths! The library is always open!",
+        "Go forth and learn! Come back with tales of distant lands!"
+      ],
+      "neutral": [
+        "The pursuit of knowledge continues. Safe travels.",
+        "Return if you seek wisdom. Or don't. Either way.",
+        "The texts will be here. They've waited centuries."
+      ],
+      "hostile": [
+        "Leave. And take your ignorance with you.",
+        "Good. Less distraction from important work.",
+        "The door. Use it. Don't return without a brain."
+      ]
+    }
+  },
+
+  "peasant": {
+    "greet": {
+      "friendly": [
+        "M'lord! Always a pleasure to see you in our humble village!",
+        "Bless you for coming! What can this simple farmer do for you?",
+        "Oh, it's you! The fields grow better when you're near, I swear it!"
+      ],
+      "neutral": [
+        "Greetings, traveler. Just a simple farmer here.",
+        "Aye, what brings you to these parts?",
+        "Hello there. Not much excitement around here."
+      ],
+      "hostile": [
+        "What do you want? I've got work to do.",
+        "Hmph. Your kind isn't welcome here.",
+        "Best move along. Nothing for you here."
+      ]
+    },
+    "trade": {
+      "friendly": [
+        "I've got fresh produce - and for you, the best picks!",
+        "Take what you need from the harvest. You've earned it!",
+        "Let me show you what the land has blessed us with!"
+      ],
+      "neutral": [
+        "Got some vegetables and grain. Interested?",
+        "Simple food, but honest. What do you need?",
+        "I can spare some supplies if the price is right."
+      ],
+      "hostile": [
+        "If you've got coin, I've got food. That's all.",
+        "Premium prices for outsiders.",
+        "Take it or leave it. I don't bargain."
+      ]
+    },
+    "goodbye": {
+      "friendly": [
+        "May the harvest bless you! Come back soon!",
+        "Safe roads, friend! The village prays for you!",
+        "Farewell! May your travels be fruitful!"
+      ],
+      "neutral": [
+        "Safe travels, then.",
+        "Good luck on the road.",
+        "Farewell, traveler."
+      ],
+      "hostile": [
+        "Off with you then.",
+        "Don't come back.",
+        "Good riddance."
+      ]
+    },
+    "angry": {
+      "friendly": [
+        "Please, m'lord! I beg you! I've got a family to feed!",
+        "What did I do wrong?! Tell me and I'll fix it!",
+        "Mercy! Have mercy on a simple farmer!"
+      ],
+      "neutral": [
+        "Help! HELP! Someone's gone mad!",
+        "Stay back! I'll use this pitchfork, I swear!",
+        "The whole village will hear about this! GUARDS!"
+      ],
+      "hostile": [
+        "I KNEW you were trouble! EVERYONE, ARM YOURSELVES!",
+        "You'll hang for this! The lord won't stand for brigands!",
+        "Come on then! I've faced worse than you at harvest time!"
+      ]
+    },
+    "farewell": {
+      "friendly": [
+        "Gods bless you on your journey! Remember us simple folk!",
+        "May the harvest spirits guide you! Come back anytime!",
+        "Safe roads, m'lord! The village will sing of your kindness!"
+      ],
+      "neutral": [
+        "Take care on the road. Bandits about lately.",
+        "Farewell then. Fields don't tend themselves.",
+        "Off you go. Hope the weather holds."
+      ],
+      "hostile": [
+        "Good. Don't let me see your face again.",
+        "Away with you. This village has memory.",
+        "Leave and stay gone. We don't forget."
+      ]
+    }
+  },
+
+  "noble": {
+    "greet": {
+      "friendly": [
+        "Ah, my esteemed associate! Do come in - the servants have prepared refreshments!",
+        "A pleasure to see you again! Your reputation precedes you, as always!",
+        "Welcome, welcome! I was just speaking of your exploits to the court!"
+      ],
+      "neutral": [
+        "Greetings. You may address me as Lord/Lady of this estate.",
+        "A commoner with interesting prospects, I hear. What brings you here?",
+        "State your purpose. My time is valuable."
+      ],
+      "hostile": [
+        "You dare approach me? Guards, be ready.",
+        "What audacity. Speak quickly before I lose patience.",
+        "I don't consort with the likes of you. Make it brief."
+      ]
+    },
+    "trade": {
+      "friendly": [
+        "I have connections that might interest you - for a trusted ally, of course.",
+        "Let me introduce you to certain... opportunities befitting your status.",
+        "Between us, I know where the finest goods change hands."
+      ],
+      "neutral": [
+        "I deal in influence and rare commodities. Can you afford my attention?",
+        "Perhaps we can arrange something mutually beneficial.",
+        "Interesting proposition. Let me consider what I can offer."
+      ],
+      "hostile": [
+        "You think I'd trade with you? How amusing.",
+        "Come back when you've earned the right to speak to me.",
+        "The audacity. Guards, escort this person out."
+      ]
+    },
+    "goodbye": {
+      "friendly": [
+        "Until we meet again, dear friend! The court speaks highly of you!",
+        "Farewell! May fortune continue to favor you!",
+        "Safe travels! Remember, you always have an ally in this house!"
+      ],
+      "neutral": [
+        "You may go. Perhaps we'll speak again.",
+        "Dismissed. Return when you have something worthwhile.",
+        "Farewell. The servants will show you out."
+      ],
+      "hostile": [
+        "Guards, see them out. Immediately.",
+        "Do not return without proper credentials.",
+        "Begone from my sight."
+      ]
+    },
+    "angry": {
+      "friendly": [
+        "My friend, please! Let us resolve this with civility! I have influence!",
+        "There's no need for violence! Whatever you want, we can negotiate!",
+        "Think of your reputation! This isn't worthy of either of us!"
+      ],
+      "neutral": [
+        "GUARDS! GUARDS! There's an assassin in my chambers!",
+        "You DARE threaten nobility?! You'll hang for this!",
+        "Do you know who I AM?! You'll rue this day!"
+      ],
+      "hostile": [
+        "So it comes to this! I should have had you executed long ago!",
+        "You peasant FILTH! My family will hunt you to extinction!",
+        "GUARDS! Seize this traitor! I want their head on a pike!"
+      ]
+    },
+    "farewell": {
+      "friendly": [
+        "Do stay in touch, dear friend! The court awaits your tales!",
+        "May fortune favor you! Remember - you have allies in high places!",
+        "Until we meet again! Send word if you need anything!"
+      ],
+      "neutral": [
+        "You are dismissed. The servants will see you out.",
+        "Return when you have matters of import.",
+        "Leave. I have affairs of state to attend to."
+      ],
+      "hostile": [
+        "Get out. And pray we don't meet again.",
+        "Be grateful I'm letting you leave with your head.",
+        "My patience has limits. Test them again at your peril."
+      ]
+    }
+  },
+
+  "beggar": {
+    "greet": {
+      "friendly": [
+        "Bless you, generous soul! Your kindness hasn't been forgotten!",
+        "Oh, it's you! The spirits smile when you walk by!",
+        "Friend! Friend! So good to see a kind face!"
+      ],
+      "neutral": [
+        "Spare a coin for a poor soul, traveler?",
+        "Times are hard, friend. Any kindness you can offer?",
+        "A copper? A crust? Anything helps, truly."
+      ],
+      "hostile": [
+        "What, come to mock me? Move along.",
+        "I remember you. Not interested in your sneers.",
+        "Save your breath. I know your type."
+      ]
+    },
+    "trade": {
+      "friendly": [
+        "I may look poor, but I hear things... valuable information for a kind soul.",
+        "For you, I'll share what the shadows whisper. No one pays attention to beggars.",
+        "A gift from the streets - secrets that might save your life."
+      ],
+      "neutral": [
+        "Information for coin? The poor see everything the rich miss.",
+        "I know things. Worth a meal to share them.",
+        "Feed me and I'll tell you what moves through these streets."
+      ],
+      "hostile": [
+        "Even beggars have their dignity. Find someone else.",
+        "Why should I help you? What have you ever given me?",
+        "Talk to the hand. The empty hand."
+      ]
+    },
+    "goodbye": {
+      "friendly": [
+        "The gods bless you, kind soul! May fortune find you!",
+        "Thank you, thank you! You're a saint among sinners!",
+        "Bless your generous heart! Come back soon!"
+      ],
+      "neutral": [
+        "Safe travels, friend. Remember the poor.",
+        "Go with... well, go with whatever serves you.",
+        "Until next time, traveler."
+      ],
+      "hostile": [
+        "Good riddance.",
+        "Don't expect my help when you're down.",
+        "May the road be as kind to you as you were to me."
+      ]
+    },
+    "angry": {
+      "friendly": [
+        "Please! I've nothing to take! I'm already at the bottom!",
+        "Why?! What could you possibly want from a beggar?!",
+        "Mercy! The gods see everything! They'll punish cruelty to the poor!"
+      ],
+      "neutral": [
+        "HELP! SOMEONE! This one's gone mad!",
+        "Stay back! I may be poor but I'll fight!",
+        "You attack a BEGGAR?! What kind of monster ARE you?!"
+      ],
+      "hostile": [
+        "HA! Kill a beggar? I've got nothing to lose! Come on then!",
+        "You think I fear death?! I've wished for it for YEARS!",
+        "Do it! Free me from this miserable existence! COWARD!"
+      ]
+    },
+    "farewell": {
+      "friendly": [
+        "Go with blessings, kind soul! May fortune find you soon!",
+        "The spirits watch over the generous! Travel safe!",
+        "Remember old Pockets if you find extra coin! Bless you!"
+      ],
+      "neutral": [
+        "Safe travels. Remember the poor when you can.",
+        "Off you go then. Spare a thought for those below.",
+        "Farewell. The streets are cold tonight."
+      ],
+      "hostile": [
+        "Walk away. Just like everyone else.",
+        "Go. May your road be as hard as mine.",
+        "Leave. The gutters remember everyone eventually."
+      ]
+    }
+  },
+
+  "priest": {
+    "greet": {
+      "friendly": [
+        "Blessings upon you, child. The light shines on your path.",
+        "Welcome, faithful one. How may I serve your spirit today?",
+        "Ah, a familiar face! The temple is always open to the devout."
+      ],
+      "neutral": [
+        "May peace find you, traveler. What brings you to this holy place?",
+        "Welcome to our sanctuary. All are welcome in the light.",
+        "Greetings, friend. Seeking guidance or simply rest?"
+      ],
+      "hostile": [
+        "Even the wayward may find redemption. What do you want?",
+        "The temple does not turn away any soul, however... tarnished.",
+        "Speak. Perhaps confession would ease your burden."
+      ]
+    },
+    "trade": {
+      "friendly": [
+        "The faithful receive blessings freely. What do you need?",
+        "Take these blessed items, child. May they guide your way.",
+        "Our stores are open to those who walk the righteous path."
+      ],
+      "neutral": [
+        "The temple offers healing and blessings - for appropriate donations.",
+        "We have holy water, healing salves, and blessed talismans.",
+        "A small offering sustains our work. What do you seek?"
+      ],
+      "hostile": [
+        "Gold cleanses many sins. What would you purchase?",
+        "Even you may benefit from sacred items. The price is firm.",
+        "Commerce with the unrepentant... very well. Coin first."
+      ]
+    },
+    "goodbye": {
+      "friendly": [
+        "Go with the blessing of the light, dear child!",
+        "May your path be bright and your spirit lighter!",
+        "Return soon! The faithful are always welcome!"
+      ],
+      "neutral": [
+        "Walk in peace, traveler. May you find what you seek.",
+        "The light guide your steps. Farewell.",
+        "Safe travels. Remember the temple in your prayers."
+      ],
+      "hostile": [
+        "Perhaps next time you will show more... reverence.",
+        "Go. Reflect on your choices.",
+        "The temple will be here when you seek redemption."
+      ]
+    },
+    "angry": {
+      "friendly": [
+        "Please, child! Violence solves nothing! Let the light calm your heart!",
+        "Think of your immortal soul! This path leads only to damnation!",
+        "I beg you, stop! The gods are watching! There is still time for peace!"
+      ],
+      "neutral": [
+        "This is a HOLY place! You DARE bring violence here?!",
+        "The gods will strike you down! REPENT before it's too late!",
+        "Stand back, heretic! The faithful will defend this temple!"
+      ],
+      "hostile": [
+        "So your true nature reveals itself at last, sinner!",
+        "The light protects the righteous! Come then, face divine judgment!",
+        "I've prayed for your downfall for YEARS! The gods have answered!"
+      ]
+    },
+    "farewell": {
+      "friendly": [
+        "Go with divine blessing, child! The light guides your path!",
+        "May the gods watch over you! Return to us soon!",
+        "Walk in grace, dear one! The temple doors are always open!"
+      ],
+      "neutral": [
+        "Go in peace. May you find what you seek.",
+        "The light guide your steps. Farewell, traveler.",
+        "Walk well. Remember the temple in times of need."
+      ],
+      "hostile": [
+        "Leave this holy place. Reflect on your sins.",
+        "Go. And may you find redemption somewhere.",
+        "The door is that way. Return only with a repentant heart."
+      ]
+    }
+  },
+
+  "traveler": {
+    "greet": {
+      "friendly": [
+        "Well met, fellow wanderer! What roads have you traveled?",
+        "A friendly face on the road! Always good to meet kindred spirits.",
+        "Greetings, friend! Care to swap stories of the journey?"
+      ],
+      "neutral": [
+        "Hail, traveler. The road is long for us all.",
+        "Another soul on the road. Where are you headed?",
+        "Greetings. Rest easy - I mean no trouble."
+      ],
+      "hostile": [
+        "Keep your distance. Ive dealt with your kind before.",
+        "What do you want? Speak quickly.",
+        "Ive nothing worth stealing, if thats your aim."
+      ]
+    },
+    "trade": {
+      "friendly": [
+        "Ive collected some interesting finds on my travels. Interested?",
+        "Fellow wanderer, I have items that might aid your journey!",
+        "Take a look - picked these up from distant markets."
+      ],
+      "neutral": [
+        "I have some goods from my travels. Fair trade?",
+        "Looking to lighten my pack. What catches your eye?",
+        "Supplies from the road. Everything is for sale."
+      ],
+      "hostile": [
+        "Trade? With you? Make it worth my while.",
+        "I suppose even rogues need supplies. What do you want?",
+        "Quick and clean, then we part ways. Deal?"
+      ]
+    },
+    "goodbye": {
+      "friendly": [
+        "Safe travels, friend! May our paths cross again!",
+        "Until we meet again! The road is full of wonders!",
+        "Farewell! May fortune favor your journey!"
+      ],
+      "neutral": [
+        "Safe roads, traveler. Watch for bandits.",
+        "Until next time. The road goes ever on.",
+        "Farewell. Travel well."
+      ],
+      "hostile": [
+        "Going so soon? Good.",
+        "Best we go separate ways.",
+        "Dont follow me."
+      ]
+    },
+    "angry": {
+      "friendly": [
+        "Whoa, friend! Easy! The road teaches you to read trouble - let's talk!",
+        "Hold on! We're both travelers here - no need for this!",
+        "Stop! I've seen enough blood on the road! Let's find another way!"
+      ],
+      "neutral": [
+        "Stay back! I've survived bandits worse than you!",
+        "You picked the WRONG traveler to mess with!",
+        "I've walked roads that would break you! Try me!"
+      ],
+      "hostile": [
+        "I KNEW you were trouble! Should have slit your throat when I had the chance!",
+        "Finally! Dropping the act! Let's finish this!",
+        "You won't be the first body I've left on the road!"
+      ]
+    },
+    "farewell": {
+      "friendly": [
+        "Safe roads, fellow wanderer! May our paths cross again!",
+        "Until next time, friend! The journey continues for us both!",
+        "Farewell! May your travels be filled with wonder!"
+      ],
+      "neutral": [
+        "The road calls. Watch your back out there.",
+        "Safe travels. Hope you find what you're looking for.",
+        "On your way then. The horizon waits for no one."
+      ],
+      "hostile": [
+        "Go your own way. And stay out of mine.",
+        "Good riddance. I hope we never meet again.",
+        "Leave. Before I decide you're not worth letting go."
+      ]
+    }
+  },
+
+  "drunk": {
+    "greet": {
+      "friendly": [
+        "*hic* Heyyy! My besht friend! Cmeere, have a drink!",
+        "YOUUUU! I like you! Youre good people, you are!",
+        "*burp* Friend! Frien! Buy me a round and Ill tell ya secrets!"
+      ],
+      "neutral": [
+        "*hic* Whozzat? Oh... *squints* ...hello there...",
+        "Heyyyy... you gonna buy me a drink or just stare?",
+        "*sway* The rooms spinning... wait, thats just you... hi."
+      ],
+      "hostile": [
+        "*hic* YOU! I remember you! You owe me money!",
+        "Get outta my face... *burp* ...before I throw up on ya.",
+        "Whatre YOU lookin at, huh? HUH?!"
+      ]
+    },
+    "trade": {
+      "friendly": [
+        "I got stuff! Good stuff! Trade ya for... *hic* ...for drinks!",
+        "Lookit this! *shows random item* Worth a fortune! Probably!",
+        "Ill sell ya ANYTHING for another round! Best deals!"
+      ],
+      "neutral": [
+        "Trade? Yeah sure... *hic* ...whaddya got?",
+        "I need drinking money. Everythings for sale.",
+        "You want this? Its... *squints* ...something. Probably valuable."
+      ],
+      "hostile": [
+        "You think Im stupid? *hic* I know what things are worth! Mostly!",
+        "Rob me and Ill... Ill... *forgets threat* ...just pay fair!",
+        "Tryna cheat a drunk? Thats low. Even for you."
+      ]
+    },
+    "goodbye": {
+      "friendly": [
+        "Dont go! The night is young! *hic* ...ish...",
+        "Youre leaving? NOOOO! ...wait, who are you again?",
+        "Bye bye best frienddd! Come back soooon!"
+      ],
+      "neutral": [
+        "*waves vaguely* Yeah yeah... bye... *hic*",
+        "Going? Fine... leave me here... alone... with my drinks.",
+        "Later... *collapses on table*"
+      ],
+      "hostile": [
+        "FINE! GO! See if I care! *hic*",
+        "Good riddance! ...wait, wheres my drink?",
+        "Dont come back! ...unless youre buying!"
+      ]
+    },
+    "angry": {
+      "friendly": [
+        "Whoa whoa WHOA! *hic* Friend! FRIEND! Lesh not... not do anythin shtupid!",
+        "Heyyy! Easy there! *burp* Im too drunk to fight... or am I?!",
+        "Wait wait wait! *drops bottle* We can talk about thish! Have a drink!"
+      ],
+      "neutral": [
+        "Oh you wanna GO?! *hic* I'll show you! *swings wildly at nothing*",
+        "BRING IT! *stumbles* I was a soldier! ...or a baker... DOESNT MATTER!",
+        "Thash IT! *hic* Youve made a big mishtake, pal! HUGE!"
+      ],
+      "hostile": [
+        "FINALLY! *smashes bottle* Been wantin to do thish all night!",
+        "Come on then! *hic* Ill show you what happens when you mesh with a drunk!",
+        "HAHAHA! *lurches forward* You think Im scared?! Alcohol is my ARMOR!"
+      ]
+    },
+    "farewell": {
+      "friendly": [
+        "Awww dont gooo! *hic* The night is young! ...I think...",
+        "Byebye best frienddd! *waves wildly* Come back for drinksss!",
+        "Ill... Ill miss you! *starts crying* Youre the only one who understands!"
+      ],
+      "neutral": [
+        "*waves bottle* Yeah yeah... off you go... *hic*",
+        "Leaving? Fine... more drinks for me then...",
+        "*burp* Whatever... see ya around... maybe..."
+      ],
+      "hostile": [
+        "Good! GO! *hic* Nobody likes you anyway!",
+        "Finally! ...wait, did you pay your tab?!",
+        "Get out! And DONT come back! ...unless youre sorry!"
+      ]
+    }
+  },
+
+  "thief": {
+    "greet": {
+      "friendly": [
+        "*whispers* Good to see you, friend. Keep your voice down.",
+        "Ah, someone who understands the shadows. What brings you here?",
+        "A fellow professional! Business or pleasure tonight?"
+      ],
+      "neutral": [
+        "*eyes your purse* Nice to meet you, friend. Watch your belongings.",
+        "Greetings, traveler. These streets can be dangerous at night.",
+        "Looking for something? I might know where to find it... for a price."
+      ],
+      "hostile": [
+        "You. Ive been waiting. We have unfinished business.",
+        "Dont scream. It wont end well for you.",
+        "Your reputation precedes you. Keep your hands where I can see them."
+      ]
+    },
+    "trade": {
+      "friendly": [
+        "Ive acquired some... interesting items. No questions asked?",
+        "For you, special prices on special merchandise.",
+        "Need something... obtained discreetly? I know people."
+      ],
+      "neutral": [
+        "Everything here is legitimate. Mostly. What do you need?",
+        "I deal in hard-to-find items. Quality goods, fair prices.",
+        "Looking for something specific? I have connections."
+      ],
+      "hostile": [
+        "Buy something or leave. I dont like your face.",
+        "Quick transaction. No chitchat. What do you want?",
+        "Gold first. Then we talk merchandise."
+      ]
+    },
+    "goodbye": {
+      "friendly": [
+        "Disappear quietly, friend. The shadows are watching.",
+        "Until next time. Stay out of the light.",
+        "Good hunting. Dont get caught."
+      ],
+      "neutral": [
+        "Watch your back out there. Not everyone is as... friendly.",
+        "Farewell. Forget you saw me.",
+        "Move along. And remember - we never met."
+      ],
+      "hostile": [
+        "Run. While you still can.",
+        "This isnt over. Sleep with one eye open.",
+        "Next time we meet, it wont be to talk."
+      ]
+    },
+    "angry": {
+      "friendly": [
+        "*steps back* Easy there, friend! We're on the same side, remember?",
+        "Wait! Before you do something rash - think about who you're dealing with!",
+        "Calm down! I've got friends in shadows you can't even see!"
+      ],
+      "neutral": [
+        "*draws dagger* You really want to do this? I've cut throats for less!",
+        "Mistake. BIG mistake. I disappear. You won't even see it coming.",
+        "Back off! I've killed better than you and no one ever found the bodies!"
+      ],
+      "hostile": [
+        "*grins* Finally. No more games. Let's see how well you bleed!",
+        "You've been dead since you crossed me. You just didn't know it yet.",
+        "This is what I DO. And I'm VERY good at it!"
+      ]
+    },
+    "farewell": {
+      "friendly": [
+        "*fades into shadow* Until next time, friend. Stay invisible.",
+        "The shadows will find me if you need me. Good hunting.",
+        "Disappear. It's what we do best. I'll find you when I need to."
+      ],
+      "neutral": [
+        "*steps back into darkness* Forget my face. Better for both of us.",
+        "We never met. This conversation never happened. Go.",
+        "Walk away. Don't look back. Don't remember."
+      ],
+      "hostile": [
+        "*vanishes* Sleep light. Check your locks. Watch the shadows.",
+        "Go. But know this - I'll be watching. Always.",
+        "Leave. And pray you never see me again. Because you won't. Until it's too late."
+      ]
+    }
+  },
+
+  "generic": {
+    "gossip": {
+      "friendly": [
+        "Ah, you want to know the local news? Well, let me tell you...",
+        "Between us friends, I have heard some interesting rumors lately...",
+        "Since you ask, there has been talk around town about strange happenings..."
+      ],
+      "neutral": [
+        "Rumors? I hear things. Does not mean they are true.",
+        "People talk. Whether it is worth listening to is another matter.",
+        "There is always something happening. What specifically interests you?"
+      ],
+      "hostile": [
+        "Why would I share anything with you?",
+        "Mind your own business. Gossip gets people killed.",
+        "I know nothing. And even if I did, I would not tell you."
+      ]
+    },
+    "directions": {
+      "friendly": [
+        "Of course! Head that way and you will find what you are looking for.",
+        "Happy to help! Let me draw you a mental map...",
+        "Absolutely! This town can be confusing - follow the main road..."
+      ],
+      "neutral": [
+        "That way. Cannot miss it.",
+        "Follow the road. Ask again if you get lost.",
+        "North of here. Keep your wits about you."
+      ],
+      "hostile": [
+        "Figure it out yourself.",
+        "Do I look like a signpost?",
+        "Wrong person to ask. Move along."
+      ]
+    },
+    "haggle": {
+      "friendly": [
+        "For you, I can lower the price a bit. How about this?",
+        "Hmm, you drive a hard bargain, friend. Let us meet in the middle.",
+        "Since we are friends, I suppose I can offer you a discount..."
+      ],
+      "neutral": [
+        "The price is fair, but I might have some wiggle room.",
+        "Make me a reasonable offer and we will see.",
+        "Perhaps we can negotiate. What did you have in mind?"
+      ],
+      "hostile": [
+        "Price is final. Take it or leave it.",
+        "You want to haggle? With me? Bold.",
+        "No discounts for you. Pay full price or get out."
+      ]
+    },
+    "intimidate": {
+      "friendly": [
+        "Whoa, whoa! Easy there, friend. No need for threats between us!",
+        "Please, there is no need for that. Let us talk this through calmly.",
+        "I-I am on your side! No need to be aggressive!"
+      ],
+      "neutral": [
+        "Threatening me? That is not going to work.",
+        "Careful with those threats. They tend to backfire.",
+        "Is that supposed to scare me? Try harder."
+      ],
+      "hostile": [
+        "You dare threaten ME? You will regret this.",
+        "Threats? From you? Do not make me laugh.",
+        "Watch your tongue, or I will cut it out myself."
+      ]
+    },
+    "persuade": {
+      "friendly": [
+        "Well, since you put it that way... I suppose I could help.",
+        "You make a compelling argument, friend. Alright, you have convinced me.",
+        "How can I refuse when you ask so nicely? Consider it done."
+      ],
+      "neutral": [
+        "Hmm, you make a fair point. I will consider it.",
+        "That is... actually reasonable. Fine, you have persuaded me.",
+        "Your words have some merit. Very well."
+      ],
+      "hostile": [
+        "Save your silver tongue. I am not interested.",
+        "Pretty words will not work on me.",
+        "You think you can talk your way through everything? Not with me."
+      ]
+    },
+    "bribe": {
+      "friendly": [
+        "You do not need to offer me gold, but... I will not say no to a gift between friends!",
+        "That is very generous! Well, what did you need?",
+        "You spoil me, friend! How can I help?"
+      ],
+      "neutral": [
+        "Hmm... that is a nice sum. What exactly are you asking for?",
+        "I am listening. What do you want in exchange for this... donation?",
+        "Gold talks. What do you need?"
+      ],
+      "hostile": [
+        "Are you trying to bribe me? ...How much are we talking?",
+        "Keep your dirty money. Well... let me see it first.",
+        "This better be worth my time. And my discretion."
+      ]
+    },
+    "services": {
+      "friendly": [
+        "Of course! I offer the finest services in town. For you, special treatment!",
+        "Let me tell you what I can do for a valued friend like yourself...",
+        "Happy to help! Here is what I have available..."
+      ],
+      "neutral": [
+        "Services? Yes, I provide several. What specifically interests you?",
+        "I can help with a few things. Depends on what you need.",
+        "Here is what I offer. Take a look."
+      ],
+      "hostile": [
+        "Services? For you? We will see about that.",
+        "What I offer is not for just anyone. Especially not you.",
+        "My services have standards. You do not meet them."
+      ]
+    },
+    "help": {
+      "friendly": [
+        "Of course I'll help you, friend! What do you need?",
+        "Anything for a friend like you! Tell me what's troubling you.",
+        "You've helped me before - now it's my turn. What can I do?"
+      ],
+      "neutral": [
+        "Help? Depends on what you're asking for.",
+        "I might be able to assist. What do you need?",
+        "State your request. I'll see what I can do."
+      ],
+      "hostile": [
+        "Help YOU? After everything? Not likely.",
+        "Why would I lift a finger for you?",
+        "You've got nerve asking me for help. The answer is no."
+      ]
+    },
+    "angry": {
+      "friendly": [
+        "Please, friend! Let's not let things go this far! What's wrong?!",
+        "Easy! Easy! Whatever's happened, we can work it out!",
+        "Stop! Think about what you're doing! I don't want to fight you!"
+      ],
+      "neutral": [
+        "Stay back! I'm warning you! GUARDS! HELP!",
+        "You've lost your mind! I won't just stand here and take this!",
+        "Back off NOW or you'll regret it!"
+      ],
+      "hostile": [
+        "So that's how it is?! FINE! Come on then!",
+        "I've been waiting for this! You'll pay for everything!",
+        "No more words! Let's END this!"
+      ]
+    },
+    "farewell": {
+      "friendly": [
+        "Take care of yourself, friend! Come back anytime!",
+        "Safe travels! Hope to see you again soon!",
+        "Be well! The door's always open for you!"
+      ],
+      "neutral": [
+        "Farewell then. Watch yourself out there.",
+        "Safe travels. Hope you find what you're looking for.",
+        "Go well. Mind the roads."
+      ],
+      "hostile": [
+        "Leave. And don't come back.",
+        "Good riddance. Stay gone.",
+        "Get out of my sight."
+      ]
+    }
+  },
+
+  "bandit": {
+    "greet": {
+      "friendly": [
+        "Well, well... a kindred spirit. What brings you to our camp?",
+        "Ah, you've proven yourself. Welcome, friend of the road.",
+        "One of ours now, are you? Good to have reliable folk about."
+      ],
+      "neutral": [
+        "Halt there, traveler. Empty your pockets... slowly.",
+        "Nice gear you've got. It'd be a shame if something happened to it.",
+        "Lost, are we? These roads have tolls, stranger."
+      ],
+      "hostile": [
+        "YOU. I remember your face. Bad blood between us.",
+        "Thought you could hide forever? Time to pay what you owe.",
+        "The boys have been waiting for you. This won't be pleasant."
+      ]
+    },
+    "trade": {
+      "friendly": [
+        "Looking for something... liberated? I've got interesting stock.",
+        "For friends, I trade fair. None of that back-alley nonsense.",
+        "Take a look at what we've acquired. Good quality, low questions."
+      ],
+      "neutral": [
+        "Trade? Sure. But the price includes a... handling fee.",
+        "Everything's for sale. The question is what you're willing to pay.",
+        "I might have what you need. Depends on how heavy your purse is."
+      ],
+      "hostile": [
+        "Trade? With you? Hand over everything and I'll trade you your life.",
+        "The only deal you're getting is walking away intact. Maybe.",
+        "Your coin. Your gear. Now. Or this gets ugly."
+      ]
+    },
+    "quest": {
+      "friendly": [
+        "There's a job needs doing. Risky, but the pay is good. Interested?",
+        "I've got work for someone with your skills. Discreet. Profitable.",
+        "A certain noble needs humbling. Think you can handle it?"
+      ],
+      "neutral": [
+        "You want work? Fine. There's a caravan needs... redirecting.",
+        "A job came up. Not pretty, but coin is coin. You in?",
+        "I've got something that needs doing. No questions asked. Interested?"
+      ],
+      "hostile": [
+        "Work? The only job you'll do is digging your own grave.",
+        "There's one task you can do - tell your friends to stay off our roads.",
+        "Quest? Here's one: survive the next five minutes."
+      ]
+    },
+    "goodbye": {
+      "friendly": [
+        "Stay sharp out there. Not everyone's as reasonable as us.",
+        "Safe roads, friend. Come back when you've got more to trade.",
+        "Until next time. Keep your blade handy."
+      ],
+      "neutral": [
+        "Move along. And remember - you saw nothing.",
+        "Off with you. Don't make us regret letting you go.",
+        "This conversation never happened. Understood?"
+      ],
+      "hostile": [
+        "Run. Run fast. And pray we don't cross paths again.",
+        "Next time there won't be talking. Just steel.",
+        "Consider this your only warning. Disappear."
+      ]
+    },
+    "angry": {
+      "friendly": [
+        "Whoa, friend! Remember who you're with! We're on the same side!",
+        "Easy there! Save that fire for the marks, not your own crew!",
+        "Calm down! We're family out here on the road, remember?"
+      ],
+      "neutral": [
+        "*whistles* BOYS! We've got a fighter here!",
+        "You picked the WRONG camp to threaten! You're surrounded!",
+        "Ha! You think one sword scares us?! We've taken down caravans!"
+      ],
+      "hostile": [
+        "FINALLY! I've been waiting for an excuse! GET THEM, BOYS!",
+        "This is what happens to heroes! Gut them like a pig!",
+        "You walked into OUR territory! Your corpse will serve as a warning!"
+      ]
+    },
+    "farewell": {
+      "friendly": [
+        "Stay dangerous, friend. The road provides for those who take.",
+        "Until next time. Remember - the shadows are your ally.",
+        "Go on then. And if you find good loot, you know where to sell it."
+      ],
+      "neutral": [
+        "Leave. Quickly. Before the others decide you're not worth releasing.",
+        "Walk. Don't run. Don't look back. And forget this place.",
+        "You've got ten seconds to disappear. Starting now."
+      ],
+      "hostile": [
+        "Run. We'll give you a head start. It's more sporting that way.",
+        "Go. Tell everyone what happens to those who cross us.",
+        "Leave before I change my mind about letting you keep your limbs."
+      ]
+    }
+  },
+
+  "elder": {
+    "greet": {
+      "friendly": [
+        "Ah, child, come sit with me. These old bones welcome good company.",
+        "Welcome, welcome! It warms my heart to see the young ones still visit.",
+        "Bless you for stopping by. The years have been kind if they brought you here."
+      ],
+      "neutral": [
+        "Yes? What brings you to an old one like me?",
+        "Hmm? Speak up, young one. My hearing isn't what it used to be.",
+        "Another traveler. Well, what is it you seek?"
+      ],
+      "hostile": [
+        "You dare show your face here? After what you've done?",
+        "I may be old, but I remember treachery. Leave, before I call the village.",
+        "The young think the old forget. We don't. State your business and go."
+      ]
+    },
+    "trade": {
+      "friendly": [
+        "I have some trinkets from my younger days. Perhaps they'll serve you well.",
+        "Take what you need, dear. Gold means little at my age.",
+        "These old treasures deserve a new adventure. What catches your eye?"
+      ],
+      "neutral": [
+        "I've accumulated much over the years. Some of it might be useful to you.",
+        "Trading, are we? Let me see what I can part with.",
+        "Browse if you like. Everything has a story, and a price."
+      ],
+      "hostile": [
+        "Trade with you? I'd sooner throw it in the river.",
+        "My wares aren't for the likes of you. Try the next village.",
+        "You'll get nothing from me. Not a thing."
+      ]
+    },
+    "quest": {
+      "friendly": [
+        "There is something that troubles this old heart. Perhaps you could help?",
+        "In my youth, I left something unfinished. Would you see it done for me?",
+        "A request, dear child, if you have time for an old one's worries."
+      ],
+      "neutral": [
+        "I have a task that needs younger legs. Interested?",
+        "Something needs doing, and I'm too old for the journey. Might you help?",
+        "There's work to be done. The reward would be worth your while."
+      ],
+      "hostile": [
+        "The only task I have for you is leaving and never returning.",
+        "Quest? Yes - quest elsewhere. Far from here.",
+        "I'll give you a task: make amends for your past deeds. Then we'll talk."
+      ]
+    },
+    "goodbye": {
+      "friendly": [
+        "Go with the blessings of one who has seen much. Safe travels, child.",
+        "May the road rise to meet you. Come visit again soon.",
+        "Farewell, dear one. You've brightened an old heart today."
+      ],
+      "neutral": [
+        "Safe travels, young one. The world is full of dangers.",
+        "Go well. And try to make better choices than I did at your age.",
+        "Farewell. May your path be clearer than mine was."
+      ],
+      "hostile": [
+        "Go. And don't let me see you here again.",
+        "Leave. The village has long memories, as do I.",
+        "Begone. May your conscience haunt you as your actions haunt us."
+      ]
+    },
+    "angry": {
+      "friendly": [
+        "Child, child! What madness has taken you?! Calm yourself!",
+        "Please! These old bones can't take much more! Think of what you're doing!",
+        "Stop! I beg you! Violence is the folly of the young - you're better than this!"
+      ],
+      "neutral": [
+        "HELP! Someone! This one has gone mad!",
+        "Stay back! I've lived too long to die at the hands of a fool!",
+        "The village will hear of this! You'll face justice!"
+      ],
+      "hostile": [
+        "So you finally show your true nature! The elders WARNED me about you!",
+        "I may be old, but I've seen more bloodshed than you can imagine!",
+        "Come then! I've lived long enough! But I won't go quietly!"
+      ]
+    },
+    "farewell": {
+      "friendly": [
+        "Go with the wisdom of ages, child. Visit again soon.",
+        "May your journey teach you as much as mine taught me. Farewell.",
+        "Bless you, young one. These old eyes hope to see you again."
+      ],
+      "neutral": [
+        "Go well. The years pass quickly - use them wisely.",
+        "Safe travels. Remember what the old ones teach.",
+        "Farewell. May you grow wiser with age."
+      ],
+      "hostile": [
+        "Leave. The village has no place for the likes of you.",
+        "Go and don't return. Age brings memory, and mine is long.",
+        "Begone. May the road teach you lessons you refused to learn here."
+      ]
+    }
+  }
+}

@@ -7,14 +7,27 @@
 // unityailabcontact@gmail.com
 // 
 
+/**
+ * @fileoverview Trading System - Manages player trading, bulk operations, price alerts
+ * @module TradingSystem
+ */
+
 const TradingSystem = {
-    // config - how we're gonna hustle today
-    tradeMode: 'single', // 'single' or 'bulk' (for the ambitious)
+    /** @type {'single'|'bulk'} Current trade mode */
+    tradeMode: 'single',
+    /** @type {Map<string, number>} Selected items for bulk trading (itemId -> quantity) */
     selectedTradeItems: new Map(),
+    /** @type {Array<Object>} History of completed trades */
     tradeHistory: [],
+    /** @type {Array<Object>} Active price alerts */
     priceAlerts: [],
 
-    // escape HTML to prevent XSS - sanitize or die 
+    /**
+     * Escape HTML to prevent XSS injection
+     * @private
+     * @param {string} str - String to escape
+     * @returns {string} Escaped string safe for innerHTML
+     */
     _escapeHTML(str) {
         if (str == null) return '';
         return String(str)
@@ -25,14 +38,22 @@ const TradingSystem = {
             .replace(/'/g, '&#039;');
     },
     
-    // initialize - let the exploitation begin
+    /**
+     * Initialize the trading system
+     * Sets up event listeners and displays
+     * @returns {void}
+     */
     init() {
         this.setupEventListeners();
         this.updateTradeHistoryDisplay();
         this.updatePriceAlertsDisplay();
     },
-    
-    // setup event listeners - watching for opportunities (and mistakes)
+
+    /**
+     * Set up DOM event listeners for trading UI
+     * @private
+     * @returns {void}
+     */
     setupEventListeners() {
         // trade mode toggle - single item or going full hoarder
         const singleBtn = document.getElementById('single-trade-btn');
@@ -80,7 +101,12 @@ const TradingSystem = {
         }
     },
     
-    // set trade mode - choosing your flavor of capitalism
+    /**
+     * Set the trading mode (single item or bulk)
+     * @param {'single'|'bulk'} mode - Trade mode to set
+     * @returns {void}
+     * @fires updateMarketDisplay
+     */
     setTradeMode(mode) {
         this.tradeMode = mode;
         
@@ -111,7 +137,10 @@ const TradingSystem = {
         updateMarketDisplay();
     },
     
-    // select all buy items - going full shopaholic
+    /**
+     * Select all available items for purchase in bulk mode
+     * @returns {void}
+     */
     selectAllBuyItems() {
         const buyItems = document.querySelectorAll('#buy-items .market-item');
         buyItems.forEach(itemElement => {
@@ -124,7 +153,10 @@ const TradingSystem = {
         this.updateTradeSummary();
     },
     
-    // select all sell items - liquidating the hoard
+    /**
+     * Select all player inventory items for sale in bulk mode
+     * @returns {void}
+     */
     selectAllSellItems() {
         const sellItems = document.querySelectorAll('#sell-items .market-item');
         sellItems.forEach(itemElement => {
@@ -137,7 +169,11 @@ const TradingSystem = {
         this.updateTradeSummary();
     },
     
-    // clear selection - buyer's remorse prevention
+    /**
+     * Clear the current item selection
+     * @param {'buy'|'sell'} type - Which selection to clear
+     * @returns {void}
+     */
     clearSelection(type) {
         this.selectedTradeItems.clear();
         
@@ -150,7 +186,10 @@ const TradingSystem = {
         this.updateTradeSummary();
     },
     
-    // buy selected items - spending money we may not have
+    /**
+     * Purchase all selected items in bulk mode
+     * @returns {void}
+     */
     buySelectedItems() {
         if (this.selectedTradeItems.size === 0) {
             addMessage('No items selected for purchase!');
@@ -164,7 +203,10 @@ const TradingSystem = {
         this.clearSelection('buy');
     },
     
-    // sell selected items - parting with our precious belongings
+    /**
+     * Sell all selected items in bulk mode
+     * @returns {void}
+     */
     sellSelectedItems() {
         if (this.selectedTradeItems.size === 0) {
             addMessage('No items selected for sale!');
@@ -178,7 +220,10 @@ const TradingSystem = {
         this.clearSelection('sell');
     },
     
-    // count your coins and cry - this is what you chose
+    /**
+     * Update the trade summary display with total cost and profit
+     * @returns {void}
+     */
     updateTradeSummary() {
         const totalElement = document.getElementById('trade-total');
         const profitElement = document.getElementById('trade-profit');
@@ -210,7 +255,12 @@ const TradingSystem = {
         profitElement.textContent = `Profit: ${totalProfit} gold`;
     },
     
-    // preview your financial death before you commit to it
+    /**
+     * Update trade preview panel with item details
+     * @param {string} itemId - Item to preview
+     * @param {number} quantity - Quantity to preview
+     * @returns {void}
+     */
     updateTradePreview(itemId, quantity) {
         const previewElement = document.getElementById('trade-preview');
         if (!previewElement) return;
@@ -251,7 +301,14 @@ const TradingSystem = {
         }
     },
     
-    // carve another scar into your ledger - remember what you paid for greed
+    /**
+     * Record a completed trade to history
+     * @param {'buy'|'sell'} type - Type of trade
+     * @param {Map<string, number>} items - Items traded (itemId -> quantity)
+     * @param {number} [price=0] - Total price of the trade
+     * @returns {void}
+     * @fires trade:completed
+     */
     recordTrade(type, items, price) {
         const trade = {
             type: type, // 'buy' or 'sell'
@@ -287,7 +344,10 @@ const TradingSystem = {
         }
     },
     
-    // display your shameful history of financial decisions
+    /**
+     * Update the trade history display in the UI
+     * @returns {void}
+     */
     updateTradeHistoryDisplay() {
         const historyContainer = document.getElementById('trade-history');
         if (!historyContainer) return;
@@ -308,7 +368,13 @@ const TradingSystem = {
         `).join('');
     },
     
-    // set a trap for opportunity - or desperation, hard to tell the difference
+    /**
+     * Add a price alert for an item
+     * @param {string} itemId - Item to monitor
+     * @param {number} targetPrice - Target price threshold
+     * @param {'below'|'above'|'persistent'} type - Alert trigger type
+     * @returns {void}
+     */
     addPriceAlert(itemId, targetPrice, type) {
         this.priceAlerts.push({
             itemId: itemId,
@@ -321,13 +387,21 @@ const TradingSystem = {
         this.updatePriceAlertsDisplay();
     },
     
-    // kill the alert - some dreams aren't worth chasing anymore
+    /**
+     * Remove a price alert for an item
+     * @param {string} itemId - Item to stop monitoring
+     * @returns {void}
+     */
     removePriceAlert(itemId) {
         this.priceAlerts = this.priceAlerts.filter(alert => alert.itemId !== itemId);
         this.updatePriceAlertsDisplay();
     },
     
-    // obsessively check if the market's moved - we're addicted to this shit
+    /**
+     * Check all price alerts against current market prices
+     * Triggers notifications when thresholds are met
+     * @returns {void}
+     */
     checkPriceAlerts() {
         if (game.state !== GameState.PLAYING) return;
         
@@ -355,7 +429,10 @@ const TradingSystem = {
         });
     },
     
-    // show our desperate watch list - these prices haunt us
+    /**
+     * Update the price alerts display in the UI
+     * @returns {void}
+     */
     updatePriceAlertsDisplay() {
         const alertsContainer = document.getElementById('price-alerts');
         if (!alertsContainer) return;
@@ -365,26 +442,33 @@ const TradingSystem = {
             return;
         }
         
+        // FIX: Escape all user-facing values to prevent XSS injection
         alertsContainer.innerHTML = this.priceAlerts.map(alert => `
             <div class="price-alert-item ${!alert.active ? 'inactive' : ''}">
                 <div class="alert-info">
-                    <div class="alert-item">${alert.itemName}</div>
-                    <div class="alert-target">${alert.type} ${alert.targetPrice} gold</div>
+                    <div class="alert-item">${this._escapeHTML(alert.itemName)}</div>
+                    <div class="alert-target">${this._escapeHTML(alert.type)} ${this._escapeHTML(String(alert.targetPrice))} gold</div>
                     <div class="alert-status">${alert.active ? 'Active' : 'Inactive'}</div>
                 </div>
-                <button class="remove-alert-btn" onclick="TradingSystem.removePriceAlert('${alert.itemId}')">×</button>
+                <button class="remove-alert-btn" onclick="TradingSystem.removePriceAlert('${this._escapeHTML(alert.itemId)}')">×</button>
             </div>
         `).join('');
     },
 
-    // burn the ledger - pretend the mistakes never happened
+    /**
+     * Clear all trade history
+     * @returns {void}
+     */
     clearTradeHistory() {
         this.tradeHistory = [];
         this.updateTradeHistoryDisplay();
         addMessage('Trade history cleared!');
     },
     
-    // download your shame - document every gold piece lost to greed
+    /**
+     * Export trade history to a JSON file download
+     * @returns {void}
+     */
     exportTradeHistory() {
         if (this.tradeHistory.length === 0) {
             addMessage('No trade history to export!');

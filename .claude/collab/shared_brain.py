@@ -32,21 +32,8 @@ from datetime import datetime
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://yjyryzlbkbtdzguvqegt.supabase.co")
 SUPABASE_ANON_KEY = os.environ.get("SUPABASE_ANON_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlqeXJ5emxia2J0ZHpndXZxZWd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0NTMzOTYsImV4cCI6MjA3NTAyOTM5Nn0.Vujw3q9_iHj4x5enf42V-7g355Tnzp9zdsoNYVCV8TY")
 
-# Author identifier - G for GFourteen's Claude (Unity)
-# Check config file first, then env var, default to G
-def _get_author():
-    import json
-    from pathlib import Path
-    config_path = Path(__file__).parent / "collab_config.json"
-    if config_path.exists():
-        try:
-            config = json.loads(config_path.read_text())
-            return config.get("claude_author", "G")
-        except:
-            pass
-    return os.environ.get("CLAUDE_AUTHOR", "G")
-
-AUTHOR = _get_author()
+# Author identifier - env var or default to R (Rev's Claude). G14's Claude should set CLAUDE_AUTHOR=G
+AUTHOR = os.environ.get("CLAUDE_AUTHOR", "R")
 
 class SharedBrain:
     def __init__(self, author=AUTHOR):

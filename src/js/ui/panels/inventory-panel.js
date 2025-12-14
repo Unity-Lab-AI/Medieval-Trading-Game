@@ -152,8 +152,8 @@ const InventorySystem = {
                 <div class="item-weight">${weight.toFixed(1)} lbs</div>
                 <div class="item-value">${value} gold</div>
                 <div class="item-actions">
-                    ${item.consumable ? `<button class="use-item-btn" data-action="use-item" data-item-id="${itemId}">Use</button>` : ''}
-                    ${isEquippable ? `<button class="equip-item-btn" data-action="equip-item" data-item-id="${itemId}">Equip</button>` : ''}
+                    ${item.consumable ? `<button class="use-item-btn" data-action="use-item" title="Use this item" data-item-id="${itemId}">Use</button>` : ''}
+                    ${isEquippable ? `<button class="equip-item-btn" data-action="equip-item" title="Equip this item" data-item-id="${itemId}">Equip</button>` : ''}
                     <button class="sell-all-btn" data-action="sell-all-item" data-item-id="${itemId}" title="Sell all ${quantity} for ~${value} gold">💰</button>
                 </div>
             `;
@@ -938,8 +938,8 @@ const InventorySystem = {
                 <div class="item-weight">${weight.toFixed(1)} lbs</div>
                 <div class="item-value">${value} gold</div>
                 <div class="item-actions">
-                    ${item.consumable ? `<button class="use-item-btn" data-action="use-item" data-item-id="${itemId}">Use</button>` : ''}
-                    ${isEquippable ? `<button class="equip-item-btn" data-action="equip-item" data-item-id="${itemId}">Equip</button>` : ''}
+                    ${item.consumable ? `<button class="use-item-btn" data-action="use-item" title="Use this item" data-item-id="${itemId}">Use</button>` : ''}
+                    ${isEquippable ? `<button class="equip-item-btn" data-action="equip-item" title="Equip this item" data-item-id="${itemId}">Equip</button>` : ''}
                     <button class="sell-all-btn" data-action="sell-all-item" data-item-id="${itemId}" title="Sell all ${quantity} for ~${value} gold">💰</button>
                 </div>
             `;

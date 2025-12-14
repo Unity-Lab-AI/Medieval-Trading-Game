@@ -15,6 +15,17 @@ const PropertyMapPicker = {
     tooltipElement: null,
     infoPanel: null,
 
+    // FIX: Escape HTML to prevent XSS injection
+    _escapeHTML(str) {
+        if (str == null) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    },
+
     // State
     isOpen: false,
     selectedLocation: null,
@@ -444,8 +455,8 @@ const PropertyMapPicker = {
         const ownedHere = (game?.player?.ownedProperties || []).filter(p => p.location === locationId);
         const availableProperties = this.getPropertiesForLocation(locationId);
 
-        let content = `<div class="tooltip-header">${location.name}</div>`;
-        content += `<div class="tooltip-type">${location.type.charAt(0).toUpperCase() + location.type.slice(1)}</div>`;
+        let content = `<div class="tooltip-header">${this._escapeHTML(location.name)}</div>`;
+        content += `<div class="tooltip-type">${this._escapeHTML(location.type.charAt(0).toUpperCase() + location.type.slice(1))}</div>`;
 
         if (isBuildable) {
             content += `<div class="tooltip-buildable">✅ Road Access Available</div>`;
@@ -520,8 +531,8 @@ const PropertyMapPicker = {
 
         let html = `
             <div class="info-location">
-                <h3>${location.name}</h3>
-                <p class="info-type">${location.type.charAt(0).toUpperCase() + location.type.slice(1)}</p>
+                <h3>${this._escapeHTML(location.name)}</h3>
+                <p class="info-type">${this._escapeHTML(location.type.charAt(0).toUpperCase() + location.type.slice(1))}</p>
             </div>
         `;
 
@@ -530,7 +541,7 @@ const PropertyMapPicker = {
                 <h4>🏠 Your Properties Here</h4>
                 ${ownedHere.map(p => {
                     const pType = PropertyTypes?.get(p.type);
-                    return `<div class="owned-property">${pType?.icon || '🏠'} ${pType?.name || p.type}</div>`;
+                    return `<div class="owned-property">${this._escapeHTML(pType?.icon || '🏠')} ${this._escapeHTML(pType?.name || p.type)}</div>`;
                 }).join('')}
             </div>`;
         }
@@ -540,9 +551,9 @@ const PropertyMapPicker = {
             ${availableProperties.length > 0 ?
                 availableProperties.map(p => `
                     <div class="available-property">
-                        <span class="property-icon">${p.icon}</span>
-                        <span class="property-name">${p.name}</span>
-                        <span class="property-price">💰 ${this.calculatePriceForLocation(p.id, locationId)}</span>
+                        <span class="property-icon">${this._escapeHTML(p.icon)}</span>
+                        <span class="property-name">${this._escapeHTML(p.name)}</span>
+                        <span class="property-price">💰 ${this._escapeHTML(String(this.calculatePriceForLocation(p.id, locationId)))}</span>
                     </div>
                 `).join('') :
                 '<p class="no-properties">No properties available here</p>'

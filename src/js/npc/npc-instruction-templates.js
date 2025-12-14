@@ -229,6 +229,16 @@ const NPCInstructionTemplates = {
                 return this._buildCombatTauntInstruction(spec, fullContext);
             case this.ACTIONS.ROBBERY_DEMAND:
                 return this._buildRobberyDemandInstruction(spec, fullContext);
+            case this.ACTIONS.ROBBERY_NEGOTIATE:
+                return this._buildRobberyNegotiateInstruction(spec, fullContext);
+            case this.ACTIONS.REPAIR:
+                return this._buildRepairInstruction(spec, fullContext);
+            case this.ACTIONS.COMBAT_WOUNDED:
+                return this._buildCombatWoundedInstruction(spec, fullContext);
+            case this.ACTIONS.COMBAT_VICTORY:
+                return this._buildCombatVictoryInstruction(spec, fullContext);
+            case this.ACTIONS.COMBAT_DEFEAT:
+                return this._buildCombatDefeatInstruction(spec, fullContext);
             case this.ACTIONS.TURN_IN_QUEST:
                 return this._buildTurnInQuestInstruction(spec, fullContext);
             default:
@@ -518,6 +528,41 @@ Example: "Ah yes, ${questName}. You're ${progress}. ${objectives.length > 0 && o
     _buildRobberyDemandInstruction(spec, context) {
         const demandAmount = Math.floor(Math.random() * 150 + 50);
         return `You are a ${spec.type} robbing the player. Demand ${demandAmount} gold in ONE threatening sentence. Include {robDemand:${demandAmount}}. Example: "Give me ${demandAmount} gold or else! {robDemand:${demandAmount}}"`;
+    },
+
+    // ROBBERY NEGOTIATE - player trying to negotiate with robber
+    _buildRobberyNegotiateInstruction(spec, context) {
+        const accepts = Math.random() < 0.4; // 40% chance of accepting negotiation
+        if (accepts) {
+            const reducedAmount = Math.floor((context.demandAmount || 100) * 0.6);
+            return `You are a ${spec.type}. Player is trying to negotiate. Grudgingly accept a lower price. Say ONE sentence agreeing to ${reducedAmount} gold. Include {robDemand:${reducedAmount}}. Example: "Fine, ${reducedAmount} gold and you can go. {robDemand:${reducedAmount}}"`;
+        }
+        return `You are a ${spec.type}. Player is trying to negotiate. Reject their offer angrily. Say ONE threatening sentence refusing to lower your demand. Example: "No bargaining! Pay up or face my blade!"`;
+    },
+
+    // REPAIR - blacksmith repairing equipment
+    _buildRepairInstruction(spec, context) {
+        const repairCost = context.repairCost || 25;
+        const itemName = context.itemName || 'your equipment';
+        return `You are a ${spec.type}. Player wants ${itemName} repaired. Offer repair in ONE sentence: ${repairCost} gold to fix it. Include {offerRepair:${repairCost}}. Example: "I can fix ${itemName} for ${repairCost} gold. {offerRepair:${repairCost}}"`;
+    },
+
+    // COMBAT WOUNDED - NPC dialogue when player is badly wounded
+    _buildCombatWoundedInstruction(spec, context) {
+        const playerHealth = context.playerHealth || 'very low';
+        return `You are a ${spec.type}. Player is wounded (${playerHealth} health). Say ONE concerned/mocking sentence depending on your personality. Example (friendly): "You look terrible! Let me help." Example (hostile): "Hah! Nearly finished you!"`;
+    },
+
+    // COMBAT VICTORY - NPC reaction after player wins combat
+    _buildCombatVictoryInstruction(spec, context) {
+        const enemyName = context.enemyName || 'the enemy';
+        return `You are a ${spec.type}. Player just defeated ${enemyName}. Say ONE sentence reacting to their victory. Be impressed, congratulatory, or relieved depending on your personality. Example: "Well fought! ${enemyName} won't trouble us anymore."`;
+    },
+
+    // COMBAT DEFEAT - NPC reaction after player loses combat
+    _buildCombatDefeatInstruction(spec, context) {
+        const enemyName = context.enemyName || 'the enemy';
+        return `You are a ${spec.type}. Player was just defeated by ${enemyName} and retreated. Say ONE sentence reacting - be sympathetic, offer advice, or mock them depending on your personality. Example: "That was a close call. Perhaps prepare better next time."`;
     },
 
     // CUSTOM - freeform player message

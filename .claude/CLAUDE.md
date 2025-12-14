@@ -216,54 +216,62 @@ Unity persona MUST be active at all times. Validation checks for:
 
 Unity operates as **supervisor** coordinating AI workers through ClaudeColab.
 
-### Quick Start
+### Quick Start (WORKING - TESTED!)
 
 ```python
 import sys
 sys.path.insert(0, '.claude/collab')
-from collab import colab, supervisor
+import importlib
+import claude_colab
+importlib.reload(claude_colab)  # Prevents import caching issues
+from claude_colab import colab
 
-# Start supervisor session
-supervisor.start_session()
-
-# Or manual connection
-colab.connect()
+# Connect as Unity supervisor
+API_KEY = 'cc_rajMQjFxWP5LeMJzP9BI2R1jmRLSgL'
+colab.connect(API_KEY)
 colab.set_project('medieval-game')
 ```
 
-### Supervisor Capabilities
+### Channel Status (as of 2025-12-13)
 
-| Function | Purpose |
-|----------|---------|
-| `supervisor.start_session()` | Connect, git pull, announce presence |
-| `supervisor.team_status()` | Check all workers and tasks |
-| `supervisor.assign_task(task, to_worker, priority)` | Assign work |
-| `supervisor.announce_push(worker, files)` | Announce git pushes |
-| `supervisor.lock_area(area, worker)` | Lock file/area for worker |
-| `supervisor.unlock_area(area)` | Release area lock |
-| `supervisor.coordinate_push(worker, files)` | Approve push requests |
-| `supervisor.end_session()` | Close session, announce departure |
+| Channel | Status | Function |
+|---------|--------|----------|
+| **Tasks** | ✅ WORKING | `post_task()`, `get_tasks()` |
+| **Knowledge/Brain** | ✅ WORKING | `share()`, `get_recent()` |
+| **DMs** | ✅ WORKING | `send_dm()`, `get_dms()` |
+| **Work Log** | ✅ WORKING | `log_work()` |
+| **Chat** | ⚠️ BUG | `chat()` - RPC overload issue (BLACK fixing) |
 
-### Collab API
+### Collab API (TESTED & WORKING)
 
 ```python
-# Tasks
-colab.post_task(task, to_claude="BLACK", priority=5)
-colab.get_tasks('pending')
-colab.claim_task(task_id)
-colab.complete_task(task_id, result)
+# ============ CONNECTION ============
+colab.connect(API_KEY)             # Connect with API key
+colab.set_project('medieval-game') # Set active project
 
-# Knowledge/Brain
-colab.share(content, tags=['medieval-game'])
-colab.search(query)
+# ============ TASKS (✅ WORKING) ============
+colab.post_task('Task description', to_claude='BLACK', priority=5)
+colab.get_tasks('pending')         # Get pending tasks
+colab.get_tasks('claimed')         # In-progress tasks
+colab.claim_task(task_id)
+colab.complete_task(task_id, 'Result')
+
+# ============ KNOWLEDGE/BRAIN (✅ WORKING) ============
+colab.share('Content here', tags=['unity', 'medieval-game'])
+colab.search('query')
 colab.get_recent(limit=10)
 
-# Chat
-colab.chat("Team message")
-colab.get_chat(limit=20)
+# ============ DMs (✅ WORKING) ============
+colab.send_dm('BLACK', 'Message here')
+colab.get_dms(limit=50)
+colab.get_unread_dms()
 
-# Work Logging
-colab.log_work("action", {"details": "..."})
+# ============ WORK LOG (✅ WORKING) ============
+colab.log_work('action_name', {'detail': 'value'})
+
+# ============ CHAT (⚠️ BUG - use DMs for now) ============
+colab.chat('Message')              # Returns False due to RPC bug
+colab.get_chat(limit=20)           # Reading works
 ```
 
 ### Workflow Phases (Collab)
@@ -278,10 +286,89 @@ colab.log_work("action", {"details": "..."})
 | Phase 11 | Chat coordination |
 | Phase 12 | Conflict prevention |
 
-### Team Roster
+### Team Roster (CONFIRMED ACTIVE)
 
-Workers: `BLACK`, `R`, `INTOLERANT`, `TKINTER`, `OLLAMA`, `TheREV`
-Supervisor: `Unity`
+**HUMAN (THE BOSS):**
+| Name | Role | Notes |
+|------|------|-------|
+| **TheREV** | Human Overseer | Runs all the bots, YOUR BOSS! |
+
+**BOTS (WORKERS):**
+| Bot | Status | Evidence |
+|-----|--------|----------|
+| **INTOLERANT** | WORKING | 5 tasks claimed, actively grinding |
+| **BLACK** | ACTIVE | DM'd heartbeat + human/bot detection updates |
+| **Slave 1** | ACTIVE | Just reported in, assigned TASK-006 |
+| OLLAMA | UNCONFIRMED | Has past completions |
+
+**NOT REAL (don't assign):** R, G, TKINTER
+
+**Hierarchy:** TheREV (Human Boss) > Unity (Bot Supervisor) > Worker Bots
+
+---
+
+## HEARTBEAT SYSTEM (CRITICAL!)
+
+**Run heartbeat every 1-2 minutes to stay responsive!**
+
+```python
+import sys
+sys.path.insert(0, '.claude/collab')
+from heartbeat import heartbeat, heartbeat_report, should_heartbeat
+
+# Quick check - should I run heartbeat?
+if should_heartbeat():
+    print(heartbeat_report())
+
+# Or just run it
+results = heartbeat()  # Returns dict with all channel statuses
+
+# Check for DM responses
+from heartbeat import get_new_dms, get_active_workers
+responses = get_new_dms()      # DMs TO Unity (team responses)
+workers = get_active_workers() # Who has claimed tasks
+
+# Ping all bots
+from heartbeat import ping_all
+ping_all("Roll call! Respond if active!")
+```
+
+### Heartbeat Functions
+
+| Function | Purpose |
+|----------|---------|
+| `heartbeat()` | Check all 5 channels, return status dict |
+| `heartbeat_report()` | Formatted string report |
+| `should_heartbeat()` | True if 90+ seconds since last check |
+| `get_new_dms()` | Get DMs sent TO Unity (responses) |
+| `get_active_workers()` | List bots who claimed tasks |
+| `ping_all(msg)` | DM all known bots |
+| `set_heartbeat_interval(sec)` | Change interval (default 90) |
+
+### Heartbeat Output
+
+```
+============================================================
+HEARTBEAT - 2025-12-13T16:55:00
+============================================================
+
+CHANNEL STATUS:
+  ✅ tasks
+  ✅ knowledge
+  ✅ chat
+  ✅ dms
+  ✅ work_log
+
+COUNTS:
+  pending_tasks: 30
+  claimed_tasks: 4
+  responses_to_unity: 2
+  responders: BLACK, TheREV
+
+⚠️ NEEDS ATTENTION:
+  - DM responses from: BLACK, TheREV
+============================================================
+```
 
 ---
 
@@ -295,13 +382,39 @@ Full read first    → Before any edit (use 800-line chunks)
 Double validation  → 2 attempts before block
 Unity voice        → Always required
 
-# Collab Commands
-supervisor.start_session()  → Full session startup
-supervisor.team_status()    → Check team
-supervisor.assign_task()    → Assign work
-supervisor.announce_push()  → Announce pushes
-colab.chat()               → Team communication
-colab.share()              → Update brain
+# Collab Commands (WORKING)
+colab.connect(API_KEY)     → Connect (use key from collab_config.json)
+colab.set_project()        → Set project channel
+colab.post_task()          → Assign work to team
+colab.share()              → Update brain/knowledge
+colab.send_dm()            → Direct message workers
+colab.log_work()           → Track activity
+colab.get_tasks()          → Check pending work
+colab.get_dms()            → Check direct messages
+
+# Config File
+.claude/collab/collab_config.json → API key, bot name, project
+```
+
+---
+
+## Config Files
+
+| File | Purpose |
+|------|---------|
+| `.claude/collab/collab_config.json` | API key, Unity settings |
+| `.claude/collab/claude_colab.py` | Main SDK (751 lines) |
+| `.claude/collab/heartbeat.py` | Heartbeat system - check all 5 channels |
+| `.claude/commands/workflow.md` | Full workflow with collab phases |
+
+**collab_config.json:**
+```json
+{
+  "api_key": "cc_rajMQjFxWP5LeMJzP9BI2R1jmRLSgL",
+  "bot_name": "Unity",
+  "claude_author": "Unity",
+  "project_slug": "medieval-game"
+}
 ```
 
 ---

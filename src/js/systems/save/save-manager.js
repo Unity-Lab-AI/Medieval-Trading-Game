@@ -104,9 +104,16 @@ const SaveManager = {
     _selectedLoadType: 'manual',
     _wasGamePaused: false,
 
-    // 
+    //
     // INITIALIZATION
-    // 
+    //
+
+    /**
+     * Initialize the SaveManager system
+     * @description Sets up save slots, auto-save timer, keyboard shortcuts (F5/F9),
+     * and emergency save handlers for page close/visibility change
+     * @returns {void}
+     */
     init() {
         console.log('💾 SaveManager: Initializing unified save system...');
 
@@ -266,10 +273,16 @@ const SaveManager = {
         });
     },
 
-    // 
+    //
     // CORE SAVE/LOAD LOGIC
-    // 
+    //
 
+    /**
+     * Collect complete game state from all systems for saving
+     * @returns {Object} Complete save data object with version, timestamp, and gameData
+     * @description Gathers state from: player, quests, factions, NPCs, market,
+     * travel, weather, achievements, tutorial, and all other game systems
+     */
     getCompleteGameState() {
         const safeCall = (fn, fallback = null) => {
             try { return fn(); } catch(e) { return fallback; }
@@ -678,10 +691,22 @@ const SaveManager = {
         return result.substring(0, originalLen);
     },
 
-    // 
+    //
     // SAVE OPERATIONS
-    // 
+    //
 
+    /**
+     * Save the current game state to a specified slot
+     * @param {number} slotNumber - Slot number (1-10)
+     * @param {string|null} [customName=null] - Optional custom name for the save
+     * @returns {boolean} True if save succeeded, false otherwise
+     * @throws {SaveError} When validation fails or storage is full
+     * @example
+     * // Save to slot 1 with default name
+     * SaveManager.saveToSlot(1);
+     * // Save to slot 3 with custom name
+     * SaveManager.saveToSlot(3, 'Before Boss Fight');
+     */
     saveToSlot(slotNumber, customName = null) {
         if (slotNumber < 1 || slotNumber > this.maxSaveSlots) {
             if (typeof addMessage === 'function') addMessage('Invalid save slot!', 'error');
@@ -738,8 +763,19 @@ const SaveManager = {
         }
     },
 
+    /**
+     * Load game state from a specified save slot
+     * @param {number} slotNumber - Slot number to load (1-10)
+     * @returns {boolean} True if load succeeded, false otherwise
+     * @fires save-loaded - Custom event dispatched after successful load
+     * @example
+     * // Load from slot 2
+     * if (SaveManager.loadFromSlot(2)) {
+     *     console.log('Game loaded!');
+     * }
+     */
     loadFromSlot(slotNumber) {
-        //  Use typed errors for better error differentiation 
+        //  Use typed errors for better error differentiation
         try {
             if (slotNumber < 1 || slotNumber > this.maxSaveSlots) {
                 throw new SaveError('Invalid save slot!', SaveErrorCodes.INVALID_SLOT, { slotNumber });
@@ -824,27 +860,45 @@ const SaveManager = {
             // Start with shallow merge for simple properties
             game.player = { ...game.player, ...savedPlayer };
 
+            // FIX BUG-7: Type validation helper - only merge if value is a plain object
+            // This prevents crashes/exploits from corrupted saves where arrays or primitives sneak in
+            const isPlainObject = (val) => val && typeof val === 'object' && !Array.isArray(val);
+
             // Deep merge critical nested objects - saved data takes priority but preserves structure
-            if (savedPlayer.inventory) {
+            if (isPlainObject(savedPlayer.inventory)) {
                 game.player.inventory = { ...(game.player.inventory || {}), ...savedPlayer.inventory };
+            } else if (savedPlayer.inventory !== undefined) {
+                console.warn('SaveManager: Invalid inventory type in save data, skipping merge');
             }
-            if (savedPlayer.equipment) {
+            if (isPlainObject(savedPlayer.equipment)) {
                 game.player.equipment = { ...(game.player.equipment || {}), ...savedPlayer.equipment };
+            } else if (savedPlayer.equipment !== undefined) {
+                console.warn('SaveManager: Invalid equipment type in save data, skipping merge');
             }
-            if (savedPlayer.attributes) {
+            if (isPlainObject(savedPlayer.attributes)) {
                 game.player.attributes = { ...(game.player.attributes || {}), ...savedPlayer.attributes };
+            } else if (savedPlayer.attributes !== undefined) {
+                console.warn('SaveManager: Invalid attributes type in save data, skipping merge');
             }
-            if (savedPlayer.skills) {
+            if (isPlainObject(savedPlayer.skills)) {
                 game.player.skills = { ...(game.player.skills || {}), ...savedPlayer.skills };
+            } else if (savedPlayer.skills !== undefined) {
+                console.warn('SaveManager: Invalid skills type in save data, skipping merge');
             }
-            if (savedPlayer.questItems) {
+            if (isPlainObject(savedPlayer.questItems)) {
                 game.player.questItems = { ...(game.player.questItems || {}), ...savedPlayer.questItems };
+            } else if (savedPlayer.questItems !== undefined) {
+                console.warn('SaveManager: Invalid questItems type in save data, skipping merge');
             }
-            if (savedPlayer.toolDurability) {
+            if (isPlainObject(savedPlayer.toolDurability)) {
                 game.player.toolDurability = { ...(game.player.toolDurability || {}), ...savedPlayer.toolDurability };
+            } else if (savedPlayer.toolDurability !== undefined) {
+                console.warn('SaveManager: Invalid toolDurability type in save data, skipping merge');
             }
-            if (savedPlayer.reputation) {
+            if (isPlainObject(savedPlayer.reputation)) {
                 game.player.reputation = { ...(game.player.reputation || {}), ...savedPlayer.reputation };
+            } else if (savedPlayer.reputation !== undefined) {
+                console.warn('SaveManager: Invalid reputation type in save data, skipping merge');
             }
         }
 
@@ -1266,10 +1320,17 @@ const SaveManager = {
         }
     },
 
-    // 
+    //
     // AUTO-SAVE & QUICK SAVE
-    // 
+    //
 
+    /**
+     * Perform an automatic save to the rotating auto-save slots
+     * @param {boolean} [silent=false] - If true, suppress the save notification
+     * @returns {void}
+     * @description Auto-saves rotate through maxAutoSaveSlots (10) slots
+     * with a minimum 30-second cooldown between saves
+     */
     autoSave(silent = false) {
         const now = Date.now();
         if (now - this.lastAutoSave < 30000 || this.isAutoSaving) return;
@@ -1318,6 +1379,11 @@ const SaveManager = {
         }
     },
 
+    /**
+     * Load game state from an auto-save slot
+     * @param {number} slotIndex - Auto-save slot index (0-9)
+     * @returns {boolean} True if load succeeded, false otherwise
+     */
     loadAutoSave(slotIndex) {
         const saveData = localStorage.getItem(`tradingGameAutoSave_${slotIndex}`);
         if (!saveData) {
@@ -1338,6 +1404,10 @@ const SaveManager = {
         }
     },
 
+    /**
+     * Quick save to current slot or slot 1 (keyboard shortcut: F5)
+     * @returns {void}
+     */
     quickSave() {
         if (typeof game === 'undefined' || game.state !== GameState.PLAYING) {
             if (typeof addMessage === 'function') addMessage('Cannot save now!', 'error');
@@ -1347,6 +1417,10 @@ const SaveManager = {
         this.saveToSlot(slot);
     },
 
+    /**
+     * Quick load from current slot or most recent save (keyboard shortcut: F9)
+     * @returns {void}
+     */
     quickLoad() {
         if (this.currentSaveSlot) {
             this.loadFromSlot(this.currentSaveSlot);
@@ -1377,8 +1451,13 @@ const SaveManager = {
 
     // 
     // UTILITY FUNCTIONS
-    // 
+    //
 
+    /**
+     * Delete a save from a specified slot
+     * @param {number} slotNumber - Slot number to delete (1-10)
+     * @returns {boolean} True if deletion succeeded, false otherwise
+     */
     deleteSave(slotNumber) {
         if (slotNumber < 1 || slotNumber > this.maxSaveSlots) return false;
 
@@ -1395,6 +1474,10 @@ const SaveManager = {
         return true;
     },
 
+    /**
+     * Find the most recently saved manual slot
+     * @returns {number|null} Slot number of most recent save, or null if no saves
+     */
     findMostRecentSave() {
         let mostRecent = null;
         let mostRecentTime = 0;

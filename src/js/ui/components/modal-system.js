@@ -48,23 +48,24 @@ const ModalSystem = {
             return `<button class="modal-btn ${className}-btn" data-btn-idx="${idx}">${btn.text}</button>`;
         }).join('');
 
-        // Build close button if closeable
+        // Build close button if closeable - with proper accessibility
         const closeButtonHTML = closeable
-            ? `<button class="modal-close-x" title="Close">×</button>`
+            ? `<button class="modal-close-x" title="Close" aria-label="Close dialog">×</button>`
             : '';
 
         // build the modal HTML - darkness in markup form
+        // ARIA attributes for accessibility - screen readers need love too
         const html = `
-            <div class="modal-dialog ${draggable ? 'modal-draggable' : ''}">
+            <div class="modal-dialog ${draggable ? 'modal-draggable' : ''}" role="dialog" aria-modal="true" aria-labelledby="modal-title">
                 <div class="modal-header ${draggable ? 'modal-drag-handle' : ''}">
-                    ${draggable ? '<span class="modal-grip">⋮⋮</span>' : ''}
-                    <h2>${title}</h2>
+                    ${draggable ? '<span class="modal-grip" aria-hidden="true">⋮⋮</span>' : ''}
+                    <h2 id="modal-title">${title}</h2>
                     ${closeButtonHTML}
                 </div>
-                <div class="modal-content">
+                <div class="modal-content" role="document">
                     ${content}
                 </div>
-                ${buttonHTML ? `<div class="modal-footer">${buttonHTML}</div>` : ''}
+                ${buttonHTML ? `<div class="modal-footer" role="group" aria-label="Modal actions">${buttonHTML}</div>` : ''}
             </div>
         `;
 
@@ -75,6 +76,8 @@ const ModalSystem = {
             modalContainer = document.createElement('div');
             modalContainer.id = this.currentModalId;
             modalContainer.className = 'modal-overlay';
+            // Accessibility: mark overlay as presentation (dialog inside has the semantics)
+            modalContainer.setAttribute('role', 'presentation');
             document.body.appendChild(modalContainer);
         }
 

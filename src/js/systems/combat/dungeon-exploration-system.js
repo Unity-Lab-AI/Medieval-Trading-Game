@@ -3192,6 +3192,7 @@ const DungeonExplorationSystem = {
             defeatMessage: 'Should\'ve... stayed retired... *cough*',
             victoryMessage: 'Captain Blackheart is finished! The smuggling ring is broken!',
             rewards: { gold: 300, items: ['exotic_goods', 'exotic_goods', 'ancient_coin', 'ancient_coin', 'blood_ruby'] },
+            isBoss: true,
             questEnemy: 'smuggler'
         },
 
@@ -3213,6 +3214,7 @@ const DungeonExplorationSystem = {
             defeatMessage: '*squeak* *dies*',
             victoryMessage: 'The Rat Queen is dead! The infestation should slow now.',
             rewards: { gold: 50, items: ['bone_fragment', 'bone_fragment', 'ancient_coin'] },
+            isBoss: true,
             questEnemy: 'giant_rat'
         }
     },

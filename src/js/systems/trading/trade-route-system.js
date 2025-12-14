@@ -199,10 +199,14 @@ const TradeRouteSystem = {
     getWarehouseInventory(warehouse) {
         // simplified system - reality is too complicated for this economy
         // In a full implementation, this would track actual items stored
-        const warehouseInventory = warehouse.inventory || {};
-        
+
+        // FIX BUG-TRADE-1: Initialize warehouse.inventory if missing
+        if (!warehouse.inventory) {
+            warehouse.inventory = {};
+        }
+
         // Generate some sample inventory based on warehouse level and upgrades
-        if (Object.keys(warehouseInventory).length === 0) {
+        if (Object.keys(warehouse.inventory).length === 0) {
             const propertyType = PropertySystem.propertyTypes[warehouse.type];
             const baseInventory = {
                 food: 50,
@@ -212,24 +216,26 @@ const TradeRouteSystem = {
                 iron_ore: 10,
                 tools: 5
             };
-            
-            // Apply level multiplier
+
+            // Apply level multiplier - PERSIST directly to warehouse.inventory!
             Object.keys(baseInventory).forEach(itemId => {
-                warehouseInventory[itemId] = Math.round(baseInventory[itemId] * (1 + (warehouse.level - 1) * 0.3));
+                warehouse.inventory[itemId] = Math.round(baseInventory[itemId] * (1 + (warehouse.level - 1) * 0.3));
             });
-            
+
             // Apply upgrade bonuses
             warehouse.upgrades.forEach(upgradeId => {
                 const upgrade = PropertySystem.upgrades[upgradeId];
                 if (upgrade && upgrade.effects.productionBonus) {
-                    Object.keys(warehouseInventory).forEach(itemId => {
-                        warehouseInventory[itemId] = Math.round(warehouseInventory[itemId] * upgrade.effects.productionBonus);
+                    Object.keys(warehouse.inventory).forEach(itemId => {
+                        warehouse.inventory[itemId] = Math.round(warehouse.inventory[itemId] * upgrade.effects.productionBonus);
                     });
                 }
             });
+
+            console.log(`📦 Warehouse inventory initialized: ${JSON.stringify(warehouse.inventory)}`);
         }
-        
-        return warehouseInventory;
+
+        return warehouse.inventory;
     },
     
     // yank items off the shelf - they're sold, gone, profit
@@ -237,12 +243,21 @@ const TradeRouteSystem = {
         if (!warehouse.inventory) {
             warehouse.inventory = {};
         }
-        
-        warehouse.inventory[itemId] = (warehouse.inventory[itemId] || 0) - amount;
-        
+
+        // FIX: Validate we have enough items before removing - prevents negative inventory exploit
+        const available = warehouse.inventory[itemId] || 0;
+        if (available < amount) {
+            console.warn(`Cannot remove ${amount} ${itemId} - only ${available} available`);
+            return false; // Reject the removal
+        }
+
+        warehouse.inventory[itemId] = available - amount;
+
         if (warehouse.inventory[itemId] <= 0) {
             delete warehouse.inventory[itemId];
         }
+
+        return true; // Success
     },
     
     // calculate if this route would make you richer or just waste time

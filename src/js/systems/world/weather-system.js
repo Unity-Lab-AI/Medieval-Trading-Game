@@ -1143,7 +1143,8 @@ const WeatherSystem = {
     startLightning() {
         if (this.lightningInterval) return;
 
-        this.lightningInterval = setInterval(() => {
+        // FIX: Use TimerManager to prevent memory leaks
+        this.lightningInterval = TimerManager.setInterval(() => {
             if (Math.random() < 0.3) {
                 this.flashLightning();
             }
@@ -1152,7 +1153,7 @@ const WeatherSystem = {
 
     stopLightning() {
         if (this.lightningInterval) {
-            clearInterval(this.lightningInterval);
+            TimerManager.clearTimeout(this.lightningInterval);
             this.lightningInterval = null;
         }
     },

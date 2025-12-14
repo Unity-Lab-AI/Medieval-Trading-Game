@@ -401,7 +401,13 @@ const Bootstrap = {
             loadingTitle.style.color = '#e53935';
         }
         if (loadingStatus) {
-            loadingStatus.innerHTML = `${error.message || 'Unknown error'}<br><button onclick="location.reload()" style="margin-top:1rem;padding:0.5rem 1rem;background:#4fc3f7;border:none;border-radius:4px;color:#1a1a2e;cursor:pointer;font-weight:bold;">Retry</button>`;
+            // FIX: Escape error message to prevent XSS injection
+            const safeMessage = (error.message || 'Unknown error')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+            loadingStatus.innerHTML = `${safeMessage}<br><button onclick="location.reload()" style="margin-top:1rem;padding:0.5rem 1rem;background:#4fc3f7;border:none;border-radius:4px;color:#1a1a2e;cursor:pointer;font-weight:bold;">Retry</button>`;
         }
     },
 
@@ -482,3 +488,31 @@ if (document.readyState === 'loading') {
 // expose globally
 window.Bootstrap = Bootstrap;
 console.log('🖤 Bootstrap loaded - registration open');
+
+// ═══════════════════════════════════════════════════════════════
+// GLOBAL ERROR HANDLERS - catch the shit that falls through
+// ═══════════════════════════════════════════════════════════════
+// Unhandled promise rejections - the silent killers of async code
+window.addEventListener('unhandledrejection', (event) => {
+    console.error('🖤 Unhandled Promise Rejection:', event.reason);
+    Bootstrap.errors.push({
+        type: 'unhandledrejection',
+        error: event.reason,
+        timestamp: Date.now()
+    });
+    // Don't prevent default - let it log to console too
+});
+
+// Global error handler for uncaught exceptions
+window.addEventListener('error', (event) => {
+    console.error('🖤 Uncaught Error:', event.error || event.message);
+    Bootstrap.errors.push({
+        type: 'uncaughterror',
+        error: event.error || event.message,
+        filename: event.filename,
+        lineno: event.lineno,
+        timestamp: Date.now()
+    });
+});
+
+console.log('🖤 Global error handlers registered - no promise left behind');

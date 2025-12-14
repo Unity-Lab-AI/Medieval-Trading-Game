@@ -176,8 +176,174 @@ const game = {
     // Tracking for periodic updates (prevents double-processing)
     lastWageProcessedDay: -1,
     
+    // 🦙 Ollama status tracking
+    ollamaStatus: {
+        available: false,
+        modelReady: false,
+        lastCheck: 0,
+        error: null
+    },
+
+    // 🦙 Check if Ollama is running and has mistral model
+    async checkOllamaStatus() {
+        try {
+            // Check if Ollama is running
+            const tagsResponse = await fetch('http://localhost:11434/api/tags', {
+                method: 'GET',
+                signal: AbortSignal.timeout(2000)
+            });
+
+            if (!tagsResponse.ok) {
+                this.ollamaStatus = { available: false, modelReady: false, lastCheck: Date.now(), error: 'Ollama not responding' };
+                console.log('🦙 Ollama not available - NPC dialogue will use fallbacks');
+                return false;
+            }
+
+            const tagsData = await tagsResponse.json();
+            const models = tagsData.models || [];
+            const hasMistral = models.some(m => m.name?.includes('mistral'));
+
+            this.ollamaStatus = {
+                available: true,
+                modelReady: hasMistral,
+                lastCheck: Date.now(),
+                error: hasMistral ? null : 'Mistral model not found'
+            };
+
+            if (hasMistral) {
+                console.log('🦙 Ollama ready with mistral model - NPC AI dialogue enabled!');
+            } else {
+                console.log('🦙 Ollama running but mistral not found. Run: ollama pull mistral');
+                this.showOllamaModelPrompt();
+            }
+
+            return hasMistral;
+        } catch (error) {
+            this.ollamaStatus = { available: false, modelReady: false, lastCheck: Date.now(), error: error.message };
+            console.log('🦙 Ollama not running - NPC dialogue will use pre-written fallbacks');
+            return false;
+        }
+    },
+
+    // 🦙 Show prompt to download mistral model
+    showOllamaModelPrompt() {
+        if (typeof ModalSystem !== 'undefined') {
+            ModalSystem.show({
+                title: '🦙 AI Model Not Found',
+                content: `
+                    <p>Ollama is running but the <strong>mistral</strong> model isn't installed.</p>
+                    <p>For AI-powered NPC dialogue, run this command:</p>
+                    <code style="display:block; background:#1a1a2e; padding:10px; margin:10px 0; border-radius:5px;">ollama pull mistral</code>
+                    <p style="color:#888; font-size:0.9em;">Without it, NPCs will use pre-written dialogue (still works, just less dynamic).</p>
+                    <p style="color:#888; font-size:0.9em;">Model size: ~4.4GB - download may take a few minutes.</p>
+                `,
+                closeable: true,
+                buttons: [
+                    { text: 'Download Now', className: 'primary', onClick: () => { ModalSystem.hide(); this.startMistralDownload(); } },
+                    { text: 'Later', className: 'secondary', onClick: () => ModalSystem.hide() }
+                ]
+            });
+        }
+    },
+
+    // 🦙 Start downloading mistral model with progress UI
+    async startMistralDownload() {
+        // Create progress overlay
+        const overlay = document.createElement('div');
+        overlay.id = 'ollama-download-overlay';
+        overlay.innerHTML = `
+            <div style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); display:flex; align-items:center; justify-content:center; z-index:10000;">
+                <div style="background:#1a1a2e; border:2px solid #4a4a6a; border-radius:12px; padding:30px; max-width:500px; text-align:center;">
+                    <h2 style="color:#8b5cf6; margin:0 0 20px 0;">🦙 Downloading Mistral AI Model</h2>
+                    <p style="color:#aaa; margin-bottom:20px;">This enables AI-powered NPC dialogue. Size: ~4.4GB</p>
+                    <div style="background:#2a2a4a; border-radius:8px; height:24px; overflow:hidden; margin-bottom:15px;">
+                        <div id="ollama-progress-bar" style="background:linear-gradient(90deg, #8b5cf6, #6366f1); height:100%; width:0%; transition:width 0.3s;"></div>
+                    </div>
+                    <p id="ollama-progress-text" style="color:#888; font-size:0.9em; margin:0;">Starting download...</p>
+                    <p id="ollama-progress-detail" style="color:#666; font-size:0.8em; margin-top:10px;"></p>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+
+        const progressBar = document.getElementById('ollama-progress-bar');
+        const progressText = document.getElementById('ollama-progress-text');
+        const progressDetail = document.getElementById('ollama-progress-detail');
+
+        try {
+            // Start the pull request (streaming response)
+            const response = await fetch('http://localhost:11434/api/pull', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'mistral', stream: true })
+            });
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let totalSize = 0;
+            let downloadedSize = 0;
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const text = decoder.decode(value);
+                const lines = text.split('\n').filter(l => l.trim());
+
+                for (const line of lines) {
+                    try {
+                        const data = JSON.parse(line);
+
+                        if (data.total) totalSize = data.total;
+                        if (data.completed) downloadedSize = data.completed;
+
+                        // Update progress
+                        if (totalSize > 0) {
+                            const percent = Math.round((downloadedSize / totalSize) * 100);
+                            progressBar.style.width = percent + '%';
+                            progressText.textContent = `${percent}% complete`;
+
+                            const downloadedMB = (downloadedSize / 1024 / 1024).toFixed(1);
+                            const totalMB = (totalSize / 1024 / 1024).toFixed(1);
+                            progressDetail.textContent = `${downloadedMB} MB / ${totalMB} MB`;
+                        }
+
+                        if (data.status) {
+                            progressText.textContent = data.status;
+                        }
+
+                        if (data.status === 'success') {
+                            progressBar.style.width = '100%';
+                            progressBar.style.background = 'linear-gradient(90deg, #10b981, #34d399)';
+                            progressText.textContent = '✓ Download complete!';
+                            progressDetail.textContent = 'AI-powered NPC dialogue is now available!';
+
+                            // Update status
+                            this.ollamaStatus.modelReady = true;
+
+                            // Remove overlay after delay
+                            setTimeout(() => overlay.remove(), 2000);
+                        }
+                    } catch (e) {
+                        // Skip non-JSON lines
+                    }
+                }
+            }
+        } catch (error) {
+            progressBar.style.background = '#ef4444';
+            progressText.textContent = 'Download failed';
+            progressDetail.textContent = error.message + ' - Try running: ollama pull mistral';
+
+            // Remove overlay after delay
+            setTimeout(() => overlay.remove(), 5000);
+        }
+    },
+
     // Initialize game engine
     init() {
+        // 🦙 Check Ollama status (async, doesn't block init)
+        this.checkOllamaStatus();
+
         // time machine handles its own init - just ensure it's ready
         if (typeof TimeMachine !== 'undefined' && !TimeMachine.isRunning) {
             TimeMachine.init();
@@ -187,7 +353,7 @@ const game = {
         this.lastFrameTime = performance.now();
         this.frameCount = 0;
         this.fps = 0;
-        
+
         // Initialize new systems (with safety checks)
         if (typeof CityReputationSystem !== 'undefined') CityReputationSystem.init();
         if (typeof CityEventSystem !== 'undefined') CityEventSystem.init();
@@ -2549,7 +2715,23 @@ function initializeAllSystems() {
         console.log('Game not in MENU state, skipping system initialization');
         return;
     }
-    
+
+    // 🦙 Initialize Ollama Model Manager FIRST - check if AI is ready for NPC voices
+    // This runs async so it doesn't block other systems from loading
+    if (typeof OllamaModelManager !== 'undefined') {
+        OllamaModelManager.init().then(status => {
+            if (status.running && status.hasModel) {
+                console.log('🦙 Ollama ready - AI-powered NPC dialogue enabled!');
+            } else if (status.running) {
+                console.log('🦙 Ollama running but model missing - download prompt shown');
+            } else {
+                console.log('🦙 Ollama not running - NPCs will use fallback responses (totally fine)');
+            }
+        }).catch(err => {
+            console.warn('🦙 Ollama check failed, no biggie:', err.message);
+        });
+    }
+
     // Initialize core systems first
     if (typeof ItemDatabase !== 'undefined') {
         ItemDatabase.init();
@@ -2844,8 +3026,8 @@ function setupEventListeners() {
             console.log('Initial difficulty:', lastKnownDifficulty);
         }
 
-        // Poll every 100ms
-        difficultyPoller = setInterval(() => {
+        // Poll every 100ms - FIX: Use TimerManager to prevent memory leaks
+        difficultyPoller = TimerManager.setInterval(() => {
             const currentRadio = document.querySelector('input[name="difficulty"]:checked');
             if (currentRadio && currentRadio.value !== lastKnownDifficulty) {
                 console.log('🔄 POLLING DETECTED DIFFICULTY CHANGE!');
@@ -2864,7 +3046,7 @@ function setupEventListeners() {
 
     window.stopDifficultyPolling = function() {
         if (difficultyPoller) {
-            clearInterval(difficultyPoller);
+            TimerManager.clearTimeout(difficultyPoller);
             difficultyPoller = null;
             console.log('✓ Difficulty polling stopped');
             GameLogger.log('EVENT', 'Difficulty polling stopped');
@@ -8413,6 +8595,21 @@ function showSettings() {
     }
 }
 
+/**
+ * Escape HTML to prevent XSS injection in high scores
+ * @param {string} str - String to escape
+ * @returns {string} Escaped string safe for innerHTML
+ */
+function _escapeHTMLForScores(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 function getHighScoresHTML() {
     // Use GlobalLeaderboardSystem (Hall of Champions) as the single source of truth
     if (typeof GlobalLeaderboardSystem === 'undefined' || !GlobalLeaderboardSystem.leaderboard || GlobalLeaderboardSystem.leaderboard.length === 0) {
@@ -8422,8 +8619,9 @@ function getHighScoresHTML() {
     return GlobalLeaderboardSystem.leaderboard.slice(0, 10).map((score, index) => {
         const medal = index === 0 ? "👑" : index === 1 ? "🥈" : index === 2 ? "🥉" : `${index + 1}.`;
         const statusIcon = score.isAlive ? '💚' : '💀';
-        const statusText = score.isAlive ? 'still playing' : (score.causeOfDeath || 'unknown');
-        return `<div class="high-score-entry">${medal} ${score.playerName || 'Unknown'}: ${(score.score || 0).toLocaleString()} pts - ${score.daysSurvived || 0} days ${statusIcon} ${statusText}</div>`;
+        const statusText = score.isAlive ? 'still playing' : _escapeHTMLForScores(score.causeOfDeath || 'unknown');
+        // FIX XSS: Escape playerName to prevent script injection via leaderboard
+        return `<div class="high-score-entry">${medal} ${_escapeHTMLForScores(score.playerName || 'Unknown')}: ${(score.score || 0).toLocaleString()} pts - ${score.daysSurvived || 0} days ${statusIcon} ${statusText}</div>`;
     }).join('');
 }
 

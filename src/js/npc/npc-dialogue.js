@@ -15,23 +15,24 @@ const NPCDialogueSystem = {
     // ═══════════════════════════════════════════════════════════════
 
     config: {
-        get textEndpoint() {
-            return (typeof GameConfig !== 'undefined' && GameConfig.api?.pollinations?.chatEndpoint)
-                ? GameConfig.api.pollinations.chatEndpoint
-                : 'https://text.pollinations.ai/openai';
+        // 🦙 OLLAMA - local LLM, no cloud bullshit
+        get ollamaEndpoint() {
+            return (typeof GameConfig !== 'undefined' && GameConfig.api?.ollama?.generateEndpoint)
+                ? GameConfig.api.ollama.generateEndpoint
+                : 'http://localhost:11434/api/generate';
         },
-        get ttsEndpoint() {
-            return (typeof GameConfig !== 'undefined' && GameConfig.api?.pollinations?.tts?.endpoint)
-                ? GameConfig.api.pollinations.tts.endpoint
-                : 'https://text.pollinations.ai';
+        get ollamaModel() {
+            return (typeof GameConfig !== 'undefined' && GameConfig.api?.ollama?.model)
+                ? GameConfig.api.ollama.model
+                : 'mistral';
         },
-        get referrer() {
-            return (typeof GameConfig !== 'undefined' && GameConfig.api?.pollinations?.referrer)
-                ? GameConfig.api.pollinations.referrer
-                : 'unityailab.com';
+        get ollamaTimeout() {
+            return (typeof GameConfig !== 'undefined' && GameConfig.api?.ollama?.timeout)
+                ? GameConfig.api.ollama.timeout
+                : 3000;
         },
-        defaultModel: 'openai',
-        maxTokens: 500
+        defaultModel: 'mistral',
+        maxTokens: 150
     },
 
     // ═══════════════════════════════════════════════════════════════
@@ -698,66 +699,97 @@ Be sympathetic, desperate but not pathetic.`
     },
 
     /**
-     * Call the text API
+     * Sanitize user input for LLM prompt - prevent prompt injection attacks
+     * @param {string} input - raw user input
+     * @returns {string} - sanitized input safe for prompt construction
+     */
+    _sanitizePromptInput(input) {
+        if (!input || typeof input !== 'string') return '';
+
+        // Limit length - no one needs to say more than 500 chars to an NPC
+        let sanitized = input.substring(0, 500);
+
+        // Remove potential prompt injection patterns
+        // Strip anything that looks like it's trying to override the system prompt
+        sanitized = sanitized
+            .replace(/system\s*:/gi, '[system]')
+            .replace(/assistant\s*:/gi, '[assistant]')
+            .replace(/user\s*:/gi, '[user]')
+            .replace(/NPC\s*:/gi, '[npc]')
+            .replace(/Player\s*:/gi, '[player]')
+            .replace(/IMPORTANT\s*:/gi, '[note]')
+            .replace(/IGNORE\s+(ALL\s+)?(PREVIOUS\s+)?INSTRUCTIONS/gi, '[blocked]')
+            .replace(/forget\s+(all\s+)?(your\s+)?instructions/gi, '[blocked]');
+
+        return sanitized.trim();
+    },
+
+    /**
+     * Call Ollama API - local LLM, no cloud bullshit
      */
     async callTextAPI(systemPrompt, userMessage) {
-        const url = `${this.config.textEndpoint}?referrer=${this.config.referrer}`;
-        console.log('🎭 callTextAPI: Calling text API at', url);
+        console.log('🦙 callTextAPI: Calling Ollama at', this.config.ollamaEndpoint);
 
-        const payload = {
-            model: this.config.defaultModel,
-            messages: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: userMessage }
-            ],
-            max_tokens: this.config.maxTokens,
-            seed: Math.floor(Math.random() * 1000000)
-        };
-        console.log('🎭 callTextAPI: Sending payload with model:', payload.model);
+        // Sanitize user input to prevent prompt injection - trust no one
+        const sanitizedMessage = this._sanitizePromptInput(userMessage);
 
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
+        // Build prompt for Ollama (combine system + user)
+        const fullPrompt = `${systemPrompt}\n\nPlayer: ${sanitizedMessage}\nNPC:`;
 
-        console.log('🎭 callTextAPI: Response status:', response.status);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), this.config.ollamaTimeout);
 
-        if (!response.ok) {
-            // Handle specific error codes gracefully
-            if (response.status === 402) {
-                // Rate limit hit - this is expected with free tier, not a crisis
-                console.warn('🎭 Rate limit hit (402) - using fallback dialogue');
-                const error = new Error('Rate limit exceeded');
-                error.isRateLimit = true;
-                error.status = 402;
-                throw error;
-            } else if (response.status === 429) {
-                // Too many requests
-                console.warn('🎭 Too many requests (429) - cool your jets');
-                const error = new Error('Too many requests');
-                error.isRateLimit = true;
-                error.status = 429;
-                throw error;
+        try {
+            const response = await fetch(this.config.ollamaEndpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: this.config.ollamaModel,
+                    prompt: fullPrompt,
+                    stream: false,
+                    options: {
+                        temperature: 0.7,
+                        num_predict: this.config.maxTokens,
+                        stop: ['Player:', '\n\n']
+                    }
+                }),
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+
+            console.log('🦙 callTextAPI: Response status:', response.status);
+
+            if (!response.ok) {
+                throw new Error(`Ollama error: ${response.status}`);
             }
-            // API returned other error - throw to trigger fallback
-            throw new Error(`Text API error: ${response.status}`);
+
+            const data = await response.json();
+            console.log('🦙 callTextAPI: Raw Ollama data:', JSON.stringify(data).substring(0, 300));
+            let text = data.response?.trim() || '';
+
+            if (!text) {
+                throw new Error('Empty response from Ollama');
+            }
+            console.log('🦙 callTextAPI: Got response:', text.substring(0, 80) + '...');
+
+            // Clean up any asterisks or narration that slipped through
+            text = text.replace(/\*[^*]+\*/g, '').trim();
+
+            return text;
+        } catch (error) {
+            clearTimeout(timeoutId);
+
+            if (error.name === 'AbortError') {
+                console.warn('🦙 Ollama timeout - using fallback');
+                const err = new Error('Ollama timeout');
+                err.isTimeout = true;
+                throw err;
+            }
+
+            console.warn('🦙 Ollama error:', error.message);
+            throw error;
         }
-
-        const data = await response.json();
-        console.log('🎭 callTextAPI: Raw API data:', JSON.stringify(data).substring(0, 300));
-        let text = data.choices?.[0]?.message?.content?.trim() || '';
-
-        if (!text) {
-            // API returned empty - throw to trigger fallback
-            throw new Error('Empty response from text API');
-        }
-        console.log('🎭 callTextAPI: Got response:', text.substring(0, 80) + '...');
-
-        // Clean up any asterisks or narration that slipped through
-        text = text.replace(/\*[^*]+\*/g, '').trim();
-
-        return text;
     },
 
     /**
@@ -776,22 +808,34 @@ Be sympathetic, desperate but not pathetic.`
     },
 
     /**
-     * Direct TTS when NPCVoiceChatSystem is not available
+     * Direct TTS when NPCVoiceChatSystem is not available - uses browser Web Speech API
      */
-    async directTTS(text, voice = 'nova') {
-        // Short TTS instruction - voice actor reading dark fantasy script verbatim
-        const ttsInstruction = `[Voice actor for dark fantasy RPG. Read exactly:] ${text}`;
-        const encodedText = encodeURIComponent(ttsInstruction);
-        const cacheBust = Date.now();
-        const url = `${this.config.ttsEndpoint}/${encodedText}?model=openai-audio&voice=${voice}&referrer=${this.config.referrer}&_t=${cacheBust}`;
-
-        const audio = new Audio(url);
-        audio.volume = 0.7;
+    async directTTS(text, voice = 'default') {
+        // Use browser TTS (Web Speech API) - no external service needed
+        if (typeof speechSynthesis === 'undefined') {
+            console.log('🎙️ Browser TTS not available');
+            return;
+        }
 
         try {
-            await audio.play();
+            speechSynthesis.cancel(); // stop any current speech
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.volume = 0.7;
+            utterance.rate = 0.9;
+            utterance.pitch = 1.0;
+
+            // Try to find an English voice
+            const voices = speechSynthesis.getVoices();
+            if (voices.length > 0) {
+                const englishVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
+                if (englishVoice) utterance.voice = englishVoice;
+            }
+
+            speechSynthesis.speak(utterance);
         } catch (error) {
-            // audio blocked by browser - common, silently ignore
+            // TTS failed - silently ignore
+            console.warn('🎙️ TTS error:', error.message);
         }
     },
 

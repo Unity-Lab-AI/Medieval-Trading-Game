@@ -207,13 +207,28 @@ const CurrentTaskSystem = {
         this.setTask('fighting', 'Fighting', enemyName, '');
     },
 
-    //  Initialize - start periodic updates 
+    // FIX: Store interval ID for cleanup - prevents memory leak
+    _updateIntervalId: null,
+
+    //  Initialize - start periodic updates
     init() {
-        setInterval(() => {
+        // Clear existing interval if any - prevents duplicate loops
+        if (this._updateIntervalId) {
+            clearInterval(this._updateIntervalId);
+        }
+        this._updateIntervalId = setInterval(() => {
             this.updateTaskDisplays();
         }, 1000);
 
         console.log('🎯 CurrentTaskSystem initialized - tracking your procrastination in real time 💀');
+    },
+
+    // Cleanup method for proper shutdown
+    cleanup() {
+        if (this._updateIntervalId) {
+            clearInterval(this._updateIntervalId);
+            this._updateIntervalId = null;
+        }
     }
 };
 

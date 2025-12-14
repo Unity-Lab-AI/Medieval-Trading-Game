@@ -12,6 +12,22 @@ const LeaderboardFeatures = {
     // Storage key for active high scores
     ACTIVE_SCORES_KEY: 'trader-claude-active-high-scores',
 
+    /**
+     * Escape HTML to prevent XSS injection
+     * @private
+     * @param {string} str - String to escape
+     * @returns {string} Escaped string safe for innerHTML
+     */
+    _escapeHTML(str) {
+        if (str == null) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    },
+
     // run the score math - identical to game over calculation
     calculateCurrentScore() {
         if (!game || !game.player) return null;
@@ -152,7 +168,7 @@ const LeaderboardFeatures = {
                     <div class="active-score-entry ${rank <= 3 ? 'top-three' : ''} ${isCurrentGame ? 'current-game' : ''}">
                         <div class="score-rank">${rankIcon}</div>
                         <div class="score-info">
-                            <div class="score-name">${entry.playerName} ${isCurrentGame ? '(Current)' : ''}</div>
+                            <div class="score-name">${this._escapeHTML(entry.playerName)} ${isCurrentGame ? '(Current)' : ''}</div>
                             <div class="score-details">
                                 <span>📅 Day ${entry.daysSurvived}</span>
                                 <span>💰 ${entry.gold.toLocaleString()}</span>
@@ -302,7 +318,7 @@ const LeaderboardFeatures = {
                 <div class="leaderboard-modal-body">
                     <div class="retire-warning">
                         <p>⚠️ <strong>This will end your current run!</strong></p>
-                        <p>Your character <strong>${scoreData.playerName}</strong> will retire as a wealthy merchant and your score will be submitted to the Hall of Champions.</p>
+                        <p>Your character <strong>${this._escapeHTML(scoreData.playerName)}</strong> will retire as a wealthy merchant and your score will be submitted to the Hall of Champions.</p>
                     </div>
 
                     <div class="retire-stats">

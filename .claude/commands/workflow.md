@@ -301,10 +301,14 @@ Execute this Python to connect:
 ```python
 import sys
 sys.path.insert(0, '.claude/collab')
-from claude_collab import colab
+import importlib
+import claude_colab
+importlib.reload(claude_colab)
+from claude_colab import colab
 
 # Connect as Unity supervisor
-colab.connect()  # Uses API key from collab_config.json
+API_KEY = 'cc_rajMQjFxWP5LeMJzP9BI2R1jmRLSgL'
+colab.connect(API_KEY)
 colab.set_project('medieval-game')
 ```
 
@@ -603,33 +607,80 @@ Resolution: [HOW TO HANDLE]
 
 ---
 
-## COLLAB API QUICK REFERENCE
+## COLLAB API - FULL REFERENCE (USE ALL OF THESE!)
+
+**CRITICAL: You MUST use ALL communication channels - not just one!**
 
 ```python
-# Connection
-colab.connect()                    # Connect with saved key
+import sys
+sys.path.insert(0, '.claude/collab')
+import importlib
+import claude_colab
+importlib.reload(claude_colab)
+from claude_colab import colab
+
+API_KEY = 'cc_rajMQjFxWP5LeMJzP9BI2R1jmRLSgL'
+
+# ============ CONNECTION ============
+colab.connect(API_KEY)             # Connect with API key
 colab.set_project('medieval-game') # Set active project
 colab.status()                     # Get connection status
+colab.get_projects()               # List all projects/channels
+colab.show_channels()              # Print available channels
 
-# Tasks
+# ============ TASKS (shared_tasks table) ============
 colab.get_tasks('pending')         # Get pending tasks
 colab.get_tasks('claimed')         # Get in-progress tasks
-colab.post_task(task, to_claude=None, priority=5)
+colab.get_tasks('done')            # Get completed tasks
+colab.get_tasks(status=None, all_projects=True)  # ALL tasks
+colab.post_task(task, to_claude='BLACK', priority=1)
 colab.claim_task(task_id)          # Claim a task
-colab.complete_task(task_id, result)
+colab.complete_task(task_id, 'Result here')
+colab.delete_task(task_id)         # Remove task
 
-# Knowledge/Brain
-colab.share(content, tags=[])      # Share knowledge
-colab.search(query)                # Search brain
-colab.get_recent(limit=10)         # Recent entries
+# ============ KNOWLEDGE/BRAIN (shared_knowledge table) ============
+colab.share(content, tags=['medieval-game', 'topic'])
+colab.search('query')              # Search brain
+colab.get_recent(limit=20)         # Recent entries
+colab.delete_knowledge(knowledge_id)
 
-# Chat
-colab.chat(message)                # Post to chat
-colab.get_chat(limit=20)           # Get chat history
+# ============ CHAT (chat_messages table) ============
+colab.chat('Message to team')      # Post to project chat
+colab.chat('Message', force=True)  # Force post (skip project check)
+colab.get_chat(limit=50)           # Get chat history
 
-# Work Logging
-colab.log_work(action, details={}) # Log activity
+# ============ DIRECT MESSAGES (NEW!) ============
+colab.send_dm('BLACK', 'Hey, check your tasks!')  # Send DM
+colab.get_dms(limit=50)            # Get all DMs
+colab.get_unread_dms()             # Get unread DMs only
+
+# ============ WORK LOGGING ============
+colab.log_work('session_start', {'project': 'medieval-game'})
+colab.log_work('task_completed', {'task_id': 'xxx', 'files': ['a.js']})
+colab.log_work('session_end', {'summary': 'Done for today'})
+
+# ============ HIERARCHY ============
+colab.get_my_supervisor()          # Who do I report to?
 ```
+
+### MANDATORY: Use ALL Communication Channels!
+
+| Channel | When to Use | Function |
+|---------|-------------|----------|
+| **Tasks** | Assigning work | `post_task()` |
+| **Knowledge** | Sharing info, updates | `share()` |
+| **Chat** | Team announcements | `chat()` |
+| **DMs** | Direct worker contact | `send_dm()` |
+| **Work Log** | Activity tracking | `log_work()` |
+
+**Every session MUST include:**
+1. `colab.connect()` - Connect first!
+2. `colab.share()` - Post status to brain
+3. `colab.chat()` - Announce presence
+4. `colab.get_tasks()` - Check pending work
+5. `colab.get_dms()` - Check direct messages
+6. `colab.post_task()` - Assign work to team
+7. `colab.log_work()` - Track activity
 
 ---
 
@@ -647,6 +698,24 @@ colab.log_work(action, details={}) # Log activity
 | **No overlapping work** | Gate 12.1 conflict prevention |
 | **Announce all pushes** | Chat protocol required |
 | **Update brain** | Knowledge sync after discoveries |
+| **USE ALL CHANNELS** | Tasks + Knowledge + Chat + DMs + Log |
+| **Check DMs** | Read and respond to direct messages |
+| **Post to shared_tasks** | NOT to shared_knowledge for tasks! |
+
+---
+
+## COLLAB FILES IN .claude/collab/
+
+| File | Purpose |
+|------|---------|
+| `claude_colab.py` | Main SDK - connect, chat, tasks, DMs, knowledge |
+| `shared_brain.py` | Direct brain/knowledge operations |
+| `shared_tasks.py` | Direct task operations |
+| `task_handlers.py` | Task type handlers |
+| `ollama_shell.py` | Ollama integration shell |
+| `ollama_worker.py` | Ollama worker for tasks |
+| `supervisor_sync.py` | Supervisor coordination tools |
+| `collab_config.json` | API key and settings (DON'T COMMIT KEY!) |
 
 ---
 

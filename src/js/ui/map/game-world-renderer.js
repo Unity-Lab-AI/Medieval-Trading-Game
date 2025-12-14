@@ -427,11 +427,12 @@ const GameWorldRenderer = {
  // listen for season changes from TimeSystem
     setupSeasonListener() {
  // poll for season changes every minute (in-game time moves fast)
+        // FIX: Use TimerManager to prevent memory leaks
         if (this.seasonCheckInterval) {
-            clearInterval(this.seasonCheckInterval);
+            TimerManager.clearTimeout(this.seasonCheckInterval);
         }
 
-        this.seasonCheckInterval = setInterval(() => {
+        this.seasonCheckInterval = TimerManager.setInterval(() => {
             // DON'T override tutorial backdrop with seasonal changes!
             if (this.isInTutorialMode()) {
                 return;

@@ -276,7 +276,7 @@ const AchievementSystem = {
             id: 'act5_complete',
             name: 'The Shadow\'s End',
             description: 'Complete Act 5 - defeat Malachar and end the threat',
-            icon: '',
+            icon: '🌑',
             category: 'quests',
             rarity: 'legendary',
             unlocked: false,
@@ -627,7 +627,7 @@ const AchievementSystem = {
             id: 'trading_legend',
             name: 'Trading Legend',
             description: 'Complete 200 trades',
-            icon: '',
+            icon: '🏆',
             category: 'trading',
             rarity: 'rare',
             unlocked: false,
@@ -711,7 +711,7 @@ const AchievementSystem = {
             id: 'bandit_hunter',
             name: 'Bandit Hunter',
             description: 'Defeat 20 bandit encounters',
-            icon: '',
+            icon: '🏴',
             category: 'survival',
             rarity: 'rare',
             unlocked: false,
@@ -929,7 +929,7 @@ const AchievementSystem = {
             id: 'first_weapon',
             name: 'Armed and Ready',
             description: 'Acquire your first weapon',
-            icon: '',
+            icon: '⚔️',
             category: 'equipment',
             rarity: 'common',
             unlocked: false,
@@ -1063,7 +1063,7 @@ const AchievementSystem = {
             id: 'legendary_creator',
             name: 'Legendary Creator',
             description: 'Craft a legendary quality item',
-            icon: '',
+            icon: '✨',
             category: 'crafting',
             rarity: 'legendary',
             unlocked: false,
@@ -1318,7 +1318,7 @@ const AchievementSystem = {
             id: 'speed_runner',
             name: 'Speed Runner',
             description: 'Reach 10,000 gold within the first 30 in-game days',
-            icon: '',
+            icon: '⚡',
             category: 'hidden',
             rarity: 'legendary',
             unlocked: false,
@@ -1578,7 +1578,15 @@ const AchievementSystem = {
         if (this._achievementsEnabled) return;
 
         // ═══════════════════════════════════════════════════════════════
-        // FIX: Comprehensive tutorial detection - check ALL possible flags
+        // FIX 2025-12-13: Use _isInTutorial() as FIRST check - most reliable
+        // ═══════════════════════════════════════════════════════════════
+        if (this._isInTutorial()) {
+            console.log('🏆 _isInTutorial()=true - achievements stay disabled');
+            return;
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // ADDITIONAL CHECKS: Comprehensive tutorial detection
         // ═══════════════════════════════════════════════════════════════
 
         // Check 1: TutorialManager.isActive
@@ -1611,6 +1619,14 @@ const AchievementSystem = {
             return;
         }
 
+        // Check 5: Check TravelSystem.currentWorld explicitly
+        const inTutorialWorld = typeof TravelSystem !== 'undefined' &&
+            TravelSystem.currentWorld === 'tutorial';
+        if (inTutorialWorld) {
+            console.log('🏆 TravelSystem.currentWorld=tutorial - achievements stay disabled');
+            return;
+        }
+
         // ═══════════════════════════════════════════════════════════════
         // If we get here, check for EXPLICIT tutorial completion
         // ═══════════════════════════════════════════════════════════════
@@ -1625,6 +1641,11 @@ const AchievementSystem = {
 
         // ONLY enable if we have explicit confirmation
         if (tutorialExplicitlyDone || tutorialCompletedLS || tutorialSkippedLS) {
+            // DOUBLE CHECK: Make sure we're not in tutorial even with these flags
+            if (this._isInTutorial()) {
+                console.log('🏆 Flags say done but _isInTutorial()=true - staying disabled');
+                return;
+            }
             console.log('🏆 Tutorial explicitly completed/skipped - enabling achievements');
             this._enableAchievements();
         } else {
@@ -1636,13 +1657,9 @@ const AchievementSystem = {
             const gameStarted = typeof game !== 'undefined' && game.player;
             const notInTutorialLocation = !TravelSystem?.playerPosition?.currentLocation?.startsWith('tutorial_');
 
+            // REMOVED FALLBACK THAT WAS CAUSING BUG - no more "TutorialManager inactive" shortcut
             if (inNormalWorld && noTutorialManager && gameStarted && notInTutorialLocation) {
                 console.log('🏆 Legacy save detected (no tutorial system) - enabling achievements');
-                this._enableAchievements();
-            } else if (inNormalWorld && gameStarted && notInTutorialLocation &&
-                       typeof TutorialManager !== 'undefined' && !TutorialManager.isActive) {
-                // TutorialManager exists but is inactive, in normal location = safe to enable
-                console.log('🏆 TutorialManager inactive + normal location - enabling achievements');
                 this._enableAchievements();
             } else {
                 console.log('🏆 Tutorial status unclear - achievements stay disabled until explicit event');
@@ -1665,13 +1682,21 @@ const AchievementSystem = {
         }
     },
 
-    //  Internal: Enable achievements and run first check 
+    //  Internal: Enable achievements and run first check
     _enableAchievements() {
         if (this._achievementsEnabled) return;
 
+        // ═══════════════════════════════════════════════════════════════
+        // FIX 2025-12-13: FINAL SAFETY CHECK - never enable during tutorial
+        // ═══════════════════════════════════════════════════════════════
+        if (this._isInTutorial()) {
+            console.log('🏆 _enableAchievements() blocked - still in tutorial!');
+            return;
+        }
+
         this._achievementsEnabled = true;
         console.log('🏆 Achievement checking now ENABLED 🖤💀');
-        //  DEBUG: Log current journey stats when enabling 
+        //  DEBUG: Log current journey stats when enabling
         console.log(`🏆 At enable time - journeysStarted: ${this.stats.journeysStarted}`);
 
         // Now check achievements for the first time
@@ -1699,18 +1724,15 @@ const AchievementSystem = {
         }
 
         // ═══════════════════════════════════════════════════════════════
-        // TRIPLE CHECK: Block if ANY tutorial indicator is active
+        // FIX 2025-12-13: Use _isInTutorial() - single source of truth
         // ═══════════════════════════════════════════════════════════════
-        if (typeof TutorialManager !== 'undefined' && TutorialManager.isActive === true) {
-            console.log('🏆 TutorialManager active - blocking achievement check');
-            return;
-        }
-        if (typeof game !== 'undefined' && game.inTutorial === true) {
-            console.log('🏆 game.inTutorial=true - blocking achievement check');
-            return;
-        }
-        if (TravelSystem?.playerPosition?.currentLocation?.startsWith('tutorial_')) {
-            console.log('🏆 In tutorial location - blocking achievement check');
+        if (this._isInTutorial()) {
+            console.log('🏆 _isInTutorial()=true - blocking achievement check');
+            // Also disable achievements if somehow enabled during tutorial
+            if (this._achievementsEnabled) {
+                console.log('🏆 SAFETY: Disabling achievements - we are in tutorial!');
+                this._achievementsEnabled = false;
+            }
             return;
         }
 
@@ -2361,14 +2383,40 @@ const AchievementSystem = {
     // to find this shit. Never again.
     // ═══════════════════════════════════════════════════════════════
     _isInTutorial() {
-        // check every goddamn flag we have
+        // ═══════════════════════════════════════════════════════════════
+        // FIX 2025-12-13: Comprehensive tutorial detection
+        // Check every goddamn flag we have - if ANY say tutorial, we're in tutorial
+        // ═══════════════════════════════════════════════════════════════
+
+        // Check 1: TutorialManager.isActive (most reliable)
         if (typeof TutorialManager !== 'undefined' && TutorialManager.isActive === true) return true;
+
+        // Check 2: game.inTutorial flag
         if (typeof game !== 'undefined' && game.inTutorial === true) return true;
+
+        // Check 3: game.tutorialCompleted explicitly FALSE (means in tutorial)
+        if (typeof game !== 'undefined' && game.tutorialCompleted === false && game.tutorialSkipped === false) {
+            // Both false = actively in tutorial
+            return true;
+        }
+
+        // Check 4: TravelSystem.currentWorld === 'tutorial'
+        if (typeof TravelSystem !== 'undefined' && TravelSystem.currentWorld === 'tutorial') return true;
+
+        // Check 5: Current location starts with 'tutorial_'
         if (TravelSystem?.playerPosition?.currentLocation?.startsWith('tutorial_')) return true;
-        // also check if we're in the tutorial world locations
-        const tutorialLocations = ['tutorial_village', 'tutorial_town', 'tutorial_crossroads', 'tutorial_farm'];
-        const currentLoc = TravelSystem?.playerPosition?.currentLocation || game?.currentLocation?.id;
+
+        // Check 6: Explicit tutorial location list (from tutorial-world.js)
+        const tutorialLocations = [
+            'tutorial_village', 'tutorial_town', 'tutorial_forest',
+            'tutorial_arena', 'tutorial_dungeon', 'tutorial_crossroads', 'tutorial_farm'
+        ];
+        const currentLoc = TravelSystem?.playerPosition?.currentLocation || game?.currentLocation?.id || game?.currentLocation;
         if (currentLoc && tutorialLocations.includes(currentLoc)) return true;
+
+        // Check 7: Active tutorial quests
+        if (typeof QuestSystem !== 'undefined' && QuestSystem.activeQuests?.some(q => q.id?.startsWith('tutorial_'))) return true;
+
         return false;
     },
 

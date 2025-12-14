@@ -1566,55 +1566,6 @@ const QuestSystem = {
                     // ═══════════════════════════════════════════════════════════
                     // DOOM WORLD OBJECTIVE TYPES - Survival in the apocalypse
                     // ═══════════════════════════════════════════════════════════
-                    //
-                    // 29 DOOM OBJECTIVE TYPES (for doom-quests.js):
-                    // ─────────────────────────────────────────────────────────────────────────────────
-                    // BUILDING & INFRASTRUCTURE:
-                    //   build      - Construct structures (data.structure === objective.structure)
-                    //   establish  - Set up facilities/alliances (data.facility or data.alliance)
-                    //   secure     - Claim/defend a location (data.location or data.area)
-                    //
-                    // COMBAT & SURVIVAL:
-                    //   defeat     - Kill enemies (also in base types, but used heavily in doom)
-                    //   boss       - Defeat boss enemy (data.enemy or data.bossId)
-                    //   defend     - Survive waves (data.encounter, tracks objective.waves)
-                    //   battle     - Large-scale combat (data.encounter or data.battle)
-                    //   survive    - Time-based survival (data.days >= objective.days)
-                    //   protect    - Defend for duration (data.duration or data.complete)
-                    //
-                    // UNIT MANAGEMENT:
-                    //   recruit    - Gather survivors (data.unit, tracks count)
-                    //   rally      - Gather forces (data.troops or data.rally)
-                    //   rescue     - Save doom NPCs (data.npc or data.type)
-                    //   escort     - Protect to destination (data.target + data.location)
-                    //
-                    // EXPLORATION & MOVEMENT:
-                    //   travel     - Alias for visit (doom quests use this)
-                    //   march      - Travel along path (tracks objective.pathProgress through path[])
-                    //   enter      - Step into area (data.location)
-                    //   return     - Go back to location (data.location or objective.to)
-                    //   search     - Look through multiple locations (objective.locations[])
-                    //   scavenge   - Search for resources (data.location)
-                    //
-                    // DISCOVERY & INVESTIGATION:
-                    //   find       - Discover something (data.item or data.location)
-                    //   investigate - Examine suspects/evidence (objective.suspects[])
-                    //   witness    - Observe a scene/event (data.scene or data.event)
-                    //   confront   - Face someone with evidence (data.npc)
-                    //
-                    // RESOURCE MANAGEMENT:
-                    //   gather     - Collect survival resources (data.resource or data.item)
-                    //   sabotage   - Damage shadow infrastructure (data.target or data.facility)
-                    //   plant      - Place something at location (data.item)
-                    //   receive    - Get item from NPC (data.item)
-                    //
-                    // EVENTS & CEREMONIES:
-                    //   cleanse    - Purify corruption nodes (tracks objective.targets)
-                    //   ceremony   - Attend doom event (data.ceremony or data.event)
-                    //   attend     - Be present at event (data.event)
-                    //   vote       - Decision in council (data.decision or data.vote)
-                    // ─────────────────────────────────────────────────────────────────────────────────
-
 
                     //  Build objective - construct structures in doom world
                     case 'build':

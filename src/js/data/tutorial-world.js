@@ -40,7 +40,7 @@ const TutorialWorld = {
             marketSize: 'small',
             travelCost: { base: 0 }, // Free to leave
             connections: ['tutorial_town', 'tutorial_forest'],
-            mapPosition: { x: 150, y: 450 }, // Bottom-left - peaceful farming village
+            mapPosition: { x: 75, y: 525 }, // Bottom-left corner - moved 50% closer to edge
 
             // Wheat is CHEAP here - sell in tutorial_town for profit
             sells: ['bread', 'wheat', 'water', 'vegetables', 'eggs'],
@@ -80,7 +80,7 @@ const TutorialWorld = {
             marketSize: 'medium',
             travelCost: { base: 2 },
             connections: ['tutorial_village', 'tutorial_forest', 'tutorial_arena'],
-            mapPosition: { x: 650, y: 450 }, // Bottom-right - bustling market town
+            mapPosition: { x: 725, y: 525 }, // Bottom-right corner - moved 50% closer to edge
 
             // Wheat is EXPENSIVE here - sell here for profit
             sells: ['tools', 'rope', 'torch', 'bandages', 'leather_armor'],
@@ -160,7 +160,7 @@ const TutorialWorld = {
             marketSize: 'small',
             travelCost: { base: 2 },
             connections: ['tutorial_town', 'tutorial_forest', 'tutorial_dungeon'],
-            mapPosition: { x: 650, y: 120 }, // Top-right - combat training grounds
+            mapPosition: { x: 725, y: 60 }, // Top-right corner - moved 50% closer to edge
 
             // Combat supplies
             sells: ['iron_sword', 'wooden_shield', 'leather_armor', 'health_potion', 'bandages'],
@@ -205,7 +205,7 @@ const TutorialWorld = {
             marketSize: 'none',
             travelCost: { base: 3 },
             connections: ['tutorial_arena'],
-            mapPosition: { x: 150, y: 120 }, // Top-left - ominous dungeon entrance
+            mapPosition: { x: 75, y: 60 }, // Top-left corner - moved 50% closer to edge
 
             sells: [], // No market in dungeon
             buys: [],

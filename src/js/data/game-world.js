@@ -799,7 +799,7 @@ const GameWorld = {
             mapPosition: { x: 720, y: 420 },
             sells: ['exotic_goods', 'spices', 'rum', 'gems', 'silk', 'artifacts'],
             buys: ['gold_bar', 'jewelry', 'weapons', 'furs', 'rare_gems'],
-            npcs: ['smuggler', 'merchant', 'fence'] // Quest: main_eastern_clues needs merchant
+            npcs: ['smuggler', 'merchant', 'fence', 'ferryman'] // Quest: main_eastern_clues needs merchant, ferryman for doom portal
         },
 
         // ═══════════════════════════════════════════════════════════
@@ -871,7 +871,7 @@ const GameWorld = {
             travelCost: { base: 6 },
             connections: ['greendale'],
             mapPosition: { x: 420, y: 480 },
-            sells: [],
+            sells: ['rat_tail', 'mushrooms', 'old_bones', 'rusty_dagger'],
             buys: ['torch', 'food', 'bandages'],
             npcs: ['adventurer'],
             gatheringDifficulty: 1.0,

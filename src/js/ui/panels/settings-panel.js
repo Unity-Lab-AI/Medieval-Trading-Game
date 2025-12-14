@@ -424,6 +424,33 @@ const SettingsPanel = {
                             <h3>🎙️ AI Voice Chat Settings</h3>
                             <p class="settings-description">Configure how NPCs communicate with you. They now have opinions... and voices.</p>
 
+                            <!-- 🦙 OLLAMA CONNECTION STATUS -->
+                            <div class="settings-group" id="ollama-status-group">
+                                <h4>🦙 Ollama Status</h4>
+                                <div class="setting-item" style="display: flex; align-items: center; gap: 10px;">
+                                    <span id="ollama-status-indicator" style="
+                                        display: inline-block;
+                                        width: 12px;
+                                        height: 12px;
+                                        border-radius: 50%;
+                                        background: #888;
+                                    "></span>
+                                    <span id="ollama-status-text">Checking Ollama...</span>
+                                    <button id="ollama-refresh-btn" style="
+                                        margin-left: auto;
+                                        padding: 5px 10px;
+                                        background: #444;
+                                        border: 1px solid #666;
+                                        border-radius: 4px;
+                                        color: #fff;
+                                        cursor: pointer;
+                                    ">🔄 Refresh</button>
+                                </div>
+                                <p class="settings-description" id="ollama-status-details">
+                                    Run 'ollama serve' in terminal to enable AI-powered NPC dialogue.
+                                </p>
+                            </div>
+
                             <div class="settings-group">
                                 <h4>🤖 AI Text Model</h4>
                                 <div class="setting-item">
@@ -432,7 +459,7 @@ const SettingsPanel = {
                                         <option value="openai" selected>Loading models...</option>
                                     </select>
                                 </div>
-                                <p class="settings-description">Models fetched from text.pollinations.ai - different models have different personalities.</p>
+                                <p class="settings-description">Using Ollama local LLM (localhost:11434). Run 'ollama serve' to enable AI dialogue.</p>
 
                                 <div class="setting-item">
                                     <label for="ai-temperature">Response Creativity</label>
@@ -513,12 +540,18 @@ const SettingsPanel = {
                             </div>
 
                             <div class="settings-group">
-                                <h4>📊 API Status</h4>
+                                <h4>🦙 Ollama Status</h4>
                                 <div class="api-status-display" id="api-status-display">
                                     <span class="api-status-indicator" id="api-status-indicator">●</span>
-                                    <span id="api-status-text">Checking connection...</span>
+                                    <span id="api-status-text">Checking Ollama connection...</span>
                                 </div>
-                                <button id="refresh-models-btn" class="save-load-btn">🔄 Refresh Available Models</button>
+                                <p class="settings-description" id="ollama-status-help">
+                                    <span id="ollama-help-text">Ollama runs locally at localhost:11434</span>
+                                </p>
+                                <div class="setting-item voice-preview-actions">
+                                    <button id="refresh-models-btn" class="save-load-btn">🔄 Check Ollama</button>
+                                    <button id="download-mistral-btn" class="save-load-btn" style="display:none;">📥 Download Mistral</button>
+                                </div>
                                 <div id="available-models-list" class="available-models-list"></div>
                             </div>
                         </div>
@@ -2195,6 +2228,13 @@ const SettingsPanel = {
 
     // setup ai voice controls - give npcs their digital souls
     setupAIVoiceControls() {
+        // 🦙 OLLAMA STATUS INDICATOR - check if AI is ready
+        this.updateOllamaStatus();
+        const refreshBtn = this.panelElement.querySelector('#ollama-refresh-btn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => this.updateOllamaStatus());
+        }
+
         // text model selector - fetch models from API
         const textModelSelect = this.panelElement.querySelector('#ai-text-model');
         if (textModelSelect) {
@@ -2243,7 +2283,7 @@ const SettingsPanel = {
         // default voice selector - populate from GameConfig
         const voiceSelect = this.panelElement.querySelector('#default-voice');
         if (voiceSelect) {
-            // populate voices from gameconfig.api.pollinations.tts.voices
+            // populate voices from browser TTS or NPCVoiceChatSystem
             this.populateVoiceDropdown(voiceSelect);
 
             if (typeof NPCVoiceChatSystem !== 'undefined') {
@@ -2293,6 +2333,18 @@ const SettingsPanel = {
         const refreshModelsBtn = this.panelElement.querySelector('#refresh-models-btn');
         if (refreshModelsBtn) {
             refreshModelsBtn.addEventListener('click', () => this.refreshAIModels());
+        }
+
+        // 🦙 Download Mistral button - triggers game.startMistralDownload()
+        const downloadMistralBtn = this.panelElement.querySelector('#download-mistral-btn');
+        if (downloadMistralBtn) {
+            downloadMistralBtn.addEventListener('click', () => {
+                if (typeof game !== 'undefined' && game.startMistralDownload) {
+                    game.startMistralDownload();
+                } else {
+                    alert('Run this command in terminal: ollama pull mistral');
+                }
+            });
         }
 
         // check initial API status
@@ -2346,49 +2398,47 @@ const SettingsPanel = {
                 this.previewAudio = null;
             }
 
-            this.updateVoicePreviewStatus(`Fetching audio...`, 'playing');
+            // Use browser TTS (Web Speech API) instead of external service
+            this.updateVoicePreviewStatus(`Speaking...`, 'playing');
 
-            // Get TTS URL with proper instruction prefix
-            const url = GameConfig.api.pollinations.getTtsUrl(phrase, voice);
-
-            // Fetch audio as blob to handle CORS/MIME issues
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            if (typeof speechSynthesis === 'undefined') {
+                throw new Error('Browser TTS not available');
             }
 
-            const audioBlob = await response.blob();
-            const audioUrl = URL.createObjectURL(audioBlob);
+            // Cancel any ongoing speech
+            speechSynthesis.cancel();
 
-            console.log('🎭 Audio blob created, size:', audioBlob.size);
+            const utterance = new SpeechSynthesisUtterance(phrase);
+            utterance.volume = effectiveVolume;
+            utterance.rate = 0.9;  // slightly slower for medieval feel
+            utterance.pitch = 1.0;
 
-            // Create audio element from blob
-            this.previewAudio = new Audio(audioUrl);
-            this.previewAudio.volume = effectiveVolume;
-            console.log(`🎭 Volume: master=${masterVolume}, voice=${voiceVolume}, effective=${effectiveVolume}`);
+            // Try to get a good voice
+            const voices = speechSynthesis.getVoices();
+            if (voices.length > 0) {
+                const englishVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
+                if (englishVoice) utterance.voice = englishVoice;
+            }
 
-            this.previewAudio.onended = () => {
-                console.log('🎭 Audio playback ended');
+            this._previewUtterance = utterance;
+
+            utterance.onend = () => {
+                console.log('🎭 TTS playback ended');
                 this.updateVoicePreviewStatus('Playback complete!', 'info');
-                URL.revokeObjectURL(audioUrl);
-                this.previewAudio = null;
-                // Re-enable test button
+                this._previewUtterance = null;
                 const testBtn = this.panelElement.querySelector('#test-voice-btn');
                 if (testBtn) testBtn.disabled = false;
             };
 
-            this.previewAudio.onerror = (e) => {
-                // audio failed - update ui, no console spam
-                this.updateVoicePreviewStatus(`Playback error`, 'error');
-                URL.revokeObjectURL(audioUrl);
-                this.previewAudio = null;
-                // Re-enable test button
+            utterance.onerror = (e) => {
+                this.updateVoicePreviewStatus(`TTS error: ${e.error}`, 'error');
+                this._previewUtterance = null;
                 const testBtn = this.panelElement.querySelector('#test-voice-btn');
                 if (testBtn) testBtn.disabled = false;
             };
 
-            this.updateVoicePreviewStatus(`[${this.formatDisplayName(personality)}/${voice}]: "${phrase}"`, 'playing');
-            await this.previewAudio.play();
+            this.updateVoicePreviewStatus(`[${this.formatDisplayName(personality)}]: "${phrase}"`, 'playing');
+            speechSynthesis.speak(utterance);
 
         } catch (error) {
             // voice preview failed - fallback will handle it
@@ -2449,27 +2499,40 @@ const SettingsPanel = {
         const phrase = fallbackPhrases[personality] || 'Greetings, traveler.';
 
         try {
-            const url = GameConfig.api.pollinations.getTtsUrl(phrase, voice);
-            const response = await fetch(url);
-            const audioBlob = await response.blob();
-            const audioUrl = URL.createObjectURL(audioBlob);
+            // Use browser TTS for fallback
+            if (typeof speechSynthesis === 'undefined') {
+                throw new Error('Browser TTS not available');
+            }
 
-            this.previewAudio = new Audio(audioUrl);
-            // volume is already effective (0-1 range) from testVoicePreview
-            this.previewAudio.volume = volume;
-            this.previewAudio.onended = () => {
+            speechSynthesis.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(phrase);
+            utterance.volume = volume;
+            utterance.rate = 0.9;
+            utterance.pitch = 1.0;
+
+            const voices = speechSynthesis.getVoices();
+            if (voices.length > 0) {
+                const englishVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
+                if (englishVoice) utterance.voice = englishVoice;
+            }
+
+            utterance.onend = () => {
                 this.updateVoicePreviewStatus('Playback complete (fallback)', 'info');
-                URL.revokeObjectURL(audioUrl);
-                // Re-enable test button
                 const testBtn = this.panelElement.querySelector('#test-voice-btn');
                 if (testBtn) testBtn.disabled = false;
             };
 
-            this.updateVoicePreviewStatus(`[${this.formatDisplayName(personality)}/${voice}] (fallback): "${phrase}"`, 'playing');
-            await this.previewAudio.play();
+            utterance.onerror = (e) => {
+                this.updateVoicePreviewStatus(`TTS error: ${e.error}`, 'error');
+                const testBtn = this.panelElement.querySelector('#test-voice-btn');
+                if (testBtn) testBtn.disabled = false;
+            };
+
+            this.updateVoicePreviewStatus(`[${this.formatDisplayName(personality)}] (fallback): "${phrase}"`, 'playing');
+            speechSynthesis.speak(utterance);
         } catch (e) {
             this.updateVoicePreviewStatus(`Fallback failed: ${e.message}`, 'error');
-            // Re-enable test button on failure
             const testBtn = this.panelElement.querySelector('#test-voice-btn');
             if (testBtn) testBtn.disabled = false;
         }
@@ -2477,11 +2540,18 @@ const SettingsPanel = {
 
     // Stop voice preview
     stopVoicePreview() {
+        // Stop browser TTS
+        if (typeof speechSynthesis !== 'undefined') {
+            speechSynthesis.cancel();
+        }
+        this._previewUtterance = null;
+
         if (this.previewAudio) {
             this.previewAudio.pause();
             this.previewAudio = null;
-            this.updateVoicePreviewStatus('Stopped.', 'info');
         }
+        this.updateVoicePreviewStatus('Stopped.', 'info');
+
         // Re-enable test button
         const testBtn = this.panelElement?.querySelector('#test-voice-btn');
         if (testBtn) testBtn.disabled = false;
@@ -2502,7 +2572,7 @@ const SettingsPanel = {
         }
     },
 
-    // populate voice dropdown from gameconfig.api.pollinations.tts.voices
+    // populate voice dropdown from browser TTS voices
     populateVoiceDropdown(selectElement) {
         if (!selectElement) return;
 
@@ -2523,14 +2593,22 @@ const SettingsPanel = {
             'amuch': 'Unique'
         };
 
-        // pull voices from gameconfig.api.pollinations.tts.voices
-        const voices = (typeof GameConfig !== 'undefined' && GameConfig.api?.pollinations?.tts?.voices)
-            ? GameConfig.api.pollinations.tts.voices
-            : ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer', 'coral', 'verse', 'ballad', 'ash', 'sage', 'amuch', 'dan'];
+        // Browser TTS uses system voices, but we keep the UI voices for display consistency
+        // These are just labels now - actual voice comes from browser speechSynthesis
+        const voices = ['default'];
+        const defaultVoice = 'default';
 
-        const defaultVoice = (typeof GameConfig !== 'undefined' && GameConfig.api?.pollinations?.tts?.defaultVoice)
-            ? GameConfig.api.pollinations.tts.defaultVoice
-            : 'nova';
+        // Try to get browser TTS voices
+        if (typeof speechSynthesis !== 'undefined') {
+            const browserVoices = speechSynthesis.getVoices();
+            if (browserVoices.length > 0) {
+                voices.length = 0; // clear default
+                browserVoices.filter(v => v.lang.startsWith('en')).slice(0, 10).forEach(v => {
+                    voices.push(v.name);
+                    voiceDescriptions[v.name] = v.lang;
+                });
+            }
+        }
 
         // Clear existing options
         selectElement.innerHTML = '';
@@ -2572,25 +2650,48 @@ const SettingsPanel = {
         }
     },
 
-    // check API connection status
+    // 🦙 Check Ollama connection status
     async checkAPIStatus() {
-        if (typeof NPCVoiceChatSystem === 'undefined') {
-            this.updateAPIStatus('disconnected', 'Voice system not loaded');
-            return;
-        }
+        this.updateAPIStatus('checking', 'Checking Ollama connection...');
 
-        this.updateAPIStatus('checking', 'Checking connection...');
+        const downloadBtn = this.panelElement?.querySelector('#download-mistral-btn');
+        const helpText = this.panelElement?.querySelector('#ollama-help-text');
 
-        // wait for NPCVoiceChatSystem to initialize
-        setTimeout(() => {
-            if (NPCVoiceChatSystem.availableTextModels.length > 0) {
-                const modelCount = NPCVoiceChatSystem.availableTextModels.length;
-                const voiceCount = NPCVoiceChatSystem.availableVoices.length;
-                this.updateAPIStatus('connected', `Connected - ${modelCount} models, ${voiceCount} voices`);
+        try {
+            // Check if Ollama is running
+            const response = await fetch('http://localhost:11434/api/tags', {
+                method: 'GET',
+                signal: AbortSignal.timeout(2000)
+            });
+
+            if (!response.ok) throw new Error('Ollama not responding');
+
+            const data = await response.json();
+            const models = data.models || [];
+            const hasMistral = models.some(m => m.name?.includes('mistral'));
+
+            if (hasMistral) {
+                // 🟢 Connected with Mistral
+                this.updateAPIStatus('connected', `🦙 Ollama connected - Mistral ready!`);
+                if (downloadBtn) downloadBtn.style.display = 'none';
+                if (helpText) helpText.textContent = 'AI-powered NPC dialogue is enabled';
+            } else if (models.length > 0) {
+                // 🟡 Connected but no Mistral
+                this.updateAPIStatus('connected', `🦙 Ollama connected - ${models.length} models (no Mistral)`);
+                if (downloadBtn) downloadBtn.style.display = 'inline-block';
+                if (helpText) helpText.textContent = 'Click "Download Mistral" to enable AI NPC dialogue';
             } else {
-                this.updateAPIStatus('disconnected', 'Could not fetch models - using fallbacks');
+                // 🟡 Connected but empty
+                this.updateAPIStatus('disconnected', '🦙 Ollama running but no models installed');
+                if (downloadBtn) downloadBtn.style.display = 'inline-block';
+                if (helpText) helpText.textContent = 'Click "Download Mistral" to install AI model';
             }
-        }, 1500);
+        } catch (error) {
+            // 🔴 Not connected
+            this.updateAPIStatus('disconnected', '🦙 Ollama not running - using fallback dialogue');
+            if (downloadBtn) downloadBtn.style.display = 'none';
+            if (helpText) helpText.textContent = 'Run "ollama serve" to enable AI dialogue';
+        }
     },
 
     // update API status display
@@ -2606,39 +2707,95 @@ const SettingsPanel = {
         }
     },
 
-    // fetch models directly from pollinations api and populate dropdown
+    // 🦙 Update Ollama connection status indicator
+    async updateOllamaStatus() {
+        const indicator = document.getElementById('ollama-status-indicator');
+        const statusText = document.getElementById('ollama-status-text');
+        const details = document.getElementById('ollama-status-details');
+
+        if (!indicator || !statusText) return;
+
+        // Set checking state
+        indicator.style.background = '#888';
+        statusText.textContent = 'Checking Ollama...';
+
+        try {
+            // Use OllamaModelManager if available
+            if (typeof OllamaModelManager !== 'undefined') {
+                const status = await OllamaModelManager.getStatus();
+
+                if (status.ollamaRunning && status.hasRequiredModel) {
+                    // Green - fully ready
+                    indicator.style.background = '#4CAF50';
+                    statusText.textContent = '✅ Ollama Ready';
+                    if (details) {
+                        details.textContent = `Model: ${status.requiredModel} installed. AI-powered NPC dialogue enabled!`;
+                    }
+                } else if (status.ollamaRunning) {
+                    // Yellow - running but no model
+                    indicator.style.background = '#FFC107';
+                    statusText.textContent = '⚠️ Model Missing';
+                    if (details) {
+                        details.innerHTML = `Ollama running but ${status.requiredModel} not installed. <button onclick="OllamaModelManager.showModelDownloadPrompt()" style="background:#4CAF50;color:white;border:none;padding:3px 8px;border-radius:3px;cursor:pointer;">Download Now</button>`;
+                    }
+                } else {
+                    // Red - not running
+                    indicator.style.background = '#f44336';
+                    statusText.textContent = '❌ Ollama Offline';
+                    if (details) {
+                        details.textContent = "Run 'ollama serve' in terminal, then click Refresh. NPCs use fallback responses.";
+                    }
+                }
+            } else {
+                // Fallback - direct check
+                const response = await fetch('http://localhost:11434/api/tags', {
+                    signal: AbortSignal.timeout(2000)
+                });
+                if (response.ok) {
+                    indicator.style.background = '#4CAF50';
+                    statusText.textContent = '✅ Ollama Connected';
+                } else {
+                    throw new Error('Not OK');
+                }
+            }
+        } catch (error) {
+            indicator.style.background = '#f44336';
+            statusText.textContent = '❌ Ollama Offline';
+            if (details) {
+                details.textContent = "Run 'ollama serve' in terminal, then click Refresh. NPCs use fallback responses.";
+            }
+        }
+    },
+
+    // fetch models from Ollama and populate dropdown
     async fetchAndPopulateModels(selectElement) {
         if (!selectElement) return;
 
         const savedModel = (typeof NPCVoiceChatSystem !== 'undefined')
-            ? NPCVoiceChatSystem.settings?.textModel || 'openai'
-            : 'openai';
-
-        // Get endpoint from GameConfig
-        const modelsEndpoint = (typeof GameConfig !== 'undefined' && GameConfig.api?.pollinations?.modelsEndpoint)
-            ? GameConfig.api.pollinations.modelsEndpoint
-            : 'https://text.pollinations.ai/models';
+            ? NPCVoiceChatSystem.settings?.textModel || 'mistral'
+            : 'mistral';
 
         try {
-            console.log('🤖 Fetching models from', modelsEndpoint);
+            console.log('🦙 Checking Ollama for models...');
 
-            const response = await fetch(modelsEndpoint, {
+            // Try to get models from Ollama
+            const response = await fetch('http://localhost:11434/api/tags', {
                 method: 'GET',
-                mode: 'cors',
-                headers: { 'Accept': 'application/json' }
+                signal: AbortSignal.timeout(2000)
             });
 
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            if (!response.ok) throw new Error(`Ollama not responding`);
 
-            const models = await response.json();
+            const data = await response.json();
+            const models = data.models || [];
 
-            if (!Array.isArray(models) || models.length === 0) {
-                throw new Error('No models returned');
+            if (models.length === 0) {
+                throw new Error('No Ollama models found');
             }
 
-            console.log(`🤖 Fetched ${models.length} models from API`);
+            console.log(`🦙 Found ${models.length} Ollama models`);
 
-            // Clear and populate dropdown with ALL fetched models
+            // Clear and populate dropdown with Ollama models
             selectElement.innerHTML = '';
 
             models.forEach(model => {

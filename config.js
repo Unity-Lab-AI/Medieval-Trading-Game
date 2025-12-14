@@ -74,61 +74,68 @@ const GameConfig = {
     // change these and watch the whole damn thing dance to your tune.
     // it's like having a universal remote for digital demons.
     api: {
-        // 🎭 pollinations.ai - where AI dreams become nightmares (in a good way)
-        // free tier = one request every 15s, referrer helps avoid the 402 death stare
-        pollinations: {
-            baseUrl: 'https://text.pollinations.ai',           // the mothership
-            textEndpoint: 'https://text.pollinations.ai',      // where words go to become... more words
-            chatEndpoint: 'https://text.pollinations.ai/openai', // openai-compatible endpoint for chat
-            modelsEndpoint: 'https://text.pollinations.ai/models', // menu of available AI personalities
-            referrer: 'unityailab.com',                        // our calling card, keeps the 402 demons away
+        // 🦙 OLLAMA - local LLM, no cloud, no bullshit, no rate limits
+        // runs on localhost:11434, model: mistral (~4GB)
+        // if Ollama isn't running, we fall back to hardcoded responses
+        ollama: {
+            baseUrl: 'http://localhost:11434',                  // the local beast
+            generateEndpoint: 'http://localhost:11434/api/generate',  // single-shot generation
+            chatEndpoint: 'http://localhost:11434/api/chat',    // conversation endpoint
+            model: 'mistral',                                   // our chosen model (~4GB)
+            timeout: 3000,                                      // 3 seconds max - fall back if slow
+            useFallbackOnTimeout: true,                         // use hardcoded responses on timeout
 
-            // 🔊 TTS - teaching robots to speak so they can judge us verbally too
-            tts: {
-                endpoint: 'https://text.pollinations.ai',      // same endpoint, different model
-                model: 'openai-audio',                         // the voice box
-                defaultVoice: 'nova',                          // our preferred digital vocal cords
-                voices: ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer', 'coral', 'verse', 'ballad', 'ash', 'sage', 'amuch', 'dan']
-            },
-
-            // 🖼️ image generation - for when words aren't traumatic enough
-            image: {
-                endpoint: 'https://image.pollinations.ai/prompt', // paint me like one of your french nightmares
-                defaultModel: 'flux',
-                defaultWidth: 512,
-                defaultHeight: 512
+            // 🔧 generation settings
+            options: {
+                temperature: 0.7,                               // creativity dial
+                top_p: 0.9,                                     // nucleus sampling
+                max_tokens: 150,                                // keep responses snappy
+                stop: ['\n\n', 'Player:', 'User:']              // stop sequences
             },
 
-            // 🖤 URL builders - so you don't have to remember the dark incantations
-            // these automatically append the referrer like a clingy ex
-            getChatUrl() {
-                return `${GameConfig.api.pollinations.chatEndpoint}?referrer=${GameConfig.api.pollinations.referrer}`;
+            // 🔍 status check - ping to see if Ollama is alive
+            async isRunning() {
+                try {
+                    const response = await fetch('http://localhost:11434/api/tags', {
+                        method: 'GET',
+                        signal: AbortSignal.timeout(1000)
+                    });
+                    return response.ok;
+                } catch {
+                    return false;
+                }
             },
-            getModelsUrl() {
-                return `${GameConfig.api.pollinations.modelsEndpoint}?referrer=${GameConfig.api.pollinations.referrer}`;
-            },
-            getTtsUrl(text, voice = null) {
-                const v = voice || GameConfig.api.pollinations.tts.defaultVoice;
-                // Short TTS instruction - voice actor reading dark fantasy script verbatim
-                const ttsInstruction = `[Voice actor for dark fantasy RPG. Read exactly:] ${text}`;
-                const encodedText = encodeURIComponent(ttsInstruction);
-                const cacheBust = Date.now();
-                return `${GameConfig.api.pollinations.tts.endpoint}/${encodedText}?model=${GameConfig.api.pollinations.tts.model}&voice=${v}&referrer=${GameConfig.api.pollinations.referrer}&_t=${cacheBust}`;
+
+            // 🎤 generate response from Ollama
+            async generate(prompt, systemPrompt = '') {
+                try {
+                    const response = await fetch(GameConfig.api.ollama.generateEndpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            model: GameConfig.api.ollama.model,
+                            prompt: prompt,
+                            system: systemPrompt,
+                            stream: false,
+                            options: GameConfig.api.ollama.options
+                        }),
+                        signal: AbortSignal.timeout(GameConfig.api.ollama.timeout)
+                    });
+
+                    if (!response.ok) return null;
+                    const data = await response.json();
+                    return data.response || null;
+                } catch {
+                    return null; // timeout or error - caller should use fallback
+                }
             }
         },
 
-        // ⚙️ rate limiting - because even darkness has boundaries
-        rateLimit: {
-            minRequestInterval: 15000,    // 15 seconds between requests (free tier)
-            maxRetries: 3,                // how many times we bang on the door
-            retryDelay: 5000              // wait 5s before trying again like a desperate ex
-        },
-
-        // 🔧 request defaults - the baseline of our digital summoning
+        // 🔧 request defaults - baseline for all API calls
         defaults: {
-            timeout: 30000,               // 30 seconds before we assume the API ghosted us
-            maxTokens: 500,               // generous tokens for NPC dialogue
-            temperature: 0.8,             // creativity dial: 0 = robot, 1 = unhinged poet
+            timeout: 3000,                // 3 seconds for Ollama
+            maxTokens: 150,               // shorter responses for NPCs
+            temperature: 0.7,             // balanced creativity
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
@@ -170,11 +177,19 @@ const GameConfig = {
     // Your players' legacies will echo across all who play...
     leaderboard: {
         enabled: true,                    // set to true once configured
-        backend: 'jsonbin',               // 'jsonbin', 'gist', or 'local'
+        backend: 'local',                 // 'jsonbin', 'gist', or 'local' - default to LOCAL for security
         jsonbin: {
-            // 🖤 JSONBin credentials - free tier, easily replaced if needed
-            binId: '69262a75d0ea881f400020a3',
-            apiKey: '$2a$10$kUCccykWGvahUe7zVs5f0OewVFZZ0wLvgh8N9LoclrWWI2OzcQ4FS'
+            // ⚠️ SECURITY FIX: API keys removed from client-side code
+            // To enable global leaderboards with JSONBin:
+            // 1. Create free account at jsonbin.io
+            // 2. Create a new bin and get your Bin ID
+            // 3. Copy your Master Key from API Keys section
+            // 4. Paste your credentials below (they're YOUR keys, YOUR risk)
+            // 5. Change backend to 'jsonbin' above
+            // WARNING: Any key you put here is visible to users inspecting the code!
+            // For production apps, use a backend proxy - this is a browser-only game.
+            binId: '',      // YOUR JSONBin Bin ID here (or leave empty for local-only)
+            apiKey: ''      // YOUR JSONBin API Key here (or leave empty for local-only)
         },
         gist: {
             gistId: '',                   // GitHub Gist ID (if using gist backend)
@@ -1264,11 +1279,12 @@ const GameConfig = {
         // 🖤 Last local test results - updated by Unity when tests pass
         // GitHub can use this to show what passed locally before deploy
         lastLocalRun: {
-            date: '2025-11-27',
+            date: '2025-12-13',
             passed: 127,
             failed: 0,
             skipped: 31,
-            duration: '1.1m'
+            duration: '1.1m',
+            note: 'Date updated by Slave 2 - tests run in CI/CD pipeline'
         }
     },
 

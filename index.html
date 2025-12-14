@@ -96,11 +96,11 @@
                     <!-- HTML-based map container - GameWorldRenderer renders here -->
                     <div id="world-map-overlay-html" class="html-map-container"></div>
                     <div class="map-controls">
-                        <button id="overlay-zoom-in-btn">+</button>
-                        <button id="overlay-zoom-out-btn">-</button>
-                        <button id="overlay-reset-view-btn">⟲</button>
-                        <button id="overlay-toggle-grid-btn">⊞</button>
-                        <button id="overlay-center-player-btn">🎯</button>
+                        <button id="overlay-zoom-in-btn" title="Zoom In (+)">+</button>
+                        <button id="overlay-zoom-out-btn" title="Zoom Out (-)">-</button>
+                        <button id="overlay-reset-view-btn" title="Reset View">⟲</button>
+                        <button id="overlay-toggle-grid-btn" title="Toggle Grid">⊞</button>
+                        <button id="overlay-center-player-btn" title="Center on Player">🎯</button>
                     </div>
                 </div>
                 <div id="overlay-location-details" class="location-details-panel hidden">
@@ -308,11 +308,11 @@
                     <div id="map-container" class="map-container">
                         <!-- 🖤 Using HTML-based GameWorldRenderer - canvas removed -->
                         <div id="map-controls" class="map-controls">
-                            <button id="zoom-in-btn" onclick="if(GameWorldRenderer) GameWorldRenderer.zoomIn()">+</button>
-                            <button id="zoom-out-btn" onclick="if(GameWorldRenderer) GameWorldRenderer.zoomOut()">-</button>
-                            <button id="reset-view-btn" onclick="if(GameWorldRenderer) GameWorldRenderer.resetView()">⟲</button>
-                            <button id="fullscreen-btn" onclick="if(GameWorldRenderer) GameWorldRenderer.toggleFullscreen()">⛶</button>
-                            <button id="center-on-player-btn" onclick="if(GameWorldRenderer) GameWorldRenderer.centerOnPlayer()">📍</button>
+                            <button id="zoom-in-btn" onclick="if(GameWorldRenderer) GameWorldRenderer.zoomIn()" title="Zoom In (+)">+</button>
+                            <button id="zoom-out-btn" onclick="if(GameWorldRenderer) GameWorldRenderer.zoomOut()" title="Zoom Out (-)">-</button>
+                            <button id="reset-view-btn" onclick="if(GameWorldRenderer) GameWorldRenderer.resetView()" title="Reset View">⟲</button>
+                            <button id="fullscreen-btn" onclick="if(GameWorldRenderer) GameWorldRenderer.toggleFullscreen()" title="Toggle Fullscreen">⛶</button>
+                            <button id="center-on-player-btn" onclick="if(GameWorldRenderer) GameWorldRenderer.centerOnPlayer()" title="Center on Player">📍</button>
                         </div>
                     </div>
 
@@ -1209,16 +1209,16 @@
 
         <!-- 🎮 Bottom Action Bar - compact row of action buttons -->
         <footer id="bottom-action-bar">
-            <button id="bottom-menu-btn" class="action-btn-bottom menu-btn-highlight" onclick="KeyBindings.openMenu();">⚙️</button>
-            <button id="bottom-market-btn" class="action-btn-bottom" onclick="KeyBindings.openMarket();">🏪</button>
-            <button id="bottom-travel-btn" class="action-btn-bottom" onclick="KeyBindings.openTravel();">🗺️</button>
-            <button id="bottom-transport-btn" class="action-btn-bottom" onclick="KeyBindings.openTransportation();">🐴</button>
-            <button id="bottom-inventory-btn" class="action-btn-bottom" onclick="KeyBindings.openInventory();">🧺</button>
-            <button id="bottom-character-btn" class="action-btn-bottom" onclick="KeyBindings.openCharacterSheet();">👤</button>
-            <button id="bottom-people-btn" class="action-btn-bottom" onclick="KeyBindings.openPeople();">👥</button>
-            <button id="bottom-financial-btn" class="action-btn-bottom" onclick="KeyBindings.openFinancialSheet();">💰</button>
-            <button id="bottom-quests-btn" class="action-btn-bottom" onclick="KeyBindings.openQuests();">📜</button>
-            <button id="bottom-achievements-btn" class="action-btn-bottom" onclick="KeyBindings.openAchievements();">🏆</button>
+            <button id="bottom-menu-btn" class="action-btn-bottom menu-btn-highlight" onclick="KeyBindings.openMenu();" title="Settings (,)">⚙️</button>
+            <button id="bottom-market-btn" class="action-btn-bottom" onclick="KeyBindings.openMarket();" title="Open Market (M)">🏪</button>
+            <button id="bottom-travel-btn" class="action-btn-bottom" onclick="KeyBindings.openTravel();" title="Open Travel (T)">🗺️</button>
+            <button id="bottom-transport-btn" class="action-btn-bottom" onclick="KeyBindings.openTransportation();" title="Transportation">🐴</button>
+            <button id="bottom-inventory-btn" class="action-btn-bottom" onclick="KeyBindings.openInventory();" title="Open Inventory (I)">🧺</button>
+            <button id="bottom-character-btn" class="action-btn-bottom" onclick="KeyBindings.openCharacterSheet();" title="Character Sheet (C)">👤</button>
+            <button id="bottom-people-btn" class="action-btn-bottom" onclick="KeyBindings.openPeople();" title="People Panel (P)">👥</button>
+            <button id="bottom-financial-btn" class="action-btn-bottom" onclick="KeyBindings.openFinancialSheet();" title="Financial Sheet (F)">💰</button>
+            <button id="bottom-quests-btn" class="action-btn-bottom" onclick="KeyBindings.openQuests();" title="Quest Log (Q)">📜</button>
+            <button id="bottom-achievements-btn" class="action-btn-bottom" onclick="KeyBindings.openAchievements();" title="Achievements (H)">🏆</button>
         </footer>
     </div>
 
@@ -1343,6 +1343,8 @@
     <script src="src/js/core/event-bus.js?v=0.91.00"></script>
     <script src="src/js/utils/color-utils.js?v=0.91.00"></script>
     <script src="src/js/utils/virtual-list.js?v=0.91.00"></script>
+    <!-- 🦙 OLLAMA MODEL MANAGER - auto-downloads Mistral for NPC AI voices -->
+    <script src="src/js/utils/ollama-model-manager.js?v=0.91.04"></script>
     <!-- ⏰ THE TIME MACHINE - Unified time engine (replaces time-system.js + game-engine.js) -->
     <script src="src/js/core/time-machine.js?v=0.91.00"></script>
 

@@ -342,7 +342,8 @@ const CombatSystem = {
             goldDrop: { min: 300, max: 700 },
             loot: ['shadow_blade', 'kingpin_ring', 'vault_key'],
             xpReward: 120,
-            special: 'backstab'
+            special: 'backstab',
+            isBoss: true
         },
 
         // Royal capital crime quests
@@ -437,7 +438,8 @@ const CombatSystem = {
             goldDrop: { min: 200, max: 500 },
             loot: ['redhawk_blade', 'bandit_treasury', 'chief_medallion'],
             xpReward: 100,
-            special: 'rallying_cry'
+            special: 'rallying_cry',
+            isBoss: true
         },
 
         // Doom World lieutenants
@@ -771,7 +773,8 @@ const CombatSystem = {
             goldDrop: { min: 80, max: 200 },
             loot: ['dark_staff', 'skull_goblet', 'necrotic_essence', 'spell_tome'],
             xpReward: 80,
-            special: 'summon_undead'
+            special: 'summon_undead',
+            isBoss: true
         },
         goblin_king: {
             id: 'goblin_king',
@@ -1153,9 +1156,13 @@ const CombatSystem = {
 
             this.updateCombatUI();
         }
+
+        // CRITICAL FIX: Reset action lock so player can take another action
+        // Without this, player is softlocked after using ANY item in combat
+        this.isProcessingAction = false;
     },
 
-    // 
+    //
     // ENEMY AI
     // 
     enemyTurn() {

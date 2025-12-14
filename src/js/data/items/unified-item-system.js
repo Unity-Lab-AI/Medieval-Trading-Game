@@ -1514,7 +1514,7 @@ const UnifiedItemSystem = {
         mine_iron: {
             name: 'Mine Iron Ore',
             description: 'Extract iron ore from rocks.',
-            icon: '',
+            icon: '⛏️',
             gatherType: 'mining',
             outputItem: 'iron_ore',
             baseTime: 60,
@@ -1596,7 +1596,7 @@ const UnifiedItemSystem = {
         harvest_timber: {
             name: 'Harvest Timber',
             description: 'Fell large trees for timber.',
-            icon: '',
+            icon: '🪵',
             gatherType: 'woodcutting',
             outputItem: 'timber',
             baseTime: 45,
@@ -1614,7 +1614,7 @@ const UnifiedItemSystem = {
         harvest_wheat: {
             name: 'Harvest Wheat',
             description: 'Collect ripe wheat from fields.',
-            icon: '',
+            icon: '🌾',
             gatherType: 'farming',
             outputItem: 'wheat',
             baseTime: 40,
@@ -1826,16 +1826,16 @@ const UnifiedItemSystem = {
     // ═══════════════════════════════════════════════════════════════
 
     skills: {
-        mining: { name: 'Mining', icon: '', maxLevel: 10 },
+        mining: { name: 'Mining', icon: '⛏️', maxLevel: 10 },
         woodcutting: { name: 'Woodcutting', icon: '🪓', maxLevel: 10 },
-        farming: { name: 'Farming', icon: '', maxLevel: 10 },
+        farming: { name: 'Farming', icon: '🌾', maxLevel: 10 },
         fishing: { name: 'Fishing', icon: '🎣', maxLevel: 10 },
         herbalism: { name: 'Herbalism', icon: '🌿', maxLevel: 10 },
         hunting: { name: 'Hunting', icon: '🏹', maxLevel: 10 },
         smithing: { name: 'Smithing', icon: '🔨', maxLevel: 10 },
         crafting: { name: 'Crafting', icon: '🛠️', maxLevel: 10 },
         cooking: { name: 'Cooking', icon: '🍳', maxLevel: 10 },
-        brewing: { name: 'Brewing', icon: '', maxLevel: 10 },
+        brewing: { name: 'Brewing', icon: '🍺', maxLevel: 10 },
         medicine: { name: 'Medicine', icon: '💊', maxLevel: 10 }
     },
 
@@ -3106,12 +3106,26 @@ const ProductionQueueSystem = {
     // 🔄 UPDATE LOOP
     // ═══════════════════════════════════════════════════════════════
 
+    // FIX: Store interval ID for cleanup - prevents memory leak
+    _updateLoopId: null,
+
     startUpdateLoop() {
-        setInterval(() => {
+        // Clear existing interval if any - prevents duplicate loops
+        if (this._updateLoopId) {
+            clearInterval(this._updateLoopId);
+        }
+        this._updateLoopId = setInterval(() => {
             this.updateQueues();
             this.updateGathering();
             this.updateBuffs();
         }, 100); // 10 updates per second
+    },
+
+    stopUpdateLoop() {
+        if (this._updateLoopId) {
+            clearInterval(this._updateLoopId);
+            this._updateLoopId = null;
+        }
     },
 
     // Get combined perk bonuses from player's selected perks

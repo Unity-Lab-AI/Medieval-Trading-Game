@@ -130,6 +130,7 @@ const TimeMachine = {
     lastFrameTime: 0,
     accumulatedTime: 0,
     animationFrameId: null,
+    _restartLock: false, // FIX BUG-6: Lock to prevent race conditions in animation frame restart
 
     // tracking for daily/weekly events
     lastProcessedDay: 0,
@@ -479,11 +480,22 @@ const TimeMachine = {
                 // normal case: engine wasn't running, start it
                 this.start();
             } else if (!this.animationFrameId) {
+                // FIX BUG-6: Use lock to prevent race condition in restart sequence
+                // Without this lock, multiple rapid setSpeed calls could trigger multiple starts
+                if (this._restartLock) {
+                    console.log('⏰ TIME MACHINE: Restart already in progress, skipping duplicate');
+                    return; // Early exit - restart already in progress
+                }
+                this._restartLock = true;
+
                 // bug fix: isRunning=true but no animation frame scheduled!
                 // this can happen if tick() crashed or the loop got stuck
                 console.warn('⏰ TIME MACHINE: Detected stale isRunning state, forcing restart...');
                 this.isRunning = false;
                 this.start();
+
+                // Release lock after start completes
+                this._restartLock = false;
             } else {
                 // engine is running with valid animation frame - just reset accumulated time
                 // to ensure immediate response after unpause

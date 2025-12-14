@@ -163,14 +163,24 @@ const NPCScheduleSystem = {
             this.currentHour = DayNightCycle.currentHour || 8;
         }
 
-        // Update periodically
-        setInterval(() => {
+        // Update periodically - use TimerManager to prevent memory leaks
+        this._hourUpdateInterval = TimerManager.setInterval(() => {
             if (typeof game !== 'undefined' && game.time) {
                 this.currentHour = game.time.hour;
             } else if (typeof DayNightCycle !== 'undefined') {
                 this.currentHour = DayNightCycle.currentHour;
             }
         }, 1000);
+    },
+
+    /**
+     * Cleanup - clear interval to prevent memory leak
+     */
+    cleanup() {
+        if (this._hourUpdateInterval) {
+            TimerManager.clearTimeout(this._hourUpdateInterval);
+            this._hourUpdateInterval = null;
+        }
     },
 
     // Generate location mappings for settlements

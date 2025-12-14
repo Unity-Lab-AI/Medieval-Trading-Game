@@ -16,6 +16,67 @@ const InitialEncounterSystem = {
     strangerSpawnedAtLocation: null, // Track where we spawned the stranger as fallback NPC
     encounterDelay: 500, // FAST - show encounter quickly after game start!
 
+    // 🔧 FIX: Single shared MutationObserver for rank-up watching
+    // Prevents the performance issue of multiple observers on document.body
+    _rankUpObserver: null,
+    _rankUpCallbacks: [],
+
+    /**
+     * 🔧 Shared utility: Wait for rank-up celebration to dismiss, then run callback
+     * Uses a single MutationObserver instead of creating duplicates
+     * @param {Function} callback - Function to call after rank-up is dismissed
+     * @param {number} fallbackMs - Fallback timeout in ms (default 5000)
+     */
+    _waitForRankUpDismissal(callback, fallbackMs = 5000) {
+        const rankUpOverlay = document.querySelector('.rank-up-celebration');
+
+        if (!rankUpOverlay) {
+            // No rank-up showing - run callback immediately
+            callback();
+            return;
+        }
+
+        console.log('🌟 Rank-up celebration active - queueing callback... 🕯️');
+
+        // Add callback to queue
+        this._rankUpCallbacks.push(callback);
+
+        // Create shared observer if not exists
+        if (!this._rankUpObserver) {
+            this._rankUpObserver = new MutationObserver((mutations, obs) => {
+                if (!document.querySelector('.rank-up-celebration')) {
+                    obs.disconnect();
+                    this._rankUpObserver = null;
+                    console.log('🌟 Rank-up dismissed - running queued callbacks 💀');
+
+                    // Run all queued callbacks with small delay
+                    const callbacks = [...this._rankUpCallbacks];
+                    this._rankUpCallbacks = [];
+                    setTimeout(() => {
+                        callbacks.forEach(cb => cb());
+                    }, 500);
+                }
+            });
+
+            this._rankUpObserver.observe(document.body, { childList: true, subtree: true });
+        }
+
+        // Fallback timeout
+        setTimeout(() => {
+            if (this._rankUpObserver) {
+                this._rankUpObserver.disconnect();
+                this._rankUpObserver = null;
+            }
+            // Run any remaining callbacks
+            const callbacks = [...this._rankUpCallbacks];
+            this._rankUpCallbacks = [];
+            if (callbacks.length > 0) {
+                console.log('🌟 Fallback timeout - running callbacks anyway 💀');
+                callbacks.forEach(cb => cb());
+            }
+        }, fallbackMs);
+    },
+
     //  THE MYSTERIOUS STRANGER - your first encounter in this world
     mysteriousStranger: {
         id: 'mysterious_stranger_intro',
@@ -393,41 +454,15 @@ const InitialEncounterSystem = {
         this._startMainGameDirectly();
     },
 
-    //  Wait for rank-up overlay to be dismissed, then show intro 
+    //  Wait for rank-up overlay to be dismissed, then show intro
+    // 🔧 FIX: Now uses shared _waitForRankUpDismissal to avoid duplicate MutationObservers
     _waitForRankUpThenShowIntro() {
-        const rankUpOverlay = document.querySelector('.rank-up-celebration');
-
-        if (rankUpOverlay) {
-            console.log('🌟 Rank-up celebration active - waiting before showing intro... 🕯️');
-
-            //  Watch for the overlay to be removed from DOM
-            const observer = new MutationObserver((mutations, obs) => {
-                if (!document.querySelector('.rank-up-celebration')) {
-                    obs.disconnect();
-                    console.log('🌟 Rank-up dismissed - now showing intro sequence 💀');
-                    //  Small delay for smooth transition after rank-up fades
-                    setTimeout(() => {
-                        this.showIntroductionSequence(this._pendingPlayerName, this._pendingStartLocation);
-                    }, 800);
-                }
-            });
-
-            observer.observe(document.body, { childList: true, subtree: true });
-
-            //  Fallback: if observer fails, show intro after 5 seconds anyway
-            setTimeout(() => {
-                observer.disconnect();
-                if (!document.querySelector('.initial-encounter-shown')) {
-                    console.log('🌟 Fallback timeout - showing intro anyway 💀');
-                    this.showIntroductionSequence(this._pendingPlayerName, this._pendingStartLocation);
-                }
-            }, 5500);
-        } else {
-            //  No rank-up showing - use normal delay
+        this._waitForRankUpDismissal(() => {
+            // Small delay for smooth transition
             setTimeout(() => {
                 this.showIntroductionSequence(this._pendingPlayerName, this._pendingStartLocation);
-            }, this.encounterDelay);
-        }
+            }, 300);
+        }, 5500);
     },
 
     //  INTRODUCTION SEQUENCE - the story begins
@@ -746,37 +781,12 @@ const InitialEncounterSystem = {
     },
 
     //  UNLOCK MAIN QUEST - actually START the prologue quest (not just discover it)
-    //  Waits for rank-up celebration to be dismissed first so popups don't overlap 
+    //  Waits for rank-up celebration to be dismissed first so popups don't overlap
+    // 🔧 FIX: Now uses shared _waitForRankUpDismissal to avoid duplicate MutationObservers
     unlockMainQuest() {
-        //  Check if rank-up celebration is showing - wait for it to be dismissed
-        const rankUpOverlay = document.querySelector('.rank-up-celebration');
-        if (rankUpOverlay) {
-            console.log('🌟 Rank-up celebration active - waiting for dismissal before showing quest... 🕯️');
-
-            //  Watch for the overlay to be removed from DOM
-            const observer = new MutationObserver((mutations, obs) => {
-                if (!document.querySelector('.rank-up-celebration')) {
-                    obs.disconnect();
-                    console.log('🌟 Rank-up dismissed - now showing main quest 💀');
-                    //  Small delay for smooth transition
-                    setTimeout(() => this._doUnlockMainQuest(), 500);
-                }
-            });
-
-            observer.observe(document.body, { childList: true, subtree: true });
-
-            //  Fallback: if somehow observer fails, unlock after 5 seconds anyway
-            setTimeout(() => {
-                observer.disconnect();
-                if (!this._mainQuestUnlocked) {
-                    console.log('🌟 Fallback timeout - unlocking main quest anyway 💀');
-                    this._doUnlockMainQuest();
-                }
-            }, 5000);
-        } else {
-            //  No rank-up showing - proceed immediately
+        this._waitForRankUpDismissal(() => {
             this._doUnlockMainQuest();
-        }
+        }, 5000);
     },
 
     //  Internal: Actually unlock the main quest
