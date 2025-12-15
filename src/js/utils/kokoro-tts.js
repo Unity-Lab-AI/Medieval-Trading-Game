@@ -62,54 +62,7 @@ const KokoroTTS = {
     settings: {
         enabled: true,
         volume: 0.8,
-        speed: 1.0,
-        useFastMode: false  // If true, use browser TTS for instant response
-    },
-
-    // ═══════════════════════════════════════════════════════════
-    // FAST MODE - Browser's built-in TTS for instant response
-    // ═══════════════════════════════════════════════════════════
-
-    _webSpeechAvailable: null,
-
-    checkWebSpeech() {
-        if (this._webSpeechAvailable !== null) return this._webSpeechAvailable;
-        this._webSpeechAvailable = 'speechSynthesis' in window;
-        return this._webSpeechAvailable;
-    },
-
-    // Use browser TTS - instant but robotic
-    speakFast(text, npcType, npcData = {}) {
-        if (!this.checkWebSpeech()) return false;
-        const clean = this._clean(text);
-        if (!clean) return false;
-
-        // Stop any current speech
-        speechSynthesis.cancel();
-
-        const utterance = new SpeechSynthesisUtterance(clean);
-        utterance.rate = this.settings.speed;
-        utterance.volume = this.settings.volume;
-
-        // Try to pick appropriate voice
-        const voices = speechSynthesis.getVoices();
-        const isFemale = this._isFemaleNPC(npcType, npcData);
-        const preferredVoice = voices.find(v =>
-            (isFemale ? v.name.toLowerCase().includes('female') || v.name.includes('Zira') || v.name.includes('Samantha') :
-                        v.name.toLowerCase().includes('male') || v.name.includes('David') || v.name.includes('Daniel'))
-        ) || voices[0];
-
-        if (preferredVoice) utterance.voice = preferredVoice;
-        speechSynthesis.speak(utterance);
-        return true;
-    },
-
-    _isFemaleNPC(npcType, npcData) {
-        if (npcData.gender === 'female' || npcData.isFemale) return true;
-        if (!npcType) return false;
-        const n = npcType.toLowerCase();
-        return ['woman','lady','girl','maiden','wife','mother','queen','princess','witch',
-                'healer','barmaid','priestess','sorceress','herbalist','seamstress','fortune_teller'].some(k => n.includes(k));
+        speed: 1.0
     },
 
     // ═══════════════════════════════════════════════════════════
@@ -345,57 +298,38 @@ const KokoroTTS = {
     // SPEECH - NON-BLOCKING via Worker
     // ═══════════════════════════════════════════════════════════
 
-    // Maximum characters for fast response - longer text gets chunked
-    MAX_CHUNK_LENGTH: 150,
-
-    // Generation timeout - fall back to browser TTS if Kokoro takes too long
-    GENERATION_TIMEOUT: 8000,  // 8 seconds max per chunk
+    // Maximum characters per chunk - smaller = faster first response
+    MAX_CHUNK_LENGTH: 100,
 
     async speak(text, npcType, npcData = {}) {
         if (!this.settings.enabled || !text?.trim()) return false;
+        if (!this._initialized || !this._worker) {
+            console.log('🎙️ KokoroTTS: Not initialized');
+            return false;
+        }
 
         const clean = this._clean(text);
         if (!clean) return false;
-
-        // FAST MODE: Use browser TTS for instant response
-        if (this.settings.useFastMode) {
-            console.log('🎙️ TTS Fast Mode: Using browser speech');
-            return this.speakFast(text, npcType, npcData);
-        }
-
-        // If Kokoro not ready, use browser TTS as fallback
-        if (!this._initialized || !this._worker) {
-            console.log('🎙️ KokoroTTS: Not initialized, using browser TTS');
-            return this.speakFast(text, npcType, npcData);
-        }
-
         const voice = npcData.voice || this.getVoiceForNPC(npcType, npcData);
 
         try {
-            // Split into sentences for faster first response
+            // Split into small chunks for faster first response
             const chunks = this._splitIntoChunks(clean);
-            console.log(`🎙️ KokoroTTS: "${voice}": ${chunks.length} chunk(s), first: "${chunks[0]?.substring(0, 40)}..."`);
+            console.log(`🎙️ KokoroTTS: "${voice}": ${chunks.length} chunk(s)`);
 
             this._showIndicator(true);
 
-            // Generate and play each chunk with timeout
+            // Generate and play each chunk
             for (let i = 0; i < chunks.length; i++) {
                 const chunk = chunks[i];
                 if (!chunk.trim()) continue;
 
-                // Check if we were told to stop
                 if (this._stopRequested) {
                     this._stopRequested = false;
                     break;
                 }
 
-                // Race between generation and timeout
-                const result = await Promise.race([
-                    this._send('generate', { text: chunk, voice, speed: this.settings.speed }),
-                    new Promise((_, reject) =>
-                        setTimeout(() => reject(new Error('Generation timeout')), this.GENERATION_TIMEOUT)
-                    )
-                ]);
+                const result = await this._send('generate', { text: chunk, voice, speed: this.settings.speed });
 
                 if (result?.audio) {
                     await this._play(result.audio, result.rate);
@@ -406,10 +340,9 @@ const KokoroTTS = {
             return true;
 
         } catch (error) {
-            console.warn('🎙️ KokoroTTS slow/failed, falling back to browser TTS:', error.message);
+            console.error('🎙️ KokoroTTS failed:', error);
             this._showIndicator(false);
-            // Fall back to browser TTS
-            return this.speakFast(text, npcType, npcData);
+            return false;
         }
     },
 
@@ -503,25 +436,12 @@ const KokoroTTS = {
     },
 
     stop() {
-        this._stopRequested = true;  // Stop any chunked playback in progress
+        this._stopRequested = true;
         if (this._currentAudio) { try { this._currentAudio.stop(); } catch {} this._currentAudio = null; }
-        // Also stop browser TTS if it's speaking
-        if (this.checkWebSpeech()) { try { speechSynthesis.cancel(); } catch {} }
         this._showIndicator(false);
     },
 
-    isPlaying() {
-        // Check both Kokoro and browser TTS
-        if (this._currentAudio) return true;
-        if (this.checkWebSpeech() && speechSynthesis.speaking) return true;
-        return false;
-    },
-
-    // Toggle between fast (browser) and quality (Kokoro) mode
-    setFastMode(enabled) {
-        this.settings.useFastMode = enabled;
-        console.log(`🎙️ TTS Mode: ${enabled ? 'Fast (Browser)' : 'Quality (Kokoro AI)'}`);
-    },
+    isPlaying() { return this._currentAudio !== null; },
     isInitialized() { return this._initialized; },
     isLoading() { return this._loading; },
 
