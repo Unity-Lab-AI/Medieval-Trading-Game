@@ -5933,10 +5933,11 @@ function updateLocationPanelMain() {
     }
 
     // Always rebuild the action buttons to ensure they're present
+    // Using onclick attributes to ensure they ALWAYS work, even during travel
     actionsDiv.innerHTML = `
-        <button id="visit-market-btn" title="Visit the local market">Visit Market</button>
-        <button id="travel-btn" title="Toggle travel panel">Travel</button>
-        <button id="people-btn" title="Toggle people panel">People</button>
+        <button id="visit-market-btn" title="Visit the local market" onclick="if(typeof openMarket==='function')openMarket()">Visit Market</button>
+        <button id="travel-btn" title="Toggle travel panel" onclick="if(typeof toggleTravel==='function')toggleTravel()">Travel</button>
+        <button id="people-btn" title="Toggle people panel" onclick="if(typeof togglePeople==='function')togglePeople()">People</button>
     `;
 
     // 🖤💀 RE-ATTACH EVENT LISTENERS to the new buttons! 💀
