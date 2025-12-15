@@ -6096,6 +6096,12 @@ function openMarket() {
     updateMarketNews();
     updateMerchantInfo(); // Display merchant personality and info
 
+    // 🎓 Tutorial quest completion - opening market completes the objective
+    if (typeof QuestSystem !== 'undefined' && QuestSystem.updateProgress) {
+        QuestSystem.updateProgress('ui_action', { action: 'open_market' });
+    }
+    document.dispatchEvent(new CustomEvent('ui-action', { detail: { action: 'open_market' } }));
+
     // 🎙️ Play merchant greeting with TTS when market opens
     playMerchantGreeting();
 }

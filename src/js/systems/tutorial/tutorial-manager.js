@@ -312,6 +312,13 @@ const TutorialManager = {
 
             console.log('🎓 Tutorial locations loaded:', Object.keys(TutorialWorld.locations));
 
+            // CRITICAL: Setup market prices for tutorial locations!
+            // Without this, markets show no items
+            if (GameWorld.setupMarketPrices) {
+                GameWorld.setupMarketPrices();
+                console.log('🎓 Tutorial market prices initialized');
+            }
+
             // FIX: Refresh game.currentLocation to prevent stale object references
             // After tutorial world reload, the old location reference may be invalid
             if (typeof game !== 'undefined' && game.currentLocation?.id) {
