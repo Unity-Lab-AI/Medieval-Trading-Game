@@ -62,7 +62,54 @@ const KokoroTTS = {
     settings: {
         enabled: true,
         volume: 0.8,
-        speed: 1.0
+        speed: 1.0,
+        useFastMode: false  // If true, use browser TTS for instant response
+    },
+
+    // ═══════════════════════════════════════════════════════════
+    // FAST MODE - Browser's built-in TTS for instant response
+    // ═══════════════════════════════════════════════════════════
+
+    _webSpeechAvailable: null,
+
+    checkWebSpeech() {
+        if (this._webSpeechAvailable !== null) return this._webSpeechAvailable;
+        this._webSpeechAvailable = 'speechSynthesis' in window;
+        return this._webSpeechAvailable;
+    },
+
+    // Use browser TTS - instant but robotic
+    speakFast(text, npcType, npcData = {}) {
+        if (!this.checkWebSpeech()) return false;
+        const clean = this._clean(text);
+        if (!clean) return false;
+
+        // Stop any current speech
+        speechSynthesis.cancel();
+
+        const utterance = new SpeechSynthesisUtterance(clean);
+        utterance.rate = this.settings.speed;
+        utterance.volume = this.settings.volume;
+
+        // Try to pick appropriate voice
+        const voices = speechSynthesis.getVoices();
+        const isFemale = this._isFemaleNPC(npcType, npcData);
+        const preferredVoice = voices.find(v =>
+            (isFemale ? v.name.toLowerCase().includes('female') || v.name.includes('Zira') || v.name.includes('Samantha') :
+                        v.name.toLowerCase().includes('male') || v.name.includes('David') || v.name.includes('Daniel'))
+        ) || voices[0];
+
+        if (preferredVoice) utterance.voice = preferredVoice;
+        speechSynthesis.speak(utterance);
+        return true;
+    },
+
+    _isFemaleNPC(npcType, npcData) {
+        if (npcData.gender === 'female' || npcData.isFemale) return true;
+        if (!npcType) return false;
+        const n = npcType.toLowerCase();
+        return ['woman','lady','girl','maiden','wife','mother','queen','princess','witch',
+                'healer','barmaid','priestess','sorceress','herbalist','seamstress','fortune_teller'].some(k => n.includes(k));
     },
 
     // ═══════════════════════════════════════════════════════════
@@ -97,23 +144,13 @@ const KokoroTTS = {
                         self.postMessage({ type: 'progress', id, data: { msg: 'Loading Kokoro library...', pct: 0.1 } });
                         const mod = await import('https://cdn.jsdelivr.net/npm/kokoro-js@1.2.0/+esm');
 
-                        // Try WebGPU first (MUCH faster), fall back to WASM
+                        // Use WASM - most compatible across all browsers
+                        // WebGPU is faster but has compatibility issues on some systems
                         let device = 'wasm';
-                        if (typeof navigator !== 'undefined' && navigator.gpu) {
-                            try {
-                                const adapter = await navigator.gpu.requestAdapter();
-                                if (adapter) {
-                                    device = 'webgpu';
-                                    self.postMessage({ type: 'progress', id, data: { msg: 'Using WebGPU acceleration!', pct: 0.15 } });
-                                }
-                            } catch (e) {
-                                // WebGPU not available, use WASM
-                            }
-                        }
 
-                        self.postMessage({ type: 'progress', id, data: { msg: 'Loading neural model (' + device + ')...', pct: 0.2 } });
+                        self.postMessage({ type: 'progress', id, data: { msg: 'Loading neural model...', pct: 0.2 } });
                         tts = await mod.KokoroTTS.from_pretrained(MODEL_ID, {
-                            dtype: 'q4',  // Use q4 quantization - faster than q8, slightly less quality
+                            dtype: 'q8',  // Use q8 quantization - best balance of speed and quality
                             device: device,
                             progress_callback: (p) => {
                                 if (p.status === 'progress') {
@@ -311,15 +348,27 @@ const KokoroTTS = {
     // Maximum characters for fast response - longer text gets chunked
     MAX_CHUNK_LENGTH: 150,
 
+    // Generation timeout - fall back to browser TTS if Kokoro takes too long
+    GENERATION_TIMEOUT: 8000,  // 8 seconds max per chunk
+
     async speak(text, npcType, npcData = {}) {
         if (!this.settings.enabled || !text?.trim()) return false;
-        if (!this._initialized || !this._worker) {
-            console.log('🎙️ KokoroTTS: Not initialized');
-            return false;
-        }
 
         const clean = this._clean(text);
         if (!clean) return false;
+
+        // FAST MODE: Use browser TTS for instant response
+        if (this.settings.useFastMode) {
+            console.log('🎙️ TTS Fast Mode: Using browser speech');
+            return this.speakFast(text, npcType, npcData);
+        }
+
+        // If Kokoro not ready, use browser TTS as fallback
+        if (!this._initialized || !this._worker) {
+            console.log('🎙️ KokoroTTS: Not initialized, using browser TTS');
+            return this.speakFast(text, npcType, npcData);
+        }
+
         const voice = npcData.voice || this.getVoiceForNPC(npcType, npcData);
 
         try {
@@ -329,7 +378,7 @@ const KokoroTTS = {
 
             this._showIndicator(true);
 
-            // Generate and play each chunk sequentially
+            // Generate and play each chunk with timeout
             for (let i = 0; i < chunks.length; i++) {
                 const chunk = chunks[i];
                 if (!chunk.trim()) continue;
@@ -340,7 +389,13 @@ const KokoroTTS = {
                     break;
                 }
 
-                const result = await this._send('generate', { text: chunk, voice, speed: this.settings.speed });
+                // Race between generation and timeout
+                const result = await Promise.race([
+                    this._send('generate', { text: chunk, voice, speed: this.settings.speed }),
+                    new Promise((_, reject) =>
+                        setTimeout(() => reject(new Error('Generation timeout')), this.GENERATION_TIMEOUT)
+                    )
+                ]);
 
                 if (result?.audio) {
                     await this._play(result.audio, result.rate);
@@ -351,9 +406,10 @@ const KokoroTTS = {
             return true;
 
         } catch (error) {
-            console.error('🎙️ KokoroTTS failed:', error);
+            console.warn('🎙️ KokoroTTS slow/failed, falling back to browser TTS:', error.message);
             this._showIndicator(false);
-            return false;
+            // Fall back to browser TTS
+            return this.speakFast(text, npcType, npcData);
         }
     },
 
@@ -449,10 +505,23 @@ const KokoroTTS = {
     stop() {
         this._stopRequested = true;  // Stop any chunked playback in progress
         if (this._currentAudio) { try { this._currentAudio.stop(); } catch {} this._currentAudio = null; }
+        // Also stop browser TTS if it's speaking
+        if (this.checkWebSpeech()) { try { speechSynthesis.cancel(); } catch {} }
         this._showIndicator(false);
     },
 
-    isPlaying() { return this._currentAudio !== null; },
+    isPlaying() {
+        // Check both Kokoro and browser TTS
+        if (this._currentAudio) return true;
+        if (this.checkWebSpeech() && speechSynthesis.speaking) return true;
+        return false;
+    },
+
+    // Toggle between fast (browser) and quality (Kokoro) mode
+    setFastMode(enabled) {
+        this.settings.useFastMode = enabled;
+        console.log(`🎙️ TTS Mode: ${enabled ? 'Fast (Browser)' : 'Quality (Kokoro AI)'}`);
+    },
     isInitialized() { return this._initialized; },
     isLoading() { return this._loading; },
 
