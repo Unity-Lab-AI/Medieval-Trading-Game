@@ -795,15 +795,15 @@ const TooltipSystem = {
         this.positionTooltip(event);
         this.tooltipElement.classList.add('visible');
 
-        // FIX: Dispatch ui-action for tutorial quest (view_tooltip objective)
-        document.dispatchEvent(new CustomEvent('ui-action', {
-            detail: { action: 'view_tooltip', target: target.className || target.id }
-        }));
+        // FIX: Clear ANY tutorial highlight immediately when tooltip shown
+        // This prevents blocking popups from interfering with gameplay
+        if (typeof TutorialHighlighter !== 'undefined') {
+            TutorialHighlighter.clearAll();
+        }
 
-        // DIRECT CALL to QuestSystem - don't rely on event listener timing
+        // DIRECT CALL to QuestSystem - complete view_tooltip objective immediately
         if (typeof QuestSystem !== 'undefined' && QuestSystem.updateProgress) {
             QuestSystem.updateProgress('ui_action', { action: 'view_tooltip' });
-            console.log('🎯 Tooltip viewed - quest progress updated directly');
         }
     },
 

@@ -440,6 +440,18 @@ const TutorialManager = {
     _onTutorialQuestAssigned(questId) {
         console.log(`🎓 Tutorial quest assigned: ${questId}`);
 
+        // ALWAYS clear highlights first - no lingering popups!
+        if (typeof TutorialHighlighter !== 'undefined') {
+            TutorialHighlighter.clearAll();
+        }
+
+        // For view_tooltip quest (tutorial_0_4) - NO HIGHLIGHT AT ALL
+        // User just needs to hover over anything to complete it
+        if (questId === 'tutorial_0_4') {
+            console.log(`🎓 Hidden Knowledge quest - no highlight needed, any tooltip completes it`);
+            return;  // Skip highlighting entirely for this quest
+        }
+
         // HIGHLIGHT THE RELEVANT UI ELEMENTS!
         this._highlightQuestObjectives(questId);
 
