@@ -4790,6 +4790,73 @@ function randomizeCharacter() {
 // 🖤 Expose randomizeCharacter globally for global click handler 🖤
 window.randomizeCharacter = randomizeCharacter;
 
+// 🎲 Randomize ONLY stat points - distributes available points randomly
+// Unlike randomizeCharacter, this ONLY affects stat distribution, not name/perks/etc.
+function randomizeStatPoints() {
+    console.log('=== Randomizing Stat Points Only ===');
+
+    const availablePoints = characterCreationState.availableAttributePoints;
+    if (availablePoints <= 0) {
+        console.log('No points to distribute');
+        addMessage('No attribute points available to distribute!');
+        return;
+    }
+
+    console.log(`Distributing ${availablePoints} available points randomly...`);
+
+    const attributeNames = ['strength', 'intelligence', 'charisma', 'endurance', 'luck'];
+
+    // Distribute each available point randomly
+    for (let i = 0; i < availablePoints; i++) {
+        // Pick random attribute that isn't already at max
+        let validAttrs = attributeNames.filter(attr =>
+            characterCreationState.manualAttributes[attr] < characterCreationState.maxAttributeValue
+        );
+
+        if (validAttrs.length > 0) {
+            const randomAttr = validAttrs[Math.floor(Math.random() * validAttrs.length)];
+            characterCreationState.manualAttributes[randomAttr]++;
+            characterCreationState.availableAttributePoints--;
+            console.log(`  +1 ${randomAttr} (now ${characterCreationState.manualAttributes[randomAttr]})`);
+        } else {
+            console.log('All attributes at max, stopping distribution');
+            break;
+        }
+    }
+
+    console.log('Final attributes:', characterCreationState.manualAttributes);
+    console.log('Points remaining:', characterCreationState.availableAttributePoints);
+
+    // Update displays
+    Object.keys(characterCreationState.manualAttributes).forEach(attr => {
+        const attrElement = document.getElementById(`attr-${attr}`);
+        if (attrElement) {
+            attrElement.textContent = characterCreationState.manualAttributes[attr];
+            attrElement.innerHTML = `<strong>${characterCreationState.manualAttributes[attr]}</strong>`;
+        }
+    });
+
+    // Update points display
+    const pointsElement = document.getElementById('attr-points-remaining');
+    if (pointsElement) {
+        pointsElement.textContent = characterCreationState.availableAttributePoints;
+    }
+
+    // Update dice button state
+    const diceBtn = document.getElementById('random-stat-dice-btn');
+    if (diceBtn) {
+        diceBtn.disabled = characterCreationState.availableAttributePoints <= 0;
+    }
+
+    calculateCharacterStats();
+    updateAttributeDisplay();
+
+    addMessage(`🎲 Randomly distributed ${availablePoints} attribute points!`);
+}
+
+// 🖤 Expose randomizeStatPoints globally 🖤
+window.randomizeStatPoints = randomizeStatPoints;
+
 function createCharacter(event) {
     console.log('=== createCharacter called ===');
     if (event && event.preventDefault) {

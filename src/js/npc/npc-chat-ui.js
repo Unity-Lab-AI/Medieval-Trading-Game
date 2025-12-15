@@ -363,6 +363,47 @@ const NPCChatUI = {
                 border-bottom-left-radius: 4px;
             }
 
+            /* Message bubble container with speaker button */
+            .message-bubble-container {
+                display: flex;
+                align-items: flex-start;
+                gap: 6px;
+            }
+
+            .message-bubble-container .message-bubble {
+                flex: 1;
+            }
+
+            /* Speaker button for TTS replay */
+            .message-speaker-btn {
+                background: transparent;
+                border: none;
+                padding: 4px 6px;
+                font-size: 14px;
+                cursor: pointer;
+                opacity: 0.4;
+                transition: all 0.2s ease;
+                border-radius: 4px;
+                flex-shrink: 0;
+                margin-top: 2px;
+            }
+
+            .message-speaker-btn:hover {
+                opacity: 0.8;
+                background: rgba(255, 255, 255, 0.1);
+            }
+
+            .message-speaker-btn.playing {
+                opacity: 1;
+                animation: speakerPulse 0.5s ease-in-out infinite;
+                background: rgba(76, 175, 80, 0.3);
+            }
+
+            @keyframes speakerPulse {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.1); }
+            }
+
             .message-sender {
                 font-size: 11px;
                 color: #6a6a8a;
@@ -901,17 +942,37 @@ const NPCChatUI = {
         if (welcome) welcome.style.display = 'none';
 
         const npcName = this.currentNPC?.name || 'NPC';
+        const messageId = `npc-message-${Date.now()}`;
 
         const messageEl = document.createElement('div');
         messageEl.className = 'chat-message npc';
         messageEl.innerHTML = `
             <span class="message-sender">${this.escapeHtml(npcName)}</span>
-            <div class="message-bubble" id="npc-message-bubble-${Date.now()}"></div>
+            <div class="message-bubble-container">
+                <div class="message-bubble" id="${messageId}-bubble"></div>
+                <button class="message-speaker-btn" id="${messageId}-speaker" title="Replay voice" data-message-id="${messageId}">
+                    🔊
+                </button>
+            </div>
             <span class="message-time">${this.getTimeString()}</span>
         `;
 
         messagesContainer.appendChild(messageEl);
         this.scrollToBottom();
+
+        // Store the text on the speaker button for replay
+        const speakerBtn = messageEl.querySelector('.message-speaker-btn');
+        if (speakerBtn) {
+            speakerBtn.dataset.text = text;
+            speakerBtn.dataset.npcName = npcName;
+            speakerBtn.dataset.npcVoice = this.currentNPC?.voice || this.currentNPC?.type || 'merchant';
+
+            // Setup click handler for replay
+            speakerBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.replayMessageVoice(speakerBtn);
+            });
+        }
 
         // locate the bubble that will birth these words - typewriter ritual begins
         const bubbleEl = messageEl.querySelector('.message-bubble');
@@ -921,6 +982,60 @@ const NPCChatUI = {
 
         if (!isGreeting) {
             this.chatHistory.push({ role: 'npc', text: text });
+        }
+    },
+
+    // Replay TTS for a specific message
+    replayMessageVoice(speakerBtn) {
+        if (!speakerBtn) return;
+
+        const text = speakerBtn.dataset.text;
+        const npcName = speakerBtn.dataset.npcName;
+        const voice = speakerBtn.dataset.npcVoice;
+
+        if (!text) {
+            console.warn('No text to replay');
+            return;
+        }
+
+        console.log(`🔊 Replaying message: "${text.substring(0, 30)}..."`);
+
+        // Show playing state
+        this.setMessageSpeakerPlaying(speakerBtn, true);
+
+        // Play voice
+        if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.playVoice) {
+            NPCVoiceChatSystem.playVoice(text, voice, npcName);
+
+            // Monitor when voice stops to reset button
+            const checkInterval = setInterval(() => {
+                if (!NPCVoiceChatSystem.isVoicePlaying || !NPCVoiceChatSystem.isVoicePlaying()) {
+                    this.setMessageSpeakerPlaying(speakerBtn, false);
+                    clearInterval(checkInterval);
+                }
+            }, 300);
+
+            // Safety timeout - stop checking after 60 seconds
+            setTimeout(() => {
+                clearInterval(checkInterval);
+                this.setMessageSpeakerPlaying(speakerBtn, false);
+            }, 60000);
+        } else {
+            // No voice system - reset immediately
+            this.setMessageSpeakerPlaying(speakerBtn, false);
+        }
+    },
+
+    // Set speaker button playing state
+    setMessageSpeakerPlaying(speakerBtn, isPlaying) {
+        if (!speakerBtn) return;
+
+        if (isPlaying) {
+            speakerBtn.classList.add('playing');
+            speakerBtn.innerHTML = '🔊';
+        } else {
+            speakerBtn.classList.remove('playing');
+            speakerBtn.innerHTML = '🔊';
         }
     },
 
