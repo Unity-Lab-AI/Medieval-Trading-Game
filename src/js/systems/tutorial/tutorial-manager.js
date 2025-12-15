@@ -564,6 +564,11 @@ const TutorialManager = {
                     selector: '.time-speed, #speed-control',
                     message: '<strong>Change game speed!</strong><br>Click here to make time go faster or slower.',
                     position: 'bottom'
+                },
+                'view_tooltip': {
+                    selector: '#bottom-market-btn, [data-panel="market-panel"]',
+                    message: '<strong>Hover over any button!</strong><br>Move your mouse over buttons, stats, or icons to see helpful tooltips appear.',
+                    position: 'top'
                 }
             };
 
@@ -697,6 +702,16 @@ const TutorialManager = {
         document.addEventListener('exploration-started', () => {
             if (!this.isActive) return;
             this._trackUIAction('open_explore');
+        });
+
+        // Listen for ui-action events (from TooltipSystem and other sources)
+        // This catches view_tooltip and any other UI actions dispatched via ui-action event
+        document.addEventListener('ui-action', (e) => {
+            if (!this.isActive) return;
+            const action = e.detail?.action;
+            if (action) {
+                this._trackUIAction(action);
+            }
         });
     },
 

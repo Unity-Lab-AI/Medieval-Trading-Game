@@ -101,6 +101,8 @@ const OllamaModelManager = {
     pullProgress: 0,
     selectedModel: null,  // User's selected model (stored in localStorage)
     availableModels: [],  // List of installed models
+    _abortController: null,  // AbortController for cancelling downloads
+    _currentModelDownload: null,  // Track which model is being downloaded
 
     // ═══════════════════════════════════════════════════════════
     // INITIALIZATION - Check Ollama status on game start
@@ -246,6 +248,8 @@ const OllamaModelManager = {
 
         this.isPulling = true;
         this.pullProgress = 0;
+        this._currentModelDownload = model;
+        this._abortController = new AbortController();
 
         console.log(`🦙 Starting download of ${model}...`);
         this.showDownloadProgress(0, 'Starting download...');
@@ -257,7 +261,8 @@ const OllamaModelManager = {
                 body: JSON.stringify({
                     name: model,
                     stream: true
-                })
+                }),
+                signal: this._abortController.signal
             });
 
             if (!response.ok) {
@@ -270,6 +275,12 @@ const OllamaModelManager = {
             let lastStatus = '';
 
             while (true) {
+                // Check if cancelled
+                if (this._abortController?.signal.aborted) {
+                    reader.cancel();
+                    throw new Error('Download cancelled by user');
+                }
+
                 const { done, value } = await reader.read();
                 if (done) break;
 
@@ -294,6 +305,8 @@ const OllamaModelManager = {
 
                         if (json.status === 'success') {
                             this.isPulling = false;
+                            this._abortController = null;
+                            this._currentModelDownload = null;
                             this.hasRequiredModel = true;
                             this.showDownloadComplete();
                             console.log(`🦙 Model ${model} downloaded successfully!`);
@@ -306,13 +319,106 @@ const OllamaModelManager = {
             }
 
             this.isPulling = false;
+            this._abortController = null;
+            this._currentModelDownload = null;
             return true;
 
         } catch (error) {
-            console.error('🦙 Model pull failed:', error);
+            const wasCancelled = error.name === 'AbortError' || error.message.includes('cancelled');
+            console.error('🦙 Model pull failed:', wasCancelled ? 'Cancelled by user' : error);
             this.isPulling = false;
-            this.showDownloadError(error.message);
+            this._abortController = null;
+            this._currentModelDownload = null;
+
+            if (wasCancelled) {
+                this.showDownloadCancelled();
+                // Clean up partial download by deleting the incomplete model
+                this.cleanupPartialDownload(model);
+            } else {
+                this.showDownloadError(error.message);
+            }
             return false;
+        }
+    },
+
+    // Cancel an in-progress download
+    cancelDownload() {
+        if (!this.isPulling || !this._abortController) {
+            console.log('🦙 No download in progress to cancel');
+            return false;
+        }
+
+        console.log('🦙 Cancelling download...');
+        this._abortController.abort();
+        return true;
+    },
+
+    // Clean up partial model download from Ollama
+    async cleanupPartialDownload(modelName) {
+        try {
+            console.log(`🦙 Cleaning up partial download: ${modelName}`);
+            // Ollama automatically cleans up incomplete downloads
+            // But we can try to delete any partial model that might exist
+            const response = await fetch(`${this.config.baseUrl}/api/delete`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: modelName })
+            });
+
+            if (response.ok) {
+                console.log(`🦙 Cleaned up partial model: ${modelName}`);
+            }
+        } catch (error) {
+            // Ignore errors - partial model may not exist
+            console.log('🦙 Cleanup skipped (model may not have been partially created)');
+        }
+    },
+
+    // Show cancelled download UI
+    showDownloadCancelled() {
+        const modal = document.getElementById('ollama-download-modal');
+        if (modal) {
+            modal.innerHTML = `
+                <div style="
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0,0,0,0.8);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 10000;
+                ">
+                    <div style="
+                        background: #1a1a2e;
+                        border: 2px solid #ff9800;
+                        border-radius: 10px;
+                        padding: 30px;
+                        max-width: 500px;
+                        text-align: center;
+                        color: #e0e0e0;
+                    ">
+                        <h2 style="color: #ff9800; margin-bottom: 20px;">⚠️ Download Cancelled</h2>
+                        <p style="margin-bottom: 20px;">
+                            Model download was cancelled. NPCs will use pre-written responses.
+                        </p>
+                        <p style="margin-bottom: 20px; font-size: 14px; color: #aaa;">
+                            You can download the model later from Settings.
+                        </p>
+                        <button onclick="this.parentElement.parentElement.parentElement.remove()" style="
+                            background: #ff9800;
+                            color: white;
+                            border: none;
+                            padding: 12px 24px;
+                            border-radius: 5px;
+                            cursor: pointer;
+                            font-size: 16px;
+                        ">Continue Without AI</button>
+                    </div>
+                </div>
+            `;
         }
     },
 
@@ -406,6 +512,16 @@ const OllamaModelManager = {
                         <p id="ollama-progress-text" style="margin-top: 10px; font-size: 14px;">
                             Preparing download...
                         </p>
+                        <button id="ollama-cancel-btn" style="
+                            background: #f44336;
+                            color: white;
+                            border: none;
+                            padding: 10px 20px;
+                            border-radius: 5px;
+                            cursor: pointer;
+                            font-size: 14px;
+                            margin-top: 15px;
+                        ">Cancel Download</button>
                     </div>
                 </div>
             </div>
@@ -425,6 +541,13 @@ const OllamaModelManager = {
             modal.remove();
             console.log('🦙 User skipped model download - using fallback responses');
         };
+
+        // Cancel button handler - delegate since button is created later
+        modal.addEventListener('click', (e) => {
+            if (e.target.id === 'ollama-cancel-btn') {
+                this.cancelDownload();
+            }
+        });
     },
 
     showDownloadProgress(percent, status) {
