@@ -231,6 +231,16 @@ const TutorialHighlighter = {
     //  SHINE THE LIGHT - Highlight an element
     // ═══════════════════════════════════════════════════════════════
     highlight(selector, options = {}) {
+        // NUKE: Never highlight ANYTHING for the tooltip quest - it breaks the game
+        // Check if tutorial_0_4 (Hidden Knowledge) is active
+        if (typeof QuestSystem !== 'undefined' && QuestSystem.activeQuests) {
+            if (QuestSystem.activeQuests['tutorial_0_4']) {
+                console.log('🔦 TutorialHighlighter: BLOCKED - tooltip quest active, no highlights allowed');
+                this.clearAll();
+                return false;
+            }
+        }
+
         if (!this.initialized) this.init();
 
         const {
