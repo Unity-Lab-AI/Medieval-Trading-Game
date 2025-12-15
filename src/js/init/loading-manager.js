@@ -443,17 +443,6 @@ const LoadingManager = {
         const titleEl = document.getElementById('loading-title');
         const statusEl = document.getElementById('loading-status');
 
-        // Check if running on static hosting - Kokoro still works but model downloads from CDN
-        // Skip auto-loading on static hosts to avoid large download without user consent
-        if (!this.canUseOllama()) {
-            console.log('🎙️ LoadingManager: Static hosting - skipping Kokoro auto-load');
-            this.kokoroStatus = 'skipped';
-            if (titleEl) titleEl.textContent = '🎙️ Kokoro TTS ✗ (static host)';
-            if (statusEl) statusEl.textContent = 'Load manually in Settings for AI voices';
-            this.targetProgress = ((index + 1) / total) * 95;
-            return;
-        }
-
         // Check if KokoroTTS module exists
         if (typeof KokoroTTS === 'undefined') {
             console.log('🎙️ LoadingManager: KokoroTTS not found');
@@ -461,6 +450,17 @@ const LoadingManager = {
             if (titleEl) titleEl.textContent = '🎙️ Kokoro TTS ✗ (not found)';
             if (statusEl) statusEl.textContent = 'NPCs will use browser TTS';
             this.targetProgress = ((index + 1) / total) * 95;
+            return;
+        }
+
+        // Check if user previously skipped Kokoro
+        const skipped = localStorage.getItem('mtg_kokoro_skipped');
+        if (skipped === 'true') {
+            this.kokoroStatus = 'skipped';
+            if (titleEl) titleEl.textContent = '🎙️ Kokoro TTS ✗ (skipped)';
+            if (statusEl) statusEl.textContent = 'NPCs will use browser TTS';
+            this.targetProgress = ((index + 1) / total) * 95;
+            console.log('🎙️ LoadingManager: Kokoro previously skipped by user');
             return;
         }
 
@@ -475,7 +475,32 @@ const LoadingManager = {
             return;
         }
 
-        // Check if model is already cached (like Ollama's checkModelExists)
+        // Check if running from file:// protocol (needs local server)
+        if (!KokoroTTS.isLocalServer()) {
+            console.log('🎙️ LoadingManager: Running from file:// - showing server requirement');
+
+            if (typeof KokoroInstaller !== 'undefined') {
+                // Pause loading and show installer UI
+                this.kokoroStatus = 'installing';
+                if (titleEl) titleEl.textContent = '🎙️ Kokoro TTS Setup Required';
+                if (statusEl) statusEl.textContent = 'Local server needed for AI voices';
+
+                // Show the setup prompt - this pauses loading
+                KokoroInstaller.showSetupPrompt('needs_server');
+
+                // Don't advance progress - wait for user action
+                return;
+            }
+
+            // No installer available - skip
+            this.kokoroStatus = 'skipped';
+            if (titleEl) titleEl.textContent = '🎙️ Kokoro TTS ✗ (needs server)';
+            if (statusEl) statusEl.textContent = 'Use START_GAME.bat for AI voices';
+            this.targetProgress = ((index + 1) / total) * 95;
+            return;
+        }
+
+        // Check if model is already cached
         this.kokoroStatus = 'checking';
         if (titleEl) titleEl.textContent = '🎙️ Checking Kokoro TTS...';
         if (statusEl) statusEl.textContent = 'Looking for cached model';
@@ -488,49 +513,81 @@ const LoadingManager = {
             if (titleEl) titleEl.textContent = '🎙️ Loading Kokoro TTS...';
             if (statusEl) statusEl.textContent = 'Model cached, loading...';
             console.log('🎙️ LoadingManager: Kokoro model cached, loading...');
-        } else {
-            // Model not cached - need to download
-            this.kokoroStatus = 'downloading';
-            this.kokoroDownloadNeeded = true;
-            if (titleEl) titleEl.textContent = '🎙️ Downloading Kokoro TTS...';
-            if (statusEl) statusEl.textContent = 'Downloading ~94MB neural voice model';
-            console.log('🎙️ LoadingManager: Kokoro model not cached, downloading...');
-        }
 
-        try {
-            // Progress callback for detailed loading feedback
-            const progressCallback = (message, progress) => {
-                this.kokoroProgress = Math.round(progress * 100);
-                if (titleEl) titleEl.textContent = `🎙️ ${message}`;
-                if (statusEl) statusEl.textContent = `${Math.round(progress * 100)}% complete`;
+            try {
+                const progressCallback = (message, progress) => {
+                    this.kokoroProgress = Math.round(progress * 100);
+                    if (titleEl) titleEl.textContent = `🎙️ ${message}`;
+                    if (statusEl) statusEl.textContent = `${Math.round(progress * 100)}% complete`;
+                };
 
-                // Update overall progress
-                const baseProgress = (index / total) * 95;
-                const kokoroContribution = (progress * (95 / total));
-                this.targetProgress = baseProgress + kokoroContribution;
-            };
+                const success = await KokoroTTS.init(progressCallback);
 
-            // Initialize Kokoro TTS with progress callback
-            const success = await KokoroTTS.init(progressCallback);
-
-            if (success) {
-                this.kokoroStatus = 'ready';
-                this.kokoroProgress = 100;
-                if (titleEl) titleEl.textContent = '🎙️ Kokoro TTS ✓';
-                if (statusEl) statusEl.textContent = '28 neural AI voices ready!';
-                console.log('🎙️ LoadingManager: Kokoro TTS ready!');
-            } else {
-                throw new Error('Initialization returned false');
+                if (success) {
+                    this.kokoroStatus = 'ready';
+                    this.kokoroProgress = 100;
+                    if (titleEl) titleEl.textContent = '🎙️ Kokoro TTS ✓';
+                    if (statusEl) statusEl.textContent = '28 neural AI voices ready!';
+                    console.log('🎙️ LoadingManager: Kokoro TTS ready!');
+                }
+            } catch (error) {
+                console.warn('🎙️ LoadingManager: Kokoro TTS load failed:', error.message);
+                this.kokoroStatus = 'skipped';
+                if (titleEl) titleEl.textContent = '🎙️ Kokoro TTS ✗ (failed)';
+                if (statusEl) statusEl.textContent = 'NPCs will use browser TTS';
             }
 
-        } catch (error) {
-            console.warn('🎙️ LoadingManager: Kokoro TTS failed:', error.message);
-            this.kokoroStatus = 'skipped';
-            if (titleEl) titleEl.textContent = '🎙️ Kokoro TTS ✗ (failed)';
-            if (statusEl) statusEl.textContent = 'NPCs will use browser TTS';
-        }
+            this.targetProgress = ((index + 1) / total) * 95;
+        } else {
+            // Model not cached - show download prompt (like Ollama does)
+            console.log('🎙️ LoadingManager: Kokoro model not cached, showing download prompt');
 
-        this.targetProgress = ((index + 1) / total) * 95;
+            if (typeof KokoroInstaller !== 'undefined') {
+                this.kokoroStatus = 'installing';
+                if (titleEl) titleEl.textContent = '🎙️ Kokoro TTS Download Required';
+                if (statusEl) statusEl.textContent = 'AI voice model needs to be downloaded';
+
+                // Show download prompt - pauses loading
+                KokoroInstaller.showSetupPrompt('needs_download');
+
+                // Don't advance progress - wait for user action
+                return;
+            }
+
+            // No installer - auto-download (old behavior)
+            this.kokoroStatus = 'downloading';
+            if (titleEl) titleEl.textContent = '🎙️ Downloading Kokoro TTS...';
+            if (statusEl) statusEl.textContent = 'Downloading ~94MB neural voice model';
+
+            try {
+                const progressCallback = (message, progress) => {
+                    this.kokoroProgress = Math.round(progress * 100);
+                    if (titleEl) titleEl.textContent = `🎙️ ${message}`;
+                    if (statusEl) statusEl.textContent = `${Math.round(progress * 100)}% complete`;
+
+                    const baseProgress = (index / total) * 95;
+                    const kokoroContribution = (progress * (95 / total));
+                    this.targetProgress = baseProgress + kokoroContribution;
+                };
+
+                const success = await KokoroTTS.init(progressCallback);
+
+                if (success) {
+                    this.kokoroStatus = 'ready';
+                    this.kokoroProgress = 100;
+                    if (titleEl) titleEl.textContent = '🎙️ Kokoro TTS ✓';
+                    if (statusEl) statusEl.textContent = '28 neural AI voices ready!';
+                    console.log('🎙️ LoadingManager: Kokoro TTS ready!');
+                }
+            } catch (error) {
+                console.warn('🎙️ LoadingManager: Kokoro TTS download failed:', error.message);
+                this.kokoroStatus = 'skipped';
+                if (titleEl) titleEl.textContent = '🎙️ Kokoro TTS ✗ (failed)';
+                if (statusEl) statusEl.textContent = 'NPCs will use browser TTS';
+            }
+
+            this.targetProgress = ((index + 1) / total) * 95;
+        }
     },
 
     // Smooth animation for progress bar
