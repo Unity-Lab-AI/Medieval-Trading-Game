@@ -963,16 +963,26 @@ const FactionSystem = {
             panel = document.getElementById('faction-panel');
         }
 
+        if (!panel) {
+            console.error('🏛️ FactionSystem: Failed to create faction panel!');
+            return;
+        }
+
         // Update content with discovered factions
         this.updateFactionPanelContent();
 
         // Show panel
         panel.style.display = 'flex';
 
-        // Bring to front
-        if (typeof DraggablePanels !== 'undefined') {
+        // Bring to front using DraggablePanels if available, otherwise set z-index directly
+        if (typeof DraggablePanels !== 'undefined' && DraggablePanels.bringToFront) {
             DraggablePanels.bringToFront(panel);
+        } else {
+            // Fallback z-index if DraggablePanels not available
+            panel.style.zIndex = '1500';
         }
+
+        console.log('🏛️ FactionSystem: Panel shown', { display: panel.style.display, zIndex: panel.style.zIndex });
     },
 
     // Hide the faction panel
@@ -985,7 +995,9 @@ const FactionSystem = {
 
     // Toggle faction panel visibility
     toggleFactionPanel() {
+        console.log('🏛️ FactionSystem: toggleFactionPanel() called');
         const panel = document.getElementById('faction-panel');
+        console.log('🏛️ FactionSystem: Panel found:', !!panel, panel ? panel.style.display : 'N/A');
         if (panel && panel.style.display !== 'none') {
             this.hideFactionPanel();
         } else {
