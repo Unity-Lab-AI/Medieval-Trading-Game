@@ -1179,6 +1179,9 @@ const PeoplePanel = {
             if (tutorialGreeting) return tutorialGreeting;
         }
 
+        // Get player name for personalized greetings
+        const playerName = (typeof game !== 'undefined' && game.player?.name) ? game.player.name : 'Traveler';
+
         const greetings = {
             innkeeper: "Welcome, traveler! Looking for a room or perhaps some ale?",
             blacksmith: "*wipes sweat from brow* What can I forge for you today?",
@@ -1190,6 +1193,9 @@ const PeoplePanel = {
             tutorial_merchant: "Welcome, new trader! I'm here to help you learn the basics of buying and selling.",
             tutorial_guide: "Greetings! I'm here to guide you through this training area. Ask me anything!",
             tutorial_trainer: "Ready to learn some combat basics? I'll teach you everything you need to survive out there.",
+            // 🎭 Hooded Stranger - the mysterious prophet from initial encounter
+            hooded_stranger: `So... the prophecy stirs. Another piece moves upon the board. Listen well, ${playerName}... Darkness gathers in the north. The Shadow Tower, long dormant, stirs once more. The wizard Malachar... he has returned. You are more than a simple trader, young one. Fate has brought you here for a reason. Seek out the village Elder here in Greendale. He will guide your first steps on this path.`,
+            prophet: `Ah... another soul drawn to this land by fate's cruel hand. The winds spoke of your arrival, ${playerName}. Dark times approach, and you have a part to play in what is to come.`,
             default: "Hello there. What brings you here?"
         };
         return greetings[npcData.type] || greetings.default;

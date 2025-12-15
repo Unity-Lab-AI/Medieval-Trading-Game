@@ -709,6 +709,11 @@ const MusicSystem = {
         // If currently playing menu music, queue normal to play after menu ends
         if (this.currentCategory === 'menu' && this.isPlaying) {
             this.queueCategory('normal');
+        }
+        // If menu music is pending (waiting for user interaction), queue normal instead of replacing
+        else if (this.pendingPlayCategory === 'menu' && !this.userHasInteracted) {
+            console.log('🎵 MusicSystem: Menu music pending, queueing normal for after menu ends');
+            this.pendingCategory = 'normal';  // Queue normal to play after menu track ends
         } else {
             this.playCategory('normal');
         }
