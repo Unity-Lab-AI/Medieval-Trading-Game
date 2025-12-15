@@ -154,7 +154,7 @@ const TutorialQuests = {
                 chainOrder: 4,
                 difficulty: 'tutorial',
                 objectives: [
-                    { type: 'ui_action', action: 'view_tooltip', completed: false, description: 'Hover over any button or icon to see its tooltip' }
+                    { type: 'ui_action', action: 'view_tooltip', completed: true, description: 'Hover over any button or icon to see its tooltip' }
                 ],
                 rewards: { gold: 25, experience: 10 },
                 prerequisite: 'tutorial_0_3',
