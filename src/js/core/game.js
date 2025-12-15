@@ -6017,13 +6017,14 @@ const MARKET_LOCATIONS = ['royal_capital', 'tutorial_village', 'tutorial_town'];
 // 🏪 Check if current location has a market
 function locationHasMarket(locationId = null) {
     // Try multiple ways to get location ID
-    const currentLocationId = locationId ||
-                              game?.currentLocation?.id ||
-                              game?.currentLocation ||
-                              TravelSystem?.playerPosition?.currentLocation;
+    let currentLocationId = locationId ||
+                            game?.currentLocation?.id ||
+                            TravelSystem?.playerPosition?.currentLocation;
 
-    // Debug log to help troubleshoot
-    console.log(`🏪 Market check: locationId="${currentLocationId}", hasMarket=${MARKET_LOCATIONS.includes(currentLocationId)}`);
+    // Handle case where game.currentLocation might be a string ID directly
+    if (!currentLocationId && typeof game?.currentLocation === 'string') {
+        currentLocationId = game.currentLocation;
+    }
 
     return MARKET_LOCATIONS.includes(currentLocationId);
 }
@@ -6070,7 +6071,7 @@ function setupMarketVisibilityListener() {
         updateMarketButtonVisibility();
     });
 
-    console.log('🏪 Market visibility listener initialized - only Royal Capital has a grand market');
+    console.log('🏪 Market visibility listener initialized - markets at Royal Capital and tutorial locations');
 }
 
 // Expose globally for other systems
