@@ -143,6 +143,7 @@ const EquipmentSystem = {
         });
 
         console.log('⚔️ EquipmentSystem ready to adorn your mortal shell');
+        return true; // Bootstrap needs a return value to know init completed
     },
 
     // migrate old equippedTool/equippedWeapon/equippedArmor to new system

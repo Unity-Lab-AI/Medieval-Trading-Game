@@ -34,9 +34,14 @@ const NPCVoiceChatSystem = {
             return `${this.ollamaBaseUrl}/api/chat`;
         },
         get ollamaModel() {
-            return (typeof GameConfig !== 'undefined' && GameConfig.api?.ollama?.model)
-                ? GameConfig.api.ollama.model
-                : 'mistral';
+            // Priority: OllamaModelManager selected > GameConfig > default
+            if (typeof OllamaModelManager !== 'undefined' && OllamaModelManager.selectedModel) {
+                return OllamaModelManager.selectedModel;
+            }
+            if (typeof GameConfig !== 'undefined' && GameConfig.api?.ollama?.model) {
+                return GameConfig.api.ollama.model;
+            }
+            return 'mistral:7b-instruct';  // Default with tag
         },
         get ollamaTimeout() {
             // 30 seconds - Ollama needs time to load model on first query

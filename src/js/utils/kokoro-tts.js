@@ -389,7 +389,8 @@ const KokoroTTS = {
     _stopRequested: false,
 
     async _play(audioData, sampleRate) {
-        this.stop();
+        // Stop any currently playing audio (but don't set stop flag - that's for user interrupts)
+        if (this._currentAudio) { try { this._currentAudio.stop(); } catch {} this._currentAudio = null; }
         if (!this._audioContext) this._audioContext = new (window.AudioContext || window.webkitAudioContext)();
         if (this._audioContext.state === 'suspended') await this._audioContext.resume();
 
