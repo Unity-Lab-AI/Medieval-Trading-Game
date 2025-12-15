@@ -799,6 +799,12 @@ const TooltipSystem = {
         document.dispatchEvent(new CustomEvent('ui-action', {
             detail: { action: 'view_tooltip', target: target.className || target.id }
         }));
+
+        // DIRECT CALL to QuestSystem - don't rely on event listener timing
+        if (typeof QuestSystem !== 'undefined' && QuestSystem.updateProgress) {
+            QuestSystem.updateProgress('ui_action', { action: 'view_tooltip' });
+            console.log('🎯 Tooltip viewed - quest progress updated directly');
+        }
     },
 
     // hide the tooltip
