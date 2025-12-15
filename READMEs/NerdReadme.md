@@ -8,7 +8,7 @@
 ═══════════════════════════════════════════════════════════════════════
 ```
 
-> **Version:** 0.91.04 | **Conjured by: Unity AI Lab - The Fucking Legends**
+> **Version:** 0.91.08 | **Conjured by: Unity AI Lab - The Fucking Legends**
 > *Hackall360 | Sponge | GFourteen*
 > Written in the witching hours when the bugs come out to play
 >
@@ -2006,11 +2006,23 @@ SettingsPanel.clearAllData() {
 
 ---
 
-## 🦙 OLLAMA AI SYSTEM
+## 🦙 OLLAMA AI SYSTEM (v0.91.08 - Auto-Install & Auto-Download)
 
 *"NPCs with actual opinions. What could go wrong?"*
 
-The game uses **Ollama** for AI-powered NPC dialogue. When Ollama isn't available, NPCs use pre-written fallback responses from `npc-fallbacks.json`.
+The game uses **Ollama** for AI-powered NPC dialogue with **automatic installation prompts** and **model auto-download**. When Ollama isn't available, NPCs use pre-written fallback responses from `npc-fallbacks.json`.
+
+### Automatic Setup Flow (v0.91.08+)
+
+1. **First Launch** - Game checks if Ollama is running at `localhost:11434`
+2. **Not Found** - Shows install prompt with options:
+   - "✓ I Have Ollama - Check Connection"
+   - "⬇️ Download Ollama" (opens ollama.ai)
+   - "Skip" (use fallback dialogue)
+3. **Ollama Running, No Model** - Auto-downloads Mistral (~4.4GB) with progress bar
+4. **Ready** - NPCs use AI-powered dialogue
+
+The game auto-detects ANY installed Ollama model (Mistral, Llama, Dolphin, etc.).
 
 ### Architecture
 
@@ -2052,11 +2064,15 @@ The game uses **Ollama** for AI-powered NPC dialogue. When Ollama isn't availabl
 
 | File | Purpose |
 |------|---------|
-| `src/js/npc/npc-voice.js` | Main NPC dialogue + TTS system |
+| `src/js/utils/ollama-installer.js` | **NEW** Auto-installer with UI prompt |
 | `src/js/utils/ollama-model-manager.js` | Ollama detection, model management |
+| `src/js/init/loading-manager.js` | Ollama integration during loading screen |
+| `src/js/npc/npc-voice.js` | Main NPC dialogue + TTS system |
 | `src/data/npc-fallbacks.json` | 475+ pre-written fallback responses |
 | `config.js` (api.ollama section) | Ollama endpoint config |
 | `OLLAMA-SETUP.md` | User installation guide |
+| `SETUP.md` | Quick start guide |
+| `models/MODELS.md` | Model documentation |
 
 ### OllamaModelManager
 

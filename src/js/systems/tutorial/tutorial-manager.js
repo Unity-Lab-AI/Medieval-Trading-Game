@@ -126,14 +126,26 @@ const TutorialManager = {
             useGameTime: typeof TimeMachine !== 'undefined'
         };
 
-        // Initialize GameWorld if it doesn't exist yet (it shouldn't)
-        if (typeof GameWorld !== 'undefined' && !GameWorld._initialized) {
-            // Just create empty locations - we'll fill with tutorial only
-            GameWorld.locations = {};
+        // Back up main world locations BEFORE loading tutorial world
+        // This ensures we can restore them when tutorial ends or is skipped
+        if (typeof GameWorld !== 'undefined' && GameWorld.locations && Object.keys(GameWorld.locations).length > 0) {
+            this._originalLocations = { ...GameWorld.locations };
+            console.log('🎓 Backed up main world locations:', Object.keys(this._originalLocations).length, 'locations');
         }
 
         // Summon the training dimension from the void
         this._loadTutorialWorld();
+
+        // Sync TravelSystem with tutorial world locations
+        if (typeof TravelSystem !== 'undefined') {
+            if (TravelSystem.syncWithGameWorld) {
+                TravelSystem.syncWithGameWorld();
+                console.log('🎓 TravelSystem synced with tutorial world');
+            }
+            if (TravelSystem.generatePaths) {
+                TravelSystem.generatePaths();
+            }
+        }
 
         // Spawn our friendly tutorial NPCs (they're actors, really)
         this._registerTutorialNPCs();
@@ -238,8 +250,7 @@ const TutorialManager = {
 
         console.log('🎓 Skipping tutorial...');
 
-        // Speed run the cleanup - no ceremony for quitters
-        this._unloadTutorialWorld();
+        // Clean up tutorial NPCs and quests first
         this._unregisterTutorialNPCs();
         this._clearTutorialQuests();
 
@@ -252,6 +263,7 @@ const TutorialManager = {
         }
 
         // Fine, go to the main game. No rewards for you though!
+        // NOTE: _restoreOrStartMainGame handles world loading/unloading properly
         this._restoreOrStartMainGame();
 
         // Remember this coward's choice forever
@@ -264,8 +276,7 @@ const TutorialManager = {
 
     // ═══════════════════════════════════════════════════════════════
     //  SUMMON THE TRAINING DIMENSION - Load Tutorial World
-    //  NOTE: When called from new game, GameWorld is EMPTY.
-    //  We're adding tutorial locations as the ONLY locations.
+    //  Replaces main world locations with tutorial locations temporarily
     // ═══════════════════════════════════════════════════════════════
     _loadTutorialWorld() {
         if (typeof TutorialWorld === 'undefined') {
@@ -276,16 +287,14 @@ const TutorialManager = {
         console.log('🎓 Loading tutorial world (as primary world)...');
 
         if (typeof GameWorld !== 'undefined') {
-            // Check if main world already has locations (replay scenario)
-            if (GameWorld.locations && Object.keys(GameWorld.locations).length > 0) {
-                // Back up existing world for later restoration
+            // Back up main world if not already done and there are locations
+            if (!this._originalLocations && GameWorld.locations && Object.keys(GameWorld.locations).length > 0) {
                 this._originalLocations = { ...GameWorld.locations };
                 console.log('🎓 Backed up existing world locations for later');
-            } else {
-                // No existing locations - this is a fresh new game
-                this._originalLocations = null;
-                GameWorld.locations = {};
             }
+
+            // Clear and replace with tutorial locations ONLY
+            GameWorld.locations = {};
 
             // Load tutorial locations as the active world
             for (const [id, location] of Object.entries(TutorialWorld.locations)) {
@@ -950,30 +959,38 @@ const TutorialManager = {
             console.log('🎓 Main game time initialized: Day 1, 8:00 AM (tutorial time discarded)');
         }
 
-        // Check if we backed up an existing world (replay scenario)
+        // Restore backed up main world locations
         if (this._originalLocations && Object.keys(this._originalLocations).length > 0) {
-            // Restore the backed-up world
-            console.log('🎓 Restoring backed-up main world...');
+            console.log('🎓 Restoring backed-up main world...', Object.keys(this._originalLocations).length, 'locations');
             if (typeof GameWorld !== 'undefined') {
-                GameWorld.locations = this._originalLocations;
+                GameWorld.locations = { ...this._originalLocations };
             }
             this._originalLocations = null;
         } else {
-            // No backup = fresh new game. We need to actually LOAD the main world.
-            console.log('🎓 Initializing fresh main game world...');
+            // Fallback - this shouldn't happen if backup was done correctly
+            console.warn('🎓 No backup found! Attempting to reinitialize main world...');
 
             // Clear tutorial locations first
             if (typeof GameWorld !== 'undefined') {
                 GameWorld.locations = {};
-                // Clear tutorial-specific visited locations
                 GameWorld.visitedLocations = [];
             }
 
-            // Initialize the REAL game world
+            // Try to initialize the game world from scratch
+            // This requires the game-world.js to be reloaded or GameWorld to have a reset method
             if (typeof initializeGameWorld !== 'undefined') {
                 initializeGameWorld();
             } else if (typeof GameWorld !== 'undefined' && GameWorld.init) {
                 GameWorld.init();
+            }
+
+            // If still no locations, we have a serious problem
+            if (!GameWorld.locations || Object.keys(GameWorld.locations).length === 0) {
+                console.error('🎓 CRITICAL: Failed to restore main world locations!');
+                // Last resort - reload the page
+                alert('Error loading main game world. The page will reload.');
+                location.reload();
+                return;
             }
         }
 
@@ -983,6 +1000,39 @@ const TutorialManager = {
         // ═══════════════════════════════════════════════════════════════
         const mainStartLocation = this._determineStartingLocation();
         console.log('🎓 Starting location determined:', mainStartLocation);
+
+        // ═══════════════════════════════════════════════════════════════
+        //  RESET VISITED LOCATIONS - Start fresh with only the starting location
+        //  This prevents tutorial locations from bleeding into main world
+        // ═══════════════════════════════════════════════════════════════
+        if (typeof GameWorld !== 'undefined') {
+            GameWorld.visitedLocations = [mainStartLocation];
+            console.log('🎓 Visited locations reset to:', GameWorld.visitedLocations);
+        }
+
+        // Reset gatehouse locks for fresh start
+        if (typeof GatehouseSystem !== 'undefined' && GatehouseSystem.resetAllGates) {
+            GatehouseSystem.resetAllGates();
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        //  SYNC TRAVEL SYSTEM WITH RESTORED GAME WORLD
+        //  TravelSystem needs to know about the new locations!
+        // ═══════════════════════════════════════════════════════════════
+        if (typeof TravelSystem !== 'undefined') {
+            if (TravelSystem.syncWithGameWorld) {
+                TravelSystem.syncWithGameWorld();
+                console.log('🎓 TravelSystem synced with restored GameWorld');
+            }
+            if (TravelSystem.generatePaths) {
+                TravelSystem.generatePaths();
+            }
+            // Reset player position state
+            if (TravelSystem.playerPosition) {
+                TravelSystem.playerPosition.isTraveling = false;
+                TravelSystem.playerPosition.currentLocation = mainStartLocation;
+            }
+        }
 
         if (typeof TravelSystem !== 'undefined' && TravelSystem.teleportTo) {
             TravelSystem.teleportTo(mainStartLocation);
@@ -1003,11 +1053,23 @@ const TutorialManager = {
             setTimeout(() => TravelPanelMap.render(), 500);
         }
 
-        // Re-render GameWorldRenderer if it exists
-        if (typeof GameWorldRenderer !== 'undefined' && GameWorldRenderer.render) {
+        // Re-render GameWorldRenderer and center on player location
+        if (typeof GameWorldRenderer !== 'undefined') {
             setTimeout(() => {
                 GameWorldRenderer._currentBackdrop = null; // Force backdrop refresh
-                GameWorldRenderer.render();
+                if (GameWorldRenderer.render) {
+                    GameWorldRenderer.render();
+                }
+                // Center the map on the player's starting location
+                if (GameWorldRenderer.centerOnPlayer) {
+                    GameWorldRenderer.centerOnPlayer();
+                } else if (GameWorldRenderer.centerOnLocation) {
+                    GameWorldRenderer.centerOnLocation(mainStartLocation);
+                }
+                // Also update player marker
+                if (GameWorldRenderer.updatePlayerMarker) {
+                    GameWorldRenderer.updatePlayerMarker();
+                }
             }, 600);
         }
 
@@ -1038,7 +1100,7 @@ const TutorialManager = {
     _determineStartingLocation() {
         let startLocationId = 'greendale'; // Default
 
-        // Map old location names to new ones
+        // Map old location names to new ones (and fix locked zone/nonexistent locations)
         const locationMapping = {
             'riverwood': 'riverwood',
             'royal_capital': 'royal_capital',
@@ -1049,7 +1111,13 @@ const TutorialManager = {
             'frostfall': 'frostholm',
             'jade_palace': 'jade_harbor',
             'market_crossroads': 'silk_road_inn',
-            'darkwood_village': 'darkwood'
+            'darkwood_village': 'hunters_wood',  // darkwood is in western zone (locked!) - use hunters_wood
+            'darkwood': 'hunters_wood',          // darkwood is in western zone (locked!) - use hunters_wood
+            'hermit_grove': 'hunting_lodge',     // hermit_grove is in western zone (locked!) - use hunting_lodge
+            'iron_mines': 'northern_outpost',    // iron_mines is in northern zone (locked!) - start at gate
+            'port_azure': 'sunhaven',            // port_azure doesn't exist - use sunhaven (coastal southern)
+            'merchants_landing': 'royal_capital', // merchants_landing doesn't exist - use royal_capital
+            'greendale_farm': 'wheat_farm'       // greendale_farm doesn't exist - use wheat_farm (starter zone)
         };
 
         // Get player's perks
@@ -1061,10 +1129,15 @@ const TutorialManager = {
 
         // Check perks for starting locations
         const possibleLocations = [];
+        // Get perks definitions from PerkSystem or global perks object
+        const perkDefs = (typeof PerkSystem !== 'undefined' && PerkSystem.perks)
+                         ? PerkSystem.perks
+                         : (typeof perks !== 'undefined' ? perks : {});
+
         for (const perkId of playerPerks) {
             // Handle both string IDs and perk objects
             const id = typeof perkId === 'string' ? perkId : perkId?.id;
-            const perk = typeof perks !== 'undefined' ? perks[id] : null;
+            const perk = perkDefs[id] || null;
 
             if (perk && perk.startingLocation) {
                 let mappedLocation = locationMapping[perk.startingLocation] || perk.startingLocation;

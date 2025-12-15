@@ -650,7 +650,7 @@ const PeoplePanel = {
             this.updateQuestItems();
             // critical: refresh npc list to update quest markers (! and ?) on portraits
             if (this.viewMode === 'list') {
-                this.showNPCList(); // Rebuild cards with updated markers
+                this.showListView(); // Rebuild cards with updated markers
             }
         });
         document.addEventListener('quest-completed', () => {
@@ -662,7 +662,7 @@ const PeoplePanel = {
             }
             // critical: refresh npc list to update quest markers (! and ?) on portraits
             if (this.viewMode === 'list') {
-                this.showNPCList(); // Rebuild cards with updated markers
+                this.showListView(); // Rebuild cards with updated markers
             }
         });
 
@@ -679,7 +679,7 @@ const PeoplePanel = {
             }
             // If in list view, update the NPC cards to show ? marker
             if (this.viewMode === 'list') {
-                this.showNPCList();
+                this.showListView();
             }
         });
 
@@ -1042,9 +1042,10 @@ const PeoplePanel = {
         const canTrade = this.npcCanTrade(npcType) || npcData.canTrade;
 
         // Get NPC's available gold for trading
+        // NPCTradeWindow manages NPC inventories and gold in _npcInventoryCache
         let npcGold = 0;
-        if (typeof NPCTradeSystem !== 'undefined' && NPCTradeSystem.getNPCGold) {
-            npcGold = NPCTradeSystem.getNPCGold(npcData);
+        if (typeof NPCTradeWindow !== 'undefined' && NPCTradeWindow.getNPCGold) {
+            npcGold = NPCTradeWindow.getNPCGold(npcData);
         } else if (npcData.gold !== undefined) {
             npcGold = npcData.gold;
         } else if (npcData.inventory?.gold !== undefined) {
@@ -3813,7 +3814,8 @@ Speak cryptically and briefly. You offer passage to the ${inDoom ? 'normal world
             disableBack = false,       // 🖤 If true, hide back button
             onClose = null,            // 🖤 Callback when panel closes
             introText = null,          // 🖤 Narrative text to show before NPC speaks
-            playVoice = true           // 🖤 Whether to play TTS for greeting
+            playVoice = true,          // 🖤 Whether to play TTS for greeting
+            customVoiceHandler = null  // 🎭 Custom async function to play pre-cached TTS
         } = options;
 
         console.log(`🎭 PeoplePanel: Opening special encounter with ${npcData.name} 🖤💀`);
@@ -3886,10 +3888,25 @@ Speak cryptically and briefly. You offer passage to the ${inDoom ? 'normal world
         // show npc greeting
         if (greeting) {
             // use provided greeting
-            setTimeout(() => {
+            setTimeout(async () => {
                 // FIX BUG #1: Don't scroll for initial greeting - keep at top
                 this.addChatMessage(greeting, 'npc', false);
                 this.chatHistory.push({ role: 'assistant', content: greeting });
+
+                // 🎭 Use custom voice handler if provided (pre-cached TTS)
+                if (customVoiceHandler) {
+                    console.log('🎭 Using custom voice handler for pre-cached TTS');
+                    try {
+                        const played = await customVoiceHandler();
+                        if (played) {
+                            console.log('🎭 Pre-cached TTS played successfully');
+                            return;
+                        }
+                    } catch (err) {
+                        console.warn('🎭 Custom voice handler failed:', err);
+                    }
+                    // Fall through to normal TTS if custom handler fails
+                }
 
                 // play tts - pass NPC name as source for indicator 🖤💀
                 if (playVoice && typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.settings?.voiceEnabled) {

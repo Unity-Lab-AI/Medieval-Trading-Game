@@ -18,25 +18,38 @@ const TRANSPORT_CATEGORY = {
 
 // Location types that sell transport - because not every village has horses
 const TRANSPORT_SELLERS = {
-    farm: ['horse', 'mule', 'oxen'],  // Farms sell animals
-    village: ['hand_cart'],            // Villages have basic carts
-    town: ['hand_cart', 'cart'],       // Towns have carts
-    city: ['hand_cart', 'cart', 'wagon', 'horse', 'mule'],  // Cities have most
-    capital: ['horse', 'mule', 'oxen', 'hand_cart', 'cart', 'wagon'],  // Capital has all at markup
-    port: ['mule', 'hand_cart', 'cart']  // Ports have cargo transport
+    farm: ['donkey', 'mule', 'oxen', 'horse'],  // Farms sell animals
+    stables: ['donkey', 'mule', 'horse'],      // Stables specialize in riding animals
+    village: ['hand_cart', 'donkey'],           // Villages have basic options
+    town: ['hand_cart', 'cart', 'donkey', 'mule'],  // Towns have more
+    city: ['hand_cart', 'cart', 'wagon', 'horse', 'mule', 'donkey'],  // Cities have most
+    capital: ['horse', 'mule', 'oxen', 'donkey', 'hand_cart', 'cart', 'wagon', 'covered_wagon'],  // Capital has all
+    port: ['mule', 'donkey', 'hand_cart', 'cart'],  // Ports have cargo transport
+    blacksmith: ['hand_cart', 'cart', 'wagon']  // Blacksmiths make vehicles
 };
 
 // Price multipliers by location type - royalty gets the royal tax
 const TRANSPORT_PRICE_MULTIPLIERS = {
-    farm: 1.0,      // Base price for animals
+    farm: 0.9,      // Cheaper animals at source
+    stables: 1.0,   // Base price
     village: 1.0,   // Base price
     town: 1.1,      // Slight markup
-    city: 1.25,     // City markup
-    capital: 1.75,  // Royal Capital premium
-    port: 1.15      // Port markup
+    city: 1.2,      // City markup
+    capital: 1.5,   // Royal Capital premium
+    port: 1.15,     // Port markup
+    blacksmith: 1.0 // Base price for vehicles
+};
+
+// Trader level limits - how many transport you can own based on rank
+// Level 1=Vagrant, 2=Peddler, 3=Hawker, 4=Trader, 5=Merchant, 6=Magnate, etc.
+const TRANSPORT_LIMITS = {
+    maxAnimals: [1, 2, 3, 4, 6, 8, 12, 16, 24, 50],   // Per trader level (1-10)
+    maxVehicles: [0, 1, 1, 2, 3, 4, 6, 8, 12, 25],    // Per trader level (1-10)
+    maxCarriers: [1, 2, 2, 3, 4, 5, 6, 8, 10, 20]     // Per trader level (1-10)
 };
 
 // The main transport definitions - your fleet of carrying capacity
+// Prices: hand_cart=2000, horse=10000, ox=5000, wagon=8000, cart=4000
 const transportationOptions = {
     // CARRIERS - No animal required, always available
     satchel: {
@@ -49,56 +62,74 @@ const transportationOptions = {
         speedModifier: 1.0,
         icon: '👝',
         description: 'A simple leather satchel. Everyone starts with one.',
-        canSell: false  // Can't sell your only bag
+        canSell: false,  // Can't sell your only bag
+        requiredLevel: 1
     },
     hand_cart: {
         id: 'hand_cart',
         name: 'Hand Cart',
         category: TRANSPORT_CATEGORY.CARRIER,
-        basePrice: 35,
-        sellPrice: 20,
-        carryCapacity: 150,
-        speedModifier: 0.85,
-        icon: '🛞',
-        description: 'A wooden cart you push by hand. Good early game option.'
+        basePrice: 2000,
+        sellPrice: 1200,
+        carryCapacity: 100,
+        speedModifier: 0.9,
+        icon: '🛒',
+        description: 'A sturdy wooden cart you push by hand. Perfect for new merchants.',
+        requiredLevel: 1  // Vagrant can buy
     },
 
     // ANIMALS - Can carry goods AND pull vehicles
-    horse: {
-        id: 'horse',
-        name: 'Horse',
+    donkey: {
+        id: 'donkey',
+        name: 'Donkey',
         category: TRANSPORT_CATEGORY.ANIMAL,
-        basePrice: 200,
-        sellPrice: 120,
+        basePrice: 1500,
+        sellPrice: 900,
         carryCapacity: 100,
-        speedModifier: 1.4,
-        icon: '🐴',
-        description: 'Fast but carries less. Perfect for quick trading runs.',
-        canPullVehicle: true
+        speedModifier: 0.75,
+        icon: '🫏',
+        description: 'A small but reliable pack animal. Cheap and perfect for beginners.',
+        canPullVehicle: false,  // Too small
+        requiredLevel: 1  // Vagrant can buy
     },
     mule: {
         id: 'mule',
         name: 'Mule',
         category: TRANSPORT_CATEGORY.ANIMAL,
-        basePrice: 90,
-        sellPrice: 50,
-        carryCapacity: 180,
-        speedModifier: 0.9,
+        basePrice: 3000,
+        sellPrice: 1800,
+        carryCapacity: 200,
+        speedModifier: 0.85,
         icon: '🫏',
-        description: 'Sturdy and reliable. Great balance of speed and capacity.',
-        canPullVehicle: true
+        description: 'Hardy and dependable. Good balance of speed and carrying capacity.',
+        canPullVehicle: true,
+        requiredLevel: 2  // Peddler required
     },
     oxen: {
         id: 'oxen',
         name: 'Oxen',
         category: TRANSPORT_CATEGORY.ANIMAL,
-        basePrice: 150,
-        sellPrice: 85,
-        carryCapacity: 250,
+        basePrice: 5000,
+        sellPrice: 3000,
+        carryCapacity: 350,
         speedModifier: 0.6,
         icon: '🐂',
-        description: 'Slow but incredibly strong. Best for heavy loads.',
-        canPullVehicle: true
+        description: 'Slow but incredibly powerful. Essential for serious bulk trading.',
+        canPullVehicle: true,
+        requiredLevel: 3  // Hawker required
+    },
+    horse: {
+        id: 'horse',
+        name: 'Horse',
+        category: TRANSPORT_CATEGORY.ANIMAL,
+        basePrice: 10000,
+        sellPrice: 6000,
+        carryCapacity: 150,
+        speedModifier: 1.5,
+        icon: '🐴',
+        description: 'Swift and noble. Fast travel for merchants who value speed.',
+        canPullVehicle: true,
+        requiredLevel: 4  // Trader required
     },
 
     // VEHICLES - Require an animal to pull them
@@ -106,25 +137,42 @@ const transportationOptions = {
         id: 'cart',
         name: 'Merchant Cart',
         category: TRANSPORT_CATEGORY.VEHICLE,
-        basePrice: 180,
-        sellPrice: 100,
-        carryCapacity: 350,
-        speedModifier: 0.8,  // Reduces animal speed
+        basePrice: 4000,
+        sellPrice: 2400,
+        carryCapacity: 300,
+        speedModifier: 0.85,
         icon: '🛞',
-        description: 'A sturdy cart. Requires a horse, mule, or oxen to pull.',
-        requiresAnimal: true
+        description: 'A sturdy two-wheeled cart. Requires a mule, oxen, or horse to pull.',
+        requiresAnimal: true,
+        requiredLevel: 3  // Hawker required
     },
     wagon: {
         id: 'wagon',
         name: 'Large Wagon',
         category: TRANSPORT_CATEGORY.VEHICLE,
-        basePrice: 400,
-        sellPrice: 220,
-        carryCapacity: 600,
-        speedModifier: 0.65,  // Heavier, slower
-        icon: '📦',
-        description: 'A large wagon for serious hauling. Requires an animal.',
-        requiresAnimal: true
+        basePrice: 8000,
+        sellPrice: 4800,
+        carryCapacity: 500,
+        speedModifier: 0.7,
+        icon: '🚛',
+        description: 'A large four-wheeled wagon. Massive capacity for serious merchants.',
+        requiresAnimal: true,
+        requiredLevel: 5  // Merchant required
+    },
+    covered_wagon: {
+        id: 'covered_wagon',
+        name: 'Covered Wagon',
+        category: TRANSPORT_CATEGORY.VEHICLE,
+        basePrice: 15000,
+        sellPrice: 9000,
+        carryCapacity: 650,
+        speedModifier: 0.65,
+        icon: '🚐',
+        description: 'Premium wagon with protective cover. Keeps goods safe from weather and thieves.',
+        requiresAnimal: true,
+        requiredLevel: 6,  // Magnate required
+        weatherProtection: true,
+        theftProtection: 0.3
     }
 };
 
@@ -297,6 +345,114 @@ const TransportSystem = {
     // Get transport categories
     getCategories() {
         return { ...TRANSPORT_CATEGORY };
+    },
+
+    // Get player's trader level (from MerchantRankSystem)
+    getTraderLevel(player) {
+        if (typeof MerchantRankSystem !== 'undefined' && MerchantRankSystem.getCurrentRank) {
+            const rank = MerchantRankSystem.getCurrentRank();
+            return rank?.level || 1;
+        }
+        // Fallback: check player object
+        return player?.traderLevel || player?.merchantRank?.level || 1;
+    },
+
+    // Check if player can buy a specific transport based on trader level
+    canBuyTransport(player, transportId) {
+        const transport = transportationOptions[transportId];
+        if (!transport) return { canBuy: false, reason: 'Invalid transport' };
+
+        const traderLevel = this.getTraderLevel(player);
+        const requiredLevel = transport.requiredLevel || 1;
+
+        // Check trader level requirement
+        if (traderLevel < requiredLevel) {
+            const rankNames = ['', 'Vagrant', 'Peddler', 'Hawker', 'Trader', 'Merchant', 'Magnate', 'Tycoon', 'Trade Baron', 'Merchant Mogul', 'Royal Merchant'];
+            return {
+                canBuy: false,
+                reason: `Requires ${rankNames[requiredLevel] || 'higher'} rank (level ${requiredLevel})`
+            };
+        }
+
+        // Check transport limits based on trader level
+        const levelIndex = Math.min(traderLevel - 1, 9);  // 0-9 index
+
+        if (transport.category === TRANSPORT_CATEGORY.ANIMAL) {
+            const currentAnimals = this.countOwnedAnimals(player);
+            const maxAnimals = TRANSPORT_LIMITS.maxAnimals[levelIndex];
+            if (currentAnimals >= maxAnimals) {
+                return {
+                    canBuy: false,
+                    reason: `Animal limit reached (${currentAnimals}/${maxAnimals}). Increase trader rank for more.`
+                };
+            }
+        } else if (transport.category === TRANSPORT_CATEGORY.VEHICLE) {
+            const currentVehicles = this.countOwnedVehicles(player);
+            const maxVehicles = TRANSPORT_LIMITS.maxVehicles[levelIndex];
+            if (currentVehicles >= maxVehicles) {
+                return {
+                    canBuy: false,
+                    reason: `Vehicle limit reached (${currentVehicles}/${maxVehicles}). Increase trader rank for more.`
+                };
+            }
+            // Also check if player has unpaired animals for vehicle
+            if (transport.requiresAnimal && !this.canBuyVehicle(player)) {
+                return {
+                    canBuy: false,
+                    reason: 'Need an unpaired animal to pull this vehicle'
+                };
+            }
+        } else if (transport.category === TRANSPORT_CATEGORY.CARRIER) {
+            const currentCarriers = this.countOwnedCarriers(player);
+            const maxCarriers = TRANSPORT_LIMITS.maxCarriers[levelIndex];
+            if (currentCarriers >= maxCarriers) {
+                return {
+                    canBuy: false,
+                    reason: `Carrier limit reached (${currentCarriers}/${maxCarriers}). Increase trader rank for more.`
+                };
+            }
+        }
+
+        return { canBuy: true, reason: '' };
+    },
+
+    // Count owned carriers (hand carts, satchels)
+    countOwnedCarriers(player) {
+        if (!player.ownedTransport) return 1;  // Default satchel
+        return player.ownedTransport.filter(id => {
+            const t = transportationOptions[id];
+            return t && t.category === TRANSPORT_CATEGORY.CARRIER;
+        }).length || 1;  // At least 1 for satchel
+    },
+
+    // Get transport limits for current trader level
+    getTransportLimits(player) {
+        const traderLevel = this.getTraderLevel(player);
+        const levelIndex = Math.min(traderLevel - 1, 9);
+
+        return {
+            maxAnimals: TRANSPORT_LIMITS.maxAnimals[levelIndex],
+            maxVehicles: TRANSPORT_LIMITS.maxVehicles[levelIndex],
+            maxCarriers: TRANSPORT_LIMITS.maxCarriers[levelIndex],
+            currentAnimals: this.countOwnedAnimals(player),
+            currentVehicles: this.countOwnedVehicles(player),
+            currentCarriers: this.countOwnedCarriers(player),
+            traderLevel
+        };
+    },
+
+    // Get enhanced transport summary with limits
+    getTransportSummaryWithLimits(player) {
+        const limits = this.getTransportLimits(player);
+        const summary = this.getTransportSummary(player);
+
+        return {
+            ...summary,
+            ...limits,
+            canBuyMoreAnimals: limits.currentAnimals < limits.maxAnimals,
+            canBuyMoreVehicles: limits.currentVehicles < limits.maxVehicles && summary.canBuyVehicle,
+            canBuyMoreCarriers: limits.currentCarriers < limits.maxCarriers
+        };
     }
 };
 
@@ -304,7 +460,8 @@ const TransportSystem = {
 window.TRANSPORT_CATEGORY = TRANSPORT_CATEGORY;
 window.TRANSPORT_SELLERS = TRANSPORT_SELLERS;
 window.TRANSPORT_PRICE_MULTIPLIERS = TRANSPORT_PRICE_MULTIPLIERS;
+window.TRANSPORT_LIMITS = TRANSPORT_LIMITS;
 window.transportationOptions = transportationOptions;
 window.TransportSystem = TransportSystem;
 
-console.log('🚗 TransportSystem loaded - horses, carts, and all that rolls');
+console.log('🚗 TransportSystem loaded - horses, carts, wagons, and all that hauls');

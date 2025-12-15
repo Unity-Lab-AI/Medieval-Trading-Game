@@ -2212,8 +2212,12 @@ const TravelSystem = {
         addMessage(`⏱️ Estimated travel time: ${travelInfo.timeDisplay} | Distance: ${travelInfo.distance} miles`);
 
         //  Track journey start for achievements (Start Your Journey!)
-        if (typeof AchievementSystem !== 'undefined' && AchievementSystem.trackJourneyStart) {
-            AchievementSystem.trackJourneyStart(destination.id);
+        try {
+            if (typeof AchievementSystem !== 'undefined' && AchievementSystem.trackJourneyStart) {
+                AchievementSystem.trackJourneyStart(destination.id);
+            }
+        } catch (e) {
+            console.warn('🖤 AchievementSystem.trackJourneyStart error (non-fatal):', e.message);
         }
 
         // Auto-unpause time when starting travel (if auto-time toggle is enabled)
@@ -2232,12 +2236,17 @@ const TravelSystem = {
         }
 
         // Record departure from current location and set destination
+        // CRITICAL: This triggers the walking emoji animation!
         if (typeof GameWorldRenderer !== 'undefined') {
-            GameWorldRenderer.recordLocationDeparture();
-            GameWorldRenderer.setDestination(destination.id);
-            // Trigger map marker animation -  FIX: Pass full route for multi-hop path animation 
-            if (GameWorldRenderer.onTravelStart) {
-                GameWorldRenderer.onTravelStart(currentLoc.id, destination.id, travelInfo.timeHours * 60, travelInfo.route);
+            try {
+                GameWorldRenderer.recordLocationDeparture();
+                GameWorldRenderer.setDestination(destination.id);
+                // Trigger map marker animation - Pass full route for multi-hop path animation
+                if (GameWorldRenderer.onTravelStart) {
+                    GameWorldRenderer.onTravelStart(currentLoc.id, destination.id, travelInfo.timeHours * 60, travelInfo.route);
+                }
+            } catch (e) {
+                console.warn('🖤 GameWorldRenderer travel start error (non-fatal):', e.message);
             }
         }
 
@@ -2510,7 +2519,7 @@ const TravelSystem = {
             game.currentLocation = locationData;
         }
 
-        //  CRITICAL: Mark location as VISITED/EXPLORED so tooltips and panels update 
+        //  CRITICAL: Mark location as VISITED/EXPLORED so tooltips and panels update
         // Uses world-aware helper for doom/normal world separation!
         let wasFirstVisit = false;
         if (typeof GameWorld !== 'undefined') {
@@ -2557,10 +2566,14 @@ const TravelSystem = {
             this.playerPosition.y = destination.y;
         }
 
-        // Track achievement progress
-        if (typeof AchievementSystem !== 'undefined') {
-            AchievementSystem.trackLocationVisit(destination.id);
-            AchievementSystem.trackJourney(distance);
+        // Track achievement progress (wrapped in try-catch to prevent blocking travel completion)
+        try {
+            if (typeof AchievementSystem !== 'undefined') {
+                AchievementSystem.trackLocationVisit(destination.id);
+                AchievementSystem.trackJourney(distance);
+            }
+        } catch (e) {
+            console.warn('🖤 Achievement tracking error (non-fatal):', e.message);
         }
 
         //  Wrap arrival sequence in try/catch - arrival MUST complete even if UI fails 

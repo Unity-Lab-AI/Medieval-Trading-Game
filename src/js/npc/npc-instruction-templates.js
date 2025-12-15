@@ -251,8 +251,42 @@ const NPCInstructionTemplates = {
     // ═══════════════════════════════════════════════════════════════
 
     // GREETING - first contact
+    // 🦙 This instruction is sent to Ollama to generate a unique greeting
     _buildGreetingInstruction(spec, context) {
-        return `You are a ${spec.type}. Personality: ${spec.personality}. Say ONE short greeting sentence in character. Examples: "${spec.greetings?.[0] || 'Hello.'}"`;
+        const npcName = context.npc?.name || this.formatNPCName(spec.type);
+        const npcType = spec.type;
+        const locationName = context.location?.name || 'this place';
+        const timeOfDay = context.game?.timeOfDay || 'day';
+        const weather = context.game?.weather || 'clear';
+        const playerName = context.player?.name || 'traveler';
+        const personality = spec.personality || 'neutral';
+        const speakingStyle = spec.speakingStyle || 'casual';
+        const background = spec.background || `A ${npcType} going about their business.`;
+
+        return `You are ${npcName}, a ${npcType} in a medieval fantasy world.
+
+PERSONALITY: ${personality}
+SPEAKING STYLE: ${speakingStyle}
+BACKGROUND: ${background}
+${spec.traits?.length ? `TRAITS: ${spec.traits.join(', ')}` : ''}
+
+CURRENT SITUATION:
+- Location: ${locationName}
+- Time: ${timeOfDay}
+- Weather: ${weather}
+- A ${playerName} has just approached you
+
+YOUR TASK: Generate a greeting for this traveler who just approached you.
+- Be IN CHARACTER as a ${npcType} with ${personality} personality
+- Reference the time of day, weather, or location naturally if appropriate
+- Keep it to 1-2 sentences maximum
+- DO NOT use asterisks or action descriptions
+- Speak DIRECTLY as your character
+
+Example tone (but create something UNIQUE, don't copy these):
+${spec.greetings?.slice(0, 2).map(g => `- "${g}"`).join('\n') || '- "Greetings, traveler."'}
+
+Now generate your greeting:`;
     },
 
     // FAREWELL - ending conversation

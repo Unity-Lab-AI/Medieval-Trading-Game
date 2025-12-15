@@ -1,0 +1,87 @@
+# ═══════════════════════════════════════════════════════════════
+# Medieval Trading Game - .gitignore
+# ═══════════════════════════════════════════════════════════════
+# Unity AI Lab | www.unityailab.com
+# ═══════════════════════════════════════════════════════════════
+
+# ─────────────────────────────────────────────────────────────────
+# AI Models (downloaded locally, too large for git)
+# ─────────────────────────────────────────────────────────────────
+
+# Ollama text models
+models/*
+!models/MODELS.md
+
+# Kokoro TTS models (neural voice synthesis)
+# These are downloaded on first use via Transformers.js
+# Cached in browser's IndexedDB and localStorage
+tts-models/
+*.onnx
+*.onnx.json
+
+# Hugging Face cache (Transformers.js downloads here)
+.cache/huggingface/
+
+# ─────────────────────────────────────────────────────────────────
+# OS Generated Files
+# ─────────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ─────────────────────────────────────────────────────────────────
+# IDE / Editor Files
+# ─────────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.settings/
+
+# ─────────────────────────────────────────────────────────────────
+# Node / NPM (if used in future)
+# ─────────────────────────────────────────────────────────────────
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# ─────────────────────────────────────────────────────────────────
+# Build / Dist (if used in future)
+# ─────────────────────────────────────────────────────────────────
+dist/
+build/
+*.min.js
+*.min.css
+
+# ─────────────────────────────────────────────────────────────────
+# Logs and Temporary Files
+# ─────────────────────────────────────────────────────────────────
+*.log
+*.tmp
+*.temp
+*.cache
+
+# ─────────────────────────────────────────────────────────────────
+# Environment / Secrets (never commit these!)
+# ─────────────────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+credentials.json
+secrets.json
+
+# ─────────────────────────────────────────────────────────────────
+# Claude Code Hook Tracking (local state)
+# ─────────────────────────────────────────────────────────────────
+.claude/hooks/.read_tracker.json

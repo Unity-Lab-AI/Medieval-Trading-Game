@@ -16,7 +16,7 @@ const PerkSystem = {
             id: 'lumberjack',
             name: "Lumberjack",
             description: "You spent years in the forest, felling trees with axe and saw.",
-            startingLocation: 'darkwood_village',
+            startingLocation: 'hunters_wood',  // Was darkwood_village (western zone - locked!)
             startingItems: {
                 axe: 1,
                 simple_clothes: 1,
@@ -91,7 +91,7 @@ const PerkSystem = {
             id: 'merchantSon',
             name: "Merchant's Son",
             description: "Your father's trade routes taught you the art of the deal.",
-            startingLocation: 'merchants_landing',
+            startingLocation: 'royal_capital',  // Was merchants_landing (doesn't exist) - royal capital has best markets
             startingItems: {
                 fine_clothes: 1,
                 leather_boots: 1,
@@ -116,7 +116,7 @@ const PerkSystem = {
             id: 'farmersBoy',
             name: "Farmer's Boy",
             description: "Years of hard labor on the farm made you strong and resilient.",
-            startingLocation: 'greendale_farm',
+            startingLocation: 'wheat_farm',  // Was greendale_farm (doesn't exist) - wheat_farm is in starter zone
             startingItems: {
                 pitchfork: 1,
                 simple_clothes: 1,
@@ -167,7 +167,7 @@ const PerkSystem = {
             id: 'sailorsDaughter',
             name: "Sailor's Daughter",
             description: "You grew up on the docks, learning the ways of the sea.",
-            startingLocation: 'port_azure',
+            startingLocation: 'sunhaven',  // Was port_azure (doesn't exist) - sunhaven is a coastal town in southern zone
             startingItems: {
                 sailor_clothes: 1,
                 rope: 3,
@@ -191,7 +191,7 @@ const PerkSystem = {
             id: 'minersSon',
             name: "Miner's Son",
             description: "You spent your youth in the dark tunnels, learning to find precious ore.",
-            startingLocation: 'iron_mines',
+            startingLocation: 'northern_outpost',  // Was iron_mines (northern zone - locked!) - start at gate instead
             startingItems: {
                 pickaxe: 1,
                 miners_helmet: 1,
@@ -244,7 +244,7 @@ const PerkSystem = {
             id: 'gamblersDaughter',
             name: "Gambler's Daughter",
             description: "Lady luck has always smiled upon you... or has she?",
-            startingLocation: 'merchants_landing',
+            startingLocation: 'royal_capital',  // Was merchants_landing (doesn't exist) - royal capital has gambling halls
             startingItems: {
                 fancy_clothes: 1,
                 dice: 1,
@@ -268,7 +268,7 @@ const PerkSystem = {
             id: 'hunterSon',
             name: "Hunter's Son",
             description: "The wilds are your home, and no beast escapes your bow.",
-            startingLocation: 'hermit_grove',
+            startingLocation: 'hunting_lodge',  // Was hermit_grove (western zone - locked!) - hunting_lodge is in starter zone
             startingItems: {
                 hunting_bow: 1,
                 arrows: 10,

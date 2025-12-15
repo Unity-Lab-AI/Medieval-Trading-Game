@@ -459,6 +459,52 @@
     white-space: nowrap;
 }
 
+/* Trade Quantity Input - custom amount per click */
+.trade-qty-input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding: 8px;
+    background: var(--npc-bg-dark);
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+.trade-qty-input-row label {
+    color: var(--npc-text-dim);
+    white-space: nowrap;
+}
+
+.trade-qty-input-row input {
+    width: 70px;
+    padding: 5px 8px;
+    background: var(--npc-bg-medium);
+    border: 1px solid var(--npc-border);
+    border-radius: 4px;
+    color: var(--npc-gold);
+    font-size: 0.9rem;
+    text-align: center;
+    -moz-appearance: textfield;
+}
+
+.trade-qty-input-row input::-webkit-outer-spin-button,
+.trade-qty-input-row input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.trade-qty-input-row input:focus {
+    outline: none;
+    border-color: var(--npc-gold);
+}
+
+.trade-qty-input-row .qty-hint {
+    font-size: 0.7rem;
+    color: var(--npc-text-dim);
+    opacity: 0.7;
+}
+
 /* Actions */
 .trade-actions {
     display: flex;

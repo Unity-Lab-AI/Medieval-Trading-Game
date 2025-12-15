@@ -94,6 +94,24 @@ const GameWorldRenderer = {
         return location ? location.name : locationId;
     },
 
+    // Get the travel emoji based on player's transport
+    // Returns 🏇 if player owns a horse, otherwise walking emoji
+    // movingRight: true = facing right, false = facing left
+    getTravelEmoji(movingRight = true) {
+        // Check if player owns a horse in transport
+        const hasHorse = typeof game !== 'undefined' &&
+                         game.player?.ownedTransport?.includes('horse');
+
+        if (hasHorse) {
+            // Horse rider emoji - use CSS transform to flip for direction
+            // 🏇 naturally faces left, so we flip it for right movement
+            return { emoji: '🏇', needsFlip: movingRight };
+        } else {
+            // Walking emoji - 🚶 faces left, 🚶‍➡️ (ZWJ right arrow) faces right
+            return { emoji: movingRight ? '🚶‍➡️' : '🚶', needsFlip: false };
+        }
+    },
+
  // location visit history - breadcrumbs of everywhere you've been and regretted
     locationHistory: [],
     currentDestination: null,
@@ -1116,9 +1134,15 @@ const GameWorldRenderer = {
 
         const locations = this.getActiveLocations();
         // Get visited locations based on current mode (tutorial vs normal)
-        const visited = this.isInTutorialMode()
-            ? (typeof TutorialWorld !== 'undefined' ? TutorialWorld.visitedLocations || [] : [])
-            : (typeof GameWorld !== 'undefined' ? GameWorld.visitedLocations || [] : []);
+        // Use world-aware helper for doom/normal world separation
+        let visited = [];
+        if (this.isInTutorialMode()) {
+            visited = (typeof TutorialWorld !== 'undefined' ? TutorialWorld.visitedLocations || [] : []);
+        } else if (typeof GameWorld !== 'undefined') {
+            visited = (typeof GameWorld.getActiveVisitedLocations === 'function')
+                ? GameWorld.getActiveVisitedLocations()
+                : (GameWorld.visitedLocations || []);
+        }
         const drawnConnections = new Set();
 
         Object.values(locations).forEach(location => {
@@ -1811,11 +1835,12 @@ const GameWorldRenderer = {
                 this.playerMarker.style.flexDirection = 'column-reverse';
 
                 const movingRight = this.currentTravel.movingRight;
-                // 🚶 faces left, 🚶‍➡️ faces right (Unicode: person walking + ZWJ + right arrow)
-                const walkEmoji = movingRight ? '🚶‍➡️' : '🚶';
+                // Get travel emoji (horse if owned, otherwise walking)
+                const travelData = this.getTravelEmoji(movingRight);
+                const flipStyle = travelData.needsFlip ? 'transform: scaleX(-1);' : '';
 
                 this.playerMarker.innerHTML = `
-                    <div class="marker-tack" style="font-size: 42px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6)); animation: tack-walk 0.4s ease-in-out infinite; z-index: 152;"><span class="walk-emoji" style="display: inline-block;">${walkEmoji}</span></div>
+                    <div class="marker-tack" style="font-size: 42px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6)); animation: tack-walk 0.4s ease-in-out infinite; z-index: 152;"><span class="walk-emoji" style="display: inline-block; ${flipStyle}">${travelData.emoji}</span></div>
                     <div class="marker-shadow" style="position: absolute; bottom: -5px; width: 24px; height: 8px; background: rgba(0, 0, 0, 0.3); border-radius: 50%; animation: shadow-pulse 3s ease-in-out infinite; z-index: 99;"></div>
                     <div class="marker-pulse" style="position: absolute; bottom: 0px; width: 16px; height: 16px; background: rgba(255, 136, 68, 0.5); border-radius: 50%; animation: marker-pulse 2s ease-out infinite; z-index: 100;"></div>
                     <div class="marker-label" style="background: linear-gradient(180deg, #ff8844 0%, #cc4400 100%); color: white; font-size: 9px; font-weight: bold; padding: 4px 10px; border-radius: 12px; white-space: nowrap; margin-bottom: 4px; box-shadow: 0 3px 10px rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.8); z-index: 151; letter-spacing: 0.5px; text-transform: uppercase;">TRAVELING...</div>
@@ -1834,6 +1859,9 @@ const GameWorldRenderer = {
  // Also supports reroute with direct position via TravelSystem._rerouteFromPosition
     animateTravel(fromLocationId, toLocationId, travelTimeMinutes, route = null) {
         const locations = this.getActiveLocations();
+        const locationCount = Object.keys(locations).length;
+        console.log('🗺️ animateTravel: locations count:', locationCount, 'from:', fromLocationId, 'to:', toLocationId);
+
         const toLoc = locations[toLocationId];
 
  // Check for reroute position first (travel from current path position, not location)
@@ -1847,11 +1875,19 @@ const GameWorldRenderer = {
             const fromLoc = locations[fromLocationId];
             if (fromLoc?.mapPosition) {
                 fromPosition = fromLoc.mapPosition;
+            } else {
+                console.warn('🗺️ animateTravel: fromLoc not found or no mapPosition!', fromLocationId, fromLoc);
             }
         }
 
         if (!fromPosition || !toLoc?.mapPosition) {
-            console.warn('Cannot animate travel - missing location positions');
+            console.warn('Cannot animate travel - missing location positions', {
+                fromPosition,
+                toLocExists: !!toLoc,
+                toLocMapPos: toLoc?.mapPosition,
+                inTutorial: this.isInTutorialMode(),
+                locationCount
+            });
             return;
         }
 
@@ -1917,11 +1953,12 @@ const GameWorldRenderer = {
             this.playerMarker.style.flexDirection = 'column-reverse';
 
             const movingRight = this.currentTravel.movingRight;
-            // 🚶 faces left, 🚶‍➡️ faces right
-            const walkEmoji = movingRight ? '🚶‍➡️' : '🚶';
+            // Get travel emoji (horse if owned, otherwise walking)
+            const travelData = this.getTravelEmoji(movingRight);
+            const flipStyle = travelData.needsFlip ? 'transform: scaleX(-1);' : '';
 
             this.playerMarker.innerHTML = `
-                <div class="marker-tack" style="font-size: 42px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6)); animation: tack-walk 0.4s ease-in-out infinite; z-index: 152;"><span class="walk-emoji" style="display: inline-block;">${walkEmoji}</span></div>
+                <div class="marker-tack" style="font-size: 42px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6)); animation: tack-walk 0.4s ease-in-out infinite; z-index: 152;"><span class="walk-emoji" style="display: inline-block; ${flipStyle}">${travelData.emoji}</span></div>
                 <div class="marker-shadow" style="position: absolute; bottom: -5px; width: 24px; height: 8px; background: rgba(0, 0, 0, 0.3); border-radius: 50%; animation: shadow-pulse 3s ease-in-out infinite; z-index: 99;"></div>
                 <div class="marker-pulse" style="position: absolute; bottom: 0px; width: 16px; height: 16px; background: rgba(255, 136, 68, 0.5); border-radius: 50%; animation: marker-pulse 2s ease-out infinite; z-index: 100;"></div>
                 <div class="marker-label" style="background: linear-gradient(180deg, #ff8844 0%, #cc4400 100%); color: white; font-size: 9px; font-weight: bold; padding: 4px 10px; border-radius: 12px; white-space: nowrap; margin-bottom: 4px; box-shadow: 0 3px 10px rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.8); z-index: 151; letter-spacing: 0.5px; text-transform: uppercase;">TRAVELING...</div>
@@ -2067,10 +2104,11 @@ const GameWorldRenderer = {
                 // Marker was recreated - re-apply traveling state
                 this.playerMarker.classList.add('traveling');
                 this.playerMarker.style.flexDirection = 'column-reverse';
-                // 🚶 faces left, 🚶‍➡️ faces right
-                const walkEmoji = travel.movingRight ? '🚶‍➡️' : '🚶';
+                // Get travel emoji (horse if owned, otherwise walking)
+                const travelData = this.getTravelEmoji(travel.movingRight);
+                const flipStyle = travelData.needsFlip ? 'transform: scaleX(-1);' : '';
                 this.playerMarker.innerHTML = `
-                    <div class="marker-tack" style="font-size: 42px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6)); animation: tack-walk 0.4s ease-in-out infinite; z-index: 152;"><span class="walk-emoji" style="display: inline-block;">${walkEmoji}</span></div>
+                    <div class="marker-tack" style="font-size: 42px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6)); animation: tack-walk 0.4s ease-in-out infinite; z-index: 152;"><span class="walk-emoji" style="display: inline-block; ${flipStyle}">${travelData.emoji}</span></div>
                     <div class="marker-shadow" style="position: absolute; bottom: -5px; width: 24px; height: 8px; background: rgba(0, 0, 0, 0.3); border-radius: 50%; animation: shadow-pulse 3s ease-in-out infinite; z-index: 99;"></div>
                     <div class="marker-pulse" style="position: absolute; bottom: 0px; width: 16px; height: 16px; background: rgba(255, 136, 68, 0.5); border-radius: 50%; animation: marker-pulse 2s ease-out infinite; z-index: 100;"></div>
                     <div class="marker-label" style="background: linear-gradient(180deg, #ff8844 0%, #cc4400 100%); color: white; font-size: 9px; font-weight: bold; padding: 4px 10px; border-radius: 12px; white-space: nowrap; margin-bottom: 4px; box-shadow: 0 3px 10px rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.8); z-index: 151; letter-spacing: 0.5px; text-transform: uppercase;">TRAVELING...</div>
@@ -2117,7 +2155,10 @@ const GameWorldRenderer = {
                     travel.movingRight = segmentMovingRight;
                     const span = this.playerMarker.querySelector('.walk-emoji');
                     if (span) {
-                        span.textContent = travel.movingRight ? '🚶‍➡️' : '🚶';
+                        // Get updated travel emoji for new direction
+                        const travelData = this.getTravelEmoji(travel.movingRight);
+                        span.textContent = travelData.emoji;
+                        span.style.transform = travelData.needsFlip ? 'scaleX(-1)' : '';
                     }
                 }
             }
@@ -2239,8 +2280,11 @@ const GameWorldRenderer = {
  // FIX: Now accepts optional route array for multi-hop path animation 
     onTravelStart(fromId, toId, travelTimeMinutes, route = null) {
         console.log(`🗺️ GameWorldRenderer.onTravelStart: ${fromId} -> ${toId}, duration: ${travelTimeMinutes} game minutes`);
+        console.log('🗺️ Map element exists:', !!this.mapElement);
         console.log('🗺️ Player marker exists:', !!this.playerMarker);
         console.log('🗺️ Route:', route);
+        console.log('🗺️ In tutorial mode:', this.isInTutorialMode());
+        console.log('🗺️ game.inTutorial:', typeof game !== 'undefined' ? game.inTutorial : 'game undefined');
         this.animateTravel(fromId, toId, travelTimeMinutes, route);
         console.log('🗺️ After animateTravel - currentTravel:', !!this.currentTravel);
     },

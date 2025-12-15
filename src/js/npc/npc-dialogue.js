@@ -16,10 +16,17 @@ const NPCDialogueSystem = {
 
     config: {
         // 🦙 OLLAMA - local LLM, no cloud bullshit
+        // Uses OllamaModelManager's discovered working baseUrl
+        get ollamaBaseUrl() {
+            // Check OllamaModelManager's discovered URL first
+            if (typeof OllamaModelManager !== 'undefined' && OllamaModelManager.config?.baseUrl) {
+                return OllamaModelManager.config.baseUrl;
+            }
+            // Fallback to localhost
+            return 'http://localhost:11434';
+        },
         get ollamaEndpoint() {
-            return (typeof GameConfig !== 'undefined' && GameConfig.api?.ollama?.generateEndpoint)
-                ? GameConfig.api.ollama.generateEndpoint
-                : 'http://localhost:11434/api/generate';
+            return `${this.ollamaBaseUrl}/api/generate`;
         },
         get ollamaModel() {
             return (typeof GameConfig !== 'undefined' && GameConfig.api?.ollama?.model)
@@ -27,9 +34,10 @@ const NPCDialogueSystem = {
                 : 'mistral';
         },
         get ollamaTimeout() {
+            // 30 seconds - Ollama needs time to load model on first query
             return (typeof GameConfig !== 'undefined' && GameConfig.api?.ollama?.timeout)
                 ? GameConfig.api.ollama.timeout
-                : 3000;
+                : 30000;
         },
         defaultModel: 'mistral',
         maxTokens: 150

@@ -48,15 +48,14 @@ const ItemDatabase = {
         gold: {
             id: 'gold',
             name: 'Gold Coins',
-            description: 'Standard currency used throughout the realm. Each coin weighs almost nothing.',
+            description: 'Standard currency used throughout the realm. Can be stored on your person, with employees, or in buildings.',
             icon: '💰',
             category: 'currency',
             rarity: 'common',
-            //  Gold weight is INTENTIONALLY this low 
-            // 0.0001 means 10,000 gold coins = 1 weight unit
-            // This is a DESIGN CHOICE so gold doesn't fuck up your inventory capacity
-            // Don't "fix" this unless Gee says so - gold needs to be light as air
-            weight: 0.0001, // Very light - 10,000 gold = 1 weight unit
+            // Gold weight: 0.001 means 1000 gold coins = 1 weight unit
+            // Gold is a REAL inventory item that can be stored on player, employees, buildings
+            // UI counters show TOTAL gold across all storage locations
+            weight: 0.001, // 1000 gold = 1 weight unit
             basePrice: 1, // 1 gold = 1 gold (for reference)
             stackable: true,
             tradeable: true
@@ -3147,111 +3146,157 @@ const ItemDatabase = {
         // === TRANSPORT - Animals and Vehicles ===
         // These appear in trade windows at specific locations
         // Buying adds to player.ownedTransport, selling removes from it
+        // Transport items appear in Transport Panel, not regular inventory
+        // Trader level limits how many animals/vehicles you can own
 
-        // CARRIERS (no animal required)
+        // CARRIERS (no animal required) - Available at blacksmiths
         hand_cart: {
             id: 'hand_cart',
             name: 'Hand Cart',
-            description: 'A sturdy wooden cart you push by hand. Perfect for new merchants.',
+            description: 'A sturdy wooden cart you push by hand. Perfect for new merchants starting out.',
             icon: '🛒',
             category: 'transport',
             transportType: 'carrier',
             rarity: 'common',
             weight: 0,  // Transport items don't add weight - they ADD capacity
-            basePrice: 35,
-            carryCapacity: 150,
-            speedModifier: 0.85,
+            basePrice: 2000,
+            carryCapacity: 100,
+            speedModifier: 0.9,
             isTransport: true,
-            availableAt: ['village', 'town', 'city', 'capital', 'port'],
+            availableAt: ['blacksmith', 'town', 'city', 'capital'],
+            requiredTraderLevel: 1,  // Vagrant can buy
             tradeable: true
         },
 
-        // ANIMALS (can pull vehicles)
+        // ANIMALS (can pull vehicles) - Available at farms
         horse: {
             id: 'horse',
             name: 'Horse',
-            description: 'A swift horse for quick trading runs. Fast but carries less than oxen.',
+            description: 'A swift and noble steed. Fast travel but moderate carrying capacity. The choice of merchants who value speed.',
             icon: '🐴',
             category: 'transport',
             transportType: 'animal',
-            rarity: 'uncommon',
+            rarity: 'rare',
             weight: 0,
-            basePrice: 200,
-            carryCapacity: 100,
-            speedModifier: 1.4,
+            basePrice: 10000,
+            carryCapacity: 150,
+            speedModifier: 1.5,
             canPullVehicle: true,
             isTransport: true,
-            availableAt: ['farm', 'city', 'capital'],
+            availableAt: ['farm', 'stables', 'city', 'capital'],
+            requiredTraderLevel: 4,  // Trader rank required
             tradeable: true
         },
         mule: {
             id: 'mule',
             name: 'Mule',
-            description: 'A sturdy mule. Good balance of speed and carrying capacity.',
+            description: 'A hardy and dependable beast of burden. Good balance of speed and carrying capacity.',
             icon: '🫏',
             category: 'transport',
             transportType: 'animal',
-            rarity: 'common',
+            rarity: 'uncommon',
             weight: 0,
-            basePrice: 90,
-            carryCapacity: 180,
-            speedModifier: 0.9,
+            basePrice: 3000,
+            carryCapacity: 200,
+            speedModifier: 0.85,
             canPullVehicle: true,
             isTransport: true,
-            availableAt: ['farm', 'city', 'capital', 'port'],
+            availableAt: ['farm', 'village', 'town', 'city', 'capital'],
+            requiredTraderLevel: 2,  // Peddler rank required
             tradeable: true
         },
         oxen: {
             id: 'oxen',
             name: 'Oxen',
-            description: 'Slow but incredibly strong. Best for hauling heavy loads.',
+            description: 'Slow but incredibly powerful. Can haul massive loads. Essential for serious bulk trading.',
             icon: '🐂',
             category: 'transport',
             transportType: 'animal',
             rarity: 'uncommon',
             weight: 0,
-            basePrice: 150,
-            carryCapacity: 250,
+            basePrice: 5000,
+            carryCapacity: 350,
             speedModifier: 0.6,
             canPullVehicle: true,
             isTransport: true,
             availableAt: ['farm', 'capital'],
+            requiredTraderLevel: 3,  // Hawker rank required
+            tradeable: true
+        },
+        donkey: {
+            id: 'donkey',
+            name: 'Donkey',
+            description: 'A small but reliable pack animal. Cheap to maintain and perfect for beginners.',
+            icon: '🫏',
+            category: 'transport',
+            transportType: 'animal',
+            rarity: 'common',
+            weight: 0,
+            basePrice: 1500,
+            carryCapacity: 100,
+            speedModifier: 0.75,
+            canPullVehicle: false,  // Too small to pull vehicles
+            isTransport: true,
+            availableAt: ['farm', 'village', 'town'],
+            requiredTraderLevel: 1,  // Vagrant can buy
             tradeable: true
         },
 
-        // VEHICLES (require animal to pull)
+        // VEHICLES (require animal to pull) - Available at blacksmiths
         cart: {
             id: 'cart',
             name: 'Merchant Cart',
-            description: 'A sturdy cart for hauling goods. Requires a horse, mule, or oxen to pull.',
+            description: 'A sturdy two-wheeled cart for hauling goods. Requires a horse, mule, or oxen to pull.',
             icon: '🛞',
             category: 'transport',
             transportType: 'vehicle',
             rarity: 'uncommon',
             weight: 0,
-            basePrice: 180,
-            carryCapacity: 350,
-            speedModifier: 0.8,
+            basePrice: 4000,
+            carryCapacity: 300,
+            speedModifier: 0.85,
             requiresAnimal: true,
             isTransport: true,
-            availableAt: ['town', 'city', 'capital', 'port'],
+            availableAt: ['blacksmith', 'town', 'city', 'capital'],
+            requiredTraderLevel: 3,  // Hawker rank required
             tradeable: true
         },
         wagon: {
             id: 'wagon',
             name: 'Large Wagon',
-            description: 'A large wagon for serious merchants. Massive capacity but needs an animal.',
+            description: 'A large four-wheeled wagon for serious merchants. Massive capacity but slower. Needs a strong animal.',
             icon: '🚛',
             category: 'transport',
             transportType: 'vehicle',
             rarity: 'rare',
             weight: 0,
-            basePrice: 400,
-            carryCapacity: 600,
-            speedModifier: 0.65,
+            basePrice: 8000,
+            carryCapacity: 500,
+            speedModifier: 0.7,
             requiresAnimal: true,
             isTransport: true,
-            availableAt: ['city', 'capital'],
+            availableAt: ['blacksmith', 'city', 'capital'],
+            requiredTraderLevel: 5,  // Merchant rank required
+            tradeable: true
+        },
+        covered_wagon: {
+            id: 'covered_wagon',
+            name: 'Covered Wagon',
+            description: 'A large wagon with a protective cover. Keeps goods safe from weather and thieves. Premium transport.',
+            icon: '🚐',
+            category: 'transport',
+            transportType: 'vehicle',
+            rarity: 'epic',
+            weight: 0,
+            basePrice: 15000,
+            carryCapacity: 650,
+            speedModifier: 0.65,
+            requiresAnimal: true,
+            weatherProtection: true,
+            theftProtection: 0.3,  // 30% less likely to be robbed
+            isTransport: true,
+            availableAt: ['capital'],
+            requiredTraderLevel: 6,  // Magnate rank required
             tradeable: true
         },
 

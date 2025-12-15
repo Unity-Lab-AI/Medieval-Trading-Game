@@ -288,6 +288,39 @@ const MusicSystem = {
     // Crossfade audio element for smooth transitions
     crossfadeAudio: null,
 
+    // Queue a category to play AFTER the current track finishes (no crossfade)
+    // Used when transitioning from menu to game - lets menu music finish naturally
+    queueCategory(category) {
+        if (!this.settings.enabled) return;
+
+        const tracks = this.TRACKS[category];
+        if (!tracks || tracks.length === 0) {
+            console.warn(`🎵 MusicSystem: No tracks found for category: ${category}`);
+            return;
+        }
+
+        // If no music playing, start immediately
+        if (!this.isPlaying || !this.currentAudio || this.currentAudio.paused) {
+            console.log(`🎵 MusicSystem: No music playing, starting ${category} immediately`);
+            this.startCategory(category);
+            return;
+        }
+
+        // If already playing or queued for this category, ignore
+        if (this.currentCategory === category || this.pendingCategory === category) {
+            return;
+        }
+
+        // Queue the category to play after current track ends
+        this.pendingCategory = category;
+        console.log(`🎵 MusicSystem: Queued ${category} music (will play after current track ends)`);
+    },
+
+    // Queue normal music after menu music ends (used by game state change)
+    queueNormalMusic() {
+        this.queueCategory('normal');
+    },
+
     // Play music for a category (menu, normal, dungeon, doom)
     // Uses crossfade when changing categories during playback
     playCategory(category, forceCrossfade = false) {
@@ -671,8 +704,14 @@ const MusicSystem = {
     },
 
     // 🌍 Play normal world music
+    // If transitioning from menu, queue instead of crossfade (let menu finish naturally)
     playNormalMusic() {
-        this.playCategory('normal');
+        // If currently playing menu music, queue normal to play after menu ends
+        if (this.currentCategory === 'menu' && this.isPlaying) {
+            this.queueCategory('normal');
+        } else {
+            this.playCategory('normal');
+        }
     },
 
     // 🏰 Play dungeon music

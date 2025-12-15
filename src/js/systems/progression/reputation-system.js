@@ -70,11 +70,11 @@ const ReputationSystem = {
             ]
         },
         unknown: {
-            name: 'Unknown',
+            name: 'Newcomer',
             min: -49,
             max: 49,
-            color: '#6c757d',
-            icon: '❓',
+            color: '#a0a0a0',
+            icon: '🌱',
             effects: {
                 priceModifier: 1.0,
                 questAccess: 'basic',

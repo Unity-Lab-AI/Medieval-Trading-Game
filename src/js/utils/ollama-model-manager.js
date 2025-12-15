@@ -148,21 +148,41 @@ const OllamaModelManager = {
     // ═══════════════════════════════════════════════════════════
 
     async checkOllamaRunning() {
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), this.config.checkTimeout);
+        // Try multiple endpoints - localhost and 127.0.0.1
+        const endpoints = [
+            'http://localhost:11434',
+            'http://127.0.0.1:11434'
+        ];
 
-            const response = await fetch(`${this.config.baseUrl}/api/tags`, {
-                method: 'GET',
-                signal: controller.signal
-            });
+        for (const baseUrl of endpoints) {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), this.config.checkTimeout);
 
-            clearTimeout(timeoutId);
-            return response.ok;
-        } catch (error) {
-            console.log('🦙 Ollama check failed:', error.message);
-            return false;
+                console.log('🦙 Attempting to connect to Ollama at:', baseUrl);
+
+                const response = await fetch(`${baseUrl}/api/tags`, {
+                    method: 'GET',
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('🦙 Ollama connected via', baseUrl, '! Models found:', data.models?.map(m => m.name) || []);
+                    this.config.baseUrl = baseUrl; // Remember working endpoint
+                    return true;
+                }
+                console.log('🦙 Ollama response not OK from', baseUrl, ':', response.status);
+            } catch (error) {
+                console.log('🦙 Ollama check failed on', baseUrl, ':', error.name);
+            }
         }
+
+        console.log('🦙 Could not connect to Ollama on any endpoint');
+        console.log('🦙 Make sure Ollama is running: ollama serve');
+        return false;
     },
 
     // ═══════════════════════════════════════════════════════════
@@ -177,11 +197,27 @@ const OllamaModelManager = {
             const data = await response.json();
             const models = data.models || [];
 
-            // Check if any model name starts with the required model
-            return models.some(m =>
-                m.name === modelName ||
-                m.name.startsWith(`${modelName}:`)
-            );
+            // If looking for a specific model
+            if (modelName && modelName !== '*') {
+                return models.some(m =>
+                    m.name === modelName ||
+                    m.name.startsWith(`${modelName}:`)
+                );
+            }
+
+            // Check if ANY suitable model exists (not just Mistral)
+            // Accept any LLM model - the game can work with various models
+            const hasAnyModel = models.length > 0;
+            if (hasAnyModel) {
+                console.log('🦙 Found installed model:', models[0].name);
+                // Auto-select the first available model if no model selected
+                if (!this.selectedModel || this.selectedModel === this.config.requiredModel) {
+                    this.selectedModel = models[0].name;
+                    localStorage.setItem('mtg_ollama_selected_model', this.selectedModel);
+                    console.log('🦙 Auto-selected model:', this.selectedModel);
+                }
+            }
+            return hasAnyModel;
         } catch (error) {
             console.error('🦙 Model check failed:', error);
             return false;

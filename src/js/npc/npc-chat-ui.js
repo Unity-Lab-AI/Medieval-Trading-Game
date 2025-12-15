@@ -696,17 +696,8 @@ const NPCChatUI = {
         }
 
         // show greeting with typewriter effect and TTS
-        const persona = this.getPersonaForNPC(npcData);
-        if (persona && persona.greetings) {
-            const greeting = persona.greetings[Math.floor(Math.random() * persona.greetings.length)];
-            this.addNPCMessage(greeting, true);
-
-            // Give their greeting a voice - let them speak into the void
-            if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.settings?.voiceEnabled) {
-                const voice = npcData.voice || persona.voice || 'nova';
-                NPCVoiceChatSystem.playVoice(greeting, voice);
-            }
-        }
+        // 🦙 Use Ollama to generate greeting instead of hardcoded fallbacks
+        this.fetchAndDisplayGreeting(npcData);
 
         // adjust quick responses to match this puppet's programmed abilities
         this.updateQuickResponses(npcData);
@@ -1180,6 +1171,105 @@ const NPCChatUI = {
                     clearInterval(checkVoice);
                 }
             }, 500);
+        }
+    },
+
+    // ═══════════════════════════════════════════════════════════
+    // GREETING GENERATION - let Ollama give NPCs their voice
+    // ═══════════════════════════════════════════════════════════
+
+    /**
+     * Fetch greeting from Ollama and display it with typewriter effect + TTS
+     * Falls back to hardcoded greetings only if Ollama is unavailable
+     */
+    async fetchAndDisplayGreeting(npcData) {
+        const persona = this.getPersonaForNPC(npcData);
+
+        // Show typing indicator while fetching from Ollama
+        this.showTypingIndicator();
+
+        try {
+            // 🦙 Try to get AI-generated greeting from Ollama via NPCVoiceChatSystem
+            if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.getGreeting) {
+                const greetingResponse = await NPCVoiceChatSystem.getGreeting(npcData);
+
+                this.hideTypingIndicator();
+
+                if (greetingResponse && greetingResponse.text) {
+                    // Use AI-generated greeting
+                    console.log(`🦙 Got AI greeting for ${npcData.name}: "${greetingResponse.text.substring(0, 50)}..."`);
+                    this.addNPCMessage(greetingResponse.text, true);
+
+                    // Play voice with NPC-appropriate voice selection
+                    if (NPCVoiceChatSystem.settings?.voiceEnabled) {
+                        const voice = npcData.voice || npcData.type || persona?.voice || 'merchant';
+                        NPCVoiceChatSystem.playVoice(greetingResponse.text, voice, npcData.name || 'NPC');
+                    }
+                    return;
+                }
+
+                // Check if fallbacks are disabled (AI-only mode)
+                if (greetingResponse && greetingResponse.fallbacksDisabled) {
+                    console.log('🎭 AI unavailable and fallbacks disabled - showing error message');
+                    this.addNPCMessage("*The NPC stares at you blankly. (AI service unavailable - check Ollama)*", true);
+                    return;
+                }
+            }
+
+            // Ollama unavailable - check if fallbacks are allowed
+            this.hideTypingIndicator();
+
+            if (typeof NPCVoiceChatSystem !== 'undefined' && !NPCVoiceChatSystem.settings?.allowTextFallbacks) {
+                console.log('🎭 Fallbacks disabled - not showing fallback greeting');
+                this.addNPCMessage("*The NPC seems distracted. (AI service unavailable)*", true);
+                return;
+            }
+
+            // Fallbacks allowed - use hardcoded response
+            this.displayFallbackGreeting(npcData, persona);
+
+        } catch (error) {
+            console.warn('🎭 Greeting fetch failed:', error.message);
+            this.hideTypingIndicator();
+
+            // Check fallback settings
+            if (typeof NPCVoiceChatSystem !== 'undefined' && !NPCVoiceChatSystem.settings?.allowTextFallbacks) {
+                this.addNPCMessage("*Connection error. (Check if Ollama is running)*", true);
+                return;
+            }
+
+            this.displayFallbackGreeting(npcData, persona);
+        }
+    },
+
+    /**
+     * Display hardcoded fallback greeting when Ollama is unavailable
+     */
+    displayFallbackGreeting(npcData, persona) {
+        let greeting = null;
+
+        // Try persona greetings first
+        if (persona && persona.greetings && persona.greetings.length > 0) {
+            greeting = persona.greetings[Math.floor(Math.random() * persona.greetings.length)];
+        }
+
+        // Try NPCVoiceChatSystem fallback
+        if (!greeting && typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.getFallback) {
+            greeting = NPCVoiceChatSystem.getFallback(npcData.type || 'merchant', 'greet');
+        }
+
+        // Last resort fallback
+        if (!greeting) {
+            greeting = "Greetings, traveler. How may I help you?";
+        }
+
+        console.log(`🎭 Using fallback greeting for ${npcData.name}`);
+        this.addNPCMessage(greeting, true);
+
+        // Still play voice for fallback
+        if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.settings?.voiceEnabled) {
+            const voice = npcData.voice || npcData.type || persona?.voice || 'merchant';
+            NPCVoiceChatSystem.playVoice(greeting, voice, npcData.name || 'NPC');
         }
     },
 

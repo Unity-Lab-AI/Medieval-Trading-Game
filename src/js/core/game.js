@@ -187,8 +187,11 @@ const game = {
     // 🦙 Check if Ollama is running and has mistral model
     async checkOllamaStatus() {
         try {
-            // Check if Ollama is running
-            const tagsResponse = await fetch('http://localhost:11434/api/tags', {
+            // Check if Ollama is running - use OllamaModelManager's discovered baseUrl
+            const baseUrl = (typeof OllamaModelManager !== 'undefined' && OllamaModelManager.config?.baseUrl)
+                ? OllamaModelManager.config.baseUrl
+                : 'http://localhost:11434';
+            const tagsResponse = await fetch(`${baseUrl}/api/tags`, {
                 method: 'GET',
                 signal: AbortSignal.timeout(2000)
             });
@@ -271,8 +274,11 @@ const game = {
         const progressDetail = document.getElementById('ollama-progress-detail');
 
         try {
-            // Start the pull request (streaming response)
-            const response = await fetch('http://localhost:11434/api/pull', {
+            // Start the pull request (streaming response) - use dynamic baseUrl
+            const baseUrl = (typeof OllamaModelManager !== 'undefined' && OllamaModelManager.config?.baseUrl)
+                ? OllamaModelManager.config.baseUrl
+                : 'http://localhost:11434';
+            const response = await fetch(`${baseUrl}/api/pull`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: 'mistral', stream: true })
@@ -2716,20 +2722,25 @@ function initializeAllSystems() {
         return;
     }
 
-    // 🦙 Initialize Ollama Model Manager FIRST - check if AI is ready for NPC voices
-    // This runs async so it doesn't block other systems from loading
+    // 🦙 Ollama Model Manager - skip if LoadingManager already handled it
+    // LoadingManager now checks/downloads during load screen
     if (typeof OllamaModelManager !== 'undefined') {
-        OllamaModelManager.init().then(status => {
-            if (status.running && status.hasModel) {
-                console.log('🦙 Ollama ready - AI-powered NPC dialogue enabled!');
-            } else if (status.running) {
-                console.log('🦙 Ollama running but model missing - download prompt shown');
-            } else {
-                console.log('🦙 Ollama not running - NPCs will use fallback responses (totally fine)');
-            }
-        }).catch(err => {
-            console.warn('🦙 Ollama check failed, no biggie:', err.message);
-        });
+        // Only init if LoadingManager didn't already handle it
+        if (typeof LoadingManager === 'undefined' || LoadingManager.ollamaStatus === 'pending') {
+            OllamaModelManager.init().then(status => {
+                if (status.running && status.hasModel) {
+                    console.log('🦙 Ollama ready - AI-powered NPC dialogue enabled!');
+                } else if (status.running) {
+                    console.log('🦙 Ollama running but model missing - download prompt shown');
+                } else {
+                    console.log('🦙 Ollama not running - NPCs will use fallback responses (totally fine)');
+                }
+            }).catch(err => {
+                console.warn('🦙 Ollama check failed, no biggie:', err.message);
+            });
+        } else {
+            console.log('🦙 Ollama already handled by LoadingManager, status:', LoadingManager.ollamaStatus);
+        }
     }
 
     // Initialize core systems first
@@ -3242,9 +3253,10 @@ function changeState(newState) {
         if (newState === GameState.MENU) {
             MusicSystem.playMenuMusic();
         } else if (newState === GameState.PLAYING) {
-            // Music will be updated based on location (normal/dungeon/doom)
-            // This is handled in updateLocationPanel or when entering dungeons
-            MusicSystem.playNormalMusic();
+            // Queue normal music - lets menu music finish naturally before switching
+            // This creates a smooth transition from menu → character creation → gameplay
+            // Once the menu track ends, normal world music will begin
+            MusicSystem.queueNormalMusic();
         }
     }
 
@@ -3668,6 +3680,10 @@ function startNewGame() {
         InitialEncounterSystem.strangerSpawnedAtLocation = null;
         InitialEncounterSystem.hasCompletedIntro = false;
         InitialEncounterSystem._mainQuestUnlocked = false;
+        // 🎭 Clear pre-cached dialogue/TTS for new game
+        if (InitialEncounterSystem.clearCache) {
+            InitialEncounterSystem.clearCache();
+        }
     }
 
     // Reset exploration system for new game (cooldowns, completed, history)
@@ -5043,6 +5059,14 @@ function createCharacter(event) {
     //  4. Start appropriate quests
     // ═══════════════════════════════════════════════════════════════
     if (typeof InitialEncounterSystem !== 'undefined' && InitialEncounterSystem.triggerInitialEncounter) {
+        // 🎭 PRE-CACHE: Start generating hooded stranger dialogue + TTS NOW!
+        // This runs in background so by the time player finishes tutorial choice,
+        // the stranger's voice is ready for instant playback
+        if (InitialEncounterSystem.preCacheStrangerDialogue) {
+            InitialEncounterSystem.preCacheStrangerDialogue(name);
+            console.log('🎭 Hooded stranger pre-cache started in background');
+        }
+
         InitialEncounterSystem.triggerInitialEncounter(name, 'greendale');
     } else {
         // Fallback if InitialEncounterSystem not available - load main world directly
@@ -5350,7 +5374,7 @@ function initializeGameWorld() {
     // Determine starting location based on selected perks
     let startLocationId = 'greendale'; // Default starting location (a village with a market)
 
-    // Map old location names to new ones
+    // Map old location names to new ones (and fix locked zone/nonexistent locations)
     const locationMapping = {
         'riverwood': 'riverwood',
         'royal_capital': 'royal_capital',
@@ -5361,15 +5385,23 @@ function initializeGameWorld() {
         'frostfall': 'frostholm',
         'jade_palace': 'jade_harbor',
         'market_crossroads': 'silk_road_inn',
-        'darkwood_village': 'darkwood'
+        'darkwood_village': 'hunters_wood',  // darkwood is in western zone (locked!) - use hunters_wood
+        'darkwood': 'hunters_wood',          // darkwood is in western zone (locked!) - use hunters_wood
+        'hermit_grove': 'hunting_lodge',     // hermit_grove is in western zone (locked!) - use hunting_lodge
+        'iron_mines': 'northern_outpost',    // iron_mines is in northern zone (locked!) - start at gate
+        'port_azure': 'sunhaven',            // port_azure doesn't exist - use sunhaven (coastal southern)
+        'merchants_landing': 'royal_capital', // merchants_landing doesn't exist - use royal_capital
+        'greendale_farm': 'wheat_farm'       // greendale_farm doesn't exist - use wheat_farm (starter zone)
     };
 
     // Check selected perks for starting locations
-    if (selectedPerks && selectedPerks.length > 0) {
+    // Use game.player.perks if available (tutorial skip scenario), otherwise use global selectedPerks
+    const playerPerks = (game?.player?.perks?.length > 0) ? game.player.perks : selectedPerks;
+    if (playerPerks && playerPerks.length > 0) {
         // Collect all valid starting locations from perks
         const possibleLocations = [];
 
-        for (const perkId of selectedPerks) {
+        for (const perkId of playerPerks) {
             const perk = perks[perkId];
             if (perk && perk.startingLocation) {
                 let mappedLocation = locationMapping[perk.startingLocation] || perk.startingLocation;
@@ -5667,36 +5699,6 @@ function updateLocationPanelMain() {
         ${game.player && game.player.ownsHouse ? `<button class="rest-btn" onclick="restInHouse()">Rest in House (Free)</button>` : ''}
         ${!game.player || !game.player.ownsHouse ? `<button class="buy-house-btn" onclick="buyHouse()">Buy House (1000 gold)</button>` : ''}
     `;
-    
-    // Add region unlock info
-    const unlockedRegions = GameWorld.unlockedRegions;
-    const availableRegions = Object.values(GameWorld.regions).filter(region =>
-        !unlockedRegions.includes(region.id) && GameWorld.canUnlockRegion(region.id)
-    );
-    
-    if (availableRegions.length > 0) {
-        let unlockElement = locationPanel.querySelector('.region-unlocks');
-        if (!unlockElement) {
-            unlockElement = document.createElement('div');
-            unlockElement.className = 'region-unlocks';
-            detailsElement.parentNode.insertBefore(unlockElement, detailsElement.nextSibling);
-        }
-
-        unlockElement.innerHTML = `
-            <h3>Available Regions to Unlock:</h3>
-            ${availableRegions.map(region => `
-                <div class="region-option">
-                    <strong>${region.name}</strong> - ${region.description}
-                    <span class="region-cost">💰 ${region.goldRequirement} gold</span>
-                    <button class="unlock-btn" data-region-id="${escapeHtml(region.id)}">Unlock</button>
-                </div>
-            `).join('')}
-        `;
-        // 🖤 XSS fix: attach event listeners safely
-        unlockElement.querySelectorAll('.unlock-btn[data-region-id]').forEach(btn => {
-            btn.onclick = () => unlockRegion(btn.dataset.regionId);
-        });
-    }
 
     // 🖤💀 ADD NAVIGATION BUTTONS FOR STACK-BASED VIEWS 💀
     // These replace the old inline expandable sections with full-panel takeover navigation
@@ -5705,7 +5707,7 @@ function updateLocationPanelMain() {
         actionsSection = document.createElement('div');
         actionsSection.className = 'location-stack-actions';
         actionsSection.style.cssText = 'margin-top: 12px; display: flex; flex-direction: column; gap: 6px;';
-        // Insert after region unlocks or rest options
+        // Insert after rest options or region unlocks
         const insertAfter = locationPanel.querySelector('.region-unlocks') || locationPanel.querySelector('.location-rest-options');
         if (insertAfter && insertAfter.parentNode) {
             insertAfter.parentNode.insertBefore(actionsSection, insertAfter.nextSibling);

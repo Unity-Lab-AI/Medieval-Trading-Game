@@ -294,13 +294,26 @@ const TutorialHighlighter = {
         let element = document.getElementById(selector);
         if (element) return element;
 
-        // Try data-panel attribute (for action bar buttons)
-        element = document.querySelector(`[data-panel="${selector}"]`);
-        if (element) return element;
+        // If selector already looks like a CSS selector, try it directly first
+        if (selector.startsWith('[') || selector.startsWith('.') || selector.startsWith('#')) {
+            try {
+                element = document.querySelector(selector);
+                if (element) return element;
+            } catch (e) {
+                // Invalid selector, continue with other methods
+            }
+        }
 
-        // Try data-action attribute
-        element = document.querySelector(`[data-action="${selector}"]`);
-        if (element) return element;
+        // Try data-panel attribute (for action bar buttons)
+        // Skip if selector already contains brackets to avoid double-wrapping
+        if (!selector.includes('[')) {
+            element = document.querySelector(`[data-panel="${selector}"]`);
+            if (element) return element;
+
+            // Try data-action attribute
+            element = document.querySelector(`[data-action="${selector}"]`);
+            if (element) return element;
+        }
 
         // Try button with specific text
         if (selector.startsWith('button:')) {

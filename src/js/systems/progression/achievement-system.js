@@ -1612,8 +1612,9 @@ const AchievementSystem = {
         }
 
         // Check 4: Check if tutorial quests are active
+        // Note: activeQuests is an OBJECT not an array, use Object.values()
         const hasTutorialQuests = typeof QuestSystem !== 'undefined' &&
-            QuestSystem.activeQuests?.some(q => q.id?.startsWith('tutorial_'));
+            Object.values(QuestSystem.activeQuests || {}).some(q => q.id?.startsWith('tutorial_'));
         if (hasTutorialQuests) {
             console.log('🏆 Has active tutorial quests - achievements stay disabled');
             return;
@@ -2414,8 +2415,8 @@ const AchievementSystem = {
         const currentLoc = TravelSystem?.playerPosition?.currentLocation || game?.currentLocation?.id || game?.currentLocation;
         if (currentLoc && tutorialLocations.includes(currentLoc)) return true;
 
-        // Check 7: Active tutorial quests
-        if (typeof QuestSystem !== 'undefined' && QuestSystem.activeQuests?.some(q => q.id?.startsWith('tutorial_'))) return true;
+        // Check 7: Active tutorial quests (activeQuests is an object, not array)
+        if (typeof QuestSystem !== 'undefined' && Object.values(QuestSystem.activeQuests || {}).some(q => q.id?.startsWith('tutorial_'))) return true;
 
         return false;
     },

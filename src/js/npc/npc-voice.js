@@ -14,16 +14,24 @@ const NPCVoiceChatSystem = {
 
     config: {
         // 🦙 OLLAMA CONFIG - local LLM, no cloud, no rate limits
-        // all endpoints pulled from GameConfig.api.ollama
+        // Uses OllamaModelManager's discovered working baseUrl
+        get ollamaBaseUrl() {
+            // First check if we discovered a working URL
+            if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem._ollamaBaseUrl) {
+                return NPCVoiceChatSystem._ollamaBaseUrl;
+            }
+            // Then check OllamaModelManager's discovered URL
+            if (typeof OllamaModelManager !== 'undefined' && OllamaModelManager.config?.baseUrl) {
+                return OllamaModelManager.config.baseUrl;
+            }
+            // Fallback to localhost
+            return 'http://localhost:11434';
+        },
         get ollamaEndpoint() {
-            return (typeof GameConfig !== 'undefined' && GameConfig.api?.ollama?.generateEndpoint)
-                ? GameConfig.api.ollama.generateEndpoint
-                : 'http://localhost:11434/api/generate';
+            return `${this.ollamaBaseUrl}/api/generate`;
         },
         get ollamaChatEndpoint() {
-            return (typeof GameConfig !== 'undefined' && GameConfig.api?.ollama?.chatEndpoint)
-                ? GameConfig.api.ollama.chatEndpoint
-                : 'http://localhost:11434/api/chat';
+            return `${this.ollamaBaseUrl}/api/chat`;
         },
         get ollamaModel() {
             return (typeof GameConfig !== 'undefined' && GameConfig.api?.ollama?.model)
@@ -31,9 +39,10 @@ const NPCVoiceChatSystem = {
                 : 'mistral';
         },
         get ollamaTimeout() {
+            // 30 seconds - Ollama needs time to load model on first query
             return (typeof GameConfig !== 'undefined' && GameConfig.api?.ollama?.timeout)
                 ? GameConfig.api.ollama.timeout
-                : 3000;
+                : 30000;
         },
 
         // TTS - using browser Web Speech API (no external service needed)
@@ -51,7 +60,11 @@ const NPCVoiceChatSystem = {
                 voiceVolume: 70,
                 maxConversationTurns: 2,
                 maxResponseTokens: apiDefaults.maxTokens || 150,
-                temperature: apiDefaults.temperature || 0.7
+                temperature: apiDefaults.temperature || 0.7,
+                // Fallback settings - AI is primary, fallbacks are optional
+                voiceEngine: 'kokoro',           // 'kokoro' (neural AI), 'browser', 'disabled'
+                allowTextFallbacks: false,       // Use hardcoded text if Ollama unavailable?
+                voiceFallbackMode: 'disabled'    // 'disabled', 'browser', 'silent'
             };
         }
     },
@@ -265,8 +278,11 @@ const NPCVoiceChatSystem = {
             const ollamaRunning = await this.checkOllamaStatus();
 
             if (ollamaRunning) {
-                // Fetch available models from Ollama
-                const response = await fetch('http://localhost:11434/api/tags', {
+                // Fetch available models from Ollama using the working endpoint
+                const baseUrl = this._ollamaBaseUrl ||
+                    (typeof OllamaModelManager !== 'undefined' && OllamaModelManager.config?.baseUrl) ||
+                    'http://localhost:11434';
+                const response = await fetch(`${baseUrl}/api/tags`, {
                     method: 'GET',
                     signal: AbortSignal.timeout(2000)
                 });
@@ -293,12 +309,18 @@ const NPCVoiceChatSystem = {
     },
 
     async checkOllamaStatus() {
+        // Use OllamaModelManager's working baseUrl if available
+        const baseUrl = (typeof OllamaModelManager !== 'undefined' && OllamaModelManager.config?.baseUrl)
+            ? OllamaModelManager.config.baseUrl
+            : 'http://localhost:11434';
+
         try {
-            const response = await fetch('http://localhost:11434/api/tags', {
+            const response = await fetch(`${baseUrl}/api/tags`, {
                 method: 'GET',
                 signal: AbortSignal.timeout(1000)
             });
             this._ollamaAvailable = response.ok;
+            this._ollamaBaseUrl = baseUrl; // Remember working endpoint
             return response.ok;
         } catch {
             this._ollamaAvailable = false;
@@ -601,9 +623,9 @@ RELATIONSHIP MEMORY:
                                      error.message?.includes('ECONNREFUSED');
 
             if (isTimeout) {
-                console.log('🎙️ Ollama timeout - using fallback (is Ollama running?)');
+                console.log('🎙️ Ollama timeout (is Ollama running?)');
             } else if (isConnectionError) {
-                console.log('🎙️ Cannot connect to Ollama - using fallback (run: ollama serve)');
+                console.log('🎙️ Cannot connect to Ollama (run: ollama serve)');
             } else {
                 console.error('🎙️ Ollama Error:', {
                     npcType: npcData?.type || npcData?.id || 'unknown',
@@ -617,7 +639,21 @@ RELATIONSHIP MEMORY:
             this._apiFailureCount = (this._apiFailureCount || 0) + 1;
             this._lastApiError = { error: error.message, time: Date.now(), npc: npcData?.type, isTimeout, isConnectionError };
 
-            // return a fallback response that fits the NPC type
+            // CHECK FALLBACK SETTING - only use hardcoded text if allowed
+            if (!this.settings.allowTextFallbacks) {
+                console.log('🎙️ Text fallbacks disabled - NPC will not respond');
+                return {
+                    text: null,  // No response - AI only mode
+                    success: false,
+                    error: error.message,
+                    fallbackUsed: false,
+                    fallbacksDisabled: true,
+                    ollamaUnavailable: isTimeout || isConnectionError
+                };
+            }
+
+            // Fallbacks enabled - return a pre-written response
+            console.log('🎙️ Using text fallback (fallbacks enabled in settings)');
             return {
                 text: this.getFallbackResponse(npcData),
                 success: false,
@@ -945,6 +981,7 @@ RELATIONSHIP MEMORY:
     /**
      * Pre-fetch a greeting for an NPC so it's ready when player interacts
      * Call this when player approaches NPC or NPC becomes visible
+     * 🦙 Pre-fetches from Ollama to have AI greeting ready instantly
      */
     prefetchGreeting(npcData) {
         if (!npcData || !npcData.type) return;
@@ -962,22 +999,22 @@ RELATIONSHIP MEMORY:
             return; // Already fetching
         }
 
-        // Start async fetch
-        console.log(`🎙️ Pre-fetching greeting for ${npcData.name || npcData.type}...`);
+        // 🦙 Start async fetch from Ollama with proper greeting action
+        console.log(`🦙 Pre-fetching AI greeting for ${npcData.name || npcData.type}...`);
         this.pendingGreetings.set(cacheKey, true);
 
-        this.generateNPCResponse(npcData, '[GREETING]', [])
+        this.generateNPCResponse(npcData, 'Hello there!', [], { action: 'greeting' })
             .then(response => {
-                if (response.success) {
+                if (response.success && !response.fallbackUsed) {
                     this.greetingCache.set(cacheKey, {
                         text: response.text,
                         timestamp: Date.now()
                     });
-                    console.log(`🎙️ Greeting cached for ${npcData.name || npcData.type}`);
+                    console.log(`🦙 AI greeting cached for ${npcData.name || npcData.type}`);
                 }
             })
             .catch(err => {
-                console.warn(`🎙️ Failed to pre-fetch greeting:`, err);
+                console.warn(`🦙 Failed to pre-fetch AI greeting:`, err);
             })
             .finally(() => {
                 this.pendingGreetings.delete(cacheKey);
@@ -986,21 +1023,22 @@ RELATIONSHIP MEMORY:
 
     /**
      * Get a greeting - returns cached version instantly if available
-     * Otherwise fetches in real-time
+     * Otherwise fetches in real-time from Ollama
+     * 🦙 This is the PRIMARY greeting method - uses Ollama, not hardcoded text
      */
     async getGreeting(npcData) {
         const cacheKey = this.getGreetingCacheKey(npcData);
 
-        // Check cache first
+        // Check cache first (cached Ollama responses, not hardcoded)
         const cached = this.greetingCache.get(cacheKey);
         if (cached && Date.now() - cached.timestamp < this.cacheExpiry) {
-            console.log(`🎙️ Using cached greeting for ${npcData.name || npcData.type}`);
+            console.log(`🦙 Using cached AI greeting for ${npcData.name || npcData.type}`);
             return { text: cached.text, success: true, cached: true };
         }
 
         // Wait for pending fetch if one is in progress
         if (this.pendingGreetings.has(cacheKey)) {
-            console.log(`🎙️ Waiting for pending greeting fetch...`);
+            console.log(`🦙 Waiting for pending greeting fetch...`);
             // Wait up to 3 seconds for pending fetch
             for (let i = 0; i < 30; i++) {
                 await new Promise(resolve => setTimeout(resolve, 100));
@@ -1012,16 +1050,22 @@ RELATIONSHIP MEMORY:
             }
         }
 
-        // Fetch fresh greeting
-        console.log(`🎙️ Fetching fresh greeting for ${npcData.name || npcData.type}`);
-        const response = await this.generateNPCResponse(npcData, '[GREETING]', []);
+        // 🦙 Fetch fresh greeting from Ollama with proper action type
+        console.log(`🦙 Fetching AI greeting from Ollama for ${npcData.name || npcData.type}`);
+        const response = await this.generateNPCResponse(
+            npcData,
+            'Hello there!',  // Natural greeting prompt instead of [GREETING] marker
+            [],
+            { action: 'greeting' }  // Pass action so NPCInstructionTemplates is used
+        );
 
-        // Cache it for next time
-        if (response.success) {
+        // Cache it for next time (only if actually from Ollama, not fallback)
+        if (response.success && !response.fallbackUsed) {
             this.greetingCache.set(cacheKey, {
                 text: response.text,
                 timestamp: Date.now()
             });
+            console.log(`🦙 Cached AI greeting for ${npcData.name || npcData.type}`);
         }
 
         return response;
@@ -1078,6 +1122,7 @@ RELATIONSHIP MEMORY:
 
     // ═══════════════════════════════════════════════════════════
     // text-to-speech - giving NPCs actual voices to haunt you
+    // Priority: KokoroTTS (neural) -> Browser TTS (fallback) -> Silent
     // ═══════════════════════════════════════════════════════════
 
     async playVoice(text, voiceOverride = null, source = 'NPC') {
@@ -1107,22 +1152,67 @@ RELATIONSHIP MEMORY:
             // store current voice source for indicator
             this._currentVoiceSource = source;
 
-            // split into chunks for long text
+            // Check voice engine setting
+            const voiceEngine = this.settings.voiceEngine || 'kokoro';
+
+            // 📝 TEXT ONLY MODE - no voice at all
+            if (voiceEngine === 'text-only' || voiceEngine === 'disabled') {
+                console.log('🎙️ Text-only mode - no voice output');
+                return;
+            }
+
+            // 🎙️ NEURAL AI TTS (Kokoro) - Primary/Default
+            if (voiceEngine === 'kokoro') {
+                const kokoroReady = typeof KokoroTTS !== 'undefined' &&
+                    (KokoroTTS._initialized || (KokoroTTS.isInitialized && KokoroTTS.isInitialized()));
+
+                if (kokoroReady) {
+                    console.log('🎙️ Using KokoroTTS (neural AI voice)');
+
+                    // Show indicator BEFORE generation starts
+                    this.showGlobalVoiceIndicator(source);
+
+                    try {
+                        // KokoroTTS.speak() now returns a promise that resolves when playback is DONE
+                        const success = await KokoroTTS.speak(cleanText, voiceOverride, { source });
+
+                        // Hide indicator when playback completes (success or fail)
+                        this.hideGlobalVoiceIndicator();
+
+                        if (success) {
+                            console.log('🎙️ KokoroTTS playback complete');
+                            return; // Success!
+                        }
+                        console.log('🎙️ KokoroTTS synthesis failed, falling back to browser TTS');
+                    } catch (kokoroError) {
+                        console.warn('🎙️ KokoroTTS error:', kokoroError);
+                        this.hideGlobalVoiceIndicator();
+                    }
+                } else {
+                    const status = typeof KokoroTTS !== 'undefined'
+                        ? (KokoroTTS.isLoading && KokoroTTS.isLoading() ? 'loading' : 'not initialized')
+                        : 'not loaded';
+                    console.log(`🎙️ KokoroTTS ${status}, falling back to browser TTS`);
+                }
+                // Fall through to browser TTS as fallback when Kokoro not ready
+            }
+
+            // 🔊 BROWSER TTS (basic computer voice OR fallback from Kokoro)
+            console.log('🎙️ Using browser TTS');
             const chunks = this.splitTextIntoChunks(cleanText, 1000);
 
-            // add to queue
             const voice = voiceOverride || this.settings.voice;
             chunks.forEach(chunk => {
                 this.voiceQueue.push({ text: chunk, voice: voice });
             });
 
-            // start playback if not already playing
             if (!this.isPlayingVoice) {
                 this.playNextVoiceChunk();
             }
 
         } catch (error) {
             // voice playback failed - continue without voice
+            console.warn('🎙️ Voice playback error:', error);
         }
     },
 
@@ -1232,22 +1322,23 @@ RELATIONSHIP MEMORY:
                 const utterance = new SpeechSynthesisUtterance(text);
                 this._currentUtterance = utterance;
 
-                // Set volume (combine master and voice volume)
-                const effectiveVolume = (this.settings.masterVolume / 100) * (this.settings.voiceVolume / 100);
-                utterance.volume = effectiveVolume;
+                // Set volume (combine master and voice volume) - with NaN protection
+                const masterVol = this.settings.masterVolume ?? 100;
+                const voiceVol = this.settings.voiceVolume ?? 70;
+                const effectiveVolume = Math.max(0, Math.min(1, (masterVol / 100) * (voiceVol / 100)));
+                utterance.volume = isNaN(effectiveVolume) ? 0.7 : effectiveVolume;
 
-                // Set rate and pitch for medieval feel
-                utterance.rate = 0.9;  // slightly slower for dramatic effect
-                utterance.pitch = 1.0;
+                // Set rate and pitch based on NPC characteristics
+                const voiceSettings = this._getVoiceSettingsForNPC(voice);
+                utterance.rate = voiceSettings.rate;
+                utterance.pitch = voiceSettings.pitch;
 
-                // Try to find a good voice
+                // Select voice based on NPC gender/type
                 if (this._browserVoices.length > 0) {
-                    // Prefer English voices
-                    const englishVoice = this._browserVoices.find(v =>
-                        v.lang.startsWith('en') && !v.name.includes('Google')
-                    ) || this._browserVoices.find(v => v.lang.startsWith('en')) || this._browserVoices[0];
-                    if (englishVoice) {
-                        utterance.voice = englishVoice;
+                    const selectedVoice = this._selectVoiceForNPC(voice);
+                    if (selectedVoice) {
+                        utterance.voice = selectedVoice;
+                        console.log(`🎙️ Using voice: ${selectedVoice.name} for NPC type: ${voice}`);
                     }
                 }
 
@@ -1280,6 +1371,11 @@ RELATIONSHIP MEMORY:
         this.voiceQueue = [];
         this.isPlayingVoice = false;
 
+        // Stop Kokoro TTS (neural AI voice)
+        if (typeof KokoroTTS !== 'undefined' && KokoroTTS.stop) {
+            KokoroTTS.stop();
+        }
+
         // Stop browser TTS
         if (typeof speechSynthesis !== 'undefined') {
             speechSynthesis.cancel();
@@ -1304,6 +1400,128 @@ RELATIONSHIP MEMORY:
 
     isVoicePlaying() {
         return this.isPlayingVoice;
+    },
+
+    // ═══════════════════════════════════════════════════════════
+    // NPC VOICE SELECTION - match voices to NPC gender/type
+    // ═══════════════════════════════════════════════════════════
+
+    // NPC types that should use female voices
+    _femaleNPCTypes: [
+        'witch', 'healer', 'barmaid', 'maiden', 'queen', 'princess', 'priestess',
+        'sorceress', 'herbalist', 'seamstress', 'tavern_wench', 'noble_lady',
+        'female_merchant', 'female_guard', 'female_traveler', 'fortune_teller'
+    ],
+
+    // NPC types that should use deep/gravelly male voices
+    _deepVoiceNPCTypes: [
+        'guard', 'knight', 'warrior', 'blacksmith', 'bandit', 'executioner',
+        'captain', 'soldier', 'bouncer', 'dark_lord', 'dragon', 'giant',
+        'orc', 'barbarian', 'warlord', 'mercenary'
+    ],
+
+    // NPC types that should use elderly/wise voices
+    _elderlyNPCTypes: [
+        'elder', 'wizard', 'sage', 'hermit', 'old_merchant', 'oracle',
+        'ancient', 'necromancer', 'high_priest', 'scholar'
+    ],
+
+    // NPC types with unique voice characteristics
+    _specialVoiceNPCTypes: {
+        'goblin': { pitch: 1.4, rate: 1.2 },      // High-pitched, fast
+        'goblin_king': { pitch: 1.3, rate: 1.1 }, // Slightly less squeaky
+        'drunk': { pitch: 0.9, rate: 0.7 },       // Slurred, slow
+        'child': { pitch: 1.3, rate: 1.0 },       // Higher pitched
+        'ghost': { pitch: 0.8, rate: 0.8 },       // Eerie, slow
+        'demon': { pitch: 0.6, rate: 0.85 },      // Very deep
+        'fairy': { pitch: 1.5, rate: 1.1 },       // Very high
+        'frost_lord': { pitch: 0.7, rate: 0.75 }, // Cold, slow
+        'dragon': { pitch: 0.5, rate: 0.8 },      // Very deep, rumbling
+        'alpha_wolf': { pitch: 0.7, rate: 1.0 },  // Growly
+    },
+
+    /**
+     * Get voice settings (rate, pitch) for an NPC type
+     * @param {string} npcType - The NPC type or gender indicator
+     * @returns {Object} { rate, pitch }
+     */
+    _getVoiceSettingsForNPC(npcType) {
+        if (!npcType) return { rate: 0.9, pitch: 1.0 };
+
+        const normalizedType = npcType.toLowerCase();
+
+        // Check for special voice characteristics
+        if (this._specialVoiceNPCTypes[normalizedType]) {
+            return this._specialVoiceNPCTypes[normalizedType];
+        }
+
+        // Elderly NPCs speak slower
+        if (this._elderlyNPCTypes.includes(normalizedType)) {
+            return { rate: 0.8, pitch: 0.9 };
+        }
+
+        // Female NPCs - slightly higher pitch
+        if (this._femaleNPCTypes.includes(normalizedType) || normalizedType.includes('female')) {
+            return { rate: 0.9, pitch: 1.1 };
+        }
+
+        // Deep voice NPCs
+        if (this._deepVoiceNPCTypes.includes(normalizedType)) {
+            return { rate: 0.85, pitch: 0.8 };
+        }
+
+        // Default medieval NPC voice
+        return { rate: 0.9, pitch: 1.0 };
+    },
+
+    /**
+     * Select the best browser TTS voice for an NPC type
+     * @param {string} npcType - The NPC type or voice preference
+     * @returns {SpeechSynthesisVoice|null}
+     */
+    _selectVoiceForNPC(npcType) {
+        if (this._browserVoices.length === 0) return null;
+
+        const normalizedType = (npcType || '').toLowerCase();
+
+        // Get English voices only
+        const englishVoices = this._browserVoices.filter(v => v.lang.startsWith('en'));
+        if (englishVoices.length === 0) return this._browserVoices[0];
+
+        // Determine if we need male or female voice
+        const needsFemale = this._femaleNPCTypes.includes(normalizedType) ||
+                          normalizedType.includes('female') ||
+                          normalizedType.includes('woman') ||
+                          normalizedType.includes('lady');
+
+        // Try to find appropriate gendered voice
+        // Common female voice name patterns
+        const femalePatterns = ['female', 'woman', 'zira', 'hazel', 'susan', 'samantha', 'victoria', 'karen', 'moira', 'fiona', 'kate', 'serena', 'emily'];
+        // Common male voice name patterns
+        const malePatterns = ['male', 'david', 'mark', 'james', 'daniel', 'george', 'richard', 'alex', 'tom', 'oliver'];
+
+        let selectedVoice = null;
+
+        if (needsFemale) {
+            // Find a female voice
+            selectedVoice = englishVoices.find(v => {
+                const name = v.name.toLowerCase();
+                return femalePatterns.some(p => name.includes(p));
+            });
+        } else {
+            // Find a male voice
+            selectedVoice = englishVoices.find(v => {
+                const name = v.name.toLowerCase();
+                return malePatterns.some(p => name.includes(p));
+            });
+        }
+
+        // Fallback: prefer non-Google voices (they sound better), then any English voice
+        if (!selectedVoice) {
+            selectedVoice = englishVoices.find(v => !v.name.includes('Google')) || englishVoices[0];
+        }
+
+        return selectedVoice;
     },
 
     // ═══════════════════════════════════════════════════════════
@@ -1688,10 +1906,11 @@ RELATIONSHIP MEMORY:
         // check if this was the last turn
         const isLastTurn = conversation.turnCount >= conversation.maxTurns;
 
-        // play voice if enabled
+        // play voice if enabled - pass NPC type for voice selection
         if (this.settings.voiceEnabled) {
-            const voice = conversation.npcData.voice || this.settings.voice;
-            await this.playVoice(response.text, voice);
+            // Use NPC type for voice selection (gender/character-appropriate voices)
+            const npcType = conversation.npcData.type || conversation.npcData.id || 'merchant';
+            await this.playVoice(response.text, npcType, conversation.npcData.name || 'NPC');
         }
 
         return {

@@ -84,6 +84,8 @@ const LoadingManager = {
         { display: 'Audio System', check: 'MusicSystem' },
         { display: 'Save System', check: 'SaveLoadSystem' },
         { display: 'Game Engine', check: 'game' },
+        { display: 'Ollama AI Model', check: 'OllamaModelManager', async: true },
+        { display: 'Kokoro TTS', check: 'KokoroTTS', async: true },
     ],
 
     // State
@@ -97,6 +99,15 @@ const LoadingManager = {
     maxWaitTime: 20000,
     _currentSystem: 0,
     _displayTimer: null,
+
+    // Ollama state
+    ollamaStatus: 'pending', // 'pending', 'checking', 'downloading', 'ready', 'skipped'
+    ollamaProgress: 0,
+    ollamaDownloadNeeded: false,
+
+    // Kokoro TTS state
+    kokoroStatus: 'pending', // 'pending', 'loading', 'ready', 'skipped'
+    kokoroProgress: 0,
 
     // Start the loading display
     init() {
@@ -150,6 +161,19 @@ const LoadingManager = {
     showSystem(index) {
         const total = this.SYSTEMS_TO_CHECK.length;
         const sys = this.SYSTEMS_TO_CHECK[index];
+
+        // Special handling for Ollama AI - async check and download
+        if (sys.check === 'OllamaModelManager') {
+            this.handleOllamaLoading(index, total);
+            return;
+        }
+
+        // Special handling for Kokoro TTS - async loading (local/server only)
+        if (sys.check === 'KokoroTTS') {
+            this.handleKokoroLoading(index, total);
+            return;
+        }
+
         const isLoaded = typeof window[sys.check] !== 'undefined';
 
         const titleEl = document.getElementById('loading-title');
@@ -166,6 +190,346 @@ const LoadingManager = {
         }
 
         // Update progress
+        this.targetProgress = ((index + 1) / total) * 95;
+    },
+
+    // Check if Ollama can work in current environment
+    // Returns true for: local, file://, custom GPU servers, self-hosted
+    // Returns false for: static hosting like GitHub Pages (no backend)
+    canUseOllama() {
+        const hostname = window.location.hostname;
+        const protocol = window.location.protocol;
+
+        // STATIC HOSTING - No backend possible, Ollama cannot work
+        // These are pure static file hosts with no server-side capability
+        const isStaticHost =
+            hostname.includes('github.io') ||      // GitHub Pages
+            hostname.includes('pages.dev') ||      // Cloudflare Pages
+            hostname.includes('netlify.app') ||    // Netlify (static)
+            hostname.includes('vercel.app') ||     // Vercel (static)
+            hostname.includes('surge.sh') ||       // Surge.sh
+            hostname.includes('gitlab.io');        // GitLab Pages
+
+        if (isStaticHost) {
+            console.log('🦙 Static hosting detected - Ollama not available');
+            return false;
+        }
+
+        // LOCAL DEVELOPMENT - Always allow
+        const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
+        const isFileProtocol = protocol === 'file:';
+
+        if (isLocalhost || isFileProtocol) {
+            console.log('🦙 Local environment - Ollama available');
+            return true;
+        }
+
+        // CUSTOM SERVER / GPU SERVER - Allow Ollama
+        // If you're self-hosting on a GPU server, Ollama should work
+        // The server needs to run Ollama and expose port 11434
+        // Check if GameConfig has custom Ollama endpoint configured
+        if (typeof GameConfig !== 'undefined' && GameConfig.api?.ollama?.enabled !== false) {
+            console.log('🦙 Custom server - Ollama available (will check connection)');
+            return true;
+        }
+
+        // Private/Local network IPs - Allow Ollama
+        const isPrivateIP = /^192\.168\.|^10\.|^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hostname);
+        if (isPrivateIP) {
+            console.log('🦙 Private network - Ollama available');
+            return true;
+        }
+
+        // Default: Allow Ollama check (will fail gracefully if not available)
+        // This allows GPU servers and custom deployments to work
+        console.log('🦙 Unknown environment - will attempt Ollama connection');
+        return true;
+    },
+
+    // Handle Ollama AI model checking and downloading
+    async handleOllamaLoading(index, total) {
+        const titleEl = document.getElementById('loading-title');
+        const statusEl = document.getElementById('loading-status');
+
+        // Check if running on static hosting (GitHub Pages, etc.) - Ollama won't work
+        if (!this.canUseOllama()) {
+            console.log('🦙 LoadingManager: Static hosting detected - Ollama not available');
+            this.ollamaStatus = 'skipped';
+            if (titleEl) titleEl.textContent = '🦙 Ollama AI ✗ (static host)';
+            if (statusEl) statusEl.textContent = 'Run locally for AI dialogue';
+            this.targetProgress = ((index + 1) / total) * 95;
+            return;
+        }
+
+        // Check if OllamaModelManager exists
+        if (typeof OllamaModelManager === 'undefined') {
+            if (titleEl) titleEl.textContent = 'Ollama AI Model ✗ (not found)';
+            if (statusEl) statusEl.textContent = (index + 1) + ' of ' + total + ' systems';
+            this.ollamaStatus = 'skipped';
+            this.targetProgress = ((index + 1) / total) * 95;
+            return;
+        }
+
+        // Check if user previously skipped Ollama
+        const skipped = localStorage.getItem('mtg_ollama_skipped');
+        if (skipped === 'true') {
+            this.ollamaStatus = 'skipped';
+            if (titleEl) titleEl.textContent = '🦙 Ollama AI ✗ (skipped)';
+            if (statusEl) statusEl.textContent = 'NPCs will use fallback dialogue';
+            this.targetProgress = ((index + 1) / total) * 95;
+            console.log('🦙 LoadingManager: Ollama previously skipped by user');
+            return;
+        }
+
+        // Start checking Ollama
+        this.ollamaStatus = 'checking';
+        if (titleEl) titleEl.textContent = '🦙 Checking Ollama AI...';
+        if (statusEl) statusEl.textContent = 'Connecting to local Ollama server';
+
+        try {
+            // Check if Ollama is running
+            const isRunning = await OllamaModelManager.checkOllamaRunning();
+
+            if (!isRunning) {
+                // Ollama not running - show install prompt via OllamaInstaller
+                console.log('🦙 LoadingManager: Ollama not running, showing install prompt');
+
+                if (typeof OllamaInstaller !== 'undefined') {
+                    // Pause loading and show installer UI
+                    this.ollamaStatus = 'installing';
+                    if (titleEl) titleEl.textContent = '🦙 Ollama Not Found';
+                    if (statusEl) statusEl.textContent = 'Setup required for AI dialogue';
+
+                    // Show the install prompt - this pauses loading
+                    OllamaInstaller.showInstallPrompt();
+
+                    // Don't advance progress - wait for user action
+                    // OllamaInstaller.checkAndContinue() will resume loading
+                    return;
+                }
+
+                // No installer available - skip
+                this.ollamaStatus = 'skipped';
+                if (titleEl) titleEl.textContent = '🦙 Ollama AI ✗ (not running)';
+                if (statusEl) statusEl.textContent = 'NPCs will use fallback dialogue';
+                this.targetProgress = ((index + 1) / total) * 95;
+                return;
+            }
+
+            // Ollama is running - check for ANY installed model
+            if (titleEl) titleEl.textContent = '🦙 Checking AI Model...';
+            if (statusEl) statusEl.textContent = 'Looking for installed models';
+
+            // Pass '*' to accept ANY installed model, not just Mistral
+            const hasModel = await OllamaModelManager.checkModelExists('*');
+
+            if (hasModel) {
+                // Model already installed - use whatever is available
+                const modelName = OllamaModelManager.selectedModel || 'Ollama';
+                this.ollamaStatus = 'ready';
+                if (titleEl) titleEl.textContent = '🦙 Ollama AI Model ✓';
+                if (statusEl) statusEl.textContent = modelName + ' ready for NPC dialogue';
+                this.targetProgress = ((index + 1) / total) * 95;
+                console.log('🦙 LoadingManager: Ollama model ready! Using:', modelName);
+                OllamaModelManager.isOllamaRunning = true;
+                OllamaModelManager.hasRequiredModel = true;
+                return;
+            }
+
+            // Model not found - start download
+            this.ollamaStatus = 'downloading';
+            this.ollamaDownloadNeeded = true;
+            if (titleEl) titleEl.textContent = '🦙 Downloading AI Model...';
+            if (statusEl) statusEl.textContent = 'Pulling ' + OllamaModelManager.config.modelVariant + ' (0%)';
+
+            console.log('🦙 LoadingManager: Starting model download...');
+
+            // Start the download with progress tracking
+            await this.downloadOllamaModel(index, total);
+
+        } catch (error) {
+            console.warn('🦙 LoadingManager: Ollama check failed:', error.message);
+            this.ollamaStatus = 'skipped';
+            if (titleEl) titleEl.textContent = '🦙 Ollama AI ✗ (error)';
+            if (statusEl) statusEl.textContent = 'NPCs will use fallback dialogue';
+            this.targetProgress = ((index + 1) / total) * 95;
+        }
+    },
+
+    // Download Ollama model with progress tracking
+    async downloadOllamaModel(index, total) {
+        const titleEl = document.getElementById('loading-title');
+        const statusEl = document.getElementById('loading-status');
+        const model = OllamaModelManager.config.modelVariant;
+
+        try {
+            const response = await fetch(`${OllamaModelManager.config.baseUrl}/api/pull`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: model, stream: true })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Pull failed: ${response.status}`);
+            }
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const text = decoder.decode(value);
+                const lines = text.split('\n').filter(l => l.trim());
+
+                for (const line of lines) {
+                    try {
+                        const json = JSON.parse(line);
+
+                        if (json.total && json.completed) {
+                            const progress = Math.round((json.completed / json.total) * 100);
+                            this.ollamaProgress = progress;
+
+                            // Update display
+                            if (titleEl) titleEl.textContent = `🦙 Downloading AI Model... ${progress}%`;
+                            if (statusEl) {
+                                const downloaded = (json.completed / (1024 * 1024 * 1024)).toFixed(2);
+                                const totalSize = (json.total / (1024 * 1024 * 1024)).toFixed(2);
+                                statusEl.textContent = `${downloaded}GB / ${totalSize}GB`;
+                            }
+
+                            // Update overall progress (weighted for download phase)
+                            const baseProgress = (index / total) * 95;
+                            const downloadProgress = (progress / 100) * (95 / total);
+                            this.targetProgress = baseProgress + downloadProgress;
+                        }
+
+                        if (json.status) {
+                            if (statusEl && !json.total) {
+                                statusEl.textContent = json.status;
+                            }
+                        }
+
+                    } catch (e) {
+                        // Ignore JSON parse errors
+                    }
+                }
+            }
+
+            // Download complete
+            this.ollamaStatus = 'ready';
+            this.ollamaProgress = 100;
+            if (titleEl) titleEl.textContent = '🦙 Ollama AI Model ✓';
+            if (statusEl) statusEl.textContent = 'Mistral downloaded and ready!';
+            this.targetProgress = ((index + 1) / total) * 95;
+
+            OllamaModelManager.isOllamaRunning = true;
+            OllamaModelManager.hasRequiredModel = true;
+
+            console.log('🦙 LoadingManager: Model download complete!');
+
+        } catch (error) {
+            console.error('🦙 LoadingManager: Model download failed:', error.message);
+            this.ollamaStatus = 'skipped';
+            if (titleEl) titleEl.textContent = '🦙 Ollama AI ✗ (download failed)';
+            if (statusEl) statusEl.textContent = 'NPCs will use fallback dialogue';
+            this.targetProgress = ((index + 1) / total) * 95;
+        }
+    },
+
+    // 🎙️ Handle Kokoro TTS loading (local/server only - not static hosting)
+    async handleKokoroLoading(index, total) {
+        const titleEl = document.getElementById('loading-title');
+        const statusEl = document.getElementById('loading-status');
+
+        // Check if running on static hosting - Kokoro still works but model downloads from CDN
+        // Skip auto-loading on static hosts to avoid large download without user consent
+        if (!this.canUseOllama()) {
+            console.log('🎙️ LoadingManager: Static hosting - skipping Kokoro auto-load');
+            this.kokoroStatus = 'skipped';
+            if (titleEl) titleEl.textContent = '🎙️ Kokoro TTS ✗ (static host)';
+            if (statusEl) statusEl.textContent = 'Load manually in Settings for AI voices';
+            this.targetProgress = ((index + 1) / total) * 95;
+            return;
+        }
+
+        // Check if KokoroTTS module exists
+        if (typeof KokoroTTS === 'undefined') {
+            console.log('🎙️ LoadingManager: KokoroTTS not found');
+            this.kokoroStatus = 'skipped';
+            if (titleEl) titleEl.textContent = '🎙️ Kokoro TTS ✗ (not found)';
+            if (statusEl) statusEl.textContent = 'NPCs will use browser TTS';
+            this.targetProgress = ((index + 1) / total) * 95;
+            return;
+        }
+
+        // Check if user has voice disabled
+        const savedEngine = localStorage.getItem('mtg_voice_engine');
+        if (savedEngine === 'text-only') {
+            console.log('🎙️ LoadingManager: Voice disabled by user');
+            this.kokoroStatus = 'skipped';
+            if (titleEl) titleEl.textContent = '🎙️ Kokoro TTS ✗ (disabled)';
+            if (statusEl) statusEl.textContent = 'Text-only mode enabled';
+            this.targetProgress = ((index + 1) / total) * 95;
+            return;
+        }
+
+        // Check if model is already cached (like Ollama's checkModelExists)
+        this.kokoroStatus = 'checking';
+        if (titleEl) titleEl.textContent = '🎙️ Checking Kokoro TTS...';
+        if (statusEl) statusEl.textContent = 'Looking for cached model';
+
+        const isCached = await KokoroTTS.checkModelCached();
+
+        if (isCached) {
+            // Model already downloaded - just load it
+            this.kokoroStatus = 'loading';
+            if (titleEl) titleEl.textContent = '🎙️ Loading Kokoro TTS...';
+            if (statusEl) statusEl.textContent = 'Model cached, loading...';
+            console.log('🎙️ LoadingManager: Kokoro model cached, loading...');
+        } else {
+            // Model not cached - need to download
+            this.kokoroStatus = 'downloading';
+            this.kokoroDownloadNeeded = true;
+            if (titleEl) titleEl.textContent = '🎙️ Downloading Kokoro TTS...';
+            if (statusEl) statusEl.textContent = 'Downloading ~94MB neural voice model';
+            console.log('🎙️ LoadingManager: Kokoro model not cached, downloading...');
+        }
+
+        try {
+            // Progress callback for detailed loading feedback
+            const progressCallback = (message, progress) => {
+                this.kokoroProgress = Math.round(progress * 100);
+                if (titleEl) titleEl.textContent = `🎙️ ${message}`;
+                if (statusEl) statusEl.textContent = `${Math.round(progress * 100)}% complete`;
+
+                // Update overall progress
+                const baseProgress = (index / total) * 95;
+                const kokoroContribution = (progress * (95 / total));
+                this.targetProgress = baseProgress + kokoroContribution;
+            };
+
+            // Initialize Kokoro TTS with progress callback
+            const success = await KokoroTTS.init(progressCallback);
+
+            if (success) {
+                this.kokoroStatus = 'ready';
+                this.kokoroProgress = 100;
+                if (titleEl) titleEl.textContent = '🎙️ Kokoro TTS ✓';
+                if (statusEl) statusEl.textContent = '28 neural AI voices ready!';
+                console.log('🎙️ LoadingManager: Kokoro TTS ready!');
+            } else {
+                throw new Error('Initialization returned false');
+            }
+
+        } catch (error) {
+            console.warn('🎙️ LoadingManager: Kokoro TTS failed:', error.message);
+            this.kokoroStatus = 'skipped';
+            if (titleEl) titleEl.textContent = '🎙️ Kokoro TTS ✗ (failed)';
+            if (statusEl) statusEl.textContent = 'NPCs will use browser TTS';
+        }
+
         this.targetProgress = ((index + 1) / total) * 95;
     },
 
@@ -272,6 +636,12 @@ const LoadingManager = {
             // 🌦️ Start menu weather effects
             if (typeof MenuWeatherSystem !== 'undefined' && MenuWeatherSystem.init) {
                 MenuWeatherSystem.init();
+            }
+
+            // 🎵 Trigger menu music (may need user interaction first)
+            if (typeof MusicSystem !== 'undefined') {
+                MusicSystem.playMenuMusic();
+                console.log('🎵 LoadingManager: Menu music triggered');
             }
 
             console.log('🖤 LoadingManager: Main menu revealed. Let the games begin.');

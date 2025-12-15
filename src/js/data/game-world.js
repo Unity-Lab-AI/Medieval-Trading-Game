@@ -76,7 +76,7 @@ const GameWorld = {
             travelCost: { base: 5 },
             connections: ['northern_outpost', 'jade_harbor', 'greendale', 'western_watch', 'kings_inn', 'thieves_guild'],
             mapPosition: { x: 400, y: 300 },
-            sells: ['royal_goods', 'luxury_items', 'fine_clothes', 'jewelry', 'silk_garments', 'perfume', 'wine', 'spices'],
+            sells: ['royal_goods', 'luxury_items', 'fine_clothes', 'jewelry', 'silk_garments', 'perfume', 'wine', 'spices', 'horse', 'mule', 'oxen', 'donkey', 'hand_cart', 'cart', 'wagon', 'covered_wagon'],
             buys: ['artifacts', 'rare_gems', 'silk', 'gems', 'gold_bar', 'exotic_goods', 'furs', 'spices'],
             npcs: ['noble', 'guard', 'captain', 'jeweler', 'tailor', 'banker', 'herald', 'merchant', 'royal_advisor'] //  FIXED: Changed elder→royal_advisor to prevent quest confusion with village elders
         },
@@ -110,7 +110,7 @@ const GameWorld = {
             travelCost: { base: 8 },
             connections: ['royal_capital', 'fishermans_port', 'eastern_farm', 'silk_road_inn'],
             mapPosition: { x: 560, y: 280 },
-            sells: ['silk', 'spices', 'tea', 'exotic_goods', 'porcelain', 'jade', 'perfume', 'rope', 'canvas', 'salt'],
+            sells: ['silk', 'spices', 'tea', 'exotic_goods', 'porcelain', 'jade', 'perfume', 'rope', 'canvas', 'salt', 'mule', 'donkey', 'hand_cart', 'cart'],
             buys: ['fish', 'grain', 'timber', 'furs', 'iron_bar', 'gems', 'wine'],
             npcs: ['merchant', 'dockmaster', 'guard', 'sailor', 'ferryman'] // Quest: jade_harbor quests need merchant, guard (innkeeper only at inns!)
         },
@@ -125,7 +125,7 @@ const GameWorld = {
             travelCost: { base: 8 },
             connections: ['royal_capital', 'vineyard_village', 'wheat_farm', 'riverside_inn', 'sunhaven', 'riverwood', 'rat_tunnels'],
             mapPosition: { x: 400, y: 440 },
-            sells: ['bread', 'ale', 'flour', 'cheese', 'butter', 'eggs', 'meat', 'vegetables', 'livestock'],
+            sells: ['bread', 'ale', 'flour', 'cheese', 'butter', 'eggs', 'meat', 'vegetables', 'livestock', 'donkey', 'mule', 'hand_cart'],
             buys: ['wheat', 'grain', 'milk', 'honey', 'salt', 'herbs', 'wool'],
             npcs: ['elder', 'baker', 'apothecary', 'merchant', 'farmer', 'guard', 'scholar'] // Quest: act1_quest1 needs elder, act4_quest1 needs scholar
         },
@@ -396,7 +396,7 @@ const GameWorld = {
             travelCost: { base: 6 },
             connections: ['greendale', 'riverside_inn'],
             mapPosition: { x: 340, y: 380 },
-            sells: ['wheat', 'grain', 'eggs', 'vegetables', 'straw'],
+            sells: ['wheat', 'grain', 'eggs', 'vegetables', 'straw', 'donkey', 'mule', 'oxen', 'horse'],
             buys: ['scythe', 'tools', 'seeds', 'salt', 'cloth'],
             npcs: ['farmer', 'miller', 'farmhand'],
             gatheringDifficulty: 0.8, //  Very easy - basic farming
@@ -413,7 +413,7 @@ const GameWorld = {
             travelCost: { base: 8 },
             connections: ['jade_harbor', 'hillcrest'],
             mapPosition: { x: 620, y: 340 },
-            sells: ['tea', 'silk', 'vegetables', 'herbs', 'eggs'],
+            sells: ['tea', 'silk', 'vegetables', 'herbs', 'eggs', 'donkey', 'mule', 'horse'],
             buys: ['tools', 'seeds', 'cloth', 'salt', 'iron_tools'],
             npcs: ['farmer', 'silkweaver', 'merchant'],
             gatheringDifficulty: 1.2, //  Slightly harder - exotic crops require skill
@@ -430,7 +430,7 @@ const GameWorld = {
             travelCost: { base: 6 },
             connections: ['vineyard_village', 'hunters_wood'],
             mapPosition: { x: 220, y: 480 },
-            sells: ['apples', 'fruits', 'cider', 'honey', 'wax'],
+            sells: ['apples', 'fruits', 'cider', 'honey', 'wax', 'donkey', 'mule'],
             buys: ['tools', 'seeds', 'barrels', 'cloth'],
             npcs: ['farmer', 'beekeeper', 'orchardist'],
             gatheringDifficulty: 1.0, //  Normal - orchards and bees
@@ -447,7 +447,7 @@ const GameWorld = {
             travelCost: { base: 8 },
             connections: ['sunhaven', 'lighthouse_inn'],
             mapPosition: { x: 580, y: 520 },
-            sells: ['grapes', 'oil', 'vegetables', 'herbs', 'honey'],
+            sells: ['grapes', 'oil', 'vegetables', 'herbs', 'honey', 'donkey', 'mule', 'oxen'],
             buys: ['tools', 'seeds', 'barrels', 'salt', 'cloth'],
             npcs: ['farmer', 'vintner', 'olive_presser'],
             gatheringDifficulty: 1.1, //  Slightly harder - olive pressing, wine grapes
@@ -733,7 +733,7 @@ const GameWorld = {
             travelCost: { base: 12 },
             connections: ['northern_outpost', 'mountain_pass_inn'],
             mapPosition: { x: 400, y: 160 },
-            sells: ['iron_sword', 'steel_sword', 'iron_armor', 'chainmail', 'plate_armor', 'helmet', 'shield', 'iron_bar', 'steel_bar', 'iron_tools'],
+            sells: ['iron_sword', 'steel_sword', 'iron_armor', 'chainmail', 'plate_armor', 'helmet', 'shield', 'iron_bar', 'steel_bar', 'iron_tools', 'hand_cart', 'cart', 'wagon'],
             buys: ['iron_ore', 'coal', 'leather', 'wood', 'gold_ore'],
             npcs: ['blacksmith', 'guard', 'captain', 'apothecary', 'merchant', 'miner'] // CITY - behind the gate
         },
@@ -763,7 +763,7 @@ const GameWorld = {
             travelCost: { base: 12 },
             connections: ['western_watch', 'stone_quarry'],
             mapPosition: { x: 240, y: 300 },
-            sells: ['bricks', 'mortar', 'tools', 'hammer', 'pickaxe', 'nails', 'planks', 'furniture'],
+            sells: ['bricks', 'mortar', 'tools', 'hammer', 'pickaxe', 'nails', 'planks', 'furniture', 'hand_cart', 'cart'],
             buys: ['stone', 'timber', 'wood', 'iron_bar', 'clay', 'coal'],
             npcs: ['merchant', 'guard', 'blacksmith', 'mason'] // VILLAGE - behind the gate
         },

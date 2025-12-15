@@ -15,8 +15,9 @@ const NPCTradeWindow = {
     isOpen: false,
     currentNPC: null,
     interactionType: null,  // 'trade', 'hire', 'quest', 'event', 'robbery'
-    playerOffer: { items: {}, gold: 0 },
-    npcOffer: { items: {}, gold: 0 },
+    // Gold is now a regular item in items object - no separate gold tracking
+    playerOffer: { items: {} },
+    npcOffer: { items: {} },
     currentDiscount: 0,
 
     // persistent NPC inventory cache - each NPC has their own inventory!
@@ -214,8 +215,9 @@ const NPCTradeWindow = {
 
         this.currentNPC = npcData;
         this.interactionType = type;
-        this.playerOffer = { items: {}, gold: 0 };
-        this.npcOffer = { items: {}, gold: 0 };
+        // Gold is now a regular item - no separate gold tracking
+        this.playerOffer = { items: {} };
+        this.npcOffer = { items: {} };
         this.currentDiscount = npcData.currentDiscount || 0;
 
         // did we earn a discount earlier? check the session's memory
@@ -263,8 +265,9 @@ const NPCTradeWindow = {
 
         this.currentNPC = null;
         this.interactionType = null;
-        this.playerOffer = { items: {}, gold: 0 };
-        this.npcOffer = { items: {}, gold: 0 };
+        // Gold is now a regular item - no separate gold tracking
+        this.playerOffer = { items: {} };
+        this.npcOffer = { items: {} };
 
         // signal to the world - the merchant has closed their shop
         const event = new CustomEvent('trade-window-closed', {});
@@ -428,8 +431,11 @@ const NPCTradeWindow = {
         }
     },
 
+    // Custom click quantity - remembered between trades
+    _customClickQty: 1,
+
     renderTradeContent(npcData) {
-        const playerInventory = this.getPlayerInventory();
+        const playerInventory = this.getPlayerInventoryWithGold();
         const npcInventory = this.getNPCInventory(npcData);
 
         return `
@@ -440,26 +446,25 @@ const NPCTradeWindow = {
                     <div class="trade-inventory scrollable" id="player-inventory">
                         ${this.renderInventoryItems(playerInventory, 'player')}
                     </div>
-                    <div class="gold-input-row">
-                        <label>Offer Gold:</label>
-                        <input type="number" id="player-gold-offer" min="0" max="${game?.player?.gold || 0}" value="0"
-                               oninput="NPCTradeWindow.updateTradeValue()">
-                        <span class="player-gold-available">(${game?.player?.gold || 0}g available)</span>
-                    </div>
                 </div>
 
                 <!-- Trade Area -->
                 <div class="trade-column trade-area">
+                    <!-- Custom quantity input -->
+                    <div class="trade-qty-input-row">
+                        <label>Click adds:</label>
+                        <input type="number" id="trade-click-qty" min="1" value="${this._customClickQty}"
+                               title="Amount to add per click. Or use: Shift=5, Ctrl=25, Alt=100">
+                        <span class="qty-hint">Shift=5 Ctrl=25 Alt=100</span>
+                    </div>
                     <div class="offer-section">
                         <h4>Your Offer</h4>
                         <div class="offer-items" id="player-offer-items"></div>
-                        <div class="offer-gold" id="player-offer-gold">0g</div>
                     </div>
                     <div class="trade-arrow">⇄</div>
                     <div class="offer-section">
                         <h4>Their Offer</h4>
                         <div class="offer-items" id="npc-offer-items"></div>
-                        <div class="offer-gold" id="npc-offer-gold">0g</div>
                     </div>
                     <div class="trade-summary">
                         <div class="value-comparison">
@@ -476,12 +481,6 @@ const NPCTradeWindow = {
                     <div class="trade-inventory scrollable" id="npc-inventory">
                         ${this.renderInventoryItems(npcInventory, 'npc')}
                     </div>
-                    <div class="gold-input-row">
-                        <label>Request Gold:</label>
-                        <input type="number" id="npc-gold-request" min="0" max="${this.getNPCGold(npcData)}" value="0"
-                               oninput="NPCTradeWindow.updateTradeValue()">
-                        <span class="npc-gold-available">(${this.getNPCGold(npcData)}g available)</span>
-                    </div>
                 </div>
             </div>
         `;
@@ -492,16 +491,12 @@ const NPCTradeWindow = {
             return '<div class="empty-inventory">No items</div>';
         }
 
-        // filter out currency items (gold) - they have dedicated input fields
-        // also filter out sell-only items from NPC side - trash loot ain't for sale
+        // filter out sell-only items from NPC side - trash loot ain't for sale
+        // GOLD IS NOW A REAL ITEM - don't filter it out!
         const filteredEntries = Object.entries(inventory).filter(([itemId, data]) => {
             const item = typeof ItemDatabase !== 'undefined' ? ItemDatabase.getItem(itemId) : null;
 
-            // Currency items (gold) are managed via input field ONLY - don't show as clickable items
-            const isCurrency = itemId === 'gold' || item?.category === 'currency';
-            if (isCurrency) return false;
-
-            // Player can sell anything (except currency)
+            // Player can sell anything including gold
             if (side !== 'npc') return true;
 
             // Skip items marked as sell-only from NPC inventory
@@ -777,35 +772,68 @@ const NPCTradeWindow = {
     // trading logic
     // ═══════════════════════════════════════════════════════════════
 
-    addToOffer(itemId, side) {
+    // Get the effective quantity to add based on modifiers OR custom input
+    // Modifier keys take priority and are FIXED values (not multipliers):
+    // Shift = 5, Ctrl = 25, Alt = 100
+    // If no modifier key, use the custom quantity input value
+    getClickQuantity(event) {
+        // Modifier keys are FIXED amounts - they override custom input
+        if (event?.altKey) {
+            return 100;
+        } else if (event?.ctrlKey) {
+            return 25;
+        } else if (event?.shiftKey) {
+            return 5;
+        }
+
+        // No modifier key - use custom quantity from input field
+        const qtyInput = document.getElementById('trade-click-qty');
+        let customQty = parseInt(qtyInput?.value) || 1;
+        if (customQty < 1) customQty = 1;
+
+        // Remember the custom quantity for next time
+        this._customClickQty = customQty;
+
+        return customQty;
+    },
+
+    addToOffer(itemId, side, quantity = 1) {
         if (side === 'player') {
             const currentQty = this.playerOffer.items[itemId] || 0;
             const availableQty = this.getPlayerItemQty(itemId);
-            if (currentQty < availableQty) {
-                this.playerOffer.items[itemId] = currentQty + 1;
+            // For gold, get from GoldManager
+            const actualAvailable = (itemId === 'gold')
+                ? ((typeof GoldManager !== 'undefined') ? GoldManager.getGold() : (game?.player?.gold || 0))
+                : availableQty;
+            const maxCanAdd = actualAvailable - currentQty;
+            if (maxCanAdd > 0) {
+                const toAdd = Math.min(quantity, maxCanAdd);
+                this.playerOffer.items[itemId] = currentQty + toAdd;
             }
         } else {
             const currentQty = this.npcOffer.items[itemId] || 0;
             const availableQty = this.getNPCItemQty(itemId);
-            if (currentQty < availableQty) {
-                this.npcOffer.items[itemId] = currentQty + 1;
+            const maxCanAdd = availableQty - currentQty;
+            if (maxCanAdd > 0) {
+                const toAdd = Math.min(quantity, maxCanAdd);
+                this.npcOffer.items[itemId] = currentQty + toAdd;
             }
         }
         this.updateOfferDisplay();
         this.updateTradeValue();
     },
 
-    removeFromOffer(itemId, side) {
+    removeFromOffer(itemId, side, quantity = 1) {
         if (side === 'player') {
             if (this.playerOffer.items[itemId]) {
-                this.playerOffer.items[itemId]--;
+                this.playerOffer.items[itemId] -= quantity;
                 if (this.playerOffer.items[itemId] <= 0) {
                     delete this.playerOffer.items[itemId];
                 }
             }
         } else {
             if (this.npcOffer.items[itemId]) {
-                this.npcOffer.items[itemId]--;
+                this.npcOffer.items[itemId] -= quantity;
                 if (this.npcOffer.items[itemId] <= 0) {
                     delete this.npcOffer.items[itemId];
                 }
@@ -816,79 +844,49 @@ const NPCTradeWindow = {
     },
 
     updateOfferDisplay() {
-        // what are you putting on the table? show your offer
-        // using data attributes instead of inline onclick to prevent XSS
+        // Gold is now a regular item - no separate handling needed
+        // All items including gold are in playerOffer.items and npcOffer.items
+
         const playerOfferEl = document.getElementById('player-offer-items');
         if (playerOfferEl) {
-            // Build items list including gold from the input
-            let playerOfferHtml = Object.entries(this.playerOffer.items).map(([itemId, qty]) => `
+            // Build items list - gold is just another item now
+            const playerOfferHtml = Object.entries(this.playerOffer.items).map(([itemId, qty]) => `
                 <div class="offer-item" data-item-id="${this.escapeHtml(itemId)}" data-offer-type="player">
                     ${this.getItemIcon(itemId)} ${this.formatItemName(itemId)} x${qty}
                 </div>
             `).join('');
 
-            // Add gold to offer display if player is offering gold
-            const playerGoldOffer = this.playerOffer.gold || 0;
-            if (playerGoldOffer > 0) {
-                playerOfferHtml += `
-                    <div class="offer-item offer-gold-item" data-item-id="gold" data-offer-type="player-gold">
-                        ${this.getItemIcon('gold')} Gold x${playerGoldOffer}
-                    </div>
-                `;
-            }
-
             playerOfferEl.innerHTML = playerOfferHtml || '<span class="empty">Nothing</span>';
 
-            // attach event listeners safely for items (not gold - gold uses input)
-            playerOfferEl.querySelectorAll('.offer-item[data-item-id]:not(.offer-gold-item)').forEach(el => {
-                el.onclick = () => this.removeFromOffer(el.dataset.itemId, el.dataset.offerType);
-            });
-            // Gold item click clears the gold input
-            const goldOfferItem = playerOfferEl.querySelector('.offer-gold-item');
-            if (goldOfferItem) {
-                goldOfferItem.onclick = () => {
-                    const goldInput = document.getElementById('player-gold-offer');
-                    if (goldInput) goldInput.value = 0;
-                    this.updateTradeValue();
+            // attach event listeners - click to remove from offer
+            // Shift = 5x, Ctrl = 25x, Alt = 100x removal
+            playerOfferEl.querySelectorAll('.offer-item[data-item-id]').forEach(el => {
+                el.onclick = (e) => {
+                    const qty = this.getClickQuantity(e);
+                    this.removeFromOffer(el.dataset.itemId, 'player', qty);
                 };
-            }
+            });
         }
 
-        // what are they willing to give? display their counter-offer
         const npcOfferEl = document.getElementById('npc-offer-items');
         if (npcOfferEl) {
-            // Build items list including gold from the input
-            let npcOfferHtml = Object.entries(this.npcOffer.items).map(([itemId, qty]) => `
+            // Build items list - gold is just another item now
+            const npcOfferHtml = Object.entries(this.npcOffer.items).map(([itemId, qty]) => `
                 <div class="offer-item" data-item-id="${this.escapeHtml(itemId)}" data-offer-type="npc">
                     ${this.getItemIcon(itemId)} ${this.formatItemName(itemId)} x${qty}
                 </div>
             `).join('');
 
-            // Add gold to offer display if requesting gold from NPC
-            const npcGoldRequest = this.npcOffer.gold || 0;
-            if (npcGoldRequest > 0) {
-                npcOfferHtml += `
-                    <div class="offer-item offer-gold-item" data-item-id="gold" data-offer-type="npc-gold">
-                        ${this.getItemIcon('gold')} Gold x${npcGoldRequest}
-                    </div>
-                `;
-            }
-
             npcOfferEl.innerHTML = npcOfferHtml || '<span class="empty">Nothing</span>';
 
-            // attach event listeners safely for items (not gold - gold uses input)
-            npcOfferEl.querySelectorAll('.offer-item[data-item-id]:not(.offer-gold-item)').forEach(el => {
-                el.onclick = () => this.removeFromOffer(el.dataset.itemId, el.dataset.offerType);
-            });
-            // Gold item click clears the gold input
-            const goldRequestItem = npcOfferEl.querySelector('.offer-gold-item');
-            if (goldRequestItem) {
-                goldRequestItem.onclick = () => {
-                    const goldInput = document.getElementById('npc-gold-request');
-                    if (goldInput) goldInput.value = 0;
-                    this.updateTradeValue();
+            // attach event listeners - click to remove from offer
+            // Shift = 5x, Ctrl = 25x, Alt = 100x removal
+            npcOfferEl.querySelectorAll('.offer-item[data-item-id]').forEach(el => {
+                el.onclick = (e) => {
+                    const qty = this.getClickQuantity(e);
+                    this.removeFromOffer(el.dataset.itemId, 'npc', qty);
                 };
-            }
+            });
         }
     },
 
@@ -902,42 +900,48 @@ const NPCTradeWindow = {
     },
 
     updateTradeValue() {
-        // how much gold are you throwing into the deal? extract the numbers
-        const playerGoldOffer = parseInt(document.getElementById('player-gold-offer')?.value) || 0;
-        const npcGoldRequest = parseInt(document.getElementById('npc-gold-request')?.value) || 0;
+        // Gold is now a regular item in playerOffer.items and npcOffer.items
+        // No more separate gold input fields - gold is traded like any other item
 
-        this.playerOffer.gold = playerGoldOffer;
-        this.npcOffer.gold = npcGoldRequest;
-
-        // Update the offer display to show gold in the offer items area
+        // Update the offer display
         this.updateOfferDisplay();
 
         // add up the value of your offerings - every item has a price
         let playerItemValue = 0;
         for (const [itemId, qty] of Object.entries(this.playerOffer.items)) {
-            // Gold/currency is always 1:1
+            // Gold/currency is always 1:1 (1 gold = 1 gold value)
             const isCurrency = itemId === 'gold' || (typeof ItemDatabase !== 'undefined' && ItemDatabase.getItem(itemId)?.category === 'currency');
-            const locationSellBonus = this.getLocationSellBonus(itemId);
-            const sellMultiplier = Math.min(0.95, 0.75 + locationSellBonus);
-            const itemValue = isCurrency ? 1 : Math.max(1, Math.floor(this.getItemPrice(itemId) * sellMultiplier));
-            playerItemValue += itemValue * qty;
+            if (isCurrency) {
+                playerItemValue += qty; // 1 gold = 1 value
+            } else {
+                const locationSellBonus = this.getLocationSellBonus(itemId);
+                const sellMultiplier = Math.min(0.95, 0.75 + locationSellBonus);
+                const itemValue = Math.max(1, Math.floor(this.getItemPrice(itemId) * sellMultiplier));
+                playerItemValue += itemValue * qty;
+            }
         }
 
         let npcItemValue = 0;
         for (const [itemId, qty] of Object.entries(this.npcOffer.items)) {
-            const price = this.getItemPrice(itemId);
-            const discountedPrice = Math.ceil(price * (1 - this.currentDiscount / 100));
-            npcItemValue += discountedPrice * qty;
+            // Gold/currency is always 1:1 when buying too
+            const isCurrency = itemId === 'gold' || (typeof ItemDatabase !== 'undefined' && ItemDatabase.getItem(itemId)?.category === 'currency');
+            if (isCurrency) {
+                npcItemValue += qty; // 1 gold = 1 value
+            } else {
+                const price = this.getItemPrice(itemId);
+                const discountedPrice = Math.ceil(price * (1 - this.currentDiscount / 100));
+                npcItemValue += discountedPrice * qty;
+            }
         }
 
-        const playerTotalValue = playerItemValue + playerGoldOffer;
-        const npcTotalValue = npcItemValue + npcGoldRequest;
+        const playerTotalValue = playerItemValue;
+        const npcTotalValue = npcItemValue;
 
         // refresh the UI with the new values - let them see the deal
-        document.getElementById('player-offer-gold').textContent = `${playerGoldOffer}g`;
-        document.getElementById('npc-offer-gold').textContent = `${npcGoldRequest}g`;
-        document.getElementById('player-offer-value').textContent = playerTotalValue;
-        document.getElementById('npc-offer-value').textContent = npcTotalValue;
+        const playerValueEl = document.getElementById('player-offer-value');
+        const npcValueEl = document.getElementById('npc-offer-value');
+        if (playerValueEl) playerValueEl.textContent = playerTotalValue;
+        if (npcValueEl) npcValueEl.textContent = npcTotalValue;
 
         // is it fair? favorable? calculate the balance of the trade
         const statusEl = document.getElementById('trade-status');
@@ -957,13 +961,9 @@ const NPCTradeWindow = {
     },
 
     clearOffer() {
-        this.playerOffer = { items: {}, gold: 0 };
-        this.npcOffer = { items: {}, gold: 0 };
-
-        const playerGoldInput = document.getElementById('player-gold-offer');
-        const npcGoldInput = document.getElementById('npc-gold-request');
-        if (playerGoldInput) playerGoldInput.value = 0;
-        if (npcGoldInput) npcGoldInput.value = 0;
+        // Gold is now in items, not separate - clear items only
+        this.playerOffer = { items: {} };
+        this.npcOffer = { items: {} };
 
         this.updateOfferDisplay();
         this.updateTradeValue();
@@ -973,26 +973,38 @@ const NPCTradeWindow = {
         if (!this.currentNPC) return;
 
         // crunch the numbers - is this trade worthy of acceptance?
-        let playerTotalValue = this.playerOffer.gold;
+        // Gold is now just an item in the items object
+        let playerTotalValue = 0;
         for (const [itemId, qty] of Object.entries(this.playerOffer.items)) {
             // Gold/currency is always 1:1
             const isCurrency = itemId === 'gold' || (typeof ItemDatabase !== 'undefined' && ItemDatabase.getItem(itemId)?.category === 'currency');
-            const locationSellBonus = this.getLocationSellBonus(itemId);
-            const sellMultiplier = Math.min(0.95, 0.75 + locationSellBonus);
-            const itemValue = isCurrency ? 1 : Math.max(1, Math.floor(this.getItemPrice(itemId) * sellMultiplier));
-            playerTotalValue += itemValue * qty;
+            if (isCurrency) {
+                playerTotalValue += qty; // 1 gold = 1 value
+            } else {
+                const locationSellBonus = this.getLocationSellBonus(itemId);
+                const sellMultiplier = Math.min(0.95, 0.75 + locationSellBonus);
+                const itemValue = Math.max(1, Math.floor(this.getItemPrice(itemId) * sellMultiplier));
+                playerTotalValue += itemValue * qty;
+            }
         }
 
-        let npcTotalValue = this.npcOffer.gold;
+        let npcTotalValue = 0;
         for (const [itemId, qty] of Object.entries(this.npcOffer.items)) {
-            const price = this.getItemPrice(itemId);
-            const discountedPrice = Math.ceil(price * (1 - this.currentDiscount / 100));
-            npcTotalValue += discountedPrice * qty;
+            const isCurrency = itemId === 'gold' || (typeof ItemDatabase !== 'undefined' && ItemDatabase.getItem(itemId)?.category === 'currency');
+            if (isCurrency) {
+                npcTotalValue += qty; // 1 gold = 1 value
+            } else {
+                const price = this.getItemPrice(itemId);
+                const discountedPrice = Math.ceil(price * (1 - this.currentDiscount / 100));
+                npcTotalValue += discountedPrice * qty;
+            }
         }
 
-        // can you even afford this? check your pockets before promising gold
-        if (typeof game !== 'undefined' && game.player) {
-            if (this.playerOffer.gold > game.player.gold) {
+        // Check if player has enough gold if offering gold as an item
+        const goldOffered = this.playerOffer.items.gold || 0;
+        if (goldOffered > 0) {
+            const playerGold = (typeof GoldManager !== 'undefined') ? GoldManager.getGold() : (game?.player?.gold || 0);
+            if (goldOffered > playerGold) {
                 this.showNPCResponse("You don't have enough gold for that offer.");
                 return;
             }
@@ -1092,34 +1104,14 @@ const NPCTradeWindow = {
             }
         }
 
-        // Verify player has gold they're offering
-        if (this.playerOffer.gold > 0 && (game.player.gold || 0) < this.playerOffer.gold) {
-            transactionLog.errors.push(`Player missing gold: has ${game.player.gold}, needs ${this.playerOffer.gold}`);
-            console.error(`❌ TRADE FAILED: Player doesn't have ${this.playerOffer.gold} gold`);
-            addMessage?.(`Trade failed - you don't have enough gold!`, 'error');
-            this._logTransaction(transactionLog);
-            return;
-        }
-
         // Verify NPC has items they're offering (if we track NPC inventory)
+        // Note: Gold is now a regular item, so this loop handles both gold and items
         for (const [itemId, qty] of Object.entries(this.npcOffer.items)) {
             const npcHas = this.getNPCItemCount(this.currentNPC, itemId);
             if (npcHas !== null && npcHas < qty) {
                 transactionLog.errors.push(`NPC missing item: ${itemId} (has ${npcHas}, needs ${qty})`);
                 console.error(`❌ TRADE FAILED: NPC doesn't have ${qty}x ${itemId}`);
-                addMessage?.(`Trade failed - merchant doesn't have that item!`, 'error');
-                this._logTransaction(transactionLog);
-                return;
-            }
-        }
-
-        // Verify NPC has gold they're offering
-        if (this.npcOffer.gold > 0) {
-            const npcGold = this.getNPCGold(this.currentNPC);
-            if (npcGold !== null && npcGold < this.npcOffer.gold) {
-                transactionLog.errors.push(`NPC missing gold: has ${npcGold}, needs ${this.npcOffer.gold}`);
-                console.error(`❌ TRADE FAILED: NPC doesn't have ${this.npcOffer.gold} gold`);
-                addMessage?.(`Trade failed - merchant can't afford that!`, 'error');
+                addMessage?.(`Trade failed - merchant doesn't have that ${itemId === 'gold' ? 'gold' : 'item'}!`, 'error');
                 this._logTransaction(transactionLog);
                 return;
             }
@@ -1132,8 +1124,17 @@ const NPCTradeWindow = {
         // ═══════════════════════════════════════════════════════════════
 
         try {
-            // remove items from player inventory
+            // Gold is now a regular item in the items object
+            // Extract gold amounts for special handling
+            const playerGoldOffered = this.playerOffer.items.gold || 0;
+            const npcGoldOffered = this.npcOffer.items.gold || 0;
+
+            // remove items from player inventory (including gold)
             for (const [itemId, qty] of Object.entries(this.playerOffer.items)) {
+                if (itemId === 'gold') {
+                    // Gold is handled specially via GoldManager
+                    continue;
+                }
                 if (typeof PlayerStateManager !== 'undefined') {
                     PlayerStateManager.inventory.remove(itemId, qty, 'npc_trade_give');
                 } else {
@@ -1145,8 +1146,12 @@ const NPCTradeWindow = {
                 console.log(`  📤 Player gave: ${qty}x ${itemId}`);
             }
 
-            // add items to player inventory from NPC
+            // add items to player inventory from NPC (including gold)
             for (const [itemId, qty] of Object.entries(this.npcOffer.items)) {
+                if (itemId === 'gold') {
+                    // Gold is handled specially via GoldManager
+                    continue;
+                }
                 if (typeof PlayerStateManager !== 'undefined') {
                     PlayerStateManager.inventory.add(itemId, qty, 'npc_trade_receive');
                 } else {
@@ -1163,24 +1168,30 @@ const NPCTradeWindow = {
                 this.removeNPCItem(this.currentNPC, itemId, qty);
             }
 
-            // add items player sold TO NPC inventory
+            // add items player sold TO NPC inventory (not gold - gold handled separately)
             for (const [itemId, qty] of Object.entries(this.playerOffer.items)) {
+                if (itemId === 'gold') continue;
                 this.addNPCItem(this.currentNPC, itemId, qty);
             }
 
             // calculate and apply gold exchange
-            const playerGoldChange = this.npcOffer.gold - this.playerOffer.gold;
-            const newPlayerGold = (game.player.gold || 0) + playerGoldChange;
+            // Gold is now in items: player gives playerGoldOffered, receives npcGoldOffered
+            const playerGoldChange = npcGoldOffered - playerGoldOffered;
+            const currentPlayerGold = (typeof GoldManager !== 'undefined') ? GoldManager.getGold() : (game.player.gold || 0);
+            const newPlayerGold = currentPlayerGold + playerGoldChange;
 
             if (typeof GoldManager !== 'undefined' && GoldManager.setGold) {
                 GoldManager.setGold(newPlayerGold, `Trade with ${this.currentNPC?.firstName || 'NPC'}`);
             } else {
                 game.player.gold = newPlayerGold;
+                if (game.player.inventory) {
+                    game.player.inventory.gold = newPlayerGold;
+                }
             }
             console.log(`  💰 Player gold: ${transactionLog.preState.playerGold} → ${newPlayerGold} (${playerGoldChange >= 0 ? '+' : ''}${playerGoldChange})`);
 
-            // Update NPC gold
-            const npcGoldChange = this.playerOffer.gold - this.npcOffer.gold;
+            // Update NPC gold (they gain what player gives, lose what they give)
+            const npcGoldChange = playerGoldOffered - npcGoldOffered;
             if (npcGoldChange !== 0) {
                 this.modifyNPCGold(this.currentNPC, npcGoldChange);
             }
@@ -1199,8 +1210,9 @@ const NPCTradeWindow = {
                 npcGold: this.getNPCGold(this.currentNPC) || 0
             };
 
-            // Verify player received items
+            // Verify player received items (excluding gold which is handled separately)
             for (const [itemId, qty] of Object.entries(this.npcOffer.items)) {
+                if (itemId === 'gold') continue; // Gold verified separately
                 const playerNowHas = (typeof PlayerStateManager !== 'undefined')
                     ? PlayerStateManager.inventory.getQuantity(itemId)
                     : (game.player?.inventory?.[itemId] || 0);
@@ -1211,11 +1223,12 @@ const NPCTradeWindow = {
                 }
             }
 
-            // Verify gold changed correctly
+            // Verify gold changed correctly (using the playerGoldChange calculated above)
             const expectedGold = transactionLog.preState.playerGold + playerGoldChange;
-            if (Math.abs(transactionLog.postState.playerGold - expectedGold) > 0.01) {
-                transactionLog.errors.push(`Gold mismatch: expected ${expectedGold}, got ${transactionLog.postState.playerGold}`);
-                console.warn(`⚠️ Gold verification: expected ${expectedGold}, got ${transactionLog.postState.playerGold}`);
+            const actualGold = (typeof GoldManager !== 'undefined') ? GoldManager.getGold() : (game.player.gold || 0);
+            if (Math.abs(actualGold - expectedGold) > 0.01) {
+                transactionLog.errors.push(`Gold mismatch: expected ${expectedGold}, got ${actualGold}`);
+                console.warn(`⚠️ Gold verification: expected ${expectedGold}, got ${actualGold}`);
             }
 
             transactionLog.success = transactionLog.errors.length === 0;
@@ -1521,6 +1534,27 @@ const NPCTradeWindow = {
             return game.player.inventory;
         }
         return {};
+    },
+
+    // Get player inventory WITH gold included as a tradeable item
+    // Gold is stored in game.player.inventory.gold and also tracked by GoldManager
+    getPlayerInventoryWithGold() {
+        const inventory = this.getPlayerInventory();
+
+        // Get the player's gold amount (on their person)
+        let playerGold = 0;
+        if (typeof GoldManager !== 'undefined') {
+            playerGold = GoldManager.getGold();
+        } else if (typeof game !== 'undefined' && game.player) {
+            playerGold = game.player.gold || 0;
+        }
+
+        // Return inventory with gold included as an item
+        // Gold is now a real tradeable item, not just a UI display
+        return {
+            ...inventory,
+            gold: playerGold
+        };
     },
 
     getPlayerItemQty(itemId) {
@@ -2677,12 +2711,16 @@ const NPCTradeWindow = {
             tradeWindow.addEventListener('click', (e) => {
                 const target = e.target;
 
-                // inventory item click - add to offer
+                // inventory item click - add to offer with modifier key support
+                // Shift = 5x, Ctrl = 25x, Alt = 100x, or custom quantity from input
                 const inventoryItem = target.closest('.inventory-item');
                 if (inventoryItem) {
                     const itemId = inventoryItem.dataset.item;
                     const side = inventoryItem.dataset.side;
-                    if (itemId && side) this.addToOffer(itemId, side);
+                    if (itemId && side) {
+                        const qty = this.getClickQuantity(e);
+                        this.addToOffer(itemId, side, qty);
+                    }
                     return;
                 }
 
@@ -2711,7 +2749,8 @@ const NPCTradeWindow = {
                 }
 
                 // click on inventory item - opens TradeCartPanel
-                // bulk shortcuts: Shift+Click = 5, Ctrl+Click = 25
+                // Uses getClickQuantity() for consistent bulk shortcuts
+                // Shift = 5x, Ctrl = 25x, Alt = 100x, or custom quantity from input
                 const clickableItem = target.closest('.clickable-item');
                 if (clickableItem) {
                     const action = clickableItem.dataset.action;
@@ -2728,10 +2767,8 @@ const NPCTradeWindow = {
                         console.log(`💰 Gold clicked: priceAttr="${priceAttr}", parsed price=${price}, stock=${stock}`);
                     }
 
-                    // bulk quantity from modifier keys: Ctrl = 25, Shift = 5, Normal = 1
-                    let bulkQty = 1;
-                    if (e.ctrlKey || e.metaKey) bulkQty = 25;
-                    else if (e.shiftKey) bulkQty = 5;
+                    // Use consistent quantity calculation: Shift = 5x, Ctrl = 25x, Alt = 100x
+                    const bulkQty = this.getClickQuantity(e);
 
                     // open TradeCartPanel and add item
                     if (typeof TradeCartPanel !== 'undefined') {
@@ -2750,8 +2787,9 @@ const NPCTradeWindow = {
                         clickableItem.classList.add('added-to-cart');
                         setTimeout(() => clickableItem.classList.remove('added-to-cart'), 300);
                     } else {
-                        // Fallback to old behavior
-                        this.addToOffer(itemId, clickableItem.dataset.side);
+                        // Fallback to old behavior - use quantity
+                        const qty = this.getClickQuantity(e);
+                        this.addToOffer(itemId, clickableItem.dataset.side, qty);
                     }
                     return;
                 }

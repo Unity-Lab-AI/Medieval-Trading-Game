@@ -333,8 +333,8 @@
                     </div>
                     <!-- 🖤 Bug #11 Fix: Show player reputation -->
                     <div class="player-reputation-row" id="player-reputation-row">
-                        <span class="reputation-icon" title="Your Reputation">👑</span>
-                        <span class="reputation-tier" id="player-rep-tier">Neutral</span>
+                        <span class="reputation-icon" title="Your Reputation">🌱</span>
+                        <span class="reputation-tier" id="player-rep-tier">Newcomer</span>
                         <span class="reputation-value" id="player-rep-value">(0)</span>
                     </div>
                 </div>
@@ -1343,8 +1343,11 @@
     <script src="src/js/core/event-bus.js?v=0.91.00"></script>
     <script src="src/js/utils/color-utils.js?v=0.91.00"></script>
     <script src="src/js/utils/virtual-list.js?v=0.91.00"></script>
-    <!-- 🦙 OLLAMA MODEL MANAGER - auto-downloads Mistral for NPC AI voices -->
-    <script src="src/js/utils/ollama-model-manager.js?v=0.91.04"></script>
+    <!-- 🦙 OLLAMA AI SYSTEM - auto-installs Ollama and downloads Mistral model -->
+    <script src="src/js/utils/ollama-installer.js?v=0.91.08"></script>
+    <script src="src/js/utils/ollama-model-manager.js?v=0.91.08"></script>
+    <!-- 🎙️ KOKORO TTS - Real AI voices for NPCs (neural voice synthesis) -->
+    <script src="src/js/utils/kokoro-tts.js?v=0.91.08"></script>
     <!-- ⏰ THE TIME MACHINE - Unified time engine (replaces time-system.js + game-engine.js) -->
     <script src="src/js/core/time-machine.js?v=0.91.00"></script>
 

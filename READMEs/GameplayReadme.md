@@ -8,7 +8,7 @@
 ═══════════════════════════════════════════════════════════════════════
 ```
 
-> **Version:** 0.91.04 | **Unity AI Lab** by Hackall360 Sponge GFourteen
+> **Version:** 0.91.08 | **Unity AI Lab** by Hackall360 Sponge GFourteen
 > *www.unityailab.com*
 > *Written at 3am while questioning the meaning of virtual economies*
 

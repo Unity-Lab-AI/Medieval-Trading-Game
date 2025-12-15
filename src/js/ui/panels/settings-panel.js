@@ -470,14 +470,31 @@ const SettingsPanel = {
                             </div>
 
                             <div class="settings-group">
-                                <h4>🔊 Voice Settings</h4>
+                                <h4>🎙️ Voice Settings</h4>
                                 <div class="setting-item">
-                                    <label for="default-voice">Default Voice</label>
-                                    <select id="default-voice">
-                                        <!-- voices populated dynamically from GameConfig -->
+                                    <label for="voice-engine">TTS Engine</label>
+                                    <select id="voice-engine">
+                                        <option value="kokoro" selected>🎙️ Neural AI (Kokoro) - 28 Real Voices</option>
+                                        <option value="browser">🔊 Browser TTS (Basic Computer Voice)</option>
+                                        <option value="text-only">📝 Text Only (No Voice)</option>
                                     </select>
                                 </div>
-                                <p class="settings-description">NPCs have their own assigned voices, but this is the fallback. Voice volume is in Audio settings.</p>
+                                <p class="settings-description" id="voice-engine-description">Neural AI provides realistic British & American voices. Downloads ~160MB on first use.</p>
+
+                                <div id="kokoro-status-container" style="margin-top: 10px;">
+                                    <div class="setting-item">
+                                        <span id="kokoro-status-text" style="color: #888;">Checking Kokoro TTS...</span>
+                                    </div>
+                                    <div class="setting-item voice-preview-actions">
+                                        <button id="load-kokoro-btn" class="save-load-btn">🎙️ Load Kokoro TTS</button>
+                                    </div>
+                                    <div id="kokoro-progress" style="display: none; margin-top: 8px;">
+                                        <div style="background: #2a2a4a; border-radius: 4px; height: 8px; overflow: hidden;">
+                                            <div id="kokoro-progress-bar" style="background: #6b4dff; height: 100%; width: 0%; transition: width 0.3s;"></div>
+                                        </div>
+                                        <span id="kokoro-progress-text" style="font-size: 12px; color: #888;">Downloading model...</span>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="settings-group">
@@ -492,6 +509,18 @@ const SettingsPanel = {
                                     </select>
                                 </div>
                                 <p class="settings-description">How many responses before NPCs politely end the conversation.</p>
+                            </div>
+
+                            <div class="settings-group">
+                                <h4>🔄 Fallback Settings</h4>
+                                <div class="setting-item">
+                                    <label for="allow-text-fallbacks">Text Fallbacks</label>
+                                    <select id="allow-text-fallbacks">
+                                        <option value="disabled" selected>Disabled (AI Only)</option>
+                                        <option value="enabled">Enabled (Use if AI unavailable)</option>
+                                    </select>
+                                </div>
+                                <p class="settings-description">When disabled, NPCs won't respond if Ollama is unavailable. When enabled, uses pre-written responses as backup.</p>
                             </div>
 
                             <div class="settings-group">
@@ -2347,8 +2376,190 @@ const SettingsPanel = {
             });
         }
 
+        // 🎙️ Voice Engine selector - switch between Browser TTS and Kokoro
+        const voiceEngineSelect = this.panelElement.querySelector('#voice-engine');
+        if (voiceEngineSelect) {
+            voiceEngineSelect.addEventListener('change', (e) => {
+                this.handleVoiceEngineChange(e.target.value);
+            });
+            // Show/hide Kokoro controls based on initial selection
+            this.handleVoiceEngineChange(voiceEngineSelect.value);
+        }
+
+        // 🎙️ Load Kokoro TTS button
+        const loadKokoroBtn = this.panelElement.querySelector('#load-kokoro-btn');
+        if (loadKokoroBtn) {
+            loadKokoroBtn.addEventListener('click', () => this.loadKokoroTTS());
+        }
+
+        // 🔄 Fallback settings
+        const textFallbackSelect = this.panelElement.querySelector('#allow-text-fallbacks');
+        if (textFallbackSelect) {
+            // Load saved preference
+            const savedTextFallback = localStorage.getItem('mtg_text_fallbacks') || 'disabled';
+            textFallbackSelect.value = savedTextFallback;
+
+            textFallbackSelect.addEventListener('change', (e) => {
+                localStorage.setItem('mtg_text_fallbacks', e.target.value);
+                if (typeof NPCVoiceChatSystem !== 'undefined') {
+                    NPCVoiceChatSystem.settings.allowTextFallbacks = (e.target.value === 'enabled');
+                }
+                console.log(`🔄 Text fallbacks: ${e.target.value}`);
+            });
+        }
+
         // check initial API status
         this.checkAPIStatus();
+
+        // Check if Kokoro is already loaded
+        this.updateKokoroStatus();
+    },
+
+    // Handle voice engine selection change
+    handleVoiceEngineChange(engine) {
+        const kokoroContainer = this.panelElement?.querySelector('#kokoro-status-container');
+        const description = this.panelElement?.querySelector('#voice-engine-description');
+
+        // Save preference
+        localStorage.setItem('mtg_voice_engine', engine);
+
+        // Update NPCVoiceChatSystem settings
+        if (typeof NPCVoiceChatSystem !== 'undefined') {
+            NPCVoiceChatSystem.settings.voiceEnabled = (engine !== 'text-only');
+            NPCVoiceChatSystem.settings.voiceEngine = engine;
+        }
+
+        // Update description based on selection
+        if (description) {
+            switch (engine) {
+                case 'kokoro':
+                    description.textContent = 'Neural AI provides realistic British & American voices. Downloads ~160MB on first use.';
+                    break;
+                case 'browser':
+                    description.textContent = 'Uses your browser\'s built-in text-to-speech. Robotic but requires no download.';
+                    break;
+                case 'text-only':
+                    description.textContent = 'NPCs will not speak aloud. Text responses only.';
+                    break;
+            }
+        }
+
+        if (!kokoroContainer) return;
+
+        if (engine === 'kokoro') {
+            kokoroContainer.style.display = 'block';
+            this.updateKokoroStatus();
+
+            // Auto-load Kokoro if not already loaded
+            if (typeof KokoroTTS !== 'undefined' && !KokoroTTS._initialized && !KokoroTTS._loading) {
+                console.log('🎙️ Auto-loading Kokoro TTS (default engine)...');
+                this.loadKokoroTTS();
+            }
+        } else {
+            // browser or text-only - hide Kokoro controls
+            kokoroContainer.style.display = 'none';
+        }
+    },
+
+    // Update Kokoro TTS status display
+    updateKokoroStatus() {
+        const statusText = this.panelElement?.querySelector('#kokoro-status-text');
+        const loadBtn = this.panelElement?.querySelector('#load-kokoro-btn');
+
+        if (!statusText) return;
+
+        if (typeof KokoroTTS !== 'undefined') {
+            const isReady = KokoroTTS._initialized || (KokoroTTS.isInitialized && KokoroTTS.isInitialized());
+            const isLoading = KokoroTTS._loading || (KokoroTTS.isLoading && KokoroTTS.isLoading());
+
+            if (isReady) {
+                statusText.textContent = '✅ Kokoro TTS ready - 28 neural AI voices available';
+                statusText.style.color = '#4caf50';
+                if (loadBtn) {
+                    loadBtn.textContent = '🎙️ Reload Kokoro';
+                    loadBtn.disabled = false;
+                }
+            } else if (isLoading) {
+                statusText.textContent = '⏳ Loading Kokoro TTS model...';
+                statusText.style.color = '#ff9800';
+                if (loadBtn) loadBtn.disabled = true;
+            } else {
+                statusText.textContent = '⚠️ Kokoro TTS available - click to load (~94MB)';
+                statusText.style.color = '#888';
+                if (loadBtn) {
+                    loadBtn.textContent = '🎙️ Load Kokoro TTS';
+                    loadBtn.disabled = false;
+                }
+            }
+        } else {
+            statusText.textContent = '❌ Kokoro TTS module not available';
+            statusText.style.color = '#f44336';
+        }
+    },
+
+    // Load Kokoro TTS model
+    async loadKokoroTTS() {
+        const loadBtn = this.panelElement?.querySelector('#load-kokoro-btn');
+        const statusText = this.panelElement?.querySelector('#kokoro-status-text');
+        const progressContainer = this.panelElement?.querySelector('#kokoro-progress');
+        const progressBar = this.panelElement?.querySelector('#kokoro-progress-bar');
+        const progressText = this.panelElement?.querySelector('#kokoro-progress-text');
+
+        if (!loadBtn || typeof KokoroTTS === 'undefined') {
+            console.warn('🎙️ KokoroTTS not available');
+            return;
+        }
+
+        // Disable button and show progress
+        loadBtn.disabled = true;
+        loadBtn.textContent = '⏳ Loading...';
+
+        if (statusText) {
+            statusText.textContent = '⏳ Initializing neural voice AI...';
+            statusText.style.color = '#ff9800';
+        }
+
+        if (progressContainer) {
+            progressContainer.style.display = 'block';
+        }
+
+        try {
+            // Progress callback for real-time updates
+            const progressCallback = (message, progress) => {
+                const percent = Math.round(progress * 100);
+                if (progressBar) progressBar.style.width = `${percent}%`;
+                if (progressText) progressText.textContent = message;
+                if (statusText) statusText.textContent = `⏳ ${message}`;
+            };
+
+            // Actually initialize Kokoro with progress callback
+            const success = await KokoroTTS.init(progressCallback);
+
+            if (success) {
+                if (progressBar) progressBar.style.width = '100%';
+                if (progressText) progressText.textContent = 'Neural voices ready!';
+
+                setTimeout(() => {
+                    if (progressContainer) progressContainer.style.display = 'none';
+                    this.updateKokoroStatus();
+                }, 1500);
+            } else {
+                throw new Error('Failed to initialize');
+            }
+
+        } catch (error) {
+            console.error('🎙️ Failed to load Kokoro TTS:', error);
+
+            if (statusText) {
+                statusText.textContent = `❌ Failed: ${error.message}`;
+                statusText.style.color = '#f44336';
+            }
+
+            if (progressContainer) progressContainer.style.display = 'none';
+
+            loadBtn.disabled = false;
+            loadBtn.textContent = '🎙️ Retry Load';
+        }
     },
 
     // test voice preview - hear the digital demons speak
@@ -2658,8 +2869,11 @@ const SettingsPanel = {
         const helpText = this.panelElement?.querySelector('#ollama-help-text');
 
         try {
-            // Check if Ollama is running
-            const response = await fetch('http://localhost:11434/api/tags', {
+            // Check if Ollama is running - use OllamaModelManager's discovered baseUrl
+            const baseUrl = (typeof OllamaModelManager !== 'undefined' && OllamaModelManager.config?.baseUrl)
+                ? OllamaModelManager.config.baseUrl
+                : 'http://localhost:11434';
+            const response = await fetch(`${baseUrl}/api/tags`, {
                 method: 'GET',
                 signal: AbortSignal.timeout(2000)
             });
@@ -2747,8 +2961,11 @@ const SettingsPanel = {
                     }
                 }
             } else {
-                // Fallback - direct check
-                const response = await fetch('http://localhost:11434/api/tags', {
+                // Fallback - direct check using dynamic baseUrl
+                const baseUrl = (typeof OllamaModelManager !== 'undefined' && OllamaModelManager.config?.baseUrl)
+                    ? OllamaModelManager.config.baseUrl
+                    : 'http://localhost:11434';
+                const response = await fetch(`${baseUrl}/api/tags`, {
                     signal: AbortSignal.timeout(2000)
                 });
                 if (response.ok) {
@@ -2778,8 +2995,11 @@ const SettingsPanel = {
         try {
             console.log('🦙 Checking Ollama for models...');
 
-            // Try to get models from Ollama
-            const response = await fetch('http://localhost:11434/api/tags', {
+            // Try to get models from Ollama using dynamic baseUrl
+            const baseUrl = (typeof OllamaModelManager !== 'undefined' && OllamaModelManager.config?.baseUrl)
+                ? OllamaModelManager.config.baseUrl
+                : 'http://localhost:11434';
+            const response = await fetch(`${baseUrl}/api/tags`, {
                 method: 'GET',
                 signal: AbortSignal.timeout(2000)
             });
@@ -2821,25 +3041,35 @@ const SettingsPanel = {
             console.log(`🤖 Dropdown populated with ${models.length} models`);
 
         } catch (error) {
-            // api unavailable - use fallback models
-            console.warn('🤖 Using fallback models');
+            // Ollama not available - show message and offer common Ollama models to pull
+            console.warn('🦙 Ollama not available - showing pullable models');
             selectElement.innerHTML = '';
-            const fallbackModels = [
-                { name: 'openai', desc: 'OpenAI GPT-4o Mini' },
-                { name: 'openai-fast', desc: 'OpenAI Fast' },
-                { name: 'openai-reasoning', desc: 'OpenAI Reasoning' },
-                { name: 'gemini', desc: 'Gemini 2.5 Flash' },
-                { name: 'deepseek', desc: 'DeepSeek V3' },
-                { name: 'mistral', desc: 'Mistral Small' },
-                { name: 'qwen-coder', desc: 'Qwen Coder' }
+
+            // Show a "not connected" option first
+            const notConnected = document.createElement('option');
+            notConnected.value = '';
+            notConnected.textContent = '⚠️ Ollama not running - start it first';
+            notConnected.disabled = true;
+            notConnected.selected = true;
+            selectElement.appendChild(notConnected);
+
+            // Show commonly available Ollama models that can be pulled
+            const ollamaModels = [
+                { name: 'mistral:7b-instruct', desc: 'Mistral 7B Instruct (Recommended)' },
+                { name: 'mistral:latest', desc: 'Mistral Latest' },
+                { name: 'llama3:8b', desc: 'LLaMA 3 8B' },
+                { name: 'llama2:7b', desc: 'LLaMA 2 7B' },
+                { name: 'phi:latest', desc: 'Microsoft Phi-2 (Lightweight)' },
+                { name: 'tinyllama:latest', desc: 'TinyLLaMA (Ultra-light)' },
+                { name: 'gemma:2b', desc: 'Google Gemma 2B' }
             ];
-            fallbackModels.forEach(m => {
+            ollamaModels.forEach(m => {
                 const option = document.createElement('option');
                 option.value = m.name;
                 option.textContent = `${m.name} - ${m.desc}`;
+                option.disabled = true; // Can't use until Ollama is running
                 selectElement.appendChild(option);
             });
-            selectElement.value = savedModel;
         }
     },
 

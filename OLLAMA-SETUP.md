@@ -7,6 +7,43 @@
 
 ---
 
+## Automatic Setup (v0.91.08+)
+
+**The game now handles Ollama setup automatically!**
+
+When you launch the game:
+
+1. **First Launch Detection** - Game checks if Ollama is installed and running
+2. **Install Prompt** - If not found, shows download options:
+   - "✓ I Have Ollama - Check Connection" (if already installed)
+   - "⬇️ Download Ollama" (opens ollama.ai)
+   - "Skip" (use fallback dialogue)
+3. **Auto Model Download** - Once Ollama is running, game auto-downloads Mistral (~4.4GB)
+4. **Progress Display** - Loading screen shows download progress with GB counter
+5. **Ready!** - NPCs now have AI-powered dialogue
+
+### What You See on Loading Screen
+
+```
+🦙 Checking Ollama AI...
+         ↓
+🦙 Ollama Not Found → [Install Prompt Appears]
+         OR
+🦙 Checking AI Model...
+         ↓
+🦙 Downloading AI Model... 47%
+   2.07GB / 4.40GB
+         ↓
+🦙 Ollama AI Model ✓
+   mistral:7b-instruct ready for NPC dialogue
+```
+
+### Already Have a Model?
+
+If you already have ANY Ollama model installed (Mistral, Llama, Dolphin, etc.), the game will auto-detect and use it! No need to download anything else.
+
+---
+
 ## What is Ollama?
 
 Ollama runs large language models locally on your computer. Medieval Trading Game uses Ollama to generate dynamic NPC dialogue - merchants haggle, guards interrogate, and scholars lecture - all powered by AI running entirely on YOUR machine.
@@ -15,7 +52,21 @@ Ollama runs large language models locally on your computer. Medieval Trading Gam
 
 ---
 
-## Quick Start (5 Minutes)
+## Quick Start (Automatic)
+
+1. **Download Ollama** from https://ollama.ai/download
+2. **Run the installer** (Windows: OllamaSetup.exe)
+3. **Launch the game** - it handles the rest!
+
+The game will:
+- Detect Ollama is running
+- Check for installed models
+- Auto-download Mistral if no models found
+- Show progress bar during download
+
+---
+
+## Manual Setup (If Needed)
 
 ### Step 1: Download Ollama
 
@@ -43,33 +94,21 @@ Go to: **https://ollama.ai/download**
 **Linux:**
 ```bash
 curl -fsSL https://ollama.ai/install.sh | sh
+sudo systemctl start ollama
 ```
 
-### Step 3: Pull the Mistral Model
+### Step 3: Launch Game
 
-Open a terminal/command prompt and run:
+Refresh/launch the game - it will auto-download the Mistral model!
 
+**Or manually pull a model:**
 ```bash
-ollama pull mistral
+ollama pull mistral:7b-instruct
 ```
-
-This downloads the Mistral model (~4GB). Wait for it to complete.
-
-### Step 4: Verify It Works
-
-```bash
-ollama run mistral "Hello, traveler!"
-```
-
-You should see a response. If yes, you're done!
-
-### Step 5: Play the Game
-
-Launch Medieval Trading Game. NPCs will now use AI-generated dialogue!
 
 ---
 
-## Detailed Instructions by Platform
+## Platform Details
 
 ### Windows
 
@@ -78,19 +117,12 @@ Launch Medieval Trading Game. NPCs will now use AI-generated dialogue!
 3. **Accept** UAC prompt if shown
 4. **Wait** for installation (installs to Program Files)
 5. **Look** for Ollama icon in system tray (bottom right)
-6. **Open** Command Prompt (Win+R, type `cmd`, Enter)
-7. **Run:**
-   ```cmd
-   ollama pull mistral
-   ```
-8. **Wait** for download (~4GB, depends on internet speed)
-9. **Test:**
-   ```cmd
-   ollama run mistral "Greetings!"
-   ```
+6. **Launch game** - auto-downloads model
+
+**Common Error:** If you see "Error: bind: Only one usage of each socket address" when running `ollama serve`, that means **Ollama is already running** as a Windows service. Just launch the game!
 
 **Troubleshooting Windows:**
-- If `ollama` is not recognized, restart your computer
+- If `ollama` is not recognized in terminal, restart your computer
 - Make sure Windows Defender isn't blocking it
 - Check system tray for Ollama icon (proves it's running)
 
@@ -101,20 +133,10 @@ Launch Medieval Trading Game. NPCs will now use AI-generated dialogue!
 3. **Move** `Ollama.app` to `/Applications`
 4. **Open** Ollama from Launchpad or Spotlight
 5. **Allow** in System Preferences > Security if prompted
-6. **Open** Terminal (Cmd+Space, type "Terminal")
-7. **Run:**
-   ```bash
-   ollama pull mistral
-   ```
-8. **Wait** for download
-9. **Test:**
-   ```bash
-   ollama run mistral "Well met!"
-   ```
+6. **Launch game** - auto-downloads model
 
 **Troubleshooting macOS:**
 - If blocked by Gatekeeper: System Preferences > Security > Allow
-- If Terminal says command not found, close and reopen Terminal
 - Check menu bar for Ollama icon
 
 ### Linux
@@ -131,14 +153,7 @@ Launch Medieval Trading Game. NPCs will now use AI-generated dialogue!
    ```bash
    sudo systemctl enable ollama
    ```
-4. **Pull the model:**
-   ```bash
-   ollama pull mistral
-   ```
-5. **Test:**
-   ```bash
-   ollama run mistral "Hail, adventurer!"
-   ```
+4. **Launch game** - auto-downloads model
 
 **Troubleshooting Linux:**
 - Check service status: `systemctl status ollama`
@@ -156,7 +171,36 @@ Launch Medieval Trading Game. NPCs will now use AI-generated dialogue!
 | CPU | Any modern x64 | Multicore |
 | GPU | Not required | Speeds up responses |
 
-**Note:** The Mistral model is ~4GB. Responses take 0.5-3 seconds depending on your hardware.
+**Note:** The Mistral model is ~4.4GB. Responses take 0.5-3 seconds depending on your hardware.
+
+---
+
+## Supported Models
+
+The game works with ANY Ollama model! It auto-detects installed models.
+
+| Model | Size | Description |
+|-------|------|-------------|
+| `mistral:7b-instruct` | 4.4GB | **Default** - Fast, balanced for NPC dialogue |
+| `dolphin-llama3:8b` | 4.7GB | Great alternative, uncensored |
+| `llama3:8b` | 4.7GB | Latest LLaMA, excellent quality |
+| `llama2:7b` | 3.8GB | Meta's open model |
+| `phi:latest` | 1.7GB | Microsoft's small model (faster) |
+| `tinyllama:latest` | 637MB | Ultra-light, fast but lower quality |
+| `gemma:2b` | 1.4GB | Google's efficient model |
+
+---
+
+## Environment Support
+
+| Environment | Ollama Support | Notes |
+|-------------|---------------|-------|
+| Local (file://) | ✅ Full | Open index.html directly |
+| localhost | ✅ Full | Python/Node server |
+| GPU Server | ✅ Full | Self-hosted with Ollama |
+| Private Network | ✅ Full | 192.168.x.x, 10.x.x.x |
+| GitHub Pages | ❌ None | Static host, no backend |
+| Netlify/Vercel | ❌ None | Static host, no backend |
 
 ---
 
@@ -190,30 +234,31 @@ response    selected
 
 ---
 
+## In-Game Settings
+
+**Settings > AI Voice:**
+- **Model Selector**: Shows ALL installed Ollama models dynamically
+- **Temperature**: 0.1 (focused) to 1.0 (creative)
+- **Volume**: Voice playback volume
+
+---
+
 ## Changing Models (Advanced)
 
-The game uses `mistral` by default. You can try other models:
+You can try other models:
 
 ```bash
 # Faster, smaller (needs less RAM)
 ollama pull phi
 
 # Smarter, larger (needs more RAM)
-ollama pull llama2
+ollama pull llama3:8b
 
 # Very capable but needs 16GB+ RAM
 ollama pull mixtral
 ```
 
-To change the model in-game, edit `config.js`:
-
-```javascript
-api: {
-    ollama: {
-        model: 'mistral',  // Change to 'phi', 'llama2', etc.
-    }
-}
-```
+All installed models appear in Settings > AI Voice.
 
 ---
 
@@ -235,7 +280,19 @@ A: Absolutely! Ollama is a general-purpose local LLM. Use it for writing, coding
 A: Windows/macOS: Right-click system tray icon > Quit. Linux: `sudo systemctl stop ollama`
 
 **Q: The game says Ollama isn't running!**
-A: Make sure Ollama is running (check system tray on Windows/Mac, or service on Linux). The game checks `http://localhost:11434`.
+A: Make sure Ollama is running (check system tray on Windows/Mac, or service on Linux). Click "✓ I Have Ollama - Check Connection" button.
+
+**Q: I already have Ollama but the game doesn't detect it!**
+A: Click "✓ I Have Ollama - Check Connection" button. If still not working, open browser console (F12) to see error details.
+
+---
+
+## Reset Ollama Skip Preference
+
+If you skipped Ollama setup and want to try again:
+1. Open browser console (F12)
+2. Run: `localStorage.removeItem('mtg_ollama_skipped')`
+3. Refresh the game
 
 ---
 
@@ -243,7 +300,7 @@ A: Make sure Ollama is running (check system tray on Windows/Mac, or service on 
 
 | Command | What it Does |
 |---------|--------------|
-| `ollama pull mistral` | Download the Mistral model |
+| `ollama pull mistral:7b-instruct` | Download the default model |
 | `ollama list` | Show installed models |
 | `ollama run mistral "Hi"` | Test a response |
 | `ollama serve` | Start Ollama server manually |
@@ -259,5 +316,6 @@ A: Make sure Ollama is running (check system tray on Windows/Mac, or service on 
 
 ---
 
-*Medieval Trading Game - AI NPC dialogue powered by Ollama*
+*Medieval Trading Game v0.91.08 - AI NPC dialogue powered by Ollama*
+*Unity AI Lab | www.unityailab.com*
 
