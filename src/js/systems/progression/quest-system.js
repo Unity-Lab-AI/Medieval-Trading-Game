@@ -1211,6 +1211,12 @@ const QuestSystem = {
             obj.completed = obj.completed || false;
         });
 
+        // SPECIAL CASE: tutorial_0_4 (Hidden Knowledge) is auto-complete
+        // The tooltip detection is broken, so just mark it done instantly
+        if (questId === 'tutorial_0_4' && activeQuest.objectives[0]) {
+            activeQuest.objectives[0].completed = true;
+        }
+
         this.activeQuests[questId] = activeQuest;
 
         // mark quest as discovered
