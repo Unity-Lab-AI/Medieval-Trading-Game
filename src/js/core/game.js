@@ -6016,7 +6016,15 @@ const MARKET_LOCATIONS = ['royal_capital', 'tutorial_village', 'tutorial_town'];
 
 // 🏪 Check if current location has a market
 function locationHasMarket(locationId = null) {
-    const currentLocationId = locationId || game?.currentLocation?.id;
+    // Try multiple ways to get location ID
+    const currentLocationId = locationId ||
+                              game?.currentLocation?.id ||
+                              game?.currentLocation ||
+                              TravelSystem?.playerPosition?.currentLocation;
+
+    // Debug log to help troubleshoot
+    console.log(`🏪 Market check: locationId="${currentLocationId}", hasMarket=${MARKET_LOCATIONS.includes(currentLocationId)}`);
+
     return MARKET_LOCATIONS.includes(currentLocationId);
 }
 
