@@ -6008,16 +6008,16 @@ function unlockRegion(regionId) {
 // ═══════════════════════════════════════════════════════════════
 // 🏪 MARKET VISIBILITY SYSTEM - only Royal Capital has a market 💀
 // ═══════════════════════════════════════════════════════════════
-// 🖤 The ONLY market in the realm is at Royal Capital (center hub)
+// 🖤 Markets exist at Royal Capital AND tutorial locations
 // Everywhere else, players must trade directly with NPCs who have
 // profession-based inventories (innkeepers sell food, blacksmiths sell weapons, etc.)
 
-const MARKET_LOCATION_ID = 'royal_capital';
+const MARKET_LOCATIONS = ['royal_capital', 'tutorial_village', 'tutorial_town'];
 
-// 🏪 Check if current location has a market (only Royal Capital)
+// 🏪 Check if current location has a market
 function locationHasMarket(locationId = null) {
     const currentLocationId = locationId || game?.currentLocation?.id;
-    return currentLocationId === MARKET_LOCATION_ID;
+    return MARKET_LOCATIONS.includes(currentLocationId);
 }
 
 // 🏪 Update market button visibility based on current location 💀
