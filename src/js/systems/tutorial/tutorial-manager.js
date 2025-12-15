@@ -567,13 +567,7 @@ const TutorialManager = {
                     message: '<strong>Change game speed!</strong><br>Click here to make time go faster or slower.',
                     position: 'bottom'
                 },
-                'view_tooltip': {
-                    selector: '[data-panel="people-panel"]',
-                    message: '<strong>Hover over any button!</strong><br>Move your mouse over this or any button to see helpful tooltips.',
-                    position: 'top',
-                    noOverlay: true,  // DON'T block UI - user needs to hover!
-                    pulseOnly: true   // Just pulse the element, no dark overlay
-                }
+                'view_tooltip': null  // NO HIGHLIGHT - any tooltip anywhere completes this quest
             };
 
             return actionHighlights[objective.action] || null;
