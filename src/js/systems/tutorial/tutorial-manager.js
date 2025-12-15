@@ -913,6 +913,10 @@ const TutorialManager = {
         // QuestSystem.assignQuest() looks for quests in this.quests, NOT availableQuests
         if (QuestSystem.quests) {
             for (const quest of allQuests) {
+                // FORCE tutorial_0_4 to be pre-completed - tooltip detection is broken
+                if (quest.id === 'tutorial_0_4' && quest.objectives && quest.objectives[0]) {
+                    quest.objectives[0].completed = true;
+                }
                 QuestSystem.quests[quest.id] = quest;
                 console.log(`🎓 Registered tutorial quest: ${quest.id}`);
             }
