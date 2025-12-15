@@ -20,7 +20,7 @@ const KokoroInstaller = {
     modelCached: false,
 
     // ═══════════════════════════════════════════════════════════
-    // CHECK IF RUNNING FROM LOCAL SERVER
+    // CHECK IF RUNNING FROM LOCAL SERVER (http/https, not file://)
     // ═══════════════════════════════════════════════════════════
     isLocalServer() {
         const protocol = window.location.protocol;
@@ -39,6 +39,59 @@ const KokoroInstaller = {
     },
 
     // ═══════════════════════════════════════════════════════════
+    // CHECK IF WEB WORKER CAN BE CREATED (server test)
+    // ═══════════════════════════════════════════════════════════
+    async checkServerRunning() {
+        // Kokoro TTS uses a Web Worker with ES modules
+        // This only works from http:// or https://, NOT file://
+        // We test by trying to create a minimal blob worker
+
+        if (!this.isLocalServer()) {
+            console.log('🎙️ KokoroInstaller: Running from file:// - Web Workers won\'t work');
+            return { running: false, reason: 'file_protocol' };
+        }
+
+        try {
+            // Try to create a test worker to verify we can use Web Workers
+            const testCode = 'self.postMessage("ok");';
+            const blob = new Blob([testCode], { type: 'application/javascript' });
+            const url = URL.createObjectURL(blob);
+
+            const result = await new Promise((resolve) => {
+                try {
+                    const worker = new Worker(url);
+                    worker.onmessage = () => {
+                        worker.terminate();
+                        URL.revokeObjectURL(url);
+                        resolve({ running: true });
+                    };
+                    worker.onerror = (e) => {
+                        worker.terminate();
+                        URL.revokeObjectURL(url);
+                        resolve({ running: false, reason: 'worker_error', error: e.message });
+                    };
+                    // Timeout after 2 seconds
+                    setTimeout(() => {
+                        worker.terminate();
+                        URL.revokeObjectURL(url);
+                        resolve({ running: false, reason: 'timeout' });
+                    }, 2000);
+                } catch (e) {
+                    URL.revokeObjectURL(url);
+                    resolve({ running: false, reason: 'worker_create_failed', error: e.message });
+                }
+            });
+
+            console.log('🎙️ KokoroInstaller: Server check result:', result);
+            return result;
+
+        } catch (error) {
+            console.error('🎙️ KokoroInstaller: Server check failed:', error);
+            return { running: false, reason: 'check_failed', error: error.message };
+        }
+    },
+
+    // ═══════════════════════════════════════════════════════════
     // CHECK IF KOKORO CAN WORK
     // ═══════════════════════════════════════════════════════════
     async checkStatus() {
@@ -50,6 +103,12 @@ const KokoroInstaller = {
         // Check if running from file:// protocol
         if (!this.isLocalServer()) {
             return { available: false, reason: 'needs_server' };
+        }
+
+        // Check if Web Worker can be created (verifies server is working)
+        const serverCheck = await this.checkServerRunning();
+        if (!serverCheck.running) {
+            return { available: false, reason: 'server_not_working', details: serverCheck };
         }
 
         // Check if model is cached

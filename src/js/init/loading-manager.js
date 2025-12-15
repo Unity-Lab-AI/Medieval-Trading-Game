@@ -500,8 +500,27 @@ const LoadingManager = {
             return;
         }
 
-        // Check if model is already cached
+        // Check if Web Worker can be created (verifies server is working properly)
         this.kokoroStatus = 'checking';
+        if (titleEl) titleEl.textContent = '🎙️ Checking TTS Server...';
+        if (statusEl) statusEl.textContent = 'Verifying Web Worker support';
+
+        if (typeof KokoroInstaller !== 'undefined') {
+            const serverCheck = await KokoroInstaller.checkServerRunning();
+            if (!serverCheck.running) {
+                console.log('🎙️ LoadingManager: Server check failed:', serverCheck);
+                this.kokoroStatus = 'installing';
+                if (titleEl) titleEl.textContent = '🎙️ Kokoro TTS Server Issue';
+                if (statusEl) statusEl.textContent = 'Web Worker failed - check server';
+
+                // Show the setup prompt
+                KokoroInstaller.showSetupPrompt('needs_server');
+                return;
+            }
+            console.log('🎙️ LoadingManager: Server check passed!');
+        }
+
+        // Check if model is already cached
         if (titleEl) titleEl.textContent = '🎙️ Checking Kokoro TTS...';
         if (statusEl) statusEl.textContent = 'Looking for cached model';
 
