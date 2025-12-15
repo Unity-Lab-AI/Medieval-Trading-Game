@@ -263,6 +263,39 @@ const NPCInstructionTemplates = {
         const speakingStyle = spec.speakingStyle || 'casual';
         const background = spec.background || `A ${npcType} going about their business.`;
 
+        // 🎭 Special handling for initial encounter NPCs (like hooded_stranger)
+        // These have specific story-critical instructions for their first meeting
+        if (spec.initialEncounter?.instruction) {
+            return `You are ${npcName}, a mysterious figure in a medieval fantasy world.
+
+PERSONALITY: ${personality}
+SPEAKING STYLE: ${speakingStyle}
+BACKGROUND: ${background}
+${spec.traits?.length ? `TRAITS: ${spec.traits.join(', ')}` : ''}
+${spec.voiceInstructions ? `VOICE: ${spec.voiceInstructions}` : ''}
+
+CRITICAL CONTEXT - INITIAL ENCOUNTER:
+${spec.initialEncounter.instruction}
+
+The traveler's name is ${playerName}. They have JUST arrived in ${locationName}.
+
+YOUR TASK: Deliver your prophetic greeting and warning to ${playerName}.
+- You MUST mention the darkness gathering in the north
+- You MUST reference the Shadow Tower and/or the wizard Malachar returning
+- You MUST guide them to seek the village Elder for their first quest
+- Be cryptic and mysterious but CLEAR about the threat
+- Speak in prophecies and riddles but ensure your message is understood
+- Keep it to 3-5 sentences - this is their introduction to the main story
+- DO NOT use asterisks or action descriptions
+- Speak DIRECTLY as your character
+
+Example tone (but create something UNIQUE incorporating the story elements):
+${spec.greetings?.slice(0, 2).map(g => `- "${g}"`).join('\n') || '- "The shadows speak of your coming..."'}
+
+Now deliver your prophetic greeting to ${playerName}:`;
+        }
+
+        // Standard greeting for normal NPCs
         return `You are ${npcName}, a ${npcType} in a medieval fantasy world.
 
 PERSONALITY: ${personality}
