@@ -445,12 +445,6 @@ const TutorialManager = {
             TutorialHighlighter.clearAll();
         }
 
-        // For view_tooltip quest (tutorial_0_4) - NO HIGHLIGHT AT ALL
-        // User just needs to hover over anything to complete it
-        if (questId === 'tutorial_0_4') {
-            console.log(`🎓 Hidden Knowledge quest - no highlight needed, any tooltip completes it`);
-            return;  // Skip highlighting entirely for this quest
-        }
 
         // HIGHLIGHT THE RELEVANT UI ELEMENTS!
         this._highlightQuestObjectives(questId);
@@ -913,10 +907,6 @@ const TutorialManager = {
         // QuestSystem.assignQuest() looks for quests in this.quests, NOT availableQuests
         if (QuestSystem.quests) {
             for (const quest of allQuests) {
-                // FORCE tutorial_0_4 to be pre-completed - tooltip detection is broken
-                if (quest.id === 'tutorial_0_4' && quest.objectives && quest.objectives[0]) {
-                    quest.objectives[0].completed = true;
-                }
                 QuestSystem.quests[quest.id] = quest;
                 console.log(`🎓 Registered tutorial quest: ${quest.id}`);
             }

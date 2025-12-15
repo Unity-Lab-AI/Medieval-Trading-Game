@@ -794,32 +794,6 @@ const TooltipSystem = {
         // position and show
         this.positionTooltip(event);
         this.tooltipElement.classList.add('visible');
-
-        // FIX: Clear ANY tutorial highlight immediately when tooltip shown
-        if (typeof TutorialHighlighter !== 'undefined') {
-            TutorialHighlighter.clearAll();
-        }
-
-        // COMPLETE THE HIDDEN KNOWLEDGE QUEST - multiple methods to ensure it works
-        // 1. Direct call to QuestSystem
-        if (typeof QuestSystem !== 'undefined' && QuestSystem.updateProgress) {
-            QuestSystem.updateProgress('ui_action', { action: 'view_tooltip' });
-        }
-
-        // 2. Dispatch event for any other listeners
-        document.dispatchEvent(new CustomEvent('ui-action', {
-            detail: { action: 'view_tooltip' }
-        }));
-
-        // 3. Directly mark the objective complete if quest is active
-        if (typeof QuestSystem !== 'undefined' && QuestSystem.activeQuests?.['tutorial_0_4']) {
-            const quest = QuestSystem.activeQuests['tutorial_0_4'];
-            if (quest.objectives && quest.objectives[0]) {
-                quest.objectives[0].completed = true;
-                // Trigger UI refresh
-                document.dispatchEvent(new CustomEvent('quest-updated', { detail: { questId: 'tutorial_0_4' } }));
-            }
-        }
     },
 
     // hide the tooltip

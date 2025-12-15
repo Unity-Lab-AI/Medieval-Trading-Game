@@ -123,7 +123,7 @@ const TutorialQuests = {
                 ],
                 rewards: { gold: 25, experience: 10 },
                 prerequisite: 'tutorial_0_2',
-                nextQuest: 'tutorial_0_4',
+                nextQuest: 'tutorial_1_1',
                 dialogue: {
                     offer: "Next to the pause button is the SPEED DROPDOWN. This controls how fast time passes:\n\n" +
                            "🐢 **1x NORMAL**: Real-time, good for active trading\n" +
@@ -131,46 +131,11 @@ const TutorialQuests = {
                            "⚡ **4x FASTER**: Quadruple speed, good for travel\n\n" +
                            "Faster speeds make hunger/thirst drain faster too! Click the dropdown and try changing the speed.",
                     progress: "Click the speed dropdown next to the pause button and select a different speed.",
-                    complete: "Wonderful! Use FAST when traveling or waiting for shops to restock. But be careful - time passing means your survival needs increase too! Now let's learn about TOOLTIPS..."
+                    complete: "Wonderful! Use FAST when traveling or waiting for shops to restock. But be careful - time passing means your survival needs increase too! Now let's learn about TRADING!"
                 },
                 teachingPoints: ['Speed dropdown location', 'Speed levels explained', 'Impact on survival']
-            },
-
-            // 0.4 - Tooltips Everywhere
-            tutorial_0_4: {
-                id: 'tutorial_0_4',
-                name: 'Hidden Knowledge',
-                description: 'Learn to read tooltips for information about everything.',
-                giver: 'tutorial_guide',
-                giverName: 'Merchant Elara',
-                turnInNpc: 'tutorial_guide',
-                turnInNpcName: 'Merchant Elara',
-                turnInLocation: 'tutorial_village',
-                location: 'tutorial_village',
-                type: 'tutorial',
-                act: 0,
-                actOrder: 4,
-                chain: 'tutorial',
-                chainOrder: 4,
-                difficulty: 'tutorial',
-                objectives: [
-                    { type: 'ui_action', action: 'view_tooltip', completed: true, description: 'Hover over any button or icon to see its tooltip' }
-                ],
-                rewards: { gold: 25, experience: 10 },
-                prerequisite: 'tutorial_0_3',
-                nextQuest: 'tutorial_1_1',
-                dialogue: {
-                    offer: "Every button, icon, and element has a TOOLTIP! When you hover your mouse over something, information appears:\n\n" +
-                           "📊 **STAT ICONS**: Hover over 💪🧠😊🏃🍀 to see what each stat does\n" +
-                           "🎮 **ACTION BUTTONS**: Hover to see the hotkey (like 'M' for Market)\n" +
-                           "📦 **ITEMS**: Hover to see item stats, prices, and effects\n" +
-                           "🗺️ **MAP LOCATIONS**: Hover to see location info\n\n" +
-                           "Try hovering over something now!",
-                    progress: "Move your mouse over any button, stat icon, or UI element to see its tooltip.",
-                    complete: "Reading tooltips is key to understanding the game! They show hotkeys, explain mechanics, and give vital information. Now let's learn about TRADING!"
-                },
-                teachingPoints: ['Tooltips exist everywhere', 'Hotkeys shown in tooltips', 'Item info in tooltips']
             }
+            // tutorial_0_4 (Hidden Knowledge) DELETED - tooltip detection was broken beyond repair
         }
     },
 
@@ -204,7 +169,7 @@ const TutorialQuests = {
                     { type: 'ui_action', action: 'open_market', completed: false, description: 'Open Market (press M or click 🏪)' }
                 ],
                 rewards: { gold: 25, experience: 15 },
-                prerequisite: 'tutorial_0_4',
+                prerequisite: 'tutorial_0_3',
                 nextQuest: 'tutorial_1_2',
                 dialogue: {
                     offer: "The Market is where fortunes are made! Open it with:\n\n" +
