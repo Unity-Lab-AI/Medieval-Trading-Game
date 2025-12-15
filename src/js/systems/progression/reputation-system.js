@@ -131,7 +131,7 @@ const ReputationSystem = {
             min: 500,
             max: 999,
             color: '#ffd700',
-            icon: '',
+            icon: '⭐',
             effects: {
                 priceModifier: 0.85,
                 questAccess: 'elite',
@@ -224,18 +224,25 @@ const ReputationSystem = {
 
     // Bug #11 Fix: Update the side panel reputation display
     updateSidePanelDisplay() {
+        const iconEl = document.querySelector('.reputation-icon');
         const tierEl = document.getElementById('player-rep-tier');
         const valueEl = document.getElementById('player-rep-value');
 
         if (tierEl && valueEl) {
             const tier = this.getCurrentTier();
+
+            // Update the icon to match current tier
+            if (iconEl && tier.icon) {
+                iconEl.textContent = tier.icon;
+            }
+
             tierEl.textContent = tier.name;
             valueEl.textContent = `(${this.reputation})`;
 
             // Use the tier's actual color property instead of hardcoded map
             tierEl.style.color = tier.color || '#ffd700';
 
-            console.log(`👑 Reputation Display Updated: ${tier.name} (${this.reputation})`);
+            console.log(`👑 Reputation Display Updated: ${tier.icon || ''} ${tier.name} (${this.reputation})`);
         } else {
             // Elements not found - might be called before DOM ready
             console.warn('⚠️ Reputation display elements not found in DOM yet');
