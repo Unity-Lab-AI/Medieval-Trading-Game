@@ -6209,6 +6209,24 @@ function closeMarket() {
     changeState(GameState.PLAYING);
 }
 
+// 🖤 TOGGLE MARKET - open if closed, close if open 💀
+function toggleMarket() {
+    const marketPanel = document.getElementById('market-panel');
+    const isVisible = marketPanel && (
+        marketPanel.classList.contains('active') ||
+        marketPanel.classList.contains('show') ||
+        marketPanel.style.display === 'block' ||
+        marketPanel.style.display === 'flex' ||
+        game.state === GameState.MARKET
+    );
+
+    if (isVisible) {
+        closeMarket();
+    } else {
+        openMarket();
+    }
+}
+
 function updateMarketHeader() {
     const location = GameWorld.locations[game.currentLocation.id];
     if (!location) return;
@@ -8250,10 +8268,9 @@ function handleKeyPress(event) {
             break;
         case 'm':
         case 'M':
-            if (game.state === GameState.PLAYING) {
-                openMarket();
-            } else if (game.state === GameState.MARKET) {
-                closeMarket();
+            // Toggle market - works from most states
+            if (game.state === GameState.PLAYING || game.state === GameState.MARKET) {
+                toggleMarket();
             }
             break;
         case 't':

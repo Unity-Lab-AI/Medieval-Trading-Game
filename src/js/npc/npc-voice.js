@@ -1197,23 +1197,15 @@ RELATIONSHIP MEMORY:
                     const status = typeof KokoroTTS !== 'undefined'
                         ? (KokoroTTS.isLoading && KokoroTTS.isLoading() ? 'loading' : 'not initialized')
                         : 'not loaded';
-                    console.log(`🎙️ KokoroTTS ${status}, falling back to browser TTS`);
+                    console.log(`🎙️ KokoroTTS ${status} - no voice output (browser TTS disabled)`);
+                    // No fallback to browser TTS - Kokoro only!
+                    return;
                 }
-                // Fall through to browser TTS as fallback when Kokoro not ready
             }
 
-            // 🔊 BROWSER TTS (basic computer voice OR fallback from Kokoro)
-            console.log('🎙️ Using browser TTS');
-            const chunks = this.splitTextIntoChunks(cleanText, 1000);
-
-            const voice = voiceOverride || this.settings.voice;
-            chunks.forEach(chunk => {
-                this.voiceQueue.push({ text: chunk, voice: voice });
-            });
-
-            if (!this.isPlayingVoice) {
-                this.playNextVoiceChunk();
-            }
+            // 🎙️ Kokoro engine not selected, skip voice
+            console.log('🎙️ Voice engine not kokoro, skipping voice output');
+            return;
 
         } catch (error) {
             // voice playback failed - continue without voice

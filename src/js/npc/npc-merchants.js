@@ -154,35 +154,39 @@ const NPCMerchantSystem = {
 
     // tally this puppet's wealth by counting their inventory - gold equals stock value
     calculateMerchantWealth(merchant) {
-        if (!merchant || !merchant.location) return;
+        if (!merchant || !merchant.location) return 0;
+
+        // Minimum starting gold so merchants can always trade
+        const MIN_MERCHANT_GOLD = 500;
 
         const location = GameWorld?.locations?.[merchant.location];
-        if (!location || !location.marketPrices) return;
 
         let totalInventoryValue = 0;
         let startingStock = {};
 
         // sum the value of every item this merchant hoards - their net worth
-        Object.entries(location.marketPrices).forEach(([itemId, marketData]) => {
-            const item = ItemDatabase?.getItem?.(itemId);
-            if (item && marketData.stock > 0) {
-                const itemValue = (marketData.price || item.basePrice || 10) * marketData.stock;
-                totalInventoryValue += itemValue;
+        if (location && location.marketPrices) {
+            Object.entries(location.marketPrices).forEach(([itemId, marketData]) => {
+                const item = ItemDatabase?.getItem?.(itemId);
+                if (item && marketData.stock > 0) {
+                    const itemValue = (marketData.price || item.basePrice || 10) * marketData.stock;
+                    totalInventoryValue += itemValue;
 
-                // Track starting stock for day if not already tracked
-                if (!marketData.startingDayStock) {
-                    marketData.startingDayStock = marketData.stock;
+                    // Track starting stock for day if not already tracked
+                    if (!marketData.startingDayStock) {
+                        marketData.startingDayStock = marketData.stock;
+                    }
+                    startingStock[itemId] = marketData.startingDayStock;
                 }
-                startingStock[itemId] = marketData.startingDayStock;
-            }
-        });
+            });
+        }
 
-        // Merchant gold = total inventory value (they can afford to buy back their stock)
-        merchant.maxGold = totalInventoryValue;
-        merchant.currentGold = merchant.currentGold ?? totalInventoryValue;
+        // Merchant gold = total inventory value, but minimum 500 gold so they can trade
+        merchant.maxGold = Math.max(MIN_MERCHANT_GOLD, totalInventoryValue);
+        merchant.currentGold = merchant.currentGold ?? merchant.maxGold;
         merchant.startingStock = startingStock;
 
-        return totalInventoryValue;
+        return merchant.maxGold;
     },
 
     // does this hollow merchant have enough gold? check their wallet before purchasing

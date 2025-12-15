@@ -319,6 +319,14 @@ const TutorialManager = {
                 console.log('🎓 Tutorial market prices initialized');
             }
 
+            // CRITICAL: Regenerate merchants for tutorial locations!
+            // Without this, market shows "Unknown" merchant with 0 gold
+            if (typeof NPCMerchantSystem !== 'undefined') {
+                NPCMerchantSystem.generateMerchants();
+                NPCMerchantSystem.initializeMerchantEconomy();
+                console.log('🎓 Tutorial merchants generated');
+            }
+
             // FIX: Refresh game.currentLocation to prevent stale object references
             // After tutorial world reload, the old location reference may be invalid
             if (typeof game !== 'undefined' && game.currentLocation?.id) {
