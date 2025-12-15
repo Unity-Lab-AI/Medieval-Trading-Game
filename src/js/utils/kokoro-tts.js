@@ -82,6 +82,7 @@ const KokoroTTS = {
         return `
             let tts = null;
             let isInit = false;
+            let isWarmedUp = false;
             const MODEL_ID = 'onnx-community/Kokoro-82M-v1.0-ONNX';
 
             self.onmessage = async function(e) {
@@ -96,10 +97,24 @@ const KokoroTTS = {
                         self.postMessage({ type: 'progress', id, data: { msg: 'Loading Kokoro library...', pct: 0.1 } });
                         const mod = await import('https://cdn.jsdelivr.net/npm/kokoro-js@1.2.0/+esm');
 
-                        self.postMessage({ type: 'progress', id, data: { msg: 'Loading neural model...', pct: 0.2 } });
+                        // Try WebGPU first (MUCH faster), fall back to WASM
+                        let device = 'wasm';
+                        if (typeof navigator !== 'undefined' && navigator.gpu) {
+                            try {
+                                const adapter = await navigator.gpu.requestAdapter();
+                                if (adapter) {
+                                    device = 'webgpu';
+                                    self.postMessage({ type: 'progress', id, data: { msg: 'Using WebGPU acceleration!', pct: 0.15 } });
+                                }
+                            } catch (e) {
+                                // WebGPU not available, use WASM
+                            }
+                        }
+
+                        self.postMessage({ type: 'progress', id, data: { msg: 'Loading neural model (' + device + ')...', pct: 0.2 } });
                         tts = await mod.KokoroTTS.from_pretrained(MODEL_ID, {
-                            dtype: 'q8',
-                            device: 'wasm',
+                            dtype: 'q4',  // Use q4 quantization - faster than q8, slightly less quality
+                            device: device,
                             progress_callback: (p) => {
                                 if (p.status === 'progress') {
                                     self.postMessage({ type: 'progress', id, data: { msg: 'Loading model... ' + Math.round(p.progress) + '%', pct: 0.2 + (p.progress/100)*0.7 } });
@@ -108,7 +123,17 @@ const KokoroTTS = {
                         });
 
                         isInit = true;
-                        self.postMessage({ type: 'initComplete', id, data: { success: true } });
+
+                        // PRE-WARM the model with a short generation (makes first real request MUCH faster)
+                        self.postMessage({ type: 'progress', id, data: { msg: 'Warming up model...', pct: 0.95 } });
+                        try {
+                            await tts.generate('Hello.', { voice: 'am_michael', speed: 1.2 });
+                            isWarmedUp = true;
+                        } catch (e) {
+                            // Warmup failed, but init still succeeded
+                        }
+
+                        self.postMessage({ type: 'initComplete', id, data: { success: true, device: device } });
                     } catch (err) {
                         self.postMessage({ type: 'error', id, error: err.message });
                     }
@@ -120,7 +145,10 @@ const KokoroTTS = {
                     }
                     try {
                         self.postMessage({ type: 'generating', id });
-                        const audio = await tts.generate(data.text, { voice: data.voice, speed: data.speed });
+
+                        // Use faster speed (1.1x) for more responsive feel
+                        const speed = Math.max(data.speed || 1.0, 1.1);
+                        const audio = await tts.generate(data.text, { voice: data.voice, speed: speed });
 
                         if (audio && audio.audio) {
                             const buf = audio.audio.buffer.slice(0);
@@ -280,6 +308,9 @@ const KokoroTTS = {
     // SPEECH - NON-BLOCKING via Worker
     // ═══════════════════════════════════════════════════════════
 
+    // Maximum characters for fast response - longer text gets chunked
+    MAX_CHUNK_LENGTH: 150,
+
     async speak(text, npcType, npcData = {}) {
         if (!this.settings.enabled || !text?.trim()) return false;
         if (!this._initialized || !this._worker) {
@@ -292,19 +323,32 @@ const KokoroTTS = {
         const voice = npcData.voice || this.getVoiceForNPC(npcType, npcData);
 
         try {
-            console.log(`🎙️ KokoroTTS: "${voice}": "${clean.substring(0, 40)}..."`);
+            // Split into sentences for faster first response
+            const chunks = this._splitIntoChunks(clean);
+            console.log(`🎙️ KokoroTTS: "${voice}": ${chunks.length} chunk(s), first: "${chunks[0]?.substring(0, 40)}..."`);
+
             this._showIndicator(true);
 
-            // Send to worker - NON-BLOCKING!
-            const result = await this._send('generate', { text: clean, voice, speed: this.settings.speed });
+            // Generate and play each chunk sequentially
+            for (let i = 0; i < chunks.length; i++) {
+                const chunk = chunks[i];
+                if (!chunk.trim()) continue;
+
+                // Check if we were told to stop
+                if (this._stopRequested) {
+                    this._stopRequested = false;
+                    break;
+                }
+
+                const result = await this._send('generate', { text: chunk, voice, speed: this.settings.speed });
+
+                if (result?.audio) {
+                    await this._play(result.audio, result.rate);
+                }
+            }
 
             this._showIndicator(false);
-
-            if (result?.audio) {
-                await this._play(result.audio, result.rate);
-                return true;
-            }
-            return false;
+            return true;
 
         } catch (error) {
             console.error('🎙️ KokoroTTS failed:', error);
@@ -312,6 +356,37 @@ const KokoroTTS = {
             return false;
         }
     },
+
+    // Split text into chunks at sentence boundaries for faster first response
+    _splitIntoChunks(text) {
+        if (!text || text.length <= this.MAX_CHUNK_LENGTH) {
+            return [text];
+        }
+
+        const chunks = [];
+        // Split on sentence-ending punctuation
+        const sentences = text.split(/(?<=[.!?])\s+/);
+
+        let currentChunk = '';
+        for (const sentence of sentences) {
+            // If adding this sentence would exceed limit, save current chunk and start new one
+            if (currentChunk.length + sentence.length > this.MAX_CHUNK_LENGTH && currentChunk.length > 0) {
+                chunks.push(currentChunk.trim());
+                currentChunk = sentence;
+            } else {
+                currentChunk += (currentChunk ? ' ' : '') + sentence;
+            }
+        }
+
+        // Don't forget the last chunk
+        if (currentChunk.trim()) {
+            chunks.push(currentChunk.trim());
+        }
+
+        return chunks.length > 0 ? chunks : [text];
+    },
+
+    _stopRequested: false,
 
     async _play(audioData, sampleRate) {
         this.stop();
@@ -371,6 +446,7 @@ const KokoroTTS = {
     },
 
     stop() {
+        this._stopRequested = true;  // Stop any chunked playback in progress
         if (this._currentAudio) { try { this._currentAudio.stop(); } catch {} this._currentAudio = null; }
         this._showIndicator(false);
     },
