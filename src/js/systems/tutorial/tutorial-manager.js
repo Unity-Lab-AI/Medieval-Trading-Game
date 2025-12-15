@@ -501,7 +501,9 @@ const TutorialManager = {
                 TutorialHighlighter.highlight(highlightConfig.selector, {
                     message: highlightConfig.message,
                     position: highlightConfig.position || 'auto',
-                    showOverlay: true
+                    // For view_tooltip, DON'T show overlay - it blocks hovering!
+                    showOverlay: highlightConfig.noOverlay ? false : true,
+                    pulseOnly: highlightConfig.pulseOnly || false
                 });
             }, 500);
         }
@@ -566,9 +568,11 @@ const TutorialManager = {
                     position: 'bottom'
                 },
                 'view_tooltip': {
-                    selector: '#bottom-market-btn, [data-panel="market-panel"]',
-                    message: '<strong>Hover over any button!</strong><br>Move your mouse over buttons, stats, or icons to see helpful tooltips appear.',
-                    position: 'top'
+                    selector: '[data-panel="people-panel"]',
+                    message: '<strong>Hover over any button!</strong><br>Move your mouse over this or any button to see helpful tooltips.',
+                    position: 'top',
+                    noOverlay: true,  // DON'T block UI - user needs to hover!
+                    pulseOnly: true   // Just pulse the element, no dark overlay
                 }
             };
 
@@ -722,6 +726,15 @@ const TutorialManager = {
         if (!this.isActive) return;
 
         console.log(`🎓 UI Action tracked: ${action}`);
+
+        // For view_tooltip - IMMEDIATELY clear highlight so UI is usable
+        // The quest objective is complete, no need to keep pulsing
+        if (action === 'view_tooltip') {
+            console.log('🎓 Tooltip viewed! Clearing highlight...');
+            if (typeof TutorialHighlighter !== 'undefined') {
+                TutorialHighlighter.clearAll();
+            }
+        }
 
         // Broadcast to anyone who cares (spoiler: quest system cares)
         document.dispatchEvent(new CustomEvent('tutorial-ui-action', {
