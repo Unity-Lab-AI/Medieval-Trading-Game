@@ -42,15 +42,25 @@ const TutorialWorld = {
             connections: ['tutorial_town', 'tutorial_forest'],
             mapPosition: { x: 75, y: 525 }, // Bottom-left corner - moved 50% closer to edge
 
-            // Wheat is CHEAP here - sell in tutorial_town for profit
-            sells: ['bread', 'wheat', 'water', 'vegetables', 'eggs'],
-            buys: ['fish', 'meat', 'herbs', 'leather'],
+            // ALL goods CHEAP here - sell in tutorial_town for profit
+            sells: ['bread', 'wheat', 'water', 'vegetables', 'eggs', 'fish', 'meat', 'herbs', 'leather', 'tools', 'rope', 'torch', 'bandages'],
+            buys: ['bread', 'wheat', 'water', 'vegetables', 'eggs', 'fish', 'meat', 'herbs', 'leather', 'tools', 'rope', 'torch', 'bandages'],
 
-            // Price modifiers - wheat very cheap here
+            // Price modifiers - all goods cheap here (BUY HERE)
             priceModifiers: {
-                wheat: 0.5,  // 50% of base price - BUY HERE
+                wheat: 0.5,
                 bread: 0.8,
-                vegetables: 0.7
+                water: 0.8,
+                vegetables: 0.7,
+                eggs: 0.8,
+                fish: 0.7,
+                meat: 0.7,
+                herbs: 0.6,
+                leather: 0.7,
+                tools: 0.8,
+                rope: 0.8,
+                torch: 0.8,
+                bandages: 0.8
             },
 
             npcs: ['tutorial_guide', 'tutorial_merchant_village', 'farmer'],
@@ -82,15 +92,25 @@ const TutorialWorld = {
             connections: ['tutorial_village', 'tutorial_forest', 'tutorial_arena'],
             mapPosition: { x: 725, y: 525 }, // Bottom-right corner - moved 50% closer to edge
 
-            // Wheat is EXPENSIVE here - sell here for profit
-            sells: ['tools', 'rope', 'torch', 'bandages', 'leather_armor'],
-            buys: ['wheat', 'vegetables', 'bread', 'fish', 'meat'],
+            // ALL goods EXPENSIVE here - sell here for profit
+            sells: ['bread', 'wheat', 'water', 'vegetables', 'eggs', 'fish', 'meat', 'herbs', 'leather', 'tools', 'rope', 'torch', 'bandages', 'leather_armor'],
+            buys: ['bread', 'wheat', 'water', 'vegetables', 'eggs', 'fish', 'meat', 'herbs', 'leather', 'tools', 'rope', 'torch', 'bandages'],
 
-            // Price modifiers - wheat expensive here
+            // Price modifiers - all goods expensive here (SELL HERE for 10%+ profit)
             priceModifiers: {
-                wheat: 1.8,  // 180% of base price - SELL HERE
+                wheat: 1.8,
+                bread: 1.3,
+                water: 1.2,
                 vegetables: 1.5,
-                bread: 1.3
+                eggs: 1.2,
+                fish: 1.4,
+                meat: 1.4,
+                herbs: 1.5,
+                leather: 1.3,
+                tools: 1.2,
+                rope: 1.2,
+                torch: 1.2,
+                bandages: 1.2
             },
 
             npcs: ['tutorial_merchant', 'guard', 'blacksmith'],
