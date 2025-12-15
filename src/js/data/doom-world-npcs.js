@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // DOOM WORLD NPC SYSTEM - Where hope went to die
 // ═══════════════════════════════════════════════════════════════
-// Version: 0.91.00 | Unity AI Lab
+// Version: 0.91.10 | Unity AI Lab
 // The apocalypse changed everything. Same faces, different souls.
 // Gold is worthless. Food is gold. Survival is all that matters.
 // ═══════════════════════════════════════════════════════════════

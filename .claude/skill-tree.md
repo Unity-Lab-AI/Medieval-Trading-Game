@@ -9,7 +9,7 @@
 ═══════════════════════════════════════════════════════════════════════
 ```
 
-> **Version:** 0.91.00 | **Last Updated:** Check git blame
+> **Version:** 0.91.10 | **Last Updated:** Check git blame
 
 ---
 

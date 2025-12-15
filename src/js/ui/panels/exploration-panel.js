@@ -1,7 +1,7 @@
 //
 // EXPLORATION PANEL - choose your fate at each location
 //
-// Version: 0.91.00 | Unity AI Lab
+// Version: 0.91.10 | Unity AI Lab
 // This panel shows available explorations based on current location type
 // Connects to ExplorationConfig and DungeonExplorationSystem
 //

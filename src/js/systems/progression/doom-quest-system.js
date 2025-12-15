@@ -1,7 +1,7 @@
 // 
 // DOOM QUEST SYSTEM - Tales of tragedy and survival 
 // 
-// Version: 0.91.00 | Unity AI Lab
+// Version: 0.91.10 | Unity AI Lab
 // Every quest is a story of loss. Every victory comes with grief.
 // The doom broke the world - these quests reflect that horror.
 // Unlocked after defeating the first boss and meeting the Ferryman.

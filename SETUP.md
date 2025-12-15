@@ -172,4 +172,4 @@ Medieval-Trading-Game/
 - **Ollama Docs**: https://ollama.ai/docs
 
 ---
-*Unity AI Lab | Medieval Trading Game v0.91.08*
+*Unity AI Lab | Medieval Trading Game v0.91.10*

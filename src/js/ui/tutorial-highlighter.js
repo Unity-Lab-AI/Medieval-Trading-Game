@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // TUTORIAL HIGHLIGHTER - Visual spotlight for UI elements
 // ═══════════════════════════════════════════════════════════════
-// Version: 0.91.02 | Unity AI Lab
+// Version: 0.91.10 | Unity AI Lab
 //
 // Creates visual highlights to guide players to UI elements during
 // the tutorial. Uses a dark overlay with cutouts and pulsing effects.

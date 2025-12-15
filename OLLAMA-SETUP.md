@@ -7,7 +7,7 @@
 
 ---
 
-## Automatic Setup (v0.91.08+)
+## Automatic Setup (v0.91.10+)
 
 **The game now handles Ollama setup automatically!**
 
@@ -316,6 +316,6 @@ If you skipped Ollama setup and want to try again:
 
 ---
 
-*Medieval Trading Game v0.91.08 - AI NPC dialogue powered by Ollama*
+*Medieval Trading Game v0.91.10 - AI NPC dialogue powered by Ollama*
 *Unity AI Lab | www.unityailab.com*
 

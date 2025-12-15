@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // UI POLISH SYSTEM - smooth animations and transitions
 // ═══════════════════════════════════════════════════════════════
-// Version: 0.91.00 | Unity AI Lab
+// Version: 0.91.10 | Unity AI Lab
 // Creators: Hackall360, Sponge, GFourteen
 // www.unityailab.com | github.com/Unity-Lab-AI/Medieval-Trading-Game
 // unityailabcontact@gmail.com

@@ -14,13 +14,13 @@
 | v0.80.00 | Released | Core trading, travel, basic combat |
 | v0.85.00 | Released | Property system, employees, quests |
 | v0.90.00 | Released | Doom world, enhanced NPC dialogue |
-| **v0.91.00** | **CURRENT** | Config centralization, NPC death, stability |
+| **v0.91.10** | **CURRENT** | Config centralization, NPC death, stability |
 | v0.95.00 | Planned | Combat expansion, new content |
 | v1.0.00 | Planned | Full release, polish, balance |
 
 ---
 
-## CURRENT: v0.91.00 (Stability Release)
+## CURRENT: v0.91.10 (Stability Release)
 
 **Theme:** "Config Consolidation & Death Systems"
 
@@ -152,7 +152,7 @@
 
 | Milestone | Target | Description |
 |-----------|--------|-------------|
-| Stability | v0.91.00 | No game-breaking bugs |
+| Stability | v0.91.10 | No game-breaking bugs |
 | Content | v0.95.00 | Rich gameplay variety |
 | Release | v1.0.00 | Full game experience |
 | Community | v1.1.00 | Social features |

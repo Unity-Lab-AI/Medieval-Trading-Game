@@ -1,4 +1,4 @@
-# ARCHITECTURE.md - Medieval Trading Game v0.91.00
+# ARCHITECTURE.md - Medieval Trading Game v0.91.10
 
 ---
 
@@ -25,7 +25,7 @@ This is a **browser-based medieval trading game** built with vanilla JavaScript.
 ## DIRECTORY STRUCTURE
 
 ```
-MTGv0.91.00/
+MTGv0.91.10/
 ├── index.html              # Single entry point - THE page
 ├── config.js               # The dark heart of all settings (1400 lines)
 ├── .github/workflows/      # GitHub Actions for deployment

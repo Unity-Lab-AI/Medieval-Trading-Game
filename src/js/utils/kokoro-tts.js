@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // KOKORO TTS - Real AI voices for NPCs (Web Worker version)
 // ═══════════════════════════════════════════════════════════════
-// Version: 0.91.08 | Unity AI Lab
+// Version: 0.91.10 | Unity AI Lab
 // RUNS IN WEB WORKER to prevent UI freezing during generation!
 // REQUIRES: Local server (use START_GAME.bat or START_GAME.sh)
 // ═══════════════════════════════════════════════════════════════

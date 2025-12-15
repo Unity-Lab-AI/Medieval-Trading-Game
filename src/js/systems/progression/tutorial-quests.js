@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // TUTORIAL QUESTS - Comprehensive Game Teaching System
 // ═══════════════════════════════════════════════════════════════
-// Version: 0.91.02 | Unity AI Lab
+// Version: 0.91.10 | Unity AI Lab
 // 30+ Tutorial Quests across 7 Acts
 // Teaches: EVERY UI element, button, tooltip, system, and mechanic
 // ═══════════════════════════════════════════════════════════════

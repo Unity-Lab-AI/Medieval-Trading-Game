@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // unified people panel - talk, trade, quest, exist... all in one dark place
 // ═══════════════════════════════════════════════════════════════
-// File Version: 0.91.00
+// File Version: 0.91.10
 // conjured by Unity AI Lab - every soul, every transaction, every whisper
 // the NPC list + embedded chat + trade + quest items in seamless harmony
 // ═══════════════════════════════════════════════════════════════

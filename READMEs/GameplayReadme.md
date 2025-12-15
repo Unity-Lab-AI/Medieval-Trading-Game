@@ -8,7 +8,7 @@
 ═══════════════════════════════════════════════════════════════════════
 ```
 
-> **Version:** 0.91.08 | **Unity AI Lab** by Hackall360 Sponge GFourteen
+> **Version:** 0.91.10 | **Unity AI Lab** by Hackall360 Sponge GFourteen
 > *www.unityailab.com*
 > *Written at 3am while questioning the meaning of virtual economies*
 
@@ -1766,7 +1766,7 @@ The game features **57 achievements** across 12 categories, including 10 hidden 
 
 ## 📅 VERSION HISTORY
 
-### v0.91.03 - File Structure Cleanup (2025-12-13)
+### v0.91.10 - File Structure Cleanup (2025-12-13)
 
 **Session #87: Documentation & File Organization**
 
@@ -1778,7 +1778,7 @@ The game features **57 achievements** across 12 categories, including 10 hidden 
 
 ---
 
-### v0.91.00 - The Bootstrap Refactor (2025-12-10)
+### v0.91.10 - The Bootstrap Refactor (2025-12-10)
 
 **Sessions #70-86: Major Architecture Overhaul**
 

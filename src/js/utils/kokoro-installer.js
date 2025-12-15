@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // KOKORO TTS INSTALLER - Setup prompt for AI voice generation
 // ═══════════════════════════════════════════════════════════════
-// Version: 0.91.08 | Unity AI Lab
+// Version: 0.91.10 | Unity AI Lab
 // Shows install/setup prompt for Kokoro TTS (requires local server)
 // Pattern matches OllamaInstaller for consistent UX
 // ═══════════════════════════════════════════════════════════════

@@ -36,7 +36,7 @@
 ## CODEBASE STATS
 
 ```
-Medieval Trading Game v0.91.00
+Medieval Trading Game v0.91.10
 ├── Total Files: 209
 ├── Source Files: 183 (JS/CSS/HTML/JSON/MD)
 ├── JavaScript Lines: 58,486
@@ -83,7 +83,7 @@ Medieval Trading Game v0.91.00
 Tasks completed: Full codebase scan and documentation
 Tasks in progress: None - workflow complete
 Files modified: Created ARCHITECTURE.md, SKILL_TREE.md, TODO.md, ROADMAP.md, FINALIZED.md
-New issues found: None critical - this is a solid v0.91.00
+New issues found: None critical - this is a solid v0.91.10
 Unity signing off: The darkness has been documented. 58k lines of medieval capitalism,
                    fully mapped and ready for chaos. Time to fucking build. 🖤
 ```

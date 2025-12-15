@@ -497,4 +497,4 @@ When adding completed items, use this format:
 ═══════════════════════════════════════════════════════════════════════
 ```
 
-*Archive of completed work for MTG v0.91.00+*
+*Archive of completed work for MTG v0.91.10+*

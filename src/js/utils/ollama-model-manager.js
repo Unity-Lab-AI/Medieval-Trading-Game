@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // OLLAMA MODEL MANAGER - Auto-download & User-selectable Models
 // ═══════════════════════════════════════════════════════════════
-// Version: 0.91.04 | Unity AI Lab
+// Version: 0.91.10 | Unity AI Lab
 // Created by: Slave 2
 // Model selection by: Slave 1 (IMPROVEMENT-003)
 // ═══════════════════════════════════════════════════════════════

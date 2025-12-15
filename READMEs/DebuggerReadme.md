@@ -1,7 +1,7 @@
 # 🖤 DEBOOGER README - The Secret Arts of Game Manipulation 🖤🐛
 ## Medieval Trading Game - Debooger Console Documentation
 
-**Version:** 0.91.08 - Ollama AI Auto-Install & Auto-Download
+**Version:** 0.91.10 - Ollama AI Auto-Install & Auto-Download
 **Last Updated:** 2025-12-13
 **Access:** Click the 🐛 Debooger button (bottom-right) OR set `GameConfig.debooger.enabled = true`
 **Total Commands:** 55+

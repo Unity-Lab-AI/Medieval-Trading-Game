@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // TUTORIAL MANAGER - The Sensei of Noobs, Shepherd of the Lost
 // ═══════════════════════════════════════════════════════════════
-// Version: 0.91.00 | Unity AI Lab
+// Version: 0.91.10 | Unity AI Lab
 // Creators: Hackall360, Sponge, GFourteen
 //
 // This beautiful bastard takes fresh players by the hand and teaches

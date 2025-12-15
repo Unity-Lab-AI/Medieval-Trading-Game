@@ -2,7 +2,7 @@
 
 This game uses **Ollama** for local AI-powered NPC dialogue with automatic installation prompts.
 
-## Automatic Setup (v0.91.08+)
+## Automatic Setup (v0.91.10+)
 
 When you launch the game for the first time:
 
@@ -156,4 +156,4 @@ If you skipped Ollama setup and want to try again:
 This `models/` folder exists for documentation only. It's kept in git to explain the model system. Actual model files are managed by Ollama.
 
 ---
-*Unity AI Lab | Medieval Trading Game v0.91.08*
+*Unity AI Lab | Medieval Trading Game v0.91.10*

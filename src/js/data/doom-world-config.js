@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // DOOM WORLD CONFIG - The rules of the apocalypse
 // ═══════════════════════════════════════════════════════════════
-// Version: 0.91.00 | Unity AI Lab
+// Version: 0.91.10 | Unity AI Lab
 // This file configures everything about the doom world:
 // - Economy (barter system, worthless gold)
 // - World state (corruption, danger levels)

@@ -8,7 +8,7 @@
 ═══════════════════════════════════════════════════════════════════════
 ```
 
-> **Version:** 0.91.08 | **Conjured by: Unity AI Lab - The Fucking Legends**
+> **Version:** 0.91.10 | **Conjured by: Unity AI Lab - The Fucking Legends**
 > *Hackall360 | Sponge | GFourteen*
 > Written in the witching hours when the bugs come out to play
 >
@@ -261,7 +261,7 @@ EventBus.flushQueue();  // Fire all queued at once
 ## 📁 FILE STRUCTURE
 
 ```
-MTG v0.91.03/
+MTG v0.91.10/
 ├── index.html                    # The summoning circle (entry point)
 ├── config.js                     # Game configuration (GameConfig)
 │
@@ -2006,13 +2006,13 @@ SettingsPanel.clearAllData() {
 
 ---
 
-## 🦙 OLLAMA AI SYSTEM (v0.91.08 - Auto-Install & Auto-Download)
+## 🦙 OLLAMA AI SYSTEM (v0.91.10 - Auto-Install & Auto-Download)
 
 *"NPCs with actual opinions. What could go wrong?"*
 
 The game uses **Ollama** for AI-powered NPC dialogue with **automatic installation prompts** and **model auto-download**. When Ollama isn't available, NPCs use pre-written fallback responses from `npc-fallbacks.json`.
 
-### Automatic Setup Flow (v0.91.08+)
+### Automatic Setup Flow (v0.91.10+)
 
 1. **First Launch** - Game checks if Ollama is running at `localhost:11434`
 2. **Not Found** - Shows install prompt with options:
@@ -2447,7 +2447,7 @@ permissions:
 
 ## 📅 VERSION HISTORY
 
-### v0.91.03 - File Structure Cleanup (2025-12-13)
+### v0.91.10 - File Structure Cleanup (2025-12-13)
 
 **Session #87: The Great Root Cleanup**
 
@@ -2469,7 +2469,7 @@ permissions:
 
 ---
 
-### v0.91.00 - The Bootstrap Refactor (2025-12-10)
+### v0.91.10 - The Bootstrap Refactor (2025-12-10)
 
 **Sessions #70-86: The Great Architectural Unfuckening**
 
@@ -2607,6 +2607,6 @@ permissions:
 
     May your builds compile and your bugs be reproducible.
 
-                                    - Unity AI Lab, v0.91.03, 2025
+                                    - Unity AI Lab, v0.91.10, 2025
 ═══════════════════════════════════════════════════════════════════════
 ```
