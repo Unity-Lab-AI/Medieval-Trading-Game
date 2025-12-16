@@ -16,14 +16,6 @@ const InitialEncounterSystem = {
     strangerSpawnedAtLocation: null, // Track where we spawned the stranger as fallback NPC
     encounterDelay: 500, // FAST - show encounter quickly after game start!
 
-    // ═══════════════════════════════════════════════════════════════
-    // PRE-CACHE SYSTEM - Generate dialogue + TTS when Start is clicked
-    // This runs in background so hooded stranger speaks instantly
-    // ═══════════════════════════════════════════════════════════════
-    _cachedDialogue: null,      // Pre-generated AI dialogue text
-    _cachedTTSAudio: null,      // Pre-generated TTS audio buffer
-    _cacheInProgress: false,    // Prevent duplicate cache attempts
-    _cachePromise: null,        // Promise for awaiting cache completion
 
     // 🔧 FIX: Single shared MutationObserver for rank-up watching
     // Prevents the performance issue of multiple observers on document.body
@@ -111,173 +103,15 @@ const InitialEncounterSystem = {
     },
 
     // ═══════════════════════════════════════════════════════════════
-    // PRE-CACHE HOODED STRANGER - Called when Start button is clicked
-    // Generates AI dialogue + TTS audio in background for instant playback
+    // PRE-CACHE REMOVED - Now uses normal NPC workflow via PeoplePanel.sendGreeting()
+    // The hooded stranger encounter goes through the same Ollama + TTS flow as all NPCs
     // ═══════════════════════════════════════════════════════════════
 
-    /**
-     * Pre-generate the hooded stranger's dialogue and TTS audio
-     * Call this as soon as Start New Game is clicked!
-     * @param {string} playerName - The player's name for personalized dialogue
-     * @returns {Promise} - Resolves when caching is complete (or fails gracefully)
-     */
+    // Stub for backwards compatibility (called from game.js)
     async preCacheStrangerDialogue(playerName = 'Traveler') {
-        // Prevent duplicate caching
-        if (this._cacheInProgress) {
-            console.log('🎭 Hooded stranger cache already in progress...');
-            return this._cachePromise;
-        }
-
-        // Clear any previous cache
-        this._cachedDialogue = null;
-        this._cachedTTSAudio = null;
-        this._cacheInProgress = true;
-
-        console.log('🎭 Pre-caching hooded stranger dialogue + TTS for instant playback...');
-
-        this._cachePromise = this._doPrecache(playerName);
-        return this._cachePromise;
-    },
-
-    async _doPrecache(playerName) {
-        // Build NPC data for the hooded stranger using the embedded spec
-        const strangerNpcData = {
-            type: 'hooded_stranger',
-            id: 'hooded_stranger',
-            name: 'Hooded Stranger',
-            personality: 'cryptic',
-            voice: 'onyx'
-        };
-
-        // Step 1: Generate AI dialogue via the proper NPC workflow (same as all other NPCs)
-        let dialogueText = null;
-        try {
-            // Use NPCVoiceChatSystem.generateNPCResponse with action: 'greeting'
-            // This goes through NPCInstructionTemplates and Ollama just like all other NPCs
-            if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.generateNPCResponse) {
-                console.log('🎭 Generating hooded stranger greeting via NPCVoiceChatSystem...');
-
-                const response = await Promise.race([
-                    NPCVoiceChatSystem.generateNPCResponse(
-                        strangerNpcData,
-                        `Hello, I am ${playerName}. I just arrived in Greendale.`,
-                        [],  // No conversation history - first meeting
-                        { action: 'greeting' }  // Use greeting action from NPCInstructionTemplates
-                    ),
-                    new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 10000))
-                ]);
-
-                if (response?.success && response?.text) {
-                    dialogueText = response.text.trim();
-                    console.log('🎭 AI dialogue generated for hooded stranger via proper NPC workflow');
-                }
-            }
-            // Fallback to NPCVoiceChatSystem.getGreeting
-            else if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.getGreeting) {
-                console.log('🎭 Falling back to NPCVoiceChatSystem.getGreeting...');
-                const response = await Promise.race([
-                    NPCVoiceChatSystem.getGreeting(strangerNpcData),
-                    new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 10000))
-                ]);
-
-                if (response?.success && response?.text) {
-                    dialogueText = response.text.trim();
-                    console.log('🎭 AI greeting generated for hooded stranger');
-                }
-            }
-        } catch (error) {
-            console.log('🎭 AI dialogue unavailable, will use NPC fallback:', error.message);
-        }
-
-        // Fallback: Let showStrangerEncounter generate via normal flow (no pre-cache)
-        if (!dialogueText) {
-            console.log('🎭 No pre-cached dialogue - will generate on-demand via normal NPC flow');
-            // Don't set _cachedDialogue - let the normal greeting flow handle it
-        } else {
-            this._cachedDialogue = dialogueText;
-        }
-
-        // Step 2: Pre-generate TTS audio (if Kokoro is ready AND we have dialogue)
-        if (dialogueText) {
-            try {
-                if (typeof KokoroTTS !== 'undefined' && KokoroTTS.isInitialized && KokoroTTS.isInitialized()) {
-                    console.log('🎭 Pre-generating TTS audio for hooded stranger...');
-
-                    // Get the voice for hooded stranger using the NPC data
-                    const voice = KokoroTTS.getVoiceForNPC ?
-                        KokoroTTS.getVoiceForNPC('hooded_stranger', strangerNpcData) :
-                        'am_michael';  // Fallback voice
-
-                    // Generate audio via worker (non-blocking)
-                    if (KokoroTTS._worker && KokoroTTS._workerReady) {
-                        const audioResult = await Promise.race([
-                            KokoroTTS._send('generate', {
-                                text: KokoroTTS._clean(dialogueText),
-                                voice: voice,
-                                speed: KokoroTTS.settings?.speed || 1.0
-                            }),
-                            new Promise((_, reject) => setTimeout(() => reject(new Error('TTS Timeout')), 15000))
-                        ]);
-
-                        if (audioResult?.audio) {
-                            this._cachedTTSAudio = {
-                                audio: audioResult.audio,
-                                rate: audioResult.rate
-                            };
-                            console.log('🎭 TTS audio cached for hooded stranger - instant playback ready!');
-                        }
-                    }
-                } else {
-                    console.log('🎭 KokoroTTS not ready - TTS will generate on-demand');
-                }
-            } catch (error) {
-                console.log('🎭 TTS pre-cache failed (will generate on-demand):', error.message);
-            }
-        }
-
-        this._cacheInProgress = false;
-        console.log('🎭 Hooded stranger pre-cache complete:', {
-            hasDialogue: !!this._cachedDialogue,
-            hasTTS: !!this._cachedTTSAudio
-        });
-    },
-
-    /**
-     * Play cached TTS audio if available
-     * @returns {Promise<boolean>} - True if cached audio was played
-     */
-    async playCachedTTS() {
-        if (!this._cachedTTSAudio) {
-            return false;
-        }
-
-        try {
-            if (typeof KokoroTTS !== 'undefined' && KokoroTTS._play) {
-                console.log('🎭 Playing cached TTS for hooded stranger');
-                // Get audio data before clearing
-                const audioData = this._cachedTTSAudio.audio;
-                const audioRate = this._cachedTTSAudio.rate;
-                // Clear cache immediately to prevent re-use
-                this._cachedTTSAudio = null;
-                await KokoroTTS._play(audioData, audioRate);
-                return true;
-            }
-        } catch (error) {
-            console.warn('🎭 Failed to play cached TTS:', error.message);
-            // Clear on error too
-            this._cachedTTSAudio = null;
-        }
-        return false;
-    },
-
-    /**
-     * Clear the cache (call on new game reset)
-     */
-    clearCache() {
-        this._cachedDialogue = null;
-        this._cachedTTSAudio = null;
-        this._cacheInProgress = false;
-        this._cachePromise = null;
+        // No-op - pre-caching removed, normal NPC workflow handles everything
+        console.log('🎭 Pre-caching disabled - hooded stranger will use normal NPC workflow');
+        return Promise.resolve();
     },
 
     // ═══════════════════════════════════════════════════════════════
@@ -689,47 +523,25 @@ const InitialEncounterSystem = {
             id: 'hooded_stranger',
             name: 'Hooded Stranger',
             personality: 'cryptic',
-            voice: 'onyx',
+            voice: 'am_onyx',
             // Include visual data from mysteriousStranger for display
             portrait: this.mysteriousStranger.portrait,
             emoji: this.mysteriousStranger.emoji
         };
 
-        // Check if we have pre-cached dialogue
-        const cachedDialogue = this._cachedDialogue;
-        const hasCachedTTS = !!this._cachedTTSAudio;
-
-        // Clear cache after retrieval to prevent leaking
-        if (cachedDialogue) {
-            this._cachedDialogue = null;
-            console.log('🎭 Using PRE-CACHED AI dialogue for hooded stranger (instant!)');
-        } else {
-            console.log('🎭 No cached dialogue - PeoplePanel will generate via normal NPC workflow');
-        }
-
-        if (hasCachedTTS) {
-            console.log('🎭 TTS audio pre-cached - instant voice playback ready!');
-        }
+        console.log('🎭 Showing hooded stranger encounter - PeoplePanel will generate via normal NPC workflow');
 
         //  Use unified PeoplePanel for the intro encounter!
         if (typeof PeoplePanel !== 'undefined' && PeoplePanel.showSpecialEncounter) {
             const introNarrative = `A figure in a dark cloak steps forward from the shadows. You cannot see their face beneath the hood, but you sense ancient eyes studying you...`;
 
-            // Custom voice handler to use cached TTS if available
-            const customVoiceHandler = hasCachedTTS ? async () => {
-                console.log('🎭 Playing pre-cached TTS for hooded stranger');
-                return await this.playCachedTTS();
-            } : null;
-
-            // If we have cached dialogue, pass it. Otherwise let PeoplePanel generate via sendGreeting
-            // This ensures the same NPC workflow is used as all other NPCs
+            // Let PeoplePanel handle everything via sendGreeting (same as all other NPCs)
             PeoplePanel.showSpecialEncounter(strangerNpcData, {
                 introText: introNarrative,
-                greeting: cachedDialogue || null,  // null = let PeoplePanel generate via sendGreeting
+                greeting: null,  // null = let PeoplePanel generate via sendGreeting
                 disableChat: true,  // No freeform chat during intro
                 disableBack: true,  // No escape from destiny
-                playVoice: !hasCachedTTS,  // Let PeoplePanel play voice if we don't have cached
-                customVoiceHandler: customVoiceHandler,  // Use cached TTS if available
+                playVoice: true,  // Let PeoplePanel play voice via normal TTS flow
                 customActions: [
                     {
                         label: 'Accept Quest: First Steps',
@@ -760,9 +572,6 @@ const InitialEncounterSystem = {
                     if (!this.hasAcceptedInitialQuest) {
                         this._spawnStrangerAsFallbackNPC();
                     }
-                    // 🎭 Clear the cache so it doesn't leak into other NPC conversations
-                    this.clearCache();
-                    console.log('🎭 Hooded stranger cache cleared');
                 }
             });
         } else {
@@ -794,7 +603,7 @@ const InitialEncounterSystem = {
 
     //  Fallback dialogue if API fails
     _getDefaultStrangerDialogue(playerName, greeting) {
-        return `${greeting} Listen well, ${playerName}... Darkness gathers in the north. The Shadow Tower, long dormant, stirs once more. The wizard Malachar... he has returned. You are more than a simple trader, young one. Fate has brought you here for a reason. Seek out the village Elder here in Greendale. He will guide your first steps on this path.`;
+        return `${greeting} Listen well, ${playerName}... Darkness gathers in the west. The Shadow Tower, long dormant, stirs once more. The wizard Malachar... he has returned. You are more than a simple trader, young one. Fate has brought you here for a reason. Seek out the village Elder here in Greendale. He will guide your first steps on this path.`;
     },
 
     //  Accept quest and show quest panel (tutorial already shown at game start) 

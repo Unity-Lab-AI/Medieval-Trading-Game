@@ -21,7 +21,7 @@ const KokoroTTS = {
     MODEL_ID: 'onnx-community/Kokoro-82M-v1.0-ONNX',
     CACHE_KEY: 'kokoro-tts-model-cached',
 
-    // Voice mappings
+    // Voice mappings - Full Kokoro voice IDs
     VOICES: {
         'af_heart': 'af_heart', 'af_alloy': 'af_alloy', 'af_aoede': 'af_aoede',
         'af_bella': 'af_bella', 'af_jessica': 'af_jessica', 'af_kore': 'af_kore',
@@ -32,6 +32,25 @@ const KokoroTTS = {
         'am_onyx': 'am_onyx', 'am_puck': 'am_puck', 'am_santa': 'am_santa',
         'bf_alice': 'bf_alice', 'bf_emma': 'bf_emma', 'bf_isabella': 'bf_isabella', 'bf_lily': 'bf_lily',
         'bm_daniel': 'bm_daniel', 'bm_fable': 'bm_fable', 'bm_george': 'bm_george', 'bm_lewis': 'bm_lewis'
+    },
+
+    // 🔧 Short name -> Full Kokoro ID mapping (for legacy voice names)
+    SHORT_NAME_MAP: {
+        'nova': 'af_nova', 'onyx': 'am_onyx', 'echo': 'am_echo', 'fable': 'bm_fable',
+        'alloy': 'af_alloy', 'heart': 'af_heart', 'bella': 'af_bella', 'jessica': 'af_jessica',
+        'nicole': 'af_nicole', 'river': 'af_river', 'sarah': 'af_sarah', 'sky': 'af_sky',
+        'adam': 'am_adam', 'eric': 'am_eric', 'fenrir': 'am_fenrir', 'liam': 'am_liam',
+        'michael': 'am_michael', 'puck': 'am_puck', 'santa': 'am_santa',
+        'alice': 'bf_alice', 'emma': 'bf_emma', 'isabella': 'bf_isabella', 'lily': 'bf_lily',
+        'daniel': 'bm_daniel', 'george': 'bm_george', 'lewis': 'bm_lewis',
+        // Legacy names that don't have direct matches - map to similar voices
+        'sage': 'bm_lewis',     // wise, old voice
+        'ash': 'am_adam',       // rough, gruff voice
+        'dan': 'bm_daniel',     // male British voice
+        'ballad': 'bm_george',  // storyteller voice
+        'coral': 'af_jessica',  // warm female voice
+        'verse': 'bf_emma',     // elegant female voice
+        'shimmer': 'af_bella'   // soft female voice
     },
 
     NPC_VOICE_MAP: {
@@ -216,8 +235,9 @@ const KokoroTTS = {
                 console.error('🎙️ Worker error:', e);
             };
 
-            // Init audio context
-            this._audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            // 🔧 FIX: DON'T create AudioContext here - Chrome blocks it without user gesture
+            // AudioContext will be created lazily in _play() on first actual playback
+            // This also allows sharing with NPCVoiceSystem's context if available
 
             // Send init to worker with timeout
             const result = await Promise.race([
@@ -265,6 +285,13 @@ const KokoroTTS = {
                     this._pendingCallbacks.delete(id);
                 }
                 break;
+            // 🔧 FIX: Handle 'audioReady' message type (used by kokoro-worker.js)
+            case 'audioReady':
+                if (cb) {
+                    cb.resolve({ audio: new Float32Array(data.audio), rate: data.sampleRate });
+                    this._pendingCallbacks.delete(id);
+                }
+                break;
             case 'error':
                 console.warn('🎙️ Worker error:', error);
                 if (cb) { cb.reject(new Error(error)); this._pendingCallbacks.delete(id); }
@@ -298,41 +325,101 @@ const KokoroTTS = {
     // SPEECH - NON-BLOCKING via Worker
     // ═══════════════════════════════════════════════════════════
 
-    // Maximum characters per chunk - smaller = faster first response
-    MAX_CHUNK_LENGTH: 100,
+    // Maximum characters - generate full response in one go (chunking caused more delays than it saved)
+    MAX_CHUNK_LENGTH: 2000,
 
-    async speak(text, npcType, npcData = {}) {
+    async speak(text, npcTypeOrVoice, npcData = {}) {
         if (!this.settings.enabled || !text?.trim()) return false;
         if (!this._initialized || !this._worker) {
             console.log('🎙️ KokoroTTS: Not initialized');
             return false;
         }
 
+        // 🔧 FIX: Reset stop flag at START of new speak() call
+        // Previous stop requests shouldn't affect new speech
+        this._stopRequested = false;
+
         const clean = this._clean(text);
         if (!clean) return false;
-        const voice = npcData.voice || this.getVoiceForNPC(npcType, npcData);
+
+        // 🔧 FIX: Support direct voice IDs (like 'am_onyx') AND short names (like 'onyx')
+        // Resolve ALL voice names to full Kokoro voice IDs
+        let voice;
+        let rawVoice = npcData.voice || npcTypeOrVoice;
+
+        if (rawVoice) {
+            // Is it already a full Kokoro voice ID?
+            if (rawVoice.startsWith('am_') || rawVoice.startsWith('af_') ||
+                rawVoice.startsWith('bm_') || rawVoice.startsWith('bf_')) {
+                voice = rawVoice;
+            } else {
+                // 🔧 FIX: Check SHORT_NAME_MAP first for legacy voice names
+                const shortName = rawVoice.toLowerCase();
+                if (this.SHORT_NAME_MAP[shortName]) {
+                    voice = this.SHORT_NAME_MAP[shortName];
+                    console.log(`🎙️ KokoroTTS: Resolved short name '${rawVoice}' -> '${voice}'`);
+                } else {
+                    // Try to find by suffix (e.g., 'onyx' -> 'am_onyx')
+                    const voiceKeys = Object.keys(this.VOICES);
+                    const voiceEntry = voiceKeys.find(v => v.endsWith('_' + shortName));
+                    if (voiceEntry) {
+                        voice = voiceEntry;
+                        console.log(`🎙️ KokoroTTS: Resolved by suffix '${rawVoice}' -> '${voice}'`);
+                    } else {
+                        // NPC type - look up voice in map
+                        voice = this.getVoiceForNPC(rawVoice, npcData);
+                    }
+                }
+            }
+        } else {
+            // No voice specified - look up by NPC type
+            voice = this.getVoiceForNPC(npcTypeOrVoice, npcData);
+        }
+
+        console.log(`🎙️ KokoroTTS voice selection: input="${npcTypeOrVoice}" -> resolved="${voice}"`);
+
+        // 🔧 FIX: STRICT voice validation - reject if voice not in VOICES database
+        if (!voice || !this.VOICES[voice]) {
+            console.error(`🎙️ KokoroTTS: INVALID VOICE "${voice}" - not found in VOICES database. Available: ${Object.keys(this.VOICES).join(', ')}`);
+            return false;
+        }
 
         try {
             // Split into small chunks for faster first response
             const chunks = this._splitIntoChunks(clean);
-            console.log(`🎙️ KokoroTTS: "${voice}": ${chunks.length} chunk(s)`);
+
+            // 🔧 FIX: Filter out empty chunks BEFORE the loop
+            const validChunks = chunks.filter(c => c && typeof c === 'string' && c.trim().length > 0);
+            console.log(`🎙️ KokoroTTS: "${voice}": ${validChunks.length} chunk(s) to generate`);
+
+            if (validChunks.length === 0) {
+                console.warn('🎙️ KokoroTTS: No valid chunks to generate');
+                return false;
+            }
 
             this._showIndicator(true);
 
             // Generate and play each chunk
-            for (let i = 0; i < chunks.length; i++) {
-                const chunk = chunks[i];
-                if (!chunk.trim()) continue;
+            for (let i = 0; i < validChunks.length; i++) {
+                const chunk = validChunks[i];
 
                 if (this._stopRequested) {
                     this._stopRequested = false;
                     break;
                 }
 
-                const result = await this._send('generate', { text: chunk, voice, speed: this.settings.speed });
+                console.log(`🎙️ KokoroTTS: Generating chunk ${i + 1}/${validChunks.length}...`);
+                // 🔧 FIX: Add 30-second timeout to prevent infinite hangs
+                const result = await Promise.race([
+                    this._send('generate', { text: chunk, voice, speed: this.settings.speed }),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('Generation timeout (30s)')), 30000))
+                ]);
 
                 if (result?.audio) {
+                    console.log(`🎙️ KokoroTTS: Playing chunk ${i + 1} (${result.audio.length} samples)`);
                     await this._play(result.audio, result.rate);
+                } else {
+                    console.warn(`🎙️ KokoroTTS: No audio returned for chunk ${i + 1}`);
                 }
             }
 
@@ -348,13 +435,21 @@ const KokoroTTS = {
 
     // Split text into chunks at sentence boundaries for faster first response
     _splitIntoChunks(text) {
-        if (!text || text.length <= this.MAX_CHUNK_LENGTH) {
-            return [text];
+        // 🔧 FIX: Handle empty/null text properly
+        if (!text || !text.trim()) {
+            return [];
+        }
+
+        const trimmedText = text.trim();
+
+        // Short text - just return as single chunk
+        if (trimmedText.length <= this.MAX_CHUNK_LENGTH) {
+            return [trimmedText];
         }
 
         const chunks = [];
         // Split on sentence-ending punctuation
-        const sentences = text.split(/(?<=[.!?])\s+/);
+        const sentences = trimmedText.split(/(?<=[.!?])\s+/);
 
         let currentChunk = '';
         for (const sentence of sentences) {
@@ -372,34 +467,77 @@ const KokoroTTS = {
             chunks.push(currentChunk.trim());
         }
 
-        return chunks.length > 0 ? chunks : [text];
+        return chunks.length > 0 ? chunks : [trimmedText];
     },
 
     _stopRequested: false,
 
     async _play(audioData, sampleRate) {
-        // Stop any currently playing audio (but don't set stop flag - that's for user interrupts)
-        if (this._currentAudio) { try { this._currentAudio.stop(); } catch {} this._currentAudio = null; }
-        if (!this._audioContext) this._audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        if (this._audioContext.state === 'suspended') await this._audioContext.resume();
+        try {
+            // 🔧 FIX: Add comprehensive error logging AND settle promise properly
+            if (!audioData || audioData.length === 0) {
+                console.error('🎙️ KokoroTTS._play(): No audio data provided');
+                return Promise.resolve(); // Resolve instead of hanging!
+            }
 
-        const buf = this._audioContext.createBuffer(1, audioData.length, sampleRate || this.SAMPLE_RATE);
-        buf.getChannelData(0).set(audioData);
+            console.log(`🎙️ KokoroTTS._play(): Playing ${audioData.length} samples at ${sampleRate || this.SAMPLE_RATE}Hz`);
 
-        const src = this._audioContext.createBufferSource();
-        src.buffer = buf;
+            // Stop any currently playing audio (but don't set stop flag - that's for user interrupts)
+            if (this._currentAudio) {
+                try { this._currentAudio.stop(); } catch (e) {
+                    console.warn('🎙️ KokoroTTS._play(): Error stopping previous audio:', e);
+                }
+                this._currentAudio = null;
+            }
 
-        const gain = this._audioContext.createGain();
-        gain.gain.value = this.settings.volume;
+            // 🔧 FIX: Lazy AudioContext creation + share with NPCVoiceSystem
+            if (!this._audioContext) {
+                // Try to share NPCVoiceSystem's AudioContext first
+                if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.audioContext) {
+                    this._audioContext = NPCVoiceChatSystem.audioContext;
+                    console.log('🎙️ KokoroTTS._play(): Using shared AudioContext from NPCVoiceChatSystem');
+                } else {
+                    // Create new one (lazy - only when actually playing, after user interaction)
+                    this._audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    console.log('🎙️ KokoroTTS._play(): Created new AudioContext (lazy)');
+                }
+            }
+            if (this._audioContext.state === 'suspended') {
+                await this._audioContext.resume();
+                console.log('🎙️ KokoroTTS._play(): Resumed suspended AudioContext');
+            }
 
-        src.connect(gain);
-        gain.connect(this._audioContext.destination);
-        this._currentAudio = src;
+            const buf = this._audioContext.createBuffer(1, audioData.length, sampleRate || this.SAMPLE_RATE);
+            buf.getChannelData(0).set(audioData);
 
-        return new Promise(resolve => {
-            src.onended = () => { this._currentAudio = null; resolve(); };
-            src.start();
-        });
+            const src = this._audioContext.createBufferSource();
+            src.buffer = buf;
+
+            const gain = this._audioContext.createGain();
+            gain.gain.value = this.settings.volume;
+
+            src.connect(gain);
+            gain.connect(this._audioContext.destination);
+            this._currentAudio = src;
+
+            return new Promise((resolve, reject) => {
+                src.onended = () => {
+                    this._currentAudio = null;
+                    console.log('🎙️ KokoroTTS._play(): Playback completed');
+                    resolve();
+                };
+                src.onerror = (e) => {
+                    console.error('🎙️ KokoroTTS._play(): BufferSource error:', e);
+                    this._currentAudio = null;
+                    reject(e);
+                };
+                src.start();
+            });
+        } catch (error) {
+            console.error('🎙️ KokoroTTS._play(): Critical error during playback:', error);
+            this._currentAudio = null;
+            throw error;
+        }
     },
 
     _clean(text) {

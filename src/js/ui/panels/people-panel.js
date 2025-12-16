@@ -909,10 +909,16 @@ const PeoplePanel = {
         }
 
         // enrich with persona data if available
+        // 🔧 FIX: Preserve original npc.voice - don't let persona overwrite it!
         if (typeof NPCPersonaDatabase !== 'undefined') {
             const persona = NPCPersonaDatabase.getPersona(npc.type || npc.id);
             if (persona) {
+                const originalVoice = npc.voice; // Save original voice before merge
                 npcData = { ...npc, ...persona, id: npc.id, type: npc.type };
+                // Restore original voice if it was set (prevents persona from overwriting)
+                if (originalVoice) {
+                    npcData.voice = originalVoice;
+                }
             }
         }
 
@@ -1162,6 +1168,12 @@ const PeoplePanel = {
                 // FIX BUG #1 & #5: Don't scroll for fallback greeting
                 this.addChatMessage(fallback, 'npc', false);
                 this.chatHistory.push({ role: 'assistant', content: fallback });
+
+                // 🔧 FIX: Play TTS for fallback greetings too!
+                if (NPCVoiceChatSystem.settings?.voiceEnabled) {
+                    const voice = this.getNPCVoice(npcData);
+                    NPCVoiceChatSystem.playVoice(fallback, voice);
+                }
             }
         } else {
             // FIX BUG #3: Remove "Approaching..." for fallback greeting too
@@ -1169,6 +1181,12 @@ const PeoplePanel = {
             const fallback = this.getFallbackGreeting(npcData);
             // FIX BUG #1 & #5: Don't scroll for fallback greeting
             this.addChatMessage(fallback, 'npc', false);
+
+            // 🔧 FIX: Play TTS for fallback greetings when NPCVoiceChatSystem unavailable
+            if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.settings?.voiceEnabled) {
+                const voice = this.getNPCVoice(npcData);
+                NPCVoiceChatSystem.playVoice(fallback, voice);
+            }
         }
     },
 
@@ -1259,7 +1277,14 @@ const PeoplePanel = {
             const messages = document.getElementById('people-chat-messages');
             const typing = messages?.querySelector('.typing-indicator');
             if (typing) typing.remove();
-            this.addChatMessage("*seems distracted*", 'npc');
+            const fallbackMsg = "*seems distracted*";
+            this.addChatMessage(fallbackMsg, 'npc');
+
+            // 🔧 FIX: Play TTS for fallback message in error handler
+            if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.settings?.voiceEnabled) {
+                const voice = this.getNPCVoice(this.currentNPC);
+                NPCVoiceChatSystem.playVoice(fallbackMsg, voice);
+            }
         }
 
         this.isWaitingForResponse = false;
@@ -1305,6 +1330,12 @@ const PeoplePanel = {
     updateQuickActions(npcData) {
         const container = document.getElementById('people-quick-actions');
         if (!container) return;
+
+        // 🔧 FIX: Don't overwrite special encounter buttons!
+        if (this._isSpecialEncounter) {
+            console.log('🎭 Skipping updateQuickActions - special encounter in progress');
+            return;
+        }
 
         const npcType = npcData.type || npcData.id;
         const npcName = npcData.name || npcType;
@@ -2145,6 +2176,12 @@ const PeoplePanel = {
             const fallback = this.getQuestActionFallback(actionType, quest);
             this.addChatMessage(fallback, 'npc');
             this.chatHistory.push({ role: 'assistant', content: fallback });
+
+            // 🔧 FIX: Play TTS for fallback message in error handler
+            if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.settings?.voiceEnabled) {
+                const voice = this.getNPCVoice(this.currentNPC);
+                NPCVoiceChatSystem.playVoice(fallback, voice);
+            }
 
             // critical: actually execute the quest action even in fallback!
             // If API fails but user clicked "Complete Quest", we should still complete it
@@ -3239,6 +3276,12 @@ Speak cryptically and briefly. You offer passage to the ${inDoom ? 'normal world
             this.addChatMessage(fallback, 'npc');
             this.chatHistory.push({ role: 'assistant', content: fallback });
 
+            // 🔧 FIX: Play TTS for action fallback messages
+            if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.settings?.voiceEnabled) {
+                const voice = this.getNPCVoice(this.currentNPC);
+                NPCVoiceChatSystem.playVoice(fallback, voice);
+            }
+
             // execute the action even on fallback - the fallback message is just flavor
             this.executeActionFallback(actionType);
         }
@@ -3916,7 +3959,7 @@ Speak cryptically and briefly. You offer passage to the ${inDoom ? 'normal world
 
                 // play tts - pass NPC name as source for indicator 🖤💀
                 if (playVoice && typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.settings?.voiceEnabled) {
-                    NPCVoiceChatSystem.playVoice(greeting, npcData.voice || 'onyx', npcData.name || 'Stranger');
+                    NPCVoiceChatSystem.playVoice(greeting, npcData.voice || 'am_onyx', npcData.name || 'Stranger');
                 }
             }, 300);
         } else {

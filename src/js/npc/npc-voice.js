@@ -97,7 +97,8 @@ const NPCVoiceChatSystem = {
         voiceEnabled: true,
         voiceVolume: 70,
         masterVolume: 100, // Master volume (0-100), applied on top of voiceVolume
-        temperature: 0.8
+        temperature: 0.8,
+        voiceEngine: 'kokoro'  // 🔧 FIX: Include voiceEngine in settings (default to kokoro)
     },
 
     // voice playback state - the audio abyss
@@ -144,6 +145,22 @@ const NPCVoiceChatSystem = {
 
         // setup quest event listeners for extended conversations
         this.setupQuestListeners();
+
+        // 🔧 FIX: Auto-initialize KokoroTTS if voice engine is set to 'kokoro'
+        if (this.settings.voiceEngine === 'kokoro' && typeof KokoroTTS !== 'undefined') {
+            if (!KokoroTTS._initialized && !KokoroTTS._loading) {
+                console.log('🎙️ Auto-initializing KokoroTTS (voice engine is kokoro)...');
+                KokoroTTS.init().then(success => {
+                    if (success) {
+                        console.log('🎙️ KokoroTTS auto-initialized successfully!');
+                    } else {
+                        console.warn('🎙️ KokoroTTS auto-init failed - will use browser TTS fallback');
+                    }
+                }).catch(err => {
+                    console.warn('🎙️ KokoroTTS auto-init error:', err.message);
+                });
+            }
+        }
 
         this.isInitialized = true;
         console.log('🎙️ NPCVoiceChatSystem: Initialized - NPCs now have voices and opinions');
@@ -231,6 +248,17 @@ const NPCVoiceChatSystem = {
                         console.log(`🎙️ Loaded voice enabled from settings: ${this.settings.voiceEnabled}`);
                     }
                 }
+            }
+
+            // 🔧 FIX: Load voiceEngine from mtg_voice_engine (where settings panel saves it)
+            // AND set voiceEnabled based on the engine (text-only = disabled)
+            const savedEngine = localStorage.getItem('mtg_voice_engine');
+            if (savedEngine) {
+                this.settings.voiceEngine = savedEngine;
+                // 🔧 CRITICAL FIX: voiceEnabled MUST be derived from voiceEngine at startup!
+                // Otherwise TTS is disabled even when kokoro/browser is selected
+                this.settings.voiceEnabled = (savedEngine !== 'text-only');
+                console.log(`🎙️ Loaded voice engine from localStorage: ${this.settings.voiceEngine}, voiceEnabled: ${this.settings.voiceEnabled}`);
             }
         } catch (e) {
             console.warn('🎙️ Could not load master volume from settings');
@@ -460,6 +488,7 @@ const NPCVoiceChatSystem = {
 
             if (options.action && typeof NPCInstructionTemplates !== 'undefined' && NPCInstructionTemplates._loaded) {
                 // build standardized instruction from new template system
+                const gameCtx = this.getGameContext();
                 const context = {
                     npcName: npcData.name || npcData.type,
                     message: playerMessage,
@@ -476,8 +505,10 @@ const NPCVoiceChatSystem = {
                         inventory: game?.player?.inventory || {}
                     },
                     game: {
-                        timeOfDay: this.getGameContext()?.timeOfDay || 'day',
-                        weather: this.getGameContext()?.weather || 'clear'
+                        timeOfDay: gameCtx?.timeOfDay || 'day',
+                        weather: gameCtx?.weather || 'clear',
+                        weatherContext: gameCtx?.weatherContext || 'Clear skies.',
+                        season: gameCtx?.season || 'unknown'
                     },
                     npc: {
                         inventory: npcData.currentStock || npcData.inventory || []
@@ -1168,8 +1199,38 @@ RELATIONSHIP MEMORY:
 
             // 🎙️ NEURAL AI TTS (Kokoro) - Primary/Default
             if (voiceEngine === 'kokoro') {
-                const kokoroReady = typeof KokoroTTS !== 'undefined' &&
-                    (KokoroTTS._initialized || (KokoroTTS.isInitialized && KokoroTTS.isInitialized()));
+                // Check if Kokoro exists - if not, fall through to browser TTS
+                if (typeof KokoroTTS === 'undefined') {
+                    console.log('🎙️ KokoroTTS not loaded - falling back to browser TTS');
+                    // DON'T return! Fall through to browser TTS fallback below
+                } else {
+
+                // Check if Kokoro is ready
+                let kokoroReady = KokoroTTS._initialized || (KokoroTTS.isInitialized && KokoroTTS.isInitialized());
+
+                // 🔧 FIX: If Kokoro is still loading, wait for it (up to 10 seconds)
+                if (!kokoroReady && KokoroTTS.isLoading && KokoroTTS.isLoading()) {
+                    console.log('🎙️ KokoroTTS still loading - waiting for initialization...');
+                    this.showGlobalVoiceIndicator(source, 'Loading voice...');
+
+                    try {
+                        // Wait for existing init to complete (with timeout)
+                        if (KokoroTTS._initPromise) {
+                            await Promise.race([
+                                KokoroTTS._initPromise,
+                                new Promise((_, reject) => setTimeout(() => reject(new Error('Wait timeout')), 10000))
+                            ]);
+                        }
+                        // Re-check after waiting
+                        kokoroReady = KokoroTTS._initialized || (KokoroTTS.isInitialized && KokoroTTS.isInitialized());
+                        if (kokoroReady) {
+                            console.log('🎙️ KokoroTTS finished loading - proceeding with voice');
+                        }
+                    } catch (waitError) {
+                        console.warn('🎙️ Timeout waiting for KokoroTTS:', waitError.message);
+                        this.hideGlobalVoiceIndicator();
+                    }
+                }
 
                 if (kokoroReady) {
                     console.log('🎙️ Using KokoroTTS (neural AI voice)');
@@ -1188,29 +1249,77 @@ RELATIONSHIP MEMORY:
                             console.log('🎙️ KokoroTTS playback complete');
                             return; // Success!
                         }
-                        console.log('🎙️ KokoroTTS synthesis failed, falling back to browser TTS');
+                        console.log('🎙️ KokoroTTS synthesis failed');
                     } catch (kokoroError) {
                         console.warn('🎙️ KokoroTTS error:', kokoroError);
                         this.hideGlobalVoiceIndicator();
                     }
                 } else {
-                    const status = typeof KokoroTTS !== 'undefined'
-                        ? (KokoroTTS.isLoading && KokoroTTS.isLoading() ? 'loading' : 'not initialized')
-                        : 'not loaded';
-                    console.log(`🎙️ KokoroTTS ${status} - no voice output (browser TTS disabled)`);
-                    // No fallback to browser TTS - Kokoro only!
+                    console.log('🎙️ KokoroTTS not initialized - no voice output');
+                    this.hideGlobalVoiceIndicator();
+                    return; // 🔧 FIX: Don't fall back to robot voice - just skip TTS
+                }
+                } // Close the else block from KokoroTTS undefined check
+            }
+
+            // 🎙️ BROWSER TTS - ONLY when explicitly selected (not as fallback for Kokoro)
+            if (voiceEngine === 'browser') {
+                console.log('🎙️ Using browser TTS (Web Speech API)');
+                this.showGlobalVoiceIndicator(source);
+
+                try {
+                    await this._playBrowserTTS(cleanText, voiceOverride);
+                    this.hideGlobalVoiceIndicator();
+                    console.log('🎙️ Browser TTS playback complete');
                     return;
+                } catch (browserError) {
+                    console.warn('🎙️ Browser TTS error:', browserError);
+                    this.hideGlobalVoiceIndicator();
                 }
             }
 
-            // 🎙️ Kokoro engine not selected, skip voice
-            console.log('🎙️ Voice engine not kokoro, skipping voice output');
+            console.log('🎙️ No TTS engine available');
             return;
 
         } catch (error) {
             // voice playback failed - continue without voice
             console.warn('🎙️ Voice playback error:', error);
         }
+    },
+
+    // 🔧 Browser TTS helper - uses Web Speech API
+    async _playBrowserTTS(text, voice) {
+        return new Promise((resolve, reject) => {
+            if (typeof speechSynthesis === 'undefined') {
+                reject(new Error('Speech synthesis not available'));
+                return;
+            }
+
+            // Cancel any ongoing speech
+            speechSynthesis.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(text);
+
+            // Calculate effective volume
+            const masterVol = (this.settings.masterVolume || 100) / 100;
+            const voiceVol = (this.settings.voiceVolume || 70) / 100;
+            utterance.volume = masterVol * voiceVol;
+
+            // Set voice if specified
+            if (voice && this._browserVoices.length > 0) {
+                const selectedVoice = this._browserVoices.find(v =>
+                    v.name.toLowerCase().includes(voice.toLowerCase())
+                );
+                if (selectedVoice) {
+                    utterance.voice = selectedVoice;
+                }
+            }
+
+            utterance.onend = () => resolve(true);
+            utterance.onerror = (e) => reject(e);
+
+            speechSynthesis.speak(utterance);
+        });
     },
 
     cleanTextForTTS(text) {
@@ -1559,7 +1668,7 @@ RELATIONSHIP MEMORY:
     },
 
     // create/show global voice indicator
-    showGlobalVoiceIndicator(source = 'NPC') {
+    showGlobalVoiceIndicator(source = 'NPC', customMessage = null) {
         // Create indicator if it doesn't exist
         if (!this._globalIndicator) {
             this._globalIndicator = document.createElement('div');
@@ -1655,7 +1764,9 @@ RELATIONSHIP MEMORY:
 
         // Update source and show
         const sourceEl = this._globalIndicator.querySelector('.voice-source');
-        if (sourceEl) sourceEl.textContent = `${source} speaking...`;
+        if (sourceEl) {
+            sourceEl.textContent = customMessage || `${source} speaking...`;
+        }
 
         this._globalIndicator.style.display = 'block';
     },

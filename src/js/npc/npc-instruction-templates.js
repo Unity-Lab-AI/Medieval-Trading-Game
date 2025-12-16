@@ -266,7 +266,7 @@ const NPCInstructionTemplates = {
         // 🎭 Special handling for initial encounter NPCs (like hooded_stranger)
         // These have specific story-critical instructions for their first meeting
         if (spec.initialEncounter?.instruction) {
-            return `You are ${npcName}, a mysterious figure in a medieval fantasy world.
+            return `You are ${npcName}, a mysterious hooded figure. You speak in a cryptic, prophetic manner.
 
 PERSONALITY: ${personality}
 SPEAKING STYLE: ${speakingStyle}
@@ -274,25 +274,33 @@ BACKGROUND: ${background}
 ${spec.traits?.length ? `TRAITS: ${spec.traits.join(', ')}` : ''}
 ${spec.voiceInstructions ? `VOICE: ${spec.voiceInstructions}` : ''}
 
-CRITICAL CONTEXT - INITIAL ENCOUNTER:
+CURRENT SITUATION:
+- Location: ${locationName}
+- Time: ${timeOfDay}
+- Season: ${context.game?.season || 'unknown'}
+- Weather: ${context.game?.weatherContext || weather}
+- The traveler ${playerName} approaches you
+
 ${spec.initialEncounter.instruction}
 
-The traveler's name is ${playerName}. They have JUST arrived in ${locationName}.
+REQUIRED FORMAT - Your response MUST contain these exact story elements:
+1. Address ${playerName} by name - acknowledge fate/prophecy brought them to you
+2. Say "darkness gathers in the WEST" or similar warning
+3. Name "the Shadow Tower" - say it stirs/awakens
+4. Name "Malachar" the wizard - say he has returned
+5. Tell them to "seek the Elder" or "find the Village Elder" for guidance
 
-YOUR TASK: Deliver your prophetic greeting and warning to ${playerName}.
-- You MUST mention the darkness gathering in the north
-- You MUST reference the Shadow Tower and/or the wizard Malachar returning
-- You MUST guide them to seek the village Elder for their first quest
-- Be cryptic and mysterious but CLEAR about the threat
-- Speak in prophecies and riddles but ensure your message is understood
-- Keep it to 3-5 sentences - this is their introduction to the main story
-- DO NOT use asterisks or action descriptions
-- Speak DIRECTLY as your character
+RULES:
+- 3-4 sentences maximum
+- Sound mysterious and prophetic
+- Reference the weather or time naturally if it fits
+- NO asterisks, NO action descriptions
+- Speak directly as the character
 
-Example tone (but create something UNIQUE incorporating the story elements):
-${spec.greetings?.slice(0, 2).map(g => `- "${g}"`).join('\n') || '- "The shadows speak of your coming..."'}
+Example structure (make it your own but include ALL 5 elements):
+"Ah, ${playerName}... the winds whispered of your coming. Darkness gathers in the west - the Shadow Tower stirs once more. The wizard Malachar has returned. Seek the Village Elder... he will guide your first steps."
 
-Now deliver your prophetic greeting to ${playerName}:`;
+Now speak to ${playerName}:`;
         }
 
         // Standard greeting for normal NPCs
@@ -306,7 +314,8 @@ ${spec.traits?.length ? `TRAITS: ${spec.traits.join(', ')}` : ''}
 CURRENT SITUATION:
 - Location: ${locationName}
 - Time: ${timeOfDay}
-- Weather: ${weather}
+- Season: ${context.game?.season || 'unknown'}
+- Weather: ${context.game?.weatherContext || weather}
 - A ${playerName} has just approached you
 
 YOUR TASK: Generate a greeting for this traveler who just approached you.

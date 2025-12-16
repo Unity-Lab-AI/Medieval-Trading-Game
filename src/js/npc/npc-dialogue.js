@@ -693,7 +693,7 @@ Be sympathetic, desperate but not pathetic.`
             // Use boss data if provided
             return {
                 text: bossData.taunt || 'You dare challenge me?!',
-                voice: bossData.voice || 'onyx',
+                voice: bossData.voice || 'am_onyx',
                 npcType: bossId,
                 isBoss: true,
                 fallback: true

@@ -2379,10 +2379,14 @@ const SettingsPanel = {
         // 🎙️ Voice Engine selector - switch between Browser TTS and Kokoro
         const voiceEngineSelect = this.panelElement.querySelector('#voice-engine');
         if (voiceEngineSelect) {
+            // 🔧 FIX: Restore saved voice engine from localStorage
+            const savedVoiceEngine = localStorage.getItem('mtg_voice_engine') || 'kokoro';
+            voiceEngineSelect.value = savedVoiceEngine;
+
             voiceEngineSelect.addEventListener('change', (e) => {
                 this.handleVoiceEngineChange(e.target.value);
             });
-            // Show/hide Kokoro controls based on initial selection
+            // Show/hide Kokoro controls based on restored selection
             this.handleVoiceEngineChange(voiceEngineSelect.value);
         }
 
@@ -2609,8 +2613,50 @@ const SettingsPanel = {
                 this.previewAudio = null;
             }
 
-            // Use browser TTS (Web Speech API) instead of external service
-            this.updateVoicePreviewStatus(`Speaking...`, 'playing');
+            // Check which voice engine to use
+            const voiceEngine = NPCVoiceChatSystem?.settings?.voiceEngine || 'kokoro';
+            const kokoroReady = typeof KokoroTTS !== 'undefined' &&
+                (KokoroTTS._initialized || (KokoroTTS.isInitialized && KokoroTTS.isInitialized()));
+
+            this.updateVoicePreviewStatus(`[${this.formatDisplayName(personality)}]: "${phrase}"`, 'playing');
+
+            // 🔧 FIX: Use KokoroTTS when it's selected and ready
+            if (voiceEngine === 'kokoro' && kokoroReady) {
+                console.log('🎙️ Using KokoroTTS for voice preview');
+                this.updateVoicePreviewStatus(`Speaking with neural AI voice...`, 'playing');
+
+                try {
+                    const success = await KokoroTTS.speak(phrase, voice, { source: 'Voice Test' });
+                    console.log('🎭 KokoroTTS playback ended, success:', success);
+                    this.updateVoicePreviewStatus(success ? 'Playback complete!' : 'Generation failed', success ? 'info' : 'error');
+                    const testBtn = this.panelElement.querySelector('#test-voice-btn');
+                    if (testBtn) testBtn.disabled = false;
+                    return; // 🔧 FIX: Always return - don't fall back to robot voice
+                } catch (kokoroError) {
+                    console.warn('🎙️ KokoroTTS preview failed:', kokoroError);
+                    this.updateVoicePreviewStatus('Voice generation failed', 'error');
+                    const testBtn = this.panelElement.querySelector('#test-voice-btn');
+                    if (testBtn) testBtn.disabled = false;
+                    return; // 🔧 FIX: Don't fall back to robot voice
+                }
+            } else if (voiceEngine === 'kokoro' && !kokoroReady) {
+                // Kokoro selected but not ready
+                this.updateVoicePreviewStatus('Neural voice not loaded - click "Load Neural Voices"', 'error');
+                const testBtn = this.panelElement.querySelector('#test-voice-btn');
+                if (testBtn) testBtn.disabled = false;
+                return;
+            }
+
+            // Browser TTS - ONLY when explicitly selected
+            if (voiceEngine !== 'browser') {
+                this.updateVoicePreviewStatus('No voice engine available', 'error');
+                const testBtn = this.panelElement.querySelector('#test-voice-btn');
+                if (testBtn) testBtn.disabled = false;
+                return;
+            }
+
+            console.log('🎙️ Using browser TTS for voice preview');
+            this.updateVoicePreviewStatus(`Speaking (browser voice)...`, 'playing');
 
             if (typeof speechSynthesis === 'undefined') {
                 throw new Error('Browser TTS not available');
@@ -2634,7 +2680,7 @@ const SettingsPanel = {
             this._previewUtterance = utterance;
 
             utterance.onend = () => {
-                console.log('🎭 TTS playback ended');
+                console.log('🎭 Browser TTS playback ended');
                 this.updateVoicePreviewStatus('Playback complete!', 'info');
                 this._previewUtterance = null;
                 const testBtn = this.panelElement.querySelector('#test-voice-btn');
@@ -2648,7 +2694,6 @@ const SettingsPanel = {
                 if (testBtn) testBtn.disabled = false;
             };
 
-            this.updateVoicePreviewStatus(`[${this.formatDisplayName(personality)}]: "${phrase}"`, 'playing');
             speechSynthesis.speak(utterance);
 
         } catch (error) {
@@ -2710,7 +2755,34 @@ const SettingsPanel = {
         const phrase = fallbackPhrases[personality] || 'Greetings, traveler.';
 
         try {
-            // Use browser TTS for fallback
+            // Check which voice engine to use
+            const voiceEngine = NPCVoiceChatSystem?.settings?.voiceEngine || 'kokoro';
+            const kokoroReady = typeof KokoroTTS !== 'undefined' &&
+                (KokoroTTS._initialized || (KokoroTTS.isInitialized && KokoroTTS.isInitialized()));
+
+            this.updateVoicePreviewStatus(`[${this.formatDisplayName(personality)}] (fallback): "${phrase}"`, 'playing');
+
+            // 🔧 FIX: Use KokoroTTS when it's selected and ready - NO fallback to robot voice
+            if (voiceEngine === 'kokoro') {
+                if (kokoroReady) {
+                    console.log('🎙️ Using KokoroTTS for fallback voice preview');
+                    try {
+                        const success = await KokoroTTS.speak(phrase, voice, { source: 'Voice Test' });
+                        console.log('🎭 KokoroTTS fallback playback ended');
+                        this.updateVoicePreviewStatus(success ? 'Playback complete!' : 'Generation failed', success ? 'info' : 'error');
+                    } catch (kokoroError) {
+                        console.warn('🎙️ KokoroTTS fallback failed:', kokoroError);
+                        this.updateVoicePreviewStatus('Voice generation failed', 'error');
+                    }
+                } else {
+                    this.updateVoicePreviewStatus('Neural voice not loaded', 'error');
+                }
+                const testBtn = this.panelElement.querySelector('#test-voice-btn');
+                if (testBtn) testBtn.disabled = false;
+                return;
+            }
+
+            // Use browser TTS ONLY when explicitly selected
             if (typeof speechSynthesis === 'undefined') {
                 throw new Error('Browser TTS not available');
             }
@@ -2740,7 +2812,6 @@ const SettingsPanel = {
                 if (testBtn) testBtn.disabled = false;
             };
 
-            this.updateVoicePreviewStatus(`[${this.formatDisplayName(personality)}] (fallback): "${phrase}"`, 'playing');
             speechSynthesis.speak(utterance);
         } catch (e) {
             this.updateVoicePreviewStatus(`Fallback failed: ${e.message}`, 'error');
@@ -2751,6 +2822,11 @@ const SettingsPanel = {
 
     // Stop voice preview
     stopVoicePreview() {
+        // Stop KokoroTTS if playing
+        if (typeof KokoroTTS !== 'undefined' && KokoroTTS.stop) {
+            KokoroTTS.stop();
+        }
+
         // Stop browser TTS
         if (typeof speechSynthesis !== 'undefined') {
             speechSynthesis.cancel();

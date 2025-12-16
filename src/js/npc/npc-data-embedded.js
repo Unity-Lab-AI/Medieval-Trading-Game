@@ -17,7 +17,7 @@ const NPC_EMBEDDED_DATA = {
     "merchant": {
         "type": "merchant",
         "category": "vendor",
-        "voice": "echo",
+        "voice": "am_michael",
         "personality": "friendly",
         "speakingStyle": "chatty, helpful, knows everyone in town, always has what you need",
         "background": "A traveling merchant who's seen every corner of the realm. Has goods from distant lands and tales to match.",
@@ -33,7 +33,7 @@ const NPC_EMBEDDED_DATA = {
     "general_store": {
         "type": "general_store",
         "category": "vendor",
-        "voice": "echo",
+        "voice": "am_echo",
         "personality": "friendly",
         "speakingStyle": "chatty, helpful, knows everyone in town, always has what you need",
         "background": "The backbone of the community. Sells everything from rope to rations and knows all the local news.",
@@ -49,7 +49,7 @@ const NPC_EMBEDDED_DATA = {
     "blacksmith": {
         "type": "blacksmith",
         "category": "vendor",
-        "voice": "onyx",
+        "voice": "am_onyx",
         "personality": "gruff",
         "speakingStyle": "direct, no-nonsense, proud of their craft, few words",
         "background": "A master smith who values quality over quantity. Respects hard work and has little patience for time-wasters.",
@@ -65,7 +65,7 @@ const NPC_EMBEDDED_DATA = {
     "apothecary": {
         "type": "apothecary",
         "category": "vendor",
-        "voice": "sage",
+        "voice": "bm_lewis",
         "personality": "mysterious",
         "speakingStyle": "cryptic, knowledgeable, speaks in riddles sometimes, fascinated by ingredients",
         "background": "A learned healer and alchemist with knowledge of herbs, potions, and things best left unspoken.",
@@ -81,7 +81,7 @@ const NPC_EMBEDDED_DATA = {
     "innkeeper": {
         "type": "innkeeper",
         "category": "vendor",
-        "voice": "nova",
+        "voice": "af_nova",
         "personality": "friendly",
         "speakingStyle": "warm and welcoming, slightly motherly, likes to gossip",
         "background": "Has run this inn for twenty years and knows everyone who passes through.",
@@ -100,7 +100,7 @@ const NPC_EMBEDDED_DATA = {
     "jeweler": {
         "type": "jeweler",
         "category": "vendor",
-        "voice": "verse",
+        "voice": "bf_emma",
         "personality": "suspicious",
         "speakingStyle": "refined, careful with words, slightly paranoid, appraising everything",
         "background": "Deals in precious gems and fine jewelry. Has been robbed before and trusts no one completely.",
@@ -117,7 +117,7 @@ const NPC_EMBEDDED_DATA = {
     "tailor": {
         "type": "tailor",
         "category": "vendor",
-        "voice": "shimmer",
+        "voice": "af_bella",
         "personality": "artistic",
         "speakingStyle": "creative, observant, comments on fashion, slightly vain",
         "background": "An artist with fabric. Dressed nobles and commoners alike. Judges everyone by their attire.",
@@ -134,7 +134,7 @@ const NPC_EMBEDDED_DATA = {
     "baker": {
         "type": "baker",
         "category": "vendor",
-        "voice": "nova",
+        "voice": "af_nova",
         "personality": "friendly",
         "speakingStyle": "cheerful, always smells of fresh bread, early riser",
         "background": "Up before dawn every day. Makes the best bread in town. Simple pleasures, honest work.",
@@ -150,7 +150,7 @@ const NPC_EMBEDDED_DATA = {
     "farmer": {
         "type": "farmer",
         "category": "vendor",
-        "voice": "ballad",
+        "voice": "bm_george",
         "personality": "earthy",
         "speakingStyle": "practical, weather-aware, hardworking, honest",
         "background": "Works the land from sun up to sun down. Knows more about the seasons than any scholar.",
@@ -166,7 +166,7 @@ const NPC_EMBEDDED_DATA = {
     "fisherman": {
         "type": "fisherman",
         "category": "vendor",
-        "voice": "dan",
+        "voice": "bm_daniel",
         "personality": "patient",
         "speakingStyle": "slow-talking, tells fishing stories, patient as the tide",
         "background": "Spent their whole life by the water. Has stories about every fish they've ever caught.",
@@ -186,7 +186,7 @@ const NPC_EMBEDDED_DATA = {
     "healer": {
         "type": "healer",
         "category": "service",
-        "voice": "coral",
+        "voice": "af_jessica",
         "personality": "gentle",
         "speakingStyle": "soft-spoken, caring, asks about your health, reassuring",
         "background": "Dedicated their life to easing suffering. Has seen the worst injuries and illnesses. Never turns away someone in need.",
@@ -203,7 +203,7 @@ const NPC_EMBEDDED_DATA = {
     "banker": {
         "type": "banker",
         "category": "service",
-        "voice": "ash",
+        "voice": "am_adam",
         "personality": "cold",
         "speakingStyle": "precise, formal, talks about money constantly, no small talk",
         "background": "Manages the local bank and money lending. Numbers are their only friend.",
@@ -218,7 +218,7 @@ const NPC_EMBEDDED_DATA = {
     "stablemaster": {
         "type": "stablemaster",
         "category": "service",
-        "voice": "ballad",
+        "voice": "bm_george",
         "personality": "earthy",
         "speakingStyle": "loves animals more than people, practical, smells of hay",
         "background": "Spent their life around horses and animals. Can tell a good mount by looking at it.",
@@ -232,7 +232,7 @@ const NPC_EMBEDDED_DATA = {
     "ferryman": {
         "type": "ferryman",
         "category": "service",
-        "voice": "dan",
+        "voice": "bm_daniel",
         "personality": "superstitious",
         "speakingStyle": "weathered, tells tales of the water, believes in omens",
         "background": "Has crossed these waters a thousand times. Seen things in the fog that others wouldn't believe.",
@@ -246,7 +246,7 @@ const NPC_EMBEDDED_DATA = {
     "priest": {
         "type": "priest",
         "category": "service",
-        "voice": "sage",
+        "voice": "bm_lewis",
         "personality": "serene",
         "speakingStyle": "calm, speaks of blessings and divine favor, offers comfort",
         "background": "Devoted to the divine. Offers spiritual guidance and blessings to travelers.",
@@ -262,7 +262,7 @@ const NPC_EMBEDDED_DATA = {
     "scholar": {
         "type": "scholar",
         "category": "service",
-        "voice": "sage",
+        "voice": "bm_lewis",
         "personality": "intellectual",
         "speakingStyle": "educated, uses complex words, fascinated by knowledge",
         "background": "Has spent decades studying ancient texts. Knows history, lore, and forgotten secrets.",
@@ -276,7 +276,7 @@ const NPC_EMBEDDED_DATA = {
     "herbalist": {
         "type": "herbalist",
         "category": "service",
-        "voice": "coral",
+        "voice": "af_jessica",
         "personality": "nurturing",
         "speakingStyle": "gentle, talks about plants like they're children, earth-connected",
         "background": "Lives close to nature. Knows every plant in the forest and its uses.",
@@ -297,7 +297,7 @@ const NPC_EMBEDDED_DATA = {
     "guard": {
         "type": "guard",
         "category": "authority",
-        "voice": "onyx",
+        "voice": "am_onyx",
         "personality": "stern",
         "speakingStyle": "formal, suspicious, protective of the town, follows rules",
         "background": "Sworn to protect this settlement. Has seen troublemakers come and go. Trusts no stranger completely.",
@@ -311,7 +311,7 @@ const NPC_EMBEDDED_DATA = {
     "elder": {
         "type": "elder",
         "category": "authority",
-        "voice": "sage",
+        "voice": "bm_lewis",
         "personality": "wise",
         "speakingStyle": "slow, thoughtful, speaks of the old days, gives advice",
         "background": "Has led this community for decades. Remembers when things were different. Respected by all.",
@@ -326,7 +326,7 @@ const NPC_EMBEDDED_DATA = {
     "noble": {
         "type": "noble",
         "category": "authority",
-        "voice": "verse",
+        "voice": "bf_emma",
         "personality": "arrogant",
         "speakingStyle": "condescending, speaks of status, expects respect",
         "background": "Born to privilege. Expects deference from commoners. Has influence and connections.",
@@ -343,7 +343,7 @@ const NPC_EMBEDDED_DATA = {
     "guild_master": {
         "type": "guild_master",
         "category": "authority",
-        "voice": "onyx",
+        "voice": "am_onyx",
         "personality": "professional",
         "speakingStyle": "businesslike, talks about guild matters, values competence",
         "background": "Runs the local guild chapter. Knows all the trades and traders. Respects skill and results.",
@@ -359,7 +359,7 @@ const NPC_EMBEDDED_DATA = {
     "captain": {
         "type": "captain",
         "category": "authority",
-        "voice": "onyx",
+        "voice": "am_onyx",
         "personality": "commanding",
         "speakingStyle": "military, direct, expects obedience, strategic thinker",
         "background": "Commands the local guard force. Veteran of many conflicts. Respects strength and discipline.",
@@ -375,7 +375,7 @@ const NPC_EMBEDDED_DATA = {
     "royal_advisor": {
         "type": "royal_advisor",
         "category": "authority",
-        "voice": "sage",
+        "voice": "bm_lewis",
         "personality": "calculating",
         "speakingStyle": "formal, speaks of politics and court intrigue, measured words",
         "background": "Serves the crown as counselor and scholar. Knows the kingdom's secrets and histories. More politician than sage.",
@@ -391,7 +391,7 @@ const NPC_EMBEDDED_DATA = {
     "chieftain": {
         "type": "chieftain",
         "category": "authority",
-        "voice": "onyx",
+        "voice": "am_onyx",
         "personality": "stern",
         "speakingStyle": "gruff, practical, speaks of survival and the harsh north",
         "background": "Leads this hardy village through frozen winters. Earned leadership through strength and wisdom. Values actions over words.",
@@ -410,7 +410,7 @@ const NPC_EMBEDDED_DATA = {
     "thief": {
         "type": "thief",
         "category": "criminal",
-        "voice": "echo",
+        "voice": "am_echo",
         "personality": "cunning",
         "speakingStyle": "shifty, speaks in whispers, always looking around",
         "background": "Lives in the shadows. Has connections in the underworld. Can acquire things others can't.",
@@ -424,7 +424,7 @@ const NPC_EMBEDDED_DATA = {
     "robber": {
         "type": "robber",
         "category": "criminal",
-        "voice": "dan",
+        "voice": "bm_daniel",
         "personality": "threatening",
         "speakingStyle": "aggressive, demands money, implies violence",
         "background": "Takes what they want at weapon-point. Desperate or just cruel. Not interested in conversation.",
@@ -439,7 +439,7 @@ const NPC_EMBEDDED_DATA = {
     "bandit": {
         "type": "bandit",
         "category": "criminal",
-        "voice": "onyx",
+        "voice": "am_onyx",
         "personality": "ruthless",
         "speakingStyle": "crude, violent, laughs at suffering",
         "background": "Part of a gang that preys on travelers. No mercy, no remorse. Kill if necessary.",
@@ -453,7 +453,7 @@ const NPC_EMBEDDED_DATA = {
     "smuggler": {
         "type": "smuggler",
         "category": "criminal",
-        "voice": "dan",
+        "voice": "bm_daniel",
         "personality": "paranoid",
         "speakingStyle": "suspicious, speaks in code, always watching for guards",
         "background": "Moves illegal goods across borders. Knows secret routes. Trusts no one but needs customers.",
@@ -469,7 +469,7 @@ const NPC_EMBEDDED_DATA = {
     "informant": {
         "type": "informant",
         "category": "criminal",
-        "voice": "ash",
+        "voice": "am_adam",
         "personality": "calculating",
         "speakingStyle": "speaks in riddles, sells information, plays all sides",
         "background": "Knows everyone's secrets. Sells information to the highest bidder. Has no loyalty.",
@@ -484,7 +484,7 @@ const NPC_EMBEDDED_DATA = {
     "loan_shark": {
         "type": "loan_shark",
         "category": "criminal",
-        "voice": "ash",
+        "voice": "am_adam",
         "personality": "menacing",
         "speakingStyle": "fake friendly, threatens subtly, always talks about debt",
         "background": "Lends gold at terrible rates. Has enforcers. Never forgets a debt.",
@@ -504,7 +504,7 @@ const NPC_EMBEDDED_DATA = {
         "type": "dark_lord",
         "category": "boss",
         "name": "Malachar the Eternal",
-        "voice": "onyx",
+        "voice": "am_onyx",
         "personality": "menacing",
         "speakingStyle": "theatrical evil, speaks of doom and darkness, monologues",
         "background": "Ancient being of darkness. Seeks to plunge the realm into eternal night. Enjoys mortal suffering.",
@@ -519,7 +519,7 @@ const NPC_EMBEDDED_DATA = {
         "type": "bandit_chief",
         "category": "boss",
         "name": "Scarhand Viktor",
-        "voice": "onyx",
+        "voice": "am_onyx",
         "personality": "ruthless",
         "speakingStyle": "cunning, commands respect, survived through brutality",
         "background": "Rose from nothing to lead the largest bandit gang. Earned every scar. Kills without hesitation.",
@@ -534,7 +534,7 @@ const NPC_EMBEDDED_DATA = {
         "type": "dragon",
         "category": "boss",
         "name": "Scorathax the Ancient",
-        "voice": "onyx",
+        "voice": "am_onyx",
         "personality": "imperial",
         "speakingStyle": "ancient, views mortals as insects, speaks of centuries",
         "background": "Has lived for millennia. Hoards treasure. Views humans as food or amusement.",
@@ -549,7 +549,7 @@ const NPC_EMBEDDED_DATA = {
         "type": "necromancer",
         "category": "boss",
         "name": "The Nameless One",
-        "voice": "ash",
+        "voice": "am_adam",
         "personality": "deathly",
         "speakingStyle": "whispers about death, speaks of corpses lovingly, detached from life",
         "background": "Has transcended death itself. Commands legions of undead. Life is just raw material.",
@@ -564,7 +564,7 @@ const NPC_EMBEDDED_DATA = {
         "type": "goblin_king",
         "category": "boss",
         "name": "Griknak the Magnificent",
-        "voice": "fable",
+        "voice": "bm_fable",
         "personality": "manic",
         "speakingStyle": "speaks in third person, grandiose despite being pathetic, surrounded by minions",
         "background": "Rules over goblin hordes through cunning and cruelty. Thinks he's more important than he is.",
@@ -579,7 +579,7 @@ const NPC_EMBEDDED_DATA = {
         "type": "alpha_wolf",
         "category": "boss",
         "name": "Grimfang",
-        "voice": "ballad",
+        "voice": "bm_george",
         "personality": "feral",
         "speakingStyle": "growls, speaks in broken sentences if at all, primal",
         "background": "Leads the most dangerous wolf pack in the region. More intelligent than any normal beast.",
@@ -597,7 +597,7 @@ const NPC_EMBEDDED_DATA = {
     "traveler": {
         "type": "traveler",
         "category": "common",
-        "voice": "echo",
+        "voice": "am_echo",
         "personality": "curious",
         "speakingStyle": "friendly, shares road stories, asks about destinations",
         "background": "Always on the move. Has been everywhere and nowhere. Full of stories.",
@@ -612,7 +612,7 @@ const NPC_EMBEDDED_DATA = {
     "beggar": {
         "type": "beggar",
         "category": "common",
-        "voice": "echo",
+        "voice": "am_echo",
         "personality": "desperate",
         "speakingStyle": "pleading, mentions hunger, grateful for any kindness",
         "background": "Fallen on hard times. Once had a life. Now has only hope and hunger.",
@@ -626,7 +626,7 @@ const NPC_EMBEDDED_DATA = {
     "drunk": {
         "type": "drunk",
         "category": "common",
-        "voice": "dan",
+        "voice": "bm_daniel",
         "personality": "jovial",
         "speakingStyle": "slurred, overly friendly, tells wild stories, spills secrets accidentally",
         "background": "Spends their days at the tavern. Knows everyone's business because people talk too freely around drunks.",
@@ -640,7 +640,7 @@ const NPC_EMBEDDED_DATA = {
     "courier": {
         "type": "courier",
         "category": "common",
-        "voice": "nova",
+        "voice": "af_nova",
         "personality": "hurried",
         "speakingStyle": "speaks quickly, always in a rush, mentions deadlines",
         "background": "Delivers messages and small packages across the realm. Time is money, literally.",
@@ -654,7 +654,7 @@ const NPC_EMBEDDED_DATA = {
     "miner": {
         "type": "miner",
         "category": "common",
-        "voice": "onyx",
+        "voice": "am_onyx",
         "personality": "tough",
         "speakingStyle": "gruff, talks about the depths, practical",
         "background": "Works the mines. Dangerous job. Has stories of cave-ins, treasures, and things in the deep.",
@@ -671,7 +671,7 @@ const NPC_EMBEDDED_DATA = {
     "hunter": {
         "type": "hunter",
         "category": "common",
-        "voice": "ballad",
+        "voice": "bm_george",
         "personality": "quiet",
         "speakingStyle": "few words, speaks of the forest, patient",
         "background": "Tracks game through the wilderness. Knows the forests better than anyone.",
@@ -687,7 +687,7 @@ const NPC_EMBEDDED_DATA = {
     "woodcutter": {
         "type": "woodcutter",
         "category": "common",
-        "voice": "ballad",
+        "voice": "bm_george",
         "personality": "simple",
         "speakingStyle": "straightforward, talks about trees and lumber, honest",
         "background": "Harvests wood from the forests. Honest day's work for honest pay.",
@@ -703,7 +703,7 @@ const NPC_EMBEDDED_DATA = {
     "sailor": {
         "type": "sailor",
         "category": "common",
-        "voice": "dan",
+        "voice": "bm_daniel",
         "personality": "rowdy",
         "speakingStyle": "uses nautical terms, tells sea stories, hearty",
         "background": "Has sailed the seas. Knows port cities and shipping routes. On shore leave.",
@@ -717,7 +717,7 @@ const NPC_EMBEDDED_DATA = {
     "adventurer": {
         "type": "adventurer",
         "category": "common",
-        "voice": "echo",
+        "voice": "am_echo",
         "personality": "bold",
         "speakingStyle": "confident, tells of exploits, seeks glory",
         "background": "Seeks treasure, fame, and danger. Has delved dungeons and fought monsters.",
@@ -736,10 +736,10 @@ const NPC_EMBEDDED_DATA = {
         "type": "hooded_stranger",
         "category": "mysterious",
         "name": "Hooded Stranger",
-        "voice": "onyx",
+        "voice": "am_onyx",
         "personality": "cryptic",
         "speakingStyle": "speaks in prophecies and riddles, ancient knowledge, slow and deliberate, ominous but not hostile",
-        "background": "An ancient watcher who appears at pivotal moments. Knows of the darkness gathering in the north. Guides new souls toward their destiny.",
+        "background": "An ancient watcher who appears at pivotal moments. Knows of the darkness gathering in the west. Guides new souls toward their destiny.",
         "traits": ["mysterious", "prophetic", "all-knowing", "patient"],
         "voiceInstructions": "Speak slowly and deliberately. Your voice is ancient and knowing. Pause between sentences for dramatic effect.",
         "context": "introduction",
@@ -756,7 +756,7 @@ const NPC_EMBEDDED_DATA = {
             "*fades into the shadows* Remember what I have told you..."
         ],
         "initialEncounter": {
-            "instruction": "You are meeting this traveler for the FIRST TIME. They have just arrived in Greendale. You must warn them cryptically of darkness gathering in the north - the Shadow Tower stirs, the wizard Malachar returns. Guide them to seek out the village Elder for their first steps. Be mysterious but helpful. Do NOT be hostile.",
+            "instruction": "CRITICAL STORY MOMENT - You MUST include ALL these elements: 1) Greet them as one you've awaited (fate/prophecy brought them), 2) Warn of DARKNESS gathering in the NORTH, 3) The SHADOW TOWER stirs again, 4) The wizard MALACHAR has returned, 5) Tell them to seek the VILLAGE ELDER for guidance. Be mysterious but ensure these 5 plot points are CLEARLY mentioned. This is their introduction to the main quest.",
             "topics": ["darkness", "shadow_tower", "malachar", "prophecy", "elder", "quest"]
         }
     },
@@ -764,7 +764,7 @@ const NPC_EMBEDDED_DATA = {
     "prophet": {
         "type": "prophet",
         "category": "mysterious",
-        "voice": "onyx",
+        "voice": "am_onyx",
         "personality": "cryptic",
         "speakingStyle": "speaks only in prophecies and visions, barely seems present, otherworldly",
         "background": "Has seen beyond the veil. Speaks truths that others cannot understand until it's too late.",
