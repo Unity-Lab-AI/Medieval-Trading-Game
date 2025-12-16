@@ -1534,138 +1534,120 @@ const AchievementSystem = {
     // This prevents achievements from triggering during the tutorial
     _achievementsEnabled: false,
 
+    //  FIX 2025-12-16: Require first unpause in normal world before enabling achievements
+    // Achievements should NOT fire until player actually starts playing (unpauses)
+    _tutorialComplete: false,  // Tutorial done but waiting for first unpause
+    _firstUnpauseInNormalWorld: false,  // True after player unpauses in normal world
+
     // wake up this monument to your gaming addiction
     init() {
-        console.log('🏆 Achievement System awakened from its slumber... waiting for tutorial to complete');
+        console.log('🏆 Achievement System awakened from its slumber... waiting for first unpause in normal world');
         this._achievementsEnabled = false;
+        this._tutorialComplete = false;
+        this._firstUnpauseInNormalWorld = false;
 
-        // Listen for tutorial completion - enable achievements when tutorial ends
+        // Listen for tutorial completion - mark tutorial as done, but DON'T enable yet
         document.addEventListener('tutorial-finished', () => {
-            console.log('🏆 Tutorial finished - enabling achievements NOW');
-            this._enableAchievements();
+            console.log('🏆 Tutorial finished - waiting for first unpause to enable achievements');
+            this._tutorialComplete = true;
+            // DON'T enable yet - wait for first unpause
         });
 
-        // Listen for tutorial skip - also enables achievements
+        // Listen for tutorial skip - mark tutorial as done, but DON'T enable yet
         document.addEventListener('tutorial-skipped', () => {
-            console.log('🏆 Tutorial skipped - enabling achievements NOW');
-            this._enableAchievements();
+            console.log('🏆 Tutorial skipped - waiting for first unpause to enable achievements');
+            this._tutorialComplete = true;
+            // DON'T enable yet - wait for first unpause
         });
 
-        // Listen for game-started event - this fires when the game is fully loaded
-        // Check tutorial status only AFTER game is ready
+        // Listen for game-started event - check tutorial status but DON'T auto-enable
         document.addEventListener('game-started', () => {
-            console.log('🏆 Game started - checking tutorial status');
-            this._checkTutorialStatus();
+            console.log('🏆 Game started - checking tutorial status (will wait for unpause)');
+            this._checkTutorialStatusNoEnable();
         });
 
-        // Listen for save-loaded event - check tutorial status when loading a save
+        // Listen for save-loaded event - check tutorial status but DON'T auto-enable
         document.addEventListener('save-loaded', () => {
-            console.log('🏆 Save loaded - checking tutorial status');
-            this._checkTutorialStatus();
+            console.log('🏆 Save loaded - checking tutorial status (will wait for unpause)');
+            this._checkTutorialStatusNoEnable();
         });
 
-        // Listen for main world loaded event (fires after tutorial -> normal transition)
+        // Listen for main world loaded event - mark tutorial done but DON'T enable yet
         document.addEventListener('main-world-loaded', () => {
-            console.log('🏆 Main world loaded - enabling achievements');
-            this._enableAchievements();
+            console.log('🏆 Main world loaded - waiting for first unpause to enable achievements');
+            this._tutorialComplete = true;
+            // DON'T enable yet - wait for first unpause
+        });
+
+        // ═══════════════════════════════════════════════════════════════
+        // FIX 2025-12-16: Listen for game-unpaused - THIS is when we enable!
+        // Achievements only start AFTER player unpauses in normal world
+        // ═══════════════════════════════════════════════════════════════
+        document.addEventListener('game-unpaused', () => {
+            this._onGameUnpaused();
         });
     },
 
-    // Check if tutorial is already done and enable achievements if so
-    // STRICT: Only enable if we have EXPLICIT confirmation tutorial is done
-    _checkTutorialStatus() {
+    //  Called on every unpause - check if this is the first unpause in normal world
+    _onGameUnpaused() {
+        // Already enabled? Nothing to do
+        if (this._achievementsEnabled) return;
+
+        // Still in tutorial? Don't enable
+        if (this._isInTutorial()) {
+            console.log('🏆 Unpause detected but still in tutorial - achievements stay disabled');
+            return;
+        }
+
+        // Tutorial not complete yet? Don't enable
+        if (!this._tutorialComplete) {
+            console.log('🏆 Unpause detected but tutorial not complete - achievements stay disabled');
+            return;
+        }
+
+        // Check we're in normal world
+        const inNormalWorld = typeof TravelSystem !== 'undefined' &&
+            TravelSystem.currentWorld === 'normal';
+        if (!inNormalWorld) {
+            console.log('🏆 Unpause detected but not in normal world - achievements stay disabled');
+            return;
+        }
+
+        // All conditions met - THIS is the first unpause in normal world!
+        console.log('🏆 FIRST UNPAUSE IN NORMAL WORLD - NOW enabling achievements! 🖤💀');
+        this._firstUnpauseInNormalWorld = true;
+        this._enableAchievements();
+    },
+
+    //  Check tutorial status WITHOUT auto-enabling (for game-started/save-loaded)
+    _checkTutorialStatusNoEnable() {
         // If already enabled, skip
         if (this._achievementsEnabled) return;
 
-        // ═══════════════════════════════════════════════════════════════
-        // FIX 2025-12-13: Use _isInTutorial() as FIRST check - most reliable
-        // ═══════════════════════════════════════════════════════════════
+        // Check if tutorial is done - if so, mark it but DON'T enable yet
         if (this._isInTutorial()) {
-            console.log('🏆 _isInTutorial()=true - achievements stay disabled');
+            console.log('🏆 _isInTutorial()=true - tutorial not complete');
+            this._tutorialComplete = false;
             return;
         }
 
-        // ═══════════════════════════════════════════════════════════════
-        // ADDITIONAL CHECKS: Comprehensive tutorial detection
-        // ═══════════════════════════════════════════════════════════════
-
-        // Check 1: TutorialManager.isActive
-        const tutorialManagerActive = typeof TutorialManager !== 'undefined' && TutorialManager.isActive === true;
-        if (tutorialManagerActive) {
-            console.log('🏆 TutorialManager.isActive=true - achievements stay disabled');
-            return;
-        }
-
-        // Check 2: game.inTutorial flag (set by tutorial system)
-        const gameInTutorial = typeof game !== 'undefined' && game.inTutorial === true;
-        if (gameInTutorial) {
-            console.log('🏆 game.inTutorial=true - achievements stay disabled');
-            return;
-        }
-
-        // Check 3: Check for tutorial world locations being used
-        const usingTutorialWorld = typeof TravelSystem !== 'undefined' &&
-            TravelSystem.playerPosition?.currentLocation?.startsWith('tutorial_');
-        if (usingTutorialWorld) {
-            console.log('🏆 In tutorial location - achievements stay disabled');
-            return;
-        }
-
-        // Check 4: Check if tutorial quests are active
-        // Note: activeQuests is an OBJECT not an array, use Object.values()
-        const hasTutorialQuests = typeof QuestSystem !== 'undefined' &&
-            Object.values(QuestSystem.activeQuests || {}).some(q => q.id?.startsWith('tutorial_'));
-        if (hasTutorialQuests) {
-            console.log('🏆 Has active tutorial quests - achievements stay disabled');
-            return;
-        }
-
-        // Check 5: Check TravelSystem.currentWorld explicitly
-        const inTutorialWorld = typeof TravelSystem !== 'undefined' &&
-            TravelSystem.currentWorld === 'tutorial';
-        if (inTutorialWorld) {
-            console.log('🏆 TravelSystem.currentWorld=tutorial - achievements stay disabled');
-            return;
-        }
-
-        // ═══════════════════════════════════════════════════════════════
-        // If we get here, check for EXPLICIT tutorial completion
-        // ═══════════════════════════════════════════════════════════════
-
-        // Check game state for explicit tutorial completion
+        // Check for explicit tutorial completion flags
         const tutorialExplicitlyDone = typeof game !== 'undefined' &&
             (game.tutorialCompleted === true || game.tutorialSkipped === true);
-
-        // Check localStorage for returning players who COMPLETED tutorial
         const tutorialCompletedLS = localStorage.getItem('tutorialCompleted') === 'true';
         const tutorialSkippedLS = localStorage.getItem('tutorialSkipped') === 'true';
 
-        // ONLY enable if we have explicit confirmation
         if (tutorialExplicitlyDone || tutorialCompletedLS || tutorialSkippedLS) {
-            // DOUBLE CHECK: Make sure we're not in tutorial even with these flags
-            if (this._isInTutorial()) {
-                console.log('🏆 Flags say done but _isInTutorial()=true - staying disabled');
-                return;
-            }
-            console.log('🏆 Tutorial explicitly completed/skipped - enabling achievements');
-            this._enableAchievements();
-        } else {
-            // Legacy save detection: in normal world, no tutorial flags, has player
-            // This is for saves from BEFORE the tutorial system existed
-            const inNormalWorld = typeof TravelSystem !== 'undefined' &&
-                                  TravelSystem.currentWorld === 'normal';
-            const noTutorialManager = typeof TutorialManager === 'undefined';
-            const gameStarted = typeof game !== 'undefined' && game.player;
-            const notInTutorialLocation = !TravelSystem?.playerPosition?.currentLocation?.startsWith('tutorial_');
-
-            // REMOVED FALLBACK THAT WAS CAUSING BUG - no more "TutorialManager inactive" shortcut
-            if (inNormalWorld && noTutorialManager && gameStarted && notInTutorialLocation) {
-                console.log('🏆 Legacy save detected (no tutorial system) - enabling achievements');
-                this._enableAchievements();
-            } else {
-                console.log('🏆 Tutorial status unclear - achievements stay disabled until explicit event');
-            }
+            console.log('🏆 Tutorial complete - but waiting for first unpause to enable achievements');
+            this._tutorialComplete = true;
+            // DON'T enable yet - wait for first unpause
         }
+    },
+
+    //  DEPRECATED - now uses _checkTutorialStatusNoEnable() which waits for first unpause
+    // Kept for backwards compatibility - redirects to new function
+    _checkTutorialStatus() {
+        this._checkTutorialStatusNoEnable();
     },
 
     //  DEPRECATED: No longer used - achievements now tied to tutorial completion
@@ -1692,6 +1674,17 @@ const AchievementSystem = {
         // ═══════════════════════════════════════════════════════════════
         if (this._isInTutorial()) {
             console.log('🏆 _enableAchievements() blocked - still in tutorial!');
+            return;
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // FIX 2025-12-16: REQUIRE first unpause in normal world!
+        // Don't enable until player has actually unpaused
+        // ═══════════════════════════════════════════════════════════════
+        if (!this._firstUnpauseInNormalWorld) {
+            console.log('🏆 _enableAchievements() blocked - waiting for first unpause in normal world');
+            // Mark tutorial as complete so we can enable on first unpause
+            this._tutorialComplete = true;
             return;
         }
 
@@ -1725,6 +1718,14 @@ const AchievementSystem = {
         }
 
         // ═══════════════════════════════════════════════════════════════
+        // FIX 2025-12-16: REQUIRE first unpause in normal world
+        // ═══════════════════════════════════════════════════════════════
+        if (!this._firstUnpauseInNormalWorld) {
+            console.log('🏆 checkAchievements blocked - no first unpause in normal world yet');
+            return;
+        }
+
+        // ═══════════════════════════════════════════════════════════════
         // FIX 2025-12-13: Use _isInTutorial() - single source of truth
         // ═══════════════════════════════════════════════════════════════
         if (this._isInTutorial()) {
@@ -1733,6 +1734,7 @@ const AchievementSystem = {
             if (this._achievementsEnabled) {
                 console.log('🏆 SAFETY: Disabling achievements - we are in tutorial!');
                 this._achievementsEnabled = false;
+                this._firstUnpauseInNormalWorld = false;
             }
             return;
         }
@@ -1770,10 +1772,16 @@ const AchievementSystem = {
 
     // Unlock a single achievement directly (for manual unlocks)
     unlockAchievement(achievementId) {
-        //  FIX: Don't unlock achievements until player has unpaused at least once 
+        //  FIX: Don't unlock achievements until player has unpaused at least once
         if (!this._achievementsEnabled) {
             console.log(`🏆 Achievement ${achievementId} deferred - waiting for first unpause`);
-            return; // ��� Achievements not enabled yet - player hasn't unpaused
+            return; // Achievements not enabled yet - player hasn't unpaused
+        }
+
+        // FIX 2025-12-16: Also require first unpause in normal world
+        if (!this._firstUnpauseInNormalWorld) {
+            console.log(`🏆 Achievement ${achievementId} deferred - no first unpause in normal world yet`);
+            return;
         }
 
         const achievement = this.achievements[achievementId];
@@ -2421,10 +2429,15 @@ const AchievementSystem = {
         return false;
     },
 
-    // track trade - but not in fucking tutorial
+    // track trade - but not in fucking tutorial OR before first unpause
     trackTrade(profit) {
         if (this._isInTutorial()) {
             console.log('🏆 Blocked trackTrade during tutorial - nice try');
+            return;
+        }
+        // FIX 2025-12-16: Also block before first unpause in normal world
+        if (!this._firstUnpauseInNormalWorld) {
+            console.log('🏆 Blocked trackTrade - no first unpause in normal world yet');
             return;
         }
         AchievementSystem.stats.tradesCompleted++;
@@ -2441,10 +2454,15 @@ const AchievementSystem = {
         this.checkAchievements();
     },
 
-    // track location visit - blocked in tutorial
+    // track location visit - blocked in tutorial OR before first unpause
     trackLocationVisit(locationId) {
         if (this._isInTutorial()) {
             console.log('🏆 Blocked trackLocationVisit during tutorial');
+            return;
+        }
+        // FIX 2025-12-16: Also block before first unpause in normal world
+        if (!this._firstUnpauseInNormalWorld) {
+            console.log('🏆 Blocked trackLocationVisit - no first unpause in normal world yet');
             return;
         }
         AchievementSystem.stats.uniqueLocationsVisited.add(locationId);
@@ -2452,10 +2470,15 @@ const AchievementSystem = {
         this.checkAchievements();
     },
 
-    // track journey start - the achievement that kept firing, now blocked
+    // track journey start - blocked in tutorial OR before first unpause
     trackJourneyStart(destinationId) {
         if (this._isInTutorial()) {
             console.log('🏆 Blocked trackJourneyStart during tutorial - this was the bug');
+            return;
+        }
+        // FIX 2025-12-16: Also block before first unpause in normal world
+        if (!this._firstUnpauseInNormalWorld) {
+            console.log('🏆 Blocked trackJourneyStart - no first unpause in normal world yet');
             return;
         }
         AchievementSystem.stats.journeysStarted++;
@@ -2463,10 +2486,15 @@ const AchievementSystem = {
         this.checkAchievements();
     },
 
-    // track journey completion - blocked in tutorial
+    // track journey completion - blocked in tutorial OR before first unpause
     trackJourney(distance) {
         if (this._isInTutorial()) {
             console.log('🏆 Blocked trackJourney during tutorial');
+            return;
+        }
+        // FIX 2025-12-16: Also block before first unpause in normal world
+        if (!this._firstUnpauseInNormalWorld) {
+            console.log('🏆 Blocked trackJourney - no first unpause in normal world yet');
             return;
         }
         AchievementSystem.stats.journeysCompleted++;
@@ -2474,10 +2502,15 @@ const AchievementSystem = {
         this.checkAchievements();
     },
 
-    // track encounter survival - blocked in tutorial
+    // track encounter survival - blocked in tutorial OR before first unpause
     trackEncounter(encounterType, survived) {
         if (this._isInTutorial()) {
             console.log('🏆 Blocked trackEncounter during tutorial');
+            return;
+        }
+        // FIX 2025-12-16: Also block before first unpause in normal world
+        if (!this._firstUnpauseInNormalWorld) {
+            console.log('🏆 Blocked trackEncounter - no first unpause in normal world yet');
             return;
         }
         if (survived) {
@@ -2493,20 +2526,30 @@ const AchievementSystem = {
         this.checkAchievements();
     },
 
-    // track treasure found - blocked in tutorial
+    // track treasure found - blocked in tutorial OR before first unpause
     trackTreasure() {
         if (this._isInTutorial()) {
             console.log('🏆 Blocked trackTreasure during tutorial');
+            return;
+        }
+        // FIX 2025-12-16: Also block before first unpause in normal world
+        if (!this._firstUnpauseInNormalWorld) {
+            console.log('🏆 Blocked trackTreasure - no first unpause in normal world yet');
             return;
         }
         AchievementSystem.stats.treasuresFound++;
         this.checkAchievements();
     },
 
-    // track rags to riches - blocked in tutorial
+    // track rags to riches - blocked in tutorial OR before first unpause
     trackRagsToRiches() {
         if (this._isInTutorial()) {
             console.log('🏆 Blocked trackRagsToRiches during tutorial');
+            return;
+        }
+        // FIX 2025-12-16: Also block before first unpause in normal world
+        if (!this._firstUnpauseInNormalWorld) {
+            console.log('🏆 Blocked trackRagsToRiches - no first unpause in normal world yet');
             return;
         }
         if (!AchievementSystem.stats.ragsToRiches && game.player) {
