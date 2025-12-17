@@ -3544,25 +3544,24 @@ const TravelSystem = {
                 (this.playerPosition.travelDuration * (1 - this.playerPosition.travelProgress)) / 60
             );
 
-            const travelIcon = inDoomWorld ? '💀' : '🚶';
             const actionText = inDoomWorld ? 'Venturing to' : 'Traveling to';
 
             displayEl.innerHTML = `
                 <div class="travel-in-progress${inDoomWorld ? ' doom-travel' : ''}">
                     <div class="travel-status-header">
-                        <span class="travel-icon">${travelIcon}</span>
+                        <span class="travel-icon">🚶</span>
                         <h3>${actionText} ${destDisplayName}</h3>
                     </div>
                     <div class="travel-progress-container">
                         <div class="travel-progress-bar">
                             <div class="travel-progress-fill" style="width: ${progress}%">
-                                <span class="travel-progress-marker">${travelIcon}</span>
+                                <span class="travel-progress-marker">🚶</span>
                             </div>
                         </div>
                         <div class="travel-progress-labels">
                             <span class="progress-start">📍 Start</span>
                             <span class="progress-percent">${progress}%</span>
-                            <span class="progress-end">${inDoomWorld ? '💀' : '🎯'} ${destDisplayName}</span>
+                            <span class="progress-end">🎯 ${destDisplayName}</span>
                         </div>
                     </div>
                     <div class="travel-time-info">
