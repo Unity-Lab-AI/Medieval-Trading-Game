@@ -2291,27 +2291,18 @@ const GameWorldRenderer = {
  // called when you decide to leave your current misery for different misery
  // FIX: Now accepts optional route array for multi-hop path animation
     onTravelStart(fromId, toId, travelTimeMinutes, route = null) {
-        // 🖤 CRITICAL: Validate duration - fallback to TravelSystem or default 30 💀
+        // Validate duration - fallback to TravelSystem or default 30
         let safeDuration = travelTimeMinutes;
         if (typeof safeDuration !== 'number' || isNaN(safeDuration) || safeDuration <= 0) {
             // Try to get from TravelSystem
             if (typeof TravelSystem !== 'undefined' && TravelSystem.playerPosition?.travelDuration > 0) {
                 safeDuration = TravelSystem.playerPosition.travelDuration;
-                console.log(`🗺️ onTravelStart: Using TravelSystem duration: ${safeDuration}`);
             } else {
                 safeDuration = 30; // Fallback
-                console.warn(`🗺️ onTravelStart: Duration was ${travelTimeMinutes}, using fallback: ${safeDuration}`);
             }
         }
 
-        console.log(`🗺️ GameWorldRenderer.onTravelStart: ${fromId} -> ${toId}, duration: ${safeDuration} game minutes`);
-        console.log('🗺️ Map element exists:', !!this.mapElement);
-        console.log('🗺️ Player marker exists:', !!this.playerMarker);
-        console.log('🗺️ Route:', route);
-        console.log('🗺️ In tutorial mode:', this.isInTutorialMode());
-        console.log('🗺️ game.inTutorial:', typeof game !== 'undefined' ? game.inTutorial : 'game undefined');
         this.animateTravel(fromId, toId, safeDuration, route);
-        console.log('🗺️ After animateTravel - currentTravel:', !!this.currentTravel);
     },
 
  // when you chicken out or the universe intervenes

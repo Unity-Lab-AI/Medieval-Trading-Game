@@ -301,7 +301,6 @@ const TravelPanelMap = {
                 if (cancelBtn) {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('🖤 CANCEL BUTTON CLICKED!');
                     TravelPanelMap.cancelTravel();
                 }
             };
@@ -1587,16 +1586,12 @@ const TravelPanelMap = {
         }
 
         // Notify renderer - pass duration for proper animation timing
-        console.log(`🖤 BEFORE onTravelStart: duration=${duration}, safeDuration=${safeDuration}, destId=${destId}`);
-
         if (typeof GameWorldRenderer !== 'undefined') {
             GameWorldRenderer.onTravelStart?.(virtualStartLoc.id, destId, safeDuration);
         }
 
         // Start countdown
         this.startTravelCountdown(safeDuration);
-
-        console.log(`🖤 Rerouted travel started: ${safeDuration} min to ${destLoc.name} from (${Math.round(fromX)}, ${Math.round(fromY)}) 💀`);
     },
 
     // Internal method to start travel after reroute - bypasses "already at" check
@@ -2438,8 +2433,6 @@ const TravelPanelMap = {
 
     // Cancel ongoing travel - calculates actual return journey from current path position
     cancelTravel() {
-        console.log('🖤 cancelTravel called');
-
         // Set cancelling flag to prevent race condition with updateTravelProgressDisplay
         this.travelState.isCancelling = true;
 
@@ -2456,7 +2449,6 @@ const TravelPanelMap = {
             if (locId && locations?.[locId]) {
                 const loc = locations[locId];
                 startLoc = { id: locId, name: loc.name, type: loc.type, mapPosition: loc.mapPosition };
-                console.log('Using TravelSystem.currentLocation as start:', startLoc);
             }
         }
 
@@ -2487,8 +2479,6 @@ const TravelPanelMap = {
         const currentDestId = TravelSystem.playerPosition.destination?.id;
         const currentDestLoc = locations[currentDestId];
 
-        console.log(`🖤 Cancel calc: elapsed=${elapsedTime}, originalDuration=${originalDuration}, progress=${currentProgress}`);
-
         // Calculate actual current X,Y position on the path
         let currentX = 0, currentY = 0;
         const startLocData = locations[startLocId];
@@ -2499,8 +2489,6 @@ const TravelPanelMap = {
             currentX = startLocData.mapPosition.x;
             currentY = startLocData.mapPosition.y;
         }
-
-        console.log(`Cancel: Current position at ${Math.round(currentProgress * 100)}% = (${Math.round(currentX)}, ${Math.round(currentY)})`);
 
         if (!startLoc || !startLoc.id) {
             addMessage('Journey cancelled - returning to last known location');
@@ -2521,10 +2509,7 @@ const TravelPanelMap = {
         // If you've been traveling for 20 minutes, it takes 20 minutes to get back
         const returnDuration = Math.max(1, Math.round(elapsedTime));
 
-        console.log(`🖤 Return duration: elapsedTime=${elapsedTime}, returnDuration=${returnDuration}`);
-
         addMessage(`Turning back to ${startLoc.name}... (${returnDuration} min)`);
-        console.log(`Cancel: was ${Math.round(currentProgress * 100)}% complete, returning in ${returnDuration} min`);
 
         // Emit travel:cancelled event for other systems
         if (typeof EventBus !== 'undefined') {
@@ -2598,12 +2583,9 @@ const TravelPanelMap = {
         const capturedX = currentX;
         const capturedY = currentY;
 
-        console.log(`🖤 CANCEL: Setting up return journey - duration=${capturedReturnDuration}, to=${capturedStartLocId}, from=(${capturedX}, ${capturedY})`);
-
         setTimeout(() => {
-            // NOW clear the cancelling flag since return journey is starting
+            // Clear the cancelling flag since return journey is starting
             this.travelState.isCancelling = false;
-            console.log(`🖤 CANCEL TIMEOUT: Starting return with duration=${capturedReturnDuration}`);
             this._startRerouteTravelWithDuration(capturedStartLocId, false, capturedReturnDuration, capturedX, capturedY);
         }, 100);
     },

@@ -9360,13 +9360,10 @@ game.drawPlayerPosition = function(ctx) {
 
 // Show overlay
 game.showOverlay = function(overlayId) {
-    console.log(`🖤 showOverlay called for: ${overlayId}`);
     const overlay = document.getElementById(overlayId);
     if (overlay) {
-        console.log(`🖤 found element, classes before:`, overlay.className);
         overlay.classList.remove('hidden');
         overlay.classList.add('active');
-        console.log(`🖤 classes after:`, overlay.className);
 
         // Special handling for world map overlay
         if (overlayId === 'world-map-overlay') {
