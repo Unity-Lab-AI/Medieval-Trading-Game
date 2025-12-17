@@ -772,22 +772,31 @@ const game = {
         });
     },
     
+    // Track last processed day for scheduled events to prevent spam
+    _lastScheduledEventDay: -1,
+    _lastWeeklyEventDay: -1,
+    _lastMonthlyEventDay: -1,
+
     // Check for scheduled time-based events
     checkScheduledEvents() {
         const timeInfo = TimeMachine.getTimeInfo();
-        
-        // Daily market reset
-        if (timeInfo.hour === 6 && timeInfo.minute === 0) {
+        const currentDay = timeInfo.day;
+
+        // Daily market reset at 6:00 AM - only once per day
+        if (timeInfo.hour === 6 && timeInfo.minute === 0 && this._lastScheduledEventDay !== currentDay) {
+            this._lastScheduledEventDay = currentDay;
             this.resetDailyMarket();
         }
-        
-        // Weekly special events
-        if (timeInfo.day === 1 && timeInfo.hour === 10 && timeInfo.minute === 0) {
+
+        // Weekly special events - day 1 at 10:00 AM
+        if (timeInfo.day === 1 && timeInfo.hour === 10 && timeInfo.minute === 0 && this._lastWeeklyEventDay !== currentDay) {
+            this._lastWeeklyEventDay = currentDay;
             EventSystem.triggerEvent('weekly_market');
         }
-        
-        // Monthly merchant caravan
-        if (timeInfo.day === 15 && timeInfo.hour === 14 && timeInfo.minute === 0) {
+
+        // Monthly merchant caravan - day 15 at 2:00 PM
+        if (timeInfo.day === 15 && timeInfo.hour === 14 && timeInfo.minute === 0 && this._lastMonthlyEventDay !== currentDay) {
+            this._lastMonthlyEventDay = currentDay;
             EventSystem.triggerEvent('merchant_caravan');
         }
     },
