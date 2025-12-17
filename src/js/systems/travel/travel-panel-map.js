@@ -1830,6 +1830,16 @@ const TravelPanelMap = {
         } else {
             const dest = this.currentDestination;
 
+            // Check if we're in Doom world - use Doom location names and descriptions
+            const inDoomWorld = (typeof game !== 'undefined' && game.inDoomWorld === true) ||
+                               (typeof DoomWorldConfig !== 'undefined' && DoomWorldConfig.isActive?.());
+            let destDisplayName = dest.name;
+            let destDescription = dest.description || 'No description available.';
+            if (inDoomWorld && typeof DoomWorldNPCs !== 'undefined') {
+                destDisplayName = DoomWorldNPCs.getLocationName(dest.id) || dest.name;
+                destDescription = DoomWorldNPCs.getLocationDescription(dest.id) || dest.description || 'Ruins and despair stretch before you.';
+            }
+
             // Get travel info from TravelSystem for accurate multi-hop calculations
             let travelInfoHtml = '';
             let routeInfoHtml = '';
@@ -1949,12 +1959,12 @@ const TravelPanelMap = {
                     <div class="dest-header">
                         <span class="dest-icon">${dest.icon}</span>
                         <div class="dest-name-type">
-                            <h3>${dest.name} ${statusBadge}</h3>
+                            <h3>${destDisplayName} ${statusBadge}</h3>
                             <span class="dest-type">${dest.type.charAt(0).toUpperCase() + dest.type.slice(1)} • ${dest.region}</span>
                         </div>
                     </div>
                     <div class="dest-description">
-                        ${dest.description || 'No description available.'}
+                        ${destDescription}
                     </div>
                     ${isReached ? learnedInfoHtml : travelInfoHtml}
                     ${isReached ? '' : routeInfoHtml}
@@ -1979,14 +1989,22 @@ const TravelPanelMap = {
         const locations = typeof GameWorld !== 'undefined' ? GameWorld.locations : {};
         const currentLocId = typeof game !== 'undefined' && game.currentLocation ? game.currentLocation.id : null;
 
+        // Check if we're in Doom world for route location names
+        const inDoomWorld = (typeof game !== 'undefined' && game.inDoomWorld === true) ||
+                           (typeof DoomWorldConfig !== 'undefined' && DoomWorldConfig.isActive?.());
+
         let html = '<div class="route-segments">';
-        html += '<h4>🗺️ Journey Route</h4>';
+        html += inDoomWorld ? '<h4>💀 Dark Path</h4>' : '<h4>🗺️ Journey Route</h4>';
         html += '<div class="route-path-visual">';
 
         for (let i = 0; i < travelInfo.route.length; i++) {
             const locId = travelInfo.route[i];
             const loc = locations[locId] || TravelSystem?.locations?.[locId];
-            const locName = loc?.name || locId;
+            // Use Doom location name if in Doom world
+            let locName = loc?.name || locId;
+            if (inDoomWorld && typeof DoomWorldNPCs !== 'undefined') {
+                locName = DoomWorldNPCs.getLocationName(locId) || locName;
+            }
             const locIcon = this.getLocationIcon(loc);
             const isStart = i === 0;
             const isEnd = i === travelInfo.route.length - 1;
@@ -2242,6 +2260,14 @@ const TravelPanelMap = {
             const dest = this.travelState.destination || this.currentDestination;
             if (!dest) return;
 
+            // Check if we're in Doom world - use Doom location names
+            const inDoomWorld = (typeof game !== 'undefined' && game.inDoomWorld === true) ||
+                               (typeof DoomWorldConfig !== 'undefined' && DoomWorldConfig.isActive?.());
+            let destDisplayName = dest.name;
+            if (inDoomWorld && typeof DoomWorldNPCs !== 'undefined') {
+                destDisplayName = DoomWorldNPCs.getLocationName(dest.id) || dest.name;
+            }
+
             const progress = TravelSystem.playerPosition.travelProgress || 0;
             //  Cap progress at 99% until actually complete to avoid visual glitch
             const progressPercent = Math.min(99, Math.round(progress * 100));
@@ -2251,9 +2277,12 @@ const TravelPanelMap = {
             const remainingMinutes = duration * (1 - progress);
             const remainingDisplay = this.formatTravelTime(remainingMinutes);
 
-            // 🖤 Check if this is a return journey 💀
+            // Check if this is a return journey
             const isReturning = this.travelState.isReturning;
-            const actionText = isReturning ? 'Returning to' : 'Traveling to';
+            // Doom world gets darker language
+            const actionText = inDoomWorld
+                ? (isReturning ? 'Fleeing back to' : 'Venturing to')
+                : (isReturning ? 'Returning to' : 'Traveling to');
             const startLabel = isReturning ? 'Turned back' : 'Start';
 
             // Calculate ETA
@@ -2281,13 +2310,13 @@ const TravelPanelMap = {
 
                 // First render - build full HTML - NO EMOJIS ALLOWED IN THIS CARD
                 displayEl.innerHTML = `
-                    <div class="travel-in-progress${isReturning ? ' returning' : ''}" style="animation: none !important;">
+                    <div class="travel-in-progress${isReturning ? ' returning' : ''}${inDoomWorld ? ' doom-travel' : ''}" style="animation: none !important;">
                         <div class="travel-status-header" style="animation: none !important;">
-                            <h3 style="animation: none !important;">${actionText} ${dest.name}</h3>
+                            <h3 style="animation: none !important;">${actionText} ${destDisplayName}</h3>
                         </div>
                         <div class="travel-destination-info" style="animation: none !important;">
                             <div class="dest-details" style="animation: none !important;">
-                                <span class="dest-name" style="animation: none !important;">${dest.name}</span>
+                                <span class="dest-name" style="animation: none !important;">${destDisplayName}</span>
                                 <span class="dest-type" style="animation: none !important;">${dest.type ? dest.type.charAt(0).toUpperCase() + dest.type.slice(1) : ''} - ${dest.region || 'Unknown'}</span>
                             </div>
                         </div>
@@ -2298,7 +2327,7 @@ const TravelPanelMap = {
                             <div class="travel-progress-labels" style="animation: none !important;">
                                 <span class="progress-start" style="animation: none !important;">${startLabel}</span>
                                 <span class="progress-percent" style="animation: none !important;">${progressPercent}%</span>
-                                <span class="progress-end" style="animation: none !important;">${dest.name}</span>
+                                <span class="progress-end" style="animation: none !important;">${destDisplayName}</span>
                             </div>
                         </div>
                         <div class="travel-time-info">

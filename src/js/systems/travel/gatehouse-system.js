@@ -787,7 +787,13 @@ const GatehouseSystem = {
                                        TravelSystem.resourceNodes?.find(n => n.id === destinationId) ||
                                        TravelSystem.pointsOfInterest?.find(p => p.id === destinationId);
                     if (destination) {
-                        addMessage(`Now traveling to ${destination.name}...`);
+                        // Use Doom names if in doom world
+                        const inDoomWorld = (typeof game !== 'undefined' && game.inDoomWorld === true);
+                        let destName = destination.name;
+                        if (inDoomWorld && typeof DoomWorldNPCs !== 'undefined') {
+                            destName = DoomWorldNPCs.getLocationName(destinationId) || destName;
+                        }
+                        addMessage(inDoomWorld ? `💀 Venturing to ${destName}...` : `Now traveling to ${destName}...`);
                         // Call the travel directly
                         TravelSystem.playerPosition.isTraveling = true;
                         TravelSystem.playerPosition.destination = destination;

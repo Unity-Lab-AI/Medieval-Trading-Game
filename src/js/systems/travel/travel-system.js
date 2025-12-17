@@ -2100,6 +2100,14 @@ const TravelSystem = {
             return;
         }
 
+        // Check if we're in Doom world - use Doom location names throughout travel
+        const inDoomWorld = (typeof game !== 'undefined' && game.inDoomWorld === true) ||
+                           (typeof DoomWorldConfig !== 'undefined' && DoomWorldConfig.isActive?.());
+        let destDisplayName = destination.name;
+        if (inDoomWorld && typeof DoomWorldNPCs !== 'undefined') {
+            destDisplayName = DoomWorldNPCs.getLocationName(destinationId) || destination.name;
+        }
+
         const currentLoc = this.getCurrentLocation();
         if (!currentLoc) {
             addMessage('🖤 where even are you? location unknown...');
@@ -2130,7 +2138,7 @@ const TravelSystem = {
                     'scorathax': 'Scorathax the Forest Dragon'
                 };
                 const bossName = bossNames[requiredBoss] || requiredBoss;
-                addMessage(`⚔️ The path to ${destination.name} is blocked!`);
+                addMessage(inDoomWorld ? `💀 The dark path to ${destDisplayName} is sealed!` : `⚔️ The path to ${destDisplayName} is blocked!`);
                 addMessage(`💀 You must first defeat ${bossName} to enter this dungeon.`);
                 addMessage(`📍 Seek the beast in the surrounding wilderness...`);
                 console.warn('🖤 Travel blocked - boss not defeated:', requiredBoss);
@@ -2161,9 +2169,12 @@ const TravelSystem = {
             for (const locId of intermediateLocations) {
                 if (!visitedLocations.includes(locId)) {
                     const blockedLoc = this.locations[locId];
-                    const blockedName = blockedLoc ? blockedLoc.name : locId;
-                    addMessage(`⚠️ Cannot travel through unexplored territory!`);
-                    addMessage(`📍 You must first visit "${blockedName}" before passing through.`);
+                    let blockedName = blockedLoc ? blockedLoc.name : locId;
+                    if (inDoomWorld && typeof DoomWorldNPCs !== 'undefined') {
+                        blockedName = DoomWorldNPCs.getLocationName(locId) || blockedName;
+                    }
+                    addMessage(inDoomWorld ? `💀 The darkness hides the path ahead...` : `⚠️ Cannot travel through unexplored territory!`);
+                    addMessage(inDoomWorld ? `🖤 You must first venture into "${blockedName}" to know the way.` : `📍 You must first visit "${blockedName}" before passing through.`);
                     console.warn('🖤 Travel blocked - unexplored location in path:', locId);
                     return false;
                 }
@@ -2199,7 +2210,9 @@ const TravelSystem = {
         });
 
         // Build travel message based on route complexity
-        let travelMessage = `🚶 Starting journey to ${destination.name}...`;
+        let travelMessage = inDoomWorld
+            ? `💀 Venturing into the dark toward ${destDisplayName}...`
+            : `🚶 Starting journey to ${destDisplayName}...`;
         if (travelInfo.hops > 1) {
             travelMessage += ` (${travelInfo.hops} stops)`;
         }
@@ -2498,10 +2511,21 @@ const TravelSystem = {
                 addMessage(`🛤️ Discovered ${newlyDiscovered.length} new path${newlyDiscovered.length > 1 ? 's' : ''}! Road information now available.`);
             }
         } else if (currentLoc && currentLoc.id && destination && destination.id) {
-            //  Guard against null currentLoc.id - prevents crash 
+            //  Guard against null currentLoc.id - prevents crash
             // Direct travel - discover single path
             if (this.discoverPath(currentLoc.id, destination.id)) {
-                addMessage(`🛤️ Path discovered! You now know the road from ${currentLoc.name} to ${destination.name}.`);
+                // Use Doom names in doom world
+                const inDoom = (typeof game !== 'undefined' && game.inDoomWorld === true) ||
+                              (typeof DoomWorldConfig !== 'undefined' && DoomWorldConfig.isActive?.());
+                let fromName = currentLoc.name;
+                let toName = destination.name;
+                if (inDoom && typeof DoomWorldNPCs !== 'undefined') {
+                    fromName = DoomWorldNPCs.getLocationName(currentLoc.id) || fromName;
+                    toName = DoomWorldNPCs.getLocationName(destination.id) || toName;
+                }
+                addMessage(inDoom
+                    ? `🖤 The dark path from ${fromName} to ${toName} is now known to you...`
+                    : `🛤️ Path discovered! You now know the road from ${fromName} to ${toName}.`);
             }
         }
 
@@ -2533,19 +2557,30 @@ const TravelSystem = {
             }
         }
 
+        // Use Doom location names when in the doom world
+        const inDoomWorld = (typeof game !== 'undefined' && game.inDoomWorld === true) ||
+                           (typeof DoomWorldConfig !== 'undefined' && DoomWorldConfig.isActive?.());
+        let arrivalName = destination.name;
+        if (inDoomWorld && typeof DoomWorldNPCs !== 'undefined') {
+            arrivalName = DoomWorldNPCs.getLocationName(destination.id) || destination.name;
+        }
+
         if (wasFirstVisit) {
-            addMessage(`📍 First time exploring ${destination.name}!`);
+            addMessage(inDoomWorld
+                ? `🖤 First time venturing into ${arrivalName}... the darkness greets you.`
+                : `📍 First time exploring ${arrivalName}!`);
             const activeVisited = GameWorld?.getActiveVisitedLocations?.() || GameWorld?.visitedLocations || [];
             console.log('🖤 Location discovered:', destination.id, '- Total visited:', activeVisited.length);
         }
 
-        // RING THE BELL OF ARRIVAL - let the realm know we survived
+        // RING THE BELL OF ARRIVAL - let the realm know we survived (or the skull grins in doom)
         this.showArrivalNotification(destination);
 
-        addMessage(`🔔 Arrived at ${destination.name}!`);
+        addMessage(inDoomWorld ? `💀 Reached ${arrivalName}...` : `🔔 Arrived at ${arrivalName}!`);
 
         // Check if we arrived at a gatehouse for the first time - show guard encounter
-        if (typeof GatehouseSystem !== 'undefined' && GatehouseSystem.GATEHOUSES) {
+        // In doom world, gatehouses are ruins - no guards, no fees
+        if (typeof GatehouseSystem !== 'undefined' && GatehouseSystem.GATEHOUSES && !inDoomWorld) {
             const gatehouse = GatehouseSystem.GATEHOUSES[destination.id];
             if (gatehouse && !GatehouseSystem.isGatehouseUnlocked(destination.id)) {
                 const zoneName = GatehouseSystem.ZONES[gatehouse.unlocksZone]?.name || 'the region beyond';
@@ -2557,6 +2592,13 @@ const TravelSystem = {
                         GatehouseSystem.showGatehouseArrivalPrompt(destination.id);
                     }
                 }, 500);
+            }
+        } else if (inDoomWorld && typeof GatehouseSystem !== 'undefined' && GatehouseSystem.GATEHOUSES) {
+            // In doom world, gatehouses are abandoned ruins - no guards, free passage
+            const gatehouse = GatehouseSystem.GATEHOUSES[destination.id];
+            if (gatehouse) {
+                const doomGateName = (typeof DoomWorldNPCs !== 'undefined' ? DoomWorldNPCs.getLocationName(destination.id) : null) || gatehouse.name;
+                addMessage(`💀 The gatehouse of ${doomGateName} lies in ruins. The guards are long dead. You pass through freely...`);
             }
         }
 
@@ -2769,11 +2811,28 @@ const TravelSystem = {
         return true;
     },
 
-    //  Show arrival notification - the bell tolls for thee (in a good way this time)
+    //  Show arrival notification - the bell tolls for thee (or the skull grins in doom)
     showArrivalNotification(destination) {
-        // play the sacred bell sound if audio system exists
+        // Check if we're in the Doom world
+        const inDoomWorld = (typeof game !== 'undefined' && game.inDoomWorld === true) ||
+                           (typeof DoomWorldConfig !== 'undefined' && DoomWorldConfig.isActive?.());
+
+        // Get the appropriate location name - Doom names are DIFFERENT
+        let displayName = destination.name;
+        let atmosphereText = '';
+        let descriptionText = '';
+
+        if (inDoomWorld && typeof DoomWorldNPCs !== 'undefined') {
+            // Use the Doom world location name (The Fallen Throne, Frostholm Graves, etc.)
+            displayName = DoomWorldNPCs.getLocationName(destination.id) || destination.name;
+            // Get the grim atmosphere text
+            atmosphereText = DoomWorldNPCs.getLocationAtmosphere(destination.id) || '';
+            descriptionText = DoomWorldNPCs.getLocationDescription(destination.id) || '';
+        }
+
+        // play the sacred bell sound (or doom sound) if audio system exists
         if (typeof AudioSystem !== 'undefined' && AudioSystem.playSound) {
-            AudioSystem.playSound('notification');
+            AudioSystem.playSound(inDoomWorld ? 'doom_arrival' : 'notification');
         }
 
         // create a dramatic notification popup
@@ -2784,35 +2843,74 @@ const TravelSystem = {
 
         const notification = document.createElement('div');
         notification.id = 'arrival-notification';
-        notification.className = 'arrival-notification';
-        notification.innerHTML = `
-            <div class="arrival-notification-content">
-                <div class="arrival-bell">🔔</div>
-                <div class="arrival-text">
-                    <div class="arrival-title">Journey Complete</div>
-                    <div class="arrival-destination">Welcome to ${destination.name}</div>
-                    ${destination.type ? `<div class="arrival-type">${destination.type}</div>` : ''}
-                </div>
-            </div>
-        `;
+        notification.className = inDoomWorld ? 'arrival-notification doom-arrival' : 'arrival-notification';
 
-        // style it inline because we're chaotic like that
-        notification.style.cssText = `
-            position: fixed;
-            top: 20%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: linear-gradient(135deg, rgba(20, 20, 30, 0.95) 0%, rgba(40, 40, 60, 0.95) 100%);
-            border: 2px solid #ffd700;
-            border-radius: 12px;
-            padding: 1.5rem 2rem;
-            z-index: 850; /* Z-INDEX STANDARD: Notifications (arrival) */
-            animation: arrivalSlideIn 0.5s ease-out, arrivalFadeOut 0.5s ease-in 3s forwards;
-            box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
-            text-align: center;
-            color: #fff;
-            font-family: inherit;
-        `;
+        // DOOM WORLD: Dark, ominous arrival
+        // NORMAL: Cheerful golden arrival
+        if (inDoomWorld) {
+            notification.innerHTML = `
+                <div class="arrival-notification-content">
+                    <div class="arrival-bell">💀</div>
+                    <div class="arrival-text">
+                        <div class="arrival-title">You Have Reached</div>
+                        <div class="arrival-destination">${displayName}</div>
+                        ${atmosphereText ? `<div class="arrival-atmosphere">${atmosphereText}</div>` : ''}
+                        ${destination.type ? `<div class="arrival-type">${destination.type}</div>` : ''}
+                    </div>
+                </div>
+            `;
+        } else {
+            notification.innerHTML = `
+                <div class="arrival-notification-content">
+                    <div class="arrival-bell">🔔</div>
+                    <div class="arrival-text">
+                        <div class="arrival-title">Journey Complete</div>
+                        <div class="arrival-destination">Welcome to ${displayName}</div>
+                        ${destination.type ? `<div class="arrival-type">${destination.type}</div>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        // style it based on world type
+        if (inDoomWorld) {
+            // DOOM STYLING - blood red, dark, ominous
+            notification.style.cssText = `
+                position: fixed;
+                top: 20%;
+                left: 50%;
+                transform: translateX(-50%);
+                background: linear-gradient(135deg, rgba(30, 5, 5, 0.98) 0%, rgba(60, 10, 10, 0.98) 100%);
+                border: 2px solid #8b0000;
+                border-radius: 12px;
+                padding: 1.5rem 2rem;
+                z-index: 850;
+                animation: arrivalSlideIn 0.5s ease-out, arrivalFadeOut 0.5s ease-in 4s forwards;
+                box-shadow: 0 0 30px rgba(139, 0, 0, 0.6), inset 0 0 20px rgba(0, 0, 0, 0.5);
+                text-align: center;
+                color: #ddd;
+                font-family: inherit;
+                max-width: 400px;
+            `;
+        } else {
+            // NORMAL STYLING - golden, welcoming
+            notification.style.cssText = `
+                position: fixed;
+                top: 20%;
+                left: 50%;
+                transform: translateX(-50%);
+                background: linear-gradient(135deg, rgba(20, 20, 30, 0.95) 0%, rgba(40, 40, 60, 0.95) 100%);
+                border: 2px solid #ffd700;
+                border-radius: 12px;
+                padding: 1.5rem 2rem;
+                z-index: 850;
+                animation: arrivalSlideIn 0.5s ease-out, arrivalFadeOut 0.5s ease-in 3s forwards;
+                box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
+                text-align: center;
+                color: #fff;
+                font-family: inherit;
+            `;
+        }
 
         // add the animation keyframes if they dont exist
         if (!document.getElementById('arrival-notification-styles')) {
@@ -2832,10 +2930,17 @@ const TravelSystem = {
                     animation: bellRing 0.5s ease-in-out 3;
                     margin-bottom: 0.5rem;
                 }
+                .arrival-notification.doom-arrival .arrival-bell {
+                    animation: skullPulse 1s ease-in-out infinite;
+                }
                 @keyframes bellRing {
                     0%, 100% { transform: rotate(0deg); }
                     25% { transform: rotate(15deg); }
                     75% { transform: rotate(-15deg); }
+                }
+                @keyframes skullPulse {
+                    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 5px #8b0000); }
+                    50% { transform: scale(1.1); filter: drop-shadow(0 0 15px #ff0000); }
                 }
                 .arrival-notification .arrival-title {
                     font-size: 0.9rem;
@@ -2844,11 +2949,30 @@ const TravelSystem = {
                     letter-spacing: 2px;
                     margin-bottom: 0.25rem;
                 }
+                .arrival-notification.doom-arrival .arrival-title {
+                    color: #666;
+                    letter-spacing: 3px;
+                }
                 .arrival-notification .arrival-destination {
                     font-size: 1.4rem;
                     font-weight: bold;
                     color: #ffd700;
                     text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+                }
+                .arrival-notification.doom-arrival .arrival-destination {
+                    color: #ff4444;
+                    text-shadow: 0 0 10px rgba(255, 0, 0, 0.5), 0 0 20px rgba(139, 0, 0, 0.3);
+                }
+                .arrival-notification .arrival-atmosphere {
+                    font-size: 0.85rem;
+                    color: #999;
+                    margin-top: 0.5rem;
+                    font-style: italic;
+                    line-height: 1.4;
+                    max-width: 350px;
+                }
+                .arrival-notification.doom-arrival .arrival-atmosphere {
+                    color: #888;
                 }
                 .arrival-notification .arrival-type {
                     font-size: 0.8rem;
@@ -2856,18 +2980,21 @@ const TravelSystem = {
                     margin-top: 0.25rem;
                     font-style: italic;
                 }
+                .arrival-notification.doom-arrival .arrival-type {
+                    color: #666;
+                }
             `;
             document.head.appendChild(styleSheet);
         }
 
         document.body.appendChild(notification);
 
-        // remove after animation completes (4 seconds total)
+        // remove after animation completes (doom gets more time to read atmosphere)
         setTimeout(() => {
             notification.remove();
-        }, 4000);
+        }, inDoomWorld ? 5000 : 4000);
 
-        console.log('🔔 arrival notification summoned for:', destination.name);
+        console.log(inDoomWorld ? '💀 doom arrival:' : '🔔 arrival notification summoned for:', displayName);
     },
 
     // Trigger random encounters during travel
@@ -3404,27 +3531,38 @@ const TravelSystem = {
             const dest = this.playerPosition.destination;
             if (!dest) return;
 
+            // Check for Doom world - use doom location names
+            const inDoomWorld = (typeof game !== 'undefined' && game.inDoomWorld === true) ||
+                               (typeof DoomWorldConfig !== 'undefined' && DoomWorldConfig.isActive?.());
+            let destDisplayName = dest.name;
+            if (inDoomWorld && typeof DoomWorldNPCs !== 'undefined') {
+                destDisplayName = DoomWorldNPCs.getLocationName(dest.id) || dest.name;
+            }
+
             const progress = Math.round(this.playerPosition.travelProgress * 100);
             const remainingTime = this.formatTime(
                 (this.playerPosition.travelDuration * (1 - this.playerPosition.travelProgress)) / 60
             );
 
+            const travelIcon = inDoomWorld ? '💀' : '🚶';
+            const actionText = inDoomWorld ? 'Venturing to' : 'Traveling to';
+
             displayEl.innerHTML = `
-                <div class="travel-in-progress">
+                <div class="travel-in-progress${inDoomWorld ? ' doom-travel' : ''}">
                     <div class="travel-status-header">
-                        <span class="travel-icon">🚶</span>
-                        <h3>Traveling to ${dest.name}</h3>
+                        <span class="travel-icon">${travelIcon}</span>
+                        <h3>${actionText} ${destDisplayName}</h3>
                     </div>
                     <div class="travel-progress-container">
                         <div class="travel-progress-bar">
                             <div class="travel-progress-fill" style="width: ${progress}%">
-                                <span class="travel-progress-marker">🚶</span>
+                                <span class="travel-progress-marker">${travelIcon}</span>
                             </div>
                         </div>
                         <div class="travel-progress-labels">
                             <span class="progress-start">📍 Start</span>
                             <span class="progress-percent">${progress}%</span>
-                            <span class="progress-end">🎯 ${dest.name}</span>
+                            <span class="progress-end">${inDoomWorld ? '💀' : '🎯'} ${destDisplayName}</span>
                         </div>
                     </div>
                     <div class="travel-time-info">
@@ -3462,13 +3600,17 @@ const TravelSystem = {
     updateDestinationsList() {
         const travelPanel = document.getElementById('travel-panel');
         if (!travelPanel) return;
-        
+
         const currentLoc = this.getCurrentLocation();
         if (!currentLoc) return;
-        
+
+        // Check for Doom world - use doom location names
+        const inDoomWorld = (typeof game !== 'undefined' && game.inDoomWorld === true) ||
+                           (typeof DoomWorldConfig !== 'undefined' && DoomWorldConfig.isActive?.());
+
         let html = '<div class="destinations-list">';
-        html += '<h3>Available Destinations</h3>';
-        
+        html += inDoomWorld ? '<h3>💀 Dark Destinations</h3>' : '<h3>Available Destinations</h3>';
+
         // Sort destinations by distance
         const destinations = Object.values(this.locations)
             .filter(loc => loc.id !== currentLoc.id)
@@ -3477,19 +3619,24 @@ const TravelSystem = {
                 const distB = this.calculateDistance(currentLoc, b);
                 return distA - distB;
             });
-        
+
         destinations.forEach(dest => {
             const travelInfo = this.calculateTravelInfo(dest);
+            // Use Doom name if in doom world
+            let destName = dest.name;
+            if (inDoomWorld && typeof DoomWorldNPCs !== 'undefined') {
+                destName = DoomWorldNPCs.getLocationName(dest.id) || dest.name;
+            }
             html += `
-                <div class="destination-item">
-                    <h4>${dest.name}</h4>
+                <div class="destination-item${inDoomWorld ? ' doom-dest' : ''}">
+                    <h4>${destName}</h4>
                     <p class="destination-type">${dest.type}</p>
                     <p class="travel-info">Distance: ${travelInfo.distance} miles | Time: ${travelInfo.timeDisplay}</p>
-                    <button class="travel-btn" onclick="TravelSystem.startTravel('${dest.id}')">Travel</button>
+                    <button class="travel-btn" onclick="TravelSystem.startTravel('${dest.id}')">${inDoomWorld ? '💀 Venture' : 'Travel'}</button>
                 </div>
             `;
         });
-        
+
         html += '</div>';
         travelPanel.innerHTML = html;
     },
