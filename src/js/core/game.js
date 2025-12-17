@@ -782,20 +782,21 @@ const game = {
         const timeInfo = TimeMachine.getTimeInfo();
         const currentDay = timeInfo.day;
 
-        // Daily market reset at 6:00 AM - only once per day
-        if (timeInfo.hour === 6 && timeInfo.minute === 0 && this._lastScheduledEventDay !== currentDay) {
+        // Daily market reset - fires once per day after 6 AM
+        // Uses >= instead of exact time check to catch fast time skips
+        if (timeInfo.hour >= 6 && this._lastScheduledEventDay !== currentDay) {
             this._lastScheduledEventDay = currentDay;
             this.resetDailyMarket();
         }
 
-        // Weekly special events - day 1 at 10:00 AM
-        if (timeInfo.day === 1 && timeInfo.hour === 10 && timeInfo.minute === 0 && this._lastWeeklyEventDay !== currentDay) {
+        // Weekly special events - day 1 after 10:00 AM
+        if (timeInfo.day === 1 && timeInfo.hour >= 10 && this._lastWeeklyEventDay !== currentDay) {
             this._lastWeeklyEventDay = currentDay;
             EventSystem.triggerEvent('weekly_market');
         }
 
-        // Monthly merchant caravan - day 15 at 2:00 PM
-        if (timeInfo.day === 15 && timeInfo.hour === 14 && timeInfo.minute === 0 && this._lastMonthlyEventDay !== currentDay) {
+        // Monthly merchant caravan - day 15 after 2:00 PM
+        if (timeInfo.day === 15 && timeInfo.hour >= 14 && this._lastMonthlyEventDay !== currentDay) {
             this._lastMonthlyEventDay = currentDay;
             EventSystem.triggerEvent('merchant_caravan');
         }
