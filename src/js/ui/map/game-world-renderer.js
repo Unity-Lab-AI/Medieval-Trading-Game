@@ -1957,11 +1957,23 @@ const GameWorldRenderer = {
             const travelData = this.getTravelEmoji(movingRight);
             const flipStyle = travelData.needsFlip ? 'transform: scaleX(-1);' : '';
 
+            // 🖤 Check if this is a return journey (cancel travel) 💀
+            const isReturning = typeof TravelSystem !== 'undefined' && TravelSystem.playerPosition?._isReturning;
+            const labelText = isReturning ? 'RETURNING...' : 'TRAVELING...';
+            const labelBg = isReturning
+                ? 'linear-gradient(180deg, #ff6644 0%, #aa3300 100%)' // Slightly different orange for returning
+                : 'linear-gradient(180deg, #ff8844 0%, #cc4400 100%)';
+
+            // Clear the returning flag after using it
+            if (isReturning && typeof TravelSystem !== 'undefined') {
+                delete TravelSystem.playerPosition._isReturning;
+            }
+
             this.playerMarker.innerHTML = `
                 <div class="marker-tack" style="font-size: 42px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6)); animation: tack-walk 0.4s ease-in-out infinite; z-index: 152;"><span class="walk-emoji" style="display: inline-block; ${flipStyle}">${travelData.emoji}</span></div>
                 <div class="marker-shadow" style="position: absolute; bottom: -5px; width: 24px; height: 8px; background: rgba(0, 0, 0, 0.3); border-radius: 50%; animation: shadow-pulse 3s ease-in-out infinite; z-index: 99;"></div>
                 <div class="marker-pulse" style="position: absolute; bottom: 0px; width: 16px; height: 16px; background: rgba(255, 136, 68, 0.5); border-radius: 50%; animation: marker-pulse 2s ease-out infinite; z-index: 100;"></div>
-                <div class="marker-label" style="background: linear-gradient(180deg, #ff8844 0%, #cc4400 100%); color: white; font-size: 9px; font-weight: bold; padding: 4px 10px; border-radius: 12px; white-space: nowrap; margin-bottom: 4px; box-shadow: 0 3px 10px rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.8); z-index: 151; letter-spacing: 0.5px; text-transform: uppercase;">TRAVELING...</div>
+                <div class="marker-label" style="background: ${labelBg}; color: white; font-size: 9px; font-weight: bold; padding: 4px 10px; border-radius: 12px; white-space: nowrap; margin-bottom: 4px; box-shadow: 0 3px 10px rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.8); z-index: 151; letter-spacing: 0.5px; text-transform: uppercase;">${labelText}</div>
             `;
         }
 
@@ -2277,26 +2289,43 @@ const GameWorldRenderer = {
     },
 
  // called when you decide to leave your current misery for different misery
- // FIX: Now accepts optional route array for multi-hop path animation 
+ // FIX: Now accepts optional route array for multi-hop path animation
     onTravelStart(fromId, toId, travelTimeMinutes, route = null) {
-        console.log(`🗺️ GameWorldRenderer.onTravelStart: ${fromId} -> ${toId}, duration: ${travelTimeMinutes} game minutes`);
+        // 🖤 CRITICAL: Validate duration - fallback to TravelSystem or default 30 💀
+        let safeDuration = travelTimeMinutes;
+        if (typeof safeDuration !== 'number' || isNaN(safeDuration) || safeDuration <= 0) {
+            // Try to get from TravelSystem
+            if (typeof TravelSystem !== 'undefined' && TravelSystem.playerPosition?.travelDuration > 0) {
+                safeDuration = TravelSystem.playerPosition.travelDuration;
+                console.log(`🗺️ onTravelStart: Using TravelSystem duration: ${safeDuration}`);
+            } else {
+                safeDuration = 30; // Fallback
+                console.warn(`🗺️ onTravelStart: Duration was ${travelTimeMinutes}, using fallback: ${safeDuration}`);
+            }
+        }
+
+        console.log(`🗺️ GameWorldRenderer.onTravelStart: ${fromId} -> ${toId}, duration: ${safeDuration} game minutes`);
         console.log('🗺️ Map element exists:', !!this.mapElement);
         console.log('🗺️ Player marker exists:', !!this.playerMarker);
         console.log('🗺️ Route:', route);
         console.log('🗺️ In tutorial mode:', this.isInTutorialMode());
         console.log('🗺️ game.inTutorial:', typeof game !== 'undefined' ? game.inTutorial : 'game undefined');
-        this.animateTravel(fromId, toId, travelTimeMinutes, route);
+        this.animateTravel(fromId, toId, safeDuration, route);
         console.log('🗺️ After animateTravel - currentTravel:', !!this.currentTravel);
     },
 
  // when you chicken out or the universe intervenes
+ // 🖤 DON'T call completeTravelAnimation() - that shows arrival animation 💀
+ // Just stop the current animation so return journey can start fresh
     onTravelCancel() {
         if (this.travelAnimation) {
             cancelAnimationFrame(this.travelAnimation);
             this.travelAnimation = null;
         }
         this.currentTravel = null;
-        this.completeTravelAnimation();
+        this._lastLoggedProgress = -1; // Reset progress tracking
+        // 🖤 Keep marker in traveling state - return journey will start shortly 💀
+        // Don't call completeTravelAnimation() which would show "arrived" animation
     },
 
  // apply css transforms - math that makes things move

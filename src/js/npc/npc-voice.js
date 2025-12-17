@@ -62,7 +62,7 @@ const NPCVoiceChatSystem = {
                 textModel: 'mistral',  // Ollama model
                 voice: 'default',      // Browser TTS voice
                 voiceEnabled: true,
-                voiceVolume: 70,
+                voiceVolume: 80,       // raised 15% from 70 for better audibility
                 maxConversationTurns: 2,
                 maxResponseTokens: apiDefaults.maxTokens || 150,
                 temperature: apiDefaults.temperature || 0.7,
@@ -95,7 +95,7 @@ const NPCVoiceChatSystem = {
         textModel: 'mistral',  // Ollama model - default to mistral
         voice: 'nova',
         voiceEnabled: true,
-        voiceVolume: 70,
+        voiceVolume: 80,       // raised 15% from 70 for better audibility
         masterVolume: 100, // Master volume (0-100), applied on top of voiceVolume
         temperature: 0.8,
         voiceEngine: 'kokoro'  // 🔧 FIX: Include voiceEngine in settings (default to kokoro)

@@ -628,6 +628,24 @@ const PeoplePanel = {
             }
         });
 
+        // CRITICAL: Stop hotkey propagation when typing in NPC chat input
+        // This prevents panel shortcuts (I, M, P, etc.) from triggering while chatting
+        document.addEventListener('keydown', (e) => {
+            const chatInput = document.getElementById('people-chat-input');
+            if (chatInput && document.activeElement === chatInput) {
+                // Allow Enter to send message, Escape to blur/close
+                if (e.key === 'Escape') {
+                    chatInput.blur();
+                    return;
+                }
+                // Stop ALL other keys from propagating to global hotkey handler
+                // This includes letters like I, M, P, T, Q, etc. that open panels
+                if (e.key !== 'Enter') {
+                    e.stopPropagation();
+                }
+            }
+        }, true); // Use capture phase to intercept before other handlers
+
         document.addEventListener('click', (e) => {
             if (e.target.matches(`[data-close-overlay="${this.panelId}"]`)) {
                 this.close();

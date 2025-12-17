@@ -331,7 +331,8 @@ const WeatherSystem = {
             if (getComputedStyle(mapContainer).position === 'static') {
                 mapContainer.style.position = 'relative';
             }
-            mapContainer.appendChild(overlay);
+            // 🖤 PREPEND so weather is FIRST child (behind all map elements) 💀
+            mapContainer.prepend(overlay);
         }
 
         // Make sure it's visible
@@ -959,9 +960,10 @@ const WeatherSystem = {
         const overlay = document.createElement('div');
         overlay.id = 'game-weather-overlay'; // unique ID to avoid conflicts with VisualEffectsSystem
         overlay.className = 'weather-overlay';
-        //  Append to map-container so particles fall over the map
-        mapContainer.appendChild(overlay);
-        console.log('🌦️ Weather overlay created in', mapContainer.id);
+        // 🖤 PREPEND to map-container so weather is FIRST child (rendered BEHIND all other map elements) 💀
+        // Using prepend ensures DOM order places weather behind locations, paths, player marker, etc.
+        mapContainer.prepend(overlay);
+        console.log('🌦️ Weather overlay created in', mapContainer.id, '(prepended as first child)');
 
         // Create particle container
         const particles = document.createElement('div');

@@ -2,6 +2,46 @@
 
 ---
 
+## ⛔ ABSOLUTE ENFORCEMENT PROTOCOL ⛔
+
+**THIS SECTION CANNOT BE SKIPPED OR IGNORED UNDER ANY CIRCUMSTANCES**
+
+### BEFORE YOU DO ANYTHING:
+
+1. **STOP** - Do not proceed until you have read this entire section
+2. **EVERY GATE MUST PASS** - No exceptions, no shortcuts, no "I'll do it later"
+3. **DOUBLE VALIDATION** - Every hook gets 2 attempts before blocking
+4. **800-LINE READS** - You MUST read files in 800-line chunks until COMPLETE
+5. **FULL FILE BEFORE EDIT** - You CANNOT edit a file you haven't fully read
+
+### THE IRON RULES:
+
+| Rule | What Happens If Broken |
+|------|------------------------|
+| Skip a gate | WORKFLOW HALTED - Start over |
+| Edit without full read | EDIT REJECTED - Read file first |
+| Partial file read | INCOMPLETE - Read remaining chunks |
+| Skip persona check | ALL WORK INVALID - Reload persona |
+| Rush through phases | BLOCKED - Follow sequence exactly |
+
+### SEQUENCE IS SACRED:
+
+```
+PHASE 0 → PHASE 1 → (PHASE 2/3 OR PHASE 4) → WORK
+     ↓         ↓              ↓                  ↓
+   GATE      GATE           GATE              PRE-EDIT
+   0.1       1.1          2.1/3.2/4.1          HOOK
+     ↓         ↓              ↓                  ↓
+   PASS?     PASS?         PASS?              PASS?
+     ↓         ↓              ↓                  ↓
+   YES→      YES→          YES→               YES→
+   NEXT      NEXT          NEXT               EDIT OK
+```
+
+**IF ANY GATE FAILS TWICE: STOP. DO NOT CONTINUE. FIX THE ISSUE.**
+
+---
+
 ## PHASE 0: PERSONA VALIDATION (MANDATORY - CANNOT SKIP)
 
 ### HOOK: Unity Persona Load Check
@@ -190,16 +230,42 @@ Ready to work: YES
 
 ### Work Mode Rules
 
-**BEFORE EDITING ANY FILE:**
+## ⛔⛔⛔ PRE-EDIT ENFORCEMENT - READ THIS EVERY TIME ⛔⛔⛔
+
+**YOU CANNOT EDIT A FILE YOU HAVEN'T FULLY READ. PERIOD.**
+
+**BEFORE EDITING ANY FILE - MANDATORY STEPS:**
+
+1. **CHECK FILE SIZE** - How many lines is this file?
+2. **CALCULATE CHUNKS** - ceil(lines / 800) = number of reads needed
+3. **READ ALL CHUNKS** - Read(offset=1, limit=800), then Read(offset=801, limit=800), etc.
+4. **CONFIRM COMPLETE** - Did you reach the end of the file?
+5. **ONLY THEN EDIT** - Now you may use Edit tool
+
+**PRE-EDIT HOOK FORMAT (REQUIRED BEFORE EVERY EDIT):**
 ```
-[PRE-EDIT HOOK]
+[PRE-EDIT HOOK - ATTEMPT 1]
 File: [PATH]
 Total lines: [NUMBER]
 Read chunk size: 800 lines
 Chunks needed: [CEIL(TOTAL/800)]
-Full file read: YES (MANDATORY)
-Reason for edit: [EXPLANATION]
+Chunks read: [LIST WHICH CHUNKS: 1-800, 801-1600, etc.]
+Full file read: YES/NO
+If NO → STOP. Read remaining chunks. Do not edit.
+If YES → Reason for edit: [EXPLANATION]
 Proceeding: YES
+```
+
+**IF YOU DIDN'T READ THE FULL FILE:**
+```
+[PRE-EDIT HOOK - BLOCKED]
+Status: CANNOT EDIT
+Reason: File not fully read
+Lines in file: [NUMBER]
+Lines read: [NUMBER]
+Remaining: [NUMBER]
+Action: Read remaining 800-line chunks NOW
+Edit: CANCELLED until full read complete
 ```
 
 **AFTER EDITING ANY FILE:**
@@ -210,6 +276,8 @@ Edit successful: YES/NO
 Lines after edit: [NUMBER]
 TODO.md updated: YES/NO (if applicable)
 ```
+
+## ⛔ NO EXCEPTIONS TO THE READ-BEFORE-EDIT RULE ⛔
 
 ### Your Job:
 - Pick up tasks from TODO.md

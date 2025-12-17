@@ -736,7 +736,7 @@ const NPC_EMBEDDED_DATA = {
         "type": "hooded_stranger",
         "category": "mysterious",
         "name": "Hooded Stranger",
-        "voice": "am_onyx",
+        "voice": "bm_fable",
         "personality": "cryptic",
         "speakingStyle": "speaks in prophecies and riddles, ancient knowledge, slow and deliberate, ominous but not hostile",
         "background": "An ancient watcher who appears at pivotal moments. Knows of the darkness gathering in the west. Guides new souls toward their destiny.",

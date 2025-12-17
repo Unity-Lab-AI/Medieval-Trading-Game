@@ -208,7 +208,7 @@ const GameConfig = {
     // ═══════════════════════════════════════════════════════════════
     defaults: {
         soundVolume: 0.7,          // loud enough to drown out thoughts
-        musicVolume: 0.3,          // 🖤💀 lowered for background ambiance - not overpowering 💀
+        musicVolume: 0.24,         // 🖤💀 lowered 20% from 0.3 for quieter background ambiance 💀
         autoSave: true,            // because trust issues
         autoSaveInterval: 300000,  // 5 mins of anxiety between saves
         maxSaveSlots: 10,          // 10 alternate realities
@@ -224,7 +224,7 @@ const GameConfig = {
         // 🎵 audio settings - drown out the silence
         audio: {
             masterVolume: 0.7,        // master volume slider (0-1)
-            musicVolume: 0.3,         // 🖤💀 background music - quiet ambiance, not overpowering 💀
+            musicVolume: 0.24,        // 🖤💀 background music - lowered 20% from 0.3 for quieter ambiance 💀
             sfxVolume: 0.7,           // sound effects volume
             isMuted: false,           // global mute toggle
             isMusicMuted: false,      // music-only mute

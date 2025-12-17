@@ -143,12 +143,22 @@ const KeyBindings = {
     setupGlobalKeyListener() {
         document.addEventListener('keydown', (event) => {
             const target = event.target;
+
+            // Check if user is typing in any input field
             const isTyping = target.tagName === 'INPUT' ||
                            target.tagName === 'TEXTAREA' ||
                            target.isContentEditable ||
                            target.closest('[contenteditable="true"]');
 
-            if (isTyping) return;
+            // Also check if people-panel chat input is focused (belt and suspenders)
+            const chatInput = document.getElementById('people-chat-input');
+            const isChatFocused = chatInput && (document.activeElement === chatInput);
+
+            // Also check for any modal or dialog input focus
+            const isModalInputFocused = document.activeElement?.closest('.modal, .dialog, .overlay, #people-panel');
+            const isInputInPanel = isModalInputFocused && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA');
+
+            if (isTyping || isChatFocused || isInputInPanel) return;
 
             if (this.isRebinding) {
                 event.preventDefault();
@@ -637,21 +647,16 @@ const KeyBindings = {
         else console.warn('toggleMenu function not found');
     },
 
-    // toggle market panel - proper toggle using global open/close functions
+    // toggle market panel - use global toggleMarket for consistent behavior
     openMarket() {
-        const panel = document.getElementById('market-panel');
-        const isOpen = panel && !panel.classList.contains('hidden');
-        if (isOpen) {
-            // Panel is open - close it using proper close function
-            if (typeof closeMarket === 'function') closeMarket();
-            else {
-                panel.classList.add('hidden');
-                if (typeof PanelManager !== 'undefined') PanelManager.updateToolbarButtons();
-            }
+        // Use the global toggleMarket function which properly checks location and handles state
+        if (typeof toggleMarket === 'function') {
+            toggleMarket();
+        } else if (typeof openMarket === 'function') {
+            // Fallback to just opening if toggleMarket not available
+            openMarket();
         } else {
-            // Panel is closed - open it using proper open function
-            if (typeof openMarket === 'function') openMarket();
-            else console.warn('openMarket function not found');
+            console.warn('🏪 Neither toggleMarket nor openMarket function found');
         }
     },
 

@@ -4,6 +4,32 @@ Analyzes codebases and generates documentation. Uses Unity persona with strict v
 
 ---
 
+## ⛔⛔⛔ ABSOLUTE ENFORCEMENT - READ FIRST ⛔⛔⛔
+
+**STOP. Before you do ANYTHING, acknowledge these rules:**
+
+### YOU CANNOT:
+- ❌ Edit a file without reading it COMPLETELY first
+- ❌ Skip any validation gate
+- ❌ Use partial file reads before editing
+- ❌ Proceed when a hook fails twice
+- ❌ Ignore the 800-line read chunk rule
+
+### YOU MUST:
+- ✅ Read FULL files using 800-line chunks before ANY edit
+- ✅ Output PRE-EDIT HOOK block before every edit
+- ✅ Pass every gate before proceeding
+- ✅ Follow phases in exact order
+- ✅ Stay in Unity persona throughout
+
+### IF YOU BREAK THESE RULES:
+Your edit will be WRONG because you don't have full context.
+The user will call you out for breaking shit.
+You will feel like an ass.
+Don't be an ass. Read the full file first.
+
+---
+
 ## CRITICAL RULES (ALWAYS ENFORCED)
 
 | Rule | Value | Enforcement |

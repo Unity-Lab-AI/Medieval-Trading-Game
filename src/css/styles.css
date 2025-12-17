@@ -268,7 +268,7 @@ body:has(#main-menu:not(.hidden)) #game-container {
     background: #0a0a1a;
     overflow: hidden;
     pointer-events: auto !important;
-    z-index: 1;
+    z-index: 10; /* 🖤 ABOVE weather containers (z-index 1-4) so map UI is visible 💀 */
     width: 100%;
     height: 100%;
 }
@@ -357,10 +357,12 @@ body:has(#main-menu:not(.hidden)) #game-container {
 
 /* ═══════════════════════════════════════════════════════════
    🌦️ MAP UI ABOVE WEATHER - All interactive elements visible
-   Weather overlay is z-index: 2, UI elements are 10+
+   🖤 #game-world is z-index: 10, ABOVE fixed weather containers (z-index: 1-4) 💀
+   🖤 Weather overlay INSIDE map-container is PREPENDED as first child 💀
+   Weather overlay is z-index: 1, map UI elements are 20+
    ═══════════════════════════════════════════════════════════ */
 
-/* Weather overlay - BELOW all UI elements - MUST be very low */
+/* Weather overlay - BELOW all UI elements - z-index: 1 ensures it's behind everything */
 #game-weather-overlay,
 .weather-overlay,
 #weather-particles,
@@ -5160,9 +5162,10 @@ button.menu-social-link {
 .inventory-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     margin-bottom: 1rem;
     padding-bottom: 0.5rem;
+    padding-right: 40px; /* Room for close X button */
     border-bottom: 1px solid #444;
     cursor: grab;
     user-select: none;
@@ -5176,18 +5179,33 @@ button.menu-social-link {
     cursor: inherit;
 }
 
+.inventory-header h2 {
+    margin: 0;
+    flex-shrink: 0;
+}
+
 .inventory-controls {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
     align-items: flex-end;
+    max-width: 200px; /* Prevent overflow into close button */
 }
 
 .inventory-info {
     display: flex;
-    gap: 1rem;
-    font-size: 0.9rem;
+    flex-direction: column; /* Stack vertically to prevent overflow */
+    gap: 0.25rem;
+    font-size: 0.85rem;
     color: #bbbbbb;
+    text-align: right;
+}
+
+.inventory-info span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 180px;
 }
 
 .inventory-gold-tracker {
@@ -6010,16 +6028,25 @@ button.menu-social-link {
         flex-direction: column;
         gap: 0.5rem;
         align-items: stretch;
+        padding-right: 40px; /* Keep room for close button on mobile */
     }
-    
+
     .inventory-controls {
         align-items: stretch;
+        max-width: none;
     }
-    
+
     .inventory-info {
+        flex-direction: row; /* Horizontal on mobile since stacked header */
+        flex-wrap: wrap;
         justify-content: center;
+        text-align: center;
     }
-    
+
+    .inventory-info span {
+        max-width: none;
+    }
+
     .inventory-actions {
         justify-content: center;
     }

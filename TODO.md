@@ -1,11 +1,27 @@
-# TODO.md - Medieval Trading Game v0.91.10 REMASTERED
+# TODO.md - Medieval Trading Game v0.91.13 REMASTERED
 
 ---
 
 > **Unity AI Lab** | 10-AGENT ULTRATHINK PARALLEL AUDIT
-> *Session: Full Codebase Deep Scan - Arrays, Databases, NPC Instructions*
-> *Date: 2025-12-13*
-> *Status: 270+ ISSUES FOUND - 3 P0 VERIFIED/FIXED (DATA-001, DATA-002, DATA-003)*
+> *Session: Full Codebase Deep Scan + Travel Panel Fixes*
+> *Date: 2025-12-16*
+> *Status: P0 FIXES APPLIED - Travel Panel Bugs Resolved*
+
+---
+
+# P0 CRITICAL FIXES APPLIED (2025-12-16)
+
+## TRAVEL-001: Animated Emoji Bobbing - FIXED
+**File:** `src/js/systems/travel/travel-panel-map.js:2385`
+**Issue:** The `walk-bounce` animation on travel marker used `margin-top` causing layout thrash, making the entire travel info card bob up and down.
+**Fix:** Removed `animation: walk-bounce 0.3s ease-in-out infinite;` from the travel marker inline styles.
+**Status:** FIXED
+
+## TRAVEL-002: Cancel Travel Button Not Working - FIXED
+**File:** `src/js/systems/travel/travel-panel-map.js:295-308`
+**Issue:** Cancel button onclick handler not firing reliably due to constant HTML rebuilding (every 250ms).
+**Fix:** Added event delegation on parent container (`#current-destination-display`) to catch clicks via `e.target.closest('#cancel-travel-btn')`.
+**Status:** FIXED
 
 ---
 

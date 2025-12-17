@@ -633,6 +633,19 @@ const PanelManager = {
 
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
+                // 🔒 IGNORE Escape when typing in input fields (NPC chat, text inputs, etc.)
+                const target = e.target;
+                const isTyping = target.tagName === 'INPUT' ||
+                                 target.tagName === 'TEXTAREA' ||
+                                 target.isContentEditable ||
+                                 target.closest('[contenteditable="true"]');
+                if (isTyping) {
+                    // Blur the input instead of closing panels
+                    target.blur();
+                    e.preventDefault();
+                    return;
+                }
+
                 // Use UIStateManager's priority system if available
                 if (typeof UIStateManager !== 'undefined') {
                     const action = UIStateManager.getEscAction();

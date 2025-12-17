@@ -70,7 +70,7 @@ const KokoroTTS = {
         'tailor': 'bf_lily', 'jeweler': 'bm_george',
         'thief': 'am_puck', 'smuggler': 'am_echo', 'assassin': 'am_onyx',
         'spy': 'bf_isabella', 'pirate': 'am_fenrir',
-        'prophet': 'am_onyx', 'stranger': 'am_onyx', 'hooded_stranger': 'am_onyx',
+        'prophet': 'bm_fable', 'stranger': 'bm_fable', 'hooded_stranger': 'bm_fable',
         'tutorial_guide': 'bf_emma', 'narrator': 'bm_fable',
         'ghost': 'bf_isabella', 'demon': 'am_onyx', 'angel': 'bf_lily',
         'goblin': 'am_puck', 'orc': 'am_fenrir', 'elf': 'bf_alice',

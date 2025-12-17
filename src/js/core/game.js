@@ -6012,21 +6012,49 @@ function unlockRegion(regionId) {
 // Everywhere else, players must trade directly with NPCs who have
 // profession-based inventories (innkeepers sell food, blacksmiths sell weapons, etc.)
 
+// 🏪 Market locations by world type:
+// - Normal World: royal_capital (Grand Market)
+// - Tutorial World: tutorial_village, tutorial_town
+// - Doom World: NO MARKETS (trade directly with NPCs)
 const MARKET_LOCATIONS = ['royal_capital', 'tutorial_village', 'tutorial_town'];
 
 // 🏪 Check if current location has a market
 function locationHasMarket(locationId = null) {
-    // Try multiple ways to get location ID
-    let currentLocationId = locationId ||
-                            game?.currentLocation?.id ||
-                            TravelSystem?.playerPosition?.currentLocation;
+    // 🔥 Doom World has NO markets - check this first
+    if (typeof DoomWorldSystem !== 'undefined' && DoomWorldSystem.isInDoomWorld) {
+        return false;
+    }
 
-    // Handle case where game.currentLocation might be a string ID directly
+    // Try multiple ways to get location ID (in order of reliability)
+    let currentLocationId = locationId;
+
+    // 1. Check TravelSystem first (most reliable during gameplay)
+    if (!currentLocationId && typeof TravelSystem !== 'undefined') {
+        currentLocationId = TravelSystem.playerPosition?.currentLocation;
+    }
+
+    // 2. Check game.currentLocation.id
+    if (!currentLocationId && game?.currentLocation?.id) {
+        currentLocationId = game.currentLocation.id;
+    }
+
+    // 3. Handle case where game.currentLocation might be a string ID directly
     if (!currentLocationId && typeof game?.currentLocation === 'string') {
         currentLocationId = game.currentLocation;
     }
 
-    return MARKET_LOCATIONS.includes(currentLocationId);
+    // 4. Check TutorialManager if in tutorial mode - get actual location
+    if (!currentLocationId && typeof TutorialManager !== 'undefined' && TutorialManager.isInTutorial) {
+        // Try to get actual tutorial location from TravelSystem or game
+        if (typeof TravelSystem !== 'undefined' && TravelSystem.playerPosition?.currentLocation) {
+            currentLocationId = TravelSystem.playerPosition.currentLocation;
+        } else {
+            currentLocationId = 'tutorial_village'; // Default starting location
+        }
+    }
+
+    const hasMarket = MARKET_LOCATIONS.includes(currentLocationId);
+    return hasMarket;
 }
 
 // 🏪 Update market button visibility based on current location 💀
@@ -8219,6 +8247,14 @@ function addMessage(text, type = 'info') {
 }
 
 function handleKeyPress(event) {
+    // 🔒 IGNORE hotkeys when typing in input fields (NPC chat, text inputs, etc.)
+    const target = event.target;
+    const isTyping = target.tagName === 'INPUT' ||
+                     target.tagName === 'TEXTAREA' ||
+                     target.isContentEditable ||
+                     target.closest('[contenteditable="true"]');
+    if (isTyping) return; // Let them type in peace!
+
     // Keyboard shortcuts
     switch (event.key) {
         case 'Escape':
@@ -8266,13 +8302,10 @@ function handleKeyPress(event) {
                 closeInventory();
             }
             break;
-        case 'm':
-        case 'M':
-            // Toggle market - works from most states
-            if (game.state === GameState.PLAYING || game.state === GameState.MARKET) {
-                toggleMarket();
-            }
-            break;
+        // M key for market - handled by KeyBindings system for proper toggle
+        // case 'm':
+        // case 'M':
+        //     Removed - KeyBindings.openMarket() handles M key toggle
         case 't':
         case 'T':
             if (game.state === GameState.PLAYING) {
@@ -8816,6 +8849,14 @@ game.initOverlaySystem = function() {
     // Add escape key listener for overlays (PanelManager handles panel-by-panel closing)
     EventManager.addEventListener(document, 'keydown', (e) => {
         if (e.key === 'Escape') {
+            // 🔒 IGNORE Escape when typing in input fields - let input handle blur/cancel
+            const target = e.target;
+            const isTyping = target.tagName === 'INPUT' ||
+                             target.tagName === 'TEXTAREA' ||
+                             target.isContentEditable ||
+                             target.closest('[contenteditable="true"]');
+            if (isTyping) return; // Let input fields handle their own Escape behavior
+
             // NEVER fuck with character creation / game setup - the void awaits
             const charCreation = document.getElementById('character-creation-overlay');
             const gameSetup = document.getElementById('game-setup-panel');

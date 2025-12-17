@@ -139,7 +139,7 @@ body > #menu-weather-container {
 #game-world {
     isolation: isolate !important;
     position: relative;
-    z-index: 10 !important; /* Above weather (1), contains UI elements */
+    z-index: 10 !important; /* 🖤 ABOVE fixed weather containers (z-index 1-4) so ALL map UI is visible 💀 */
 }
 
 /* Path connections between locations */

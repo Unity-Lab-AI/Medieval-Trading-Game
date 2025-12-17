@@ -236,6 +236,14 @@ const SaveManager = {
 
     setupKeyboardShortcuts() {
         const handler = (e) => {
+            // 🔒 IGNORE hotkeys when typing in input fields (NPC chat, text inputs, etc.)
+            const target = e.target;
+            const isTyping = target.tagName === 'INPUT' ||
+                             target.tagName === 'TEXTAREA' ||
+                             target.isContentEditable ||
+                             target.closest('[contenteditable="true"]');
+            if (isTyping) return; // Let them type in peace!
+
             if (e.key === 'F5') {
                 e.preventDefault();
                 this.quickSave();

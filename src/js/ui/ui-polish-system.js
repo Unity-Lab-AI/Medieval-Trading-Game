@@ -476,6 +476,14 @@ const UIPolishSystem = {
     },
     
     handleEscapeKey(event) {
+        // 🔒 IGNORE Escape when typing in input fields (NPC chat, text inputs, etc.)
+        const target = event.target;
+        const isTyping = target.tagName === 'INPUT' ||
+                         target.tagName === 'TEXTAREA' ||
+                         target.isContentEditable ||
+                         target.closest('[contenteditable="true"]');
+        if (isTyping) return; // Let input fields handle their own Escape behavior
+
         // Check if ModalSystem has an active modal - let it handle ESC
         if (typeof ModalSystem !== 'undefined' && ModalSystem.activeModals && ModalSystem.activeModals.size > 0) {
             return; // Modal's own ESC handler will deal with this

@@ -291,6 +291,22 @@ const TravelPanelMap = {
                 this.clearDestination();
             });
         }
+
+        // Cancel travel button - use DOCUMENT level event delegation
+        // This ensures clicks ALWAYS register regardless of when elements are created
+        // Remove any existing listener first to prevent duplicates
+        if (!this._cancelClickHandler) {
+            this._cancelClickHandler = (e) => {
+                const cancelBtn = e.target.closest('#cancel-travel-btn');
+                if (cancelBtn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('🖤 CANCEL BUTTON CLICKED!');
+                    TravelPanelMap.cancelTravel();
+                }
+            };
+            document.addEventListener('click', this._cancelClickHandler, true); // Use capture phase
+        }
     },
 
     //  Render the map
@@ -1408,7 +1424,8 @@ const TravelPanelMap = {
                 startLocation: null,
                 destination: null,
                 countdownInterval: null,
-                isCancelling: false
+                isCancelling: false,
+                isReturning: false
             };
 
             // Start travel back to start with calculated duration
@@ -1451,7 +1468,8 @@ const TravelPanelMap = {
             startLocation: null,
             destination: null,
             countdownInterval: null,
-            isCancelling: false
+            isCancelling: false,
+            isReturning: false
         };
 
         addMessage(`Changing course to ${newDestName}...`);
@@ -1503,11 +1521,15 @@ const TravelPanelMap = {
 
         const destName = isDiscovered ? 'Unknown Location' : location.name;
 
+        // CRITICAL: Start travel BEFORE unpausing to prevent onGameUnpaused race condition
+        // If we unpause first, onGameUnpaused triggers travelToDestination() with undefined duration!
+        this._travelToDestinationWithDuration(duration, fromX, fromY);
+
         // Get the time system
         const timeSystem = typeof TimeSystem !== 'undefined' ? TimeSystem :
                           (typeof TimeMachine !== 'undefined' ? TimeMachine : null);
 
-        // If game is paused, auto-unpause
+        // If game is paused, auto-unpause (AFTER travel is set up)
         if (timeSystem) {
             const isPaused = timeSystem.isPaused || timeSystem.currentSpeed === 'PAUSED';
             if (isPaused) {
@@ -1515,9 +1537,6 @@ const TravelPanelMap = {
                 timeSystem.setSpeed(preferredSpeed);
             }
         }
-
-        // Start travel with our calculated duration
-        this._travelToDestinationWithDuration(duration, fromX, fromY);
     },
 
     // Travel to destination with a specific duration, starting from a specific position
@@ -1539,35 +1558,45 @@ const TravelPanelMap = {
         };
 
         // Store the virtual start for travel animation
+        // 🖤 Check if _isReturning flag was set (by cancelTravel) 💀
+        const isReturning = typeof TravelSystem !== 'undefined' && TravelSystem.playerPosition?._isReturning;
+
         this.travelState = {
             isActive: true,
             startLocation: virtualStartLoc,
             destination: this.currentDestination,
             countdownInterval: null,
             isCancelling: false,
-            rerouteFromPosition: { x: fromX, y: fromY }
+            rerouteFromPosition: { x: fromX, y: fromY },
+            isReturning: isReturning // Track if this is a return journey from cancel
         };
+
+        // CRITICAL: Ensure duration is valid number, fallback to 30 if undefined/NaN
+        const safeDuration = (typeof duration === 'number' && !isNaN(duration) && duration > 0) ? duration : 30;
 
         // Set up TravelSystem state
         if (typeof TravelSystem !== 'undefined') {
             TravelSystem.playerPosition.isTraveling = true;
             TravelSystem.playerPosition.destination = { id: destId, ...destLoc };
             TravelSystem.playerPosition.travelProgress = 0;
-            TravelSystem.playerPosition.travelDuration = duration;
+            TravelSystem.playerPosition.travelDuration = safeDuration;
+            // 🖤 FIX: Use getTotalMinutes() to match GameWorldRenderer's time tracking 💀
             TravelSystem.playerPosition.travelStartTime =
-                (typeof TimeSystem !== 'undefined' ? TimeSystem.currentTime : Date.now());
+                (typeof TimeSystem !== 'undefined' && TimeSystem.getTotalMinutes ? TimeSystem.getTotalMinutes() : Date.now());
             TravelSystem.playerPosition._rerouteFromPosition = { x: fromX, y: fromY };
         }
 
-        // Notify renderer
+        // Notify renderer - pass duration for proper animation timing
+        console.log(`🖤 BEFORE onTravelStart: duration=${duration}, safeDuration=${safeDuration}, destId=${destId}`);
+
         if (typeof GameWorldRenderer !== 'undefined') {
-            GameWorldRenderer.onTravelStart?.(virtualStartLoc.id, destId);
+            GameWorldRenderer.onTravelStart?.(virtualStartLoc.id, destId, safeDuration);
         }
 
         // Start countdown
-        this.startTravelCountdown(duration);
+        this.startTravelCountdown(safeDuration);
 
-        console.log(`Rerouted travel started: ${duration} min to ${destLoc.name} from (${Math.round(fromX)}, ${Math.round(fromY)})`);
+        console.log(`🖤 Rerouted travel started: ${safeDuration} min to ${destLoc.name} from (${Math.round(fromX)}, ${Math.round(fromY)}) 💀`);
     },
 
     // Internal method to start travel after reroute - bypasses "already at" check
@@ -1727,8 +1756,16 @@ const TravelPanelMap = {
         console.log('🚶 TravelPanelMap.onGameUnpaused called', {
             waitingToTravel: this.waitingToTravel,
             hasDestination: !!this.currentDestination,
-            travelActive: this.travelState.isActive
+            travelActive: this.travelState.isActive,
+            isCancelling: this.travelState.isCancelling,
+            isReturning: this.travelState.isReturning
         });
+
+        // Don't interfere during cancel/return journey setup
+        if (this.travelState.isCancelling || this.travelState.isReturning) {
+            console.log('🚶 Cancel/return in progress, skipping auto-travel');
+            return;
+        }
 
         // Check we're not already traveling
         if (typeof TravelSystem !== 'undefined' && TravelSystem.playerPosition?.isTraveling) {
@@ -2100,46 +2137,55 @@ const TravelPanelMap = {
         startTime: null,
         duration: null,
         countdownInterval: null,
-        isCancelling: false // Flag to prevent race condition during cancel
+        isCancelling: false, // Flag to prevent race condition during cancel
+        isReturning: false   // 🖤 Flag for return journey after cancel 💀
     },
 
     //  Start the travel countdown display
     startTravelCountdown() {
         if (!this.currentDestination) return;
 
-        // Store travel state
-        this.travelState.isActive = true;
-        this.travelState.destination = { ...this.currentDestination };
+        // CRITICAL: Preserve existing state if already set up (e.g., for return journeys)
+        // Only set these if not already configured by _travelToDestinationWithDuration
+        if (!this.travelState.isActive) {
+            this.travelState.isActive = true;
+        }
+        if (!this.travelState.destination) {
+            this.travelState.destination = { ...this.currentDestination };
+        }
 
-        // Store the starting location for the travel marker
-        // IMPORTANT: Ensure we have a valid startLocation with id for cancel/reroute to work
-        if (typeof game !== 'undefined' && game.currentLocation) {
-            const loc = game.currentLocation;
-            // Ensure we have proper location data with id
-            if (typeof loc === 'string') {
-                // game.currentLocation is just an ID string - look up full data
-                const fullLoc = typeof GameWorld !== 'undefined' && GameWorld.locations?.[loc];
-                if (fullLoc) {
-                    this.travelState.startLocation = { id: loc, name: fullLoc.name, type: fullLoc.type };
+        // Only set startLocation if not already configured (preserves reroute position for return journeys)
+        if (!this.travelState.startLocation) {
+            // Store the starting location for the travel marker
+            // IMPORTANT: Ensure we have a valid startLocation with id for cancel/reroute to work
+            if (typeof game !== 'undefined' && game.currentLocation) {
+                const loc = game.currentLocation;
+                // Ensure we have proper location data with id
+                if (typeof loc === 'string') {
+                    // game.currentLocation is just an ID string - look up full data
+                    const fullLoc = typeof GameWorld !== 'undefined' && GameWorld.locations?.[loc];
+                    if (fullLoc) {
+                        this.travelState.startLocation = { id: loc, name: fullLoc.name, type: fullLoc.type };
+                    } else {
+                        this.travelState.startLocation = { id: loc, name: loc, type: 'unknown' };
+                    }
+                } else if (loc.id) {
+                    // Proper location object
+                    this.travelState.startLocation = { ...loc };
                 } else {
-                    this.travelState.startLocation = { id: loc, name: loc, type: 'unknown' };
-                }
-            } else if (loc.id) {
-                // Proper location object
-                this.travelState.startLocation = { ...loc };
-            } else {
-                // Fallback - try TravelSystem's currentLocation
-                const tsLocId = typeof TravelSystem !== 'undefined' && TravelSystem.playerPosition?.currentLocation;
-                if (tsLocId) {
-                    const tsLoc = typeof GameWorld !== 'undefined' && GameWorld.locations?.[tsLocId];
-                    this.travelState.startLocation = tsLoc
-                        ? { id: tsLocId, name: tsLoc.name, type: tsLoc.type }
-                        : { id: tsLocId, name: tsLocId, type: 'unknown' };
+                    // Fallback - try TravelSystem's currentLocation
+                    const tsLocId = typeof TravelSystem !== 'undefined' && TravelSystem.playerPosition?.currentLocation;
+                    if (tsLocId) {
+                        const tsLoc = typeof GameWorld !== 'undefined' && GameWorld.locations?.[tsLocId];
+                        this.travelState.startLocation = tsLoc
+                            ? { id: tsLocId, name: tsLoc.name, type: tsLoc.type }
+                            : { id: tsLocId, name: tsLocId, type: 'unknown' };
+                    }
                 }
             }
         }
 
-        console.log('🚶 startTravelCountdown: startLocation =', this.travelState.startLocation);
+        console.log('🚶 startTravelCountdown: startLocation =', this.travelState.startLocation, 'isReturning =', this.travelState.isReturning);
 
         // Get travel info from TravelSystem
         //  Null check for playerPosition to prevent crash 
@@ -2183,7 +2229,7 @@ const TravelPanelMap = {
         const actionsEl = document.getElementById('destination-actions');
         if (!displayEl) return;
 
-        //  Throttle updates when paused - progress doesn't change anyway 
+        //  Throttle updates when paused - progress doesn't change anyway
         const isPaused = typeof TimeSystem !== 'undefined' && (TimeSystem.isPaused || TimeSystem.currentSpeed === 'PAUSED');
         if (isPaused) {
             const now = performance.now();
@@ -2196,19 +2242,24 @@ const TravelPanelMap = {
         }
 
         // Check if we're still traveling
-        //  Null check for playerPosition to prevent race condition 
+        //  Null check for playerPosition to prevent race condition
         if (typeof TravelSystem !== 'undefined' && TravelSystem.playerPosition?.isTraveling) {
             const dest = this.travelState.destination || this.currentDestination;
             if (!dest) return;
 
             const progress = TravelSystem.playerPosition.travelProgress || 0;
-            //  Cap progress at 99% until actually complete to avoid visual glitch 
+            //  Cap progress at 99% until actually complete to avoid visual glitch
             const progressPercent = Math.min(99, Math.round(progress * 100));
 
             // Calculate remaining time
             const duration = TravelSystem.playerPosition.travelDuration || 1;
             const remainingMinutes = duration * (1 - progress);
             const remainingDisplay = this.formatTravelTime(remainingMinutes);
+
+            // 🖤 Check if this is a return journey 💀
+            const isReturning = this.travelState.isReturning;
+            const actionText = isReturning ? 'Returning to' : 'Traveling to';
+            const startLabel = isReturning ? 'Turned back' : 'Start';
 
             // Calculate ETA
             let etaDisplay = '';
@@ -2222,48 +2273,85 @@ const TravelPanelMap = {
                 etaDisplay = `${displayHour}:${arrivalMin.toString().padStart(2, '0')} ${period}`;
             }
 
-            displayEl.innerHTML = `
-                <div class="travel-in-progress">
-                    <div class="travel-status-header">
-                        <span class="travel-icon">🚶</span>
-                        <h3>Traveling to ${dest.name}</h3>
-                    </div>
-                    <div class="travel-destination-info">
-                        <span class="dest-icon">${dest.icon || '📍'}</span>
-                        <div class="dest-details">
-                            <span class="dest-name">${dest.name}</span>
-                            <span class="dest-type">${dest.type ? dest.type.charAt(0).toUpperCase() + dest.type.slice(1) : ''} • ${dest.region || 'Unknown'}</span>
+            // 🖤 FIX STUTTERING: Only rebuild HTML if structure doesn't exist yet 💀
+            // Otherwise just update the dynamic values to prevent layout thrash
+            // Also rebuild if returning state changed (need to update header text)
+            const existingProgress = displayEl.querySelector('.travel-in-progress');
+            const isCurrentlyShowingReturning = existingProgress?.classList.contains('returning');
+            const needsRebuild = !existingProgress || (isReturning !== isCurrentlyShowingReturning);
+
+            if (needsRebuild) {
+                // Clear cached references since we're rebuilding
+                this._travelDisplayCache = null;
+
+                // First render - build full HTML - NO EMOJIS ALLOWED IN THIS CARD
+                displayEl.innerHTML = `
+                    <div class="travel-in-progress${isReturning ? ' returning' : ''}" style="animation: none !important;">
+                        <div class="travel-status-header" style="animation: none !important;">
+                            <h3 style="animation: none !important;">${actionText} ${dest.name}</h3>
                         </div>
-                    </div>
-                    <div class="travel-progress-container">
-                        <div class="travel-progress-bar">
-                            <div class="travel-progress-fill" style="width: ${progressPercent}%">
-                                <span class="travel-progress-marker">🚶</span>
+                        <div class="travel-destination-info" style="animation: none !important;">
+                            <div class="dest-details" style="animation: none !important;">
+                                <span class="dest-name" style="animation: none !important;">${dest.name}</span>
+                                <span class="dest-type" style="animation: none !important;">${dest.type ? dest.type.charAt(0).toUpperCase() + dest.type.slice(1) : ''} - ${dest.region || 'Unknown'}</span>
                             </div>
                         </div>
-                        <div class="travel-progress-labels">
-                            <span class="progress-start">📍 Start</span>
-                            <span class="progress-percent">${progressPercent}%</span>
-                            <span class="progress-end">🎯 ${dest.name}</span>
+                        <div class="travel-progress-container" style="animation: none !important;">
+                            <div class="travel-progress-bar" style="animation: none !important;">
+                                <div class="travel-progress-fill" style="width: ${progressPercent}%; animation: none !important;"></div>
+                            </div>
+                            <div class="travel-progress-labels" style="animation: none !important;">
+                                <span class="progress-start" style="animation: none !important;">${startLabel}</span>
+                                <span class="progress-percent" style="animation: none !important;">${progressPercent}%</span>
+                                <span class="progress-end" style="animation: none !important;">${dest.name}</span>
+                            </div>
+                        </div>
+                        <div class="travel-time-info">
+                            <div class="time-stat">
+                                <span class="time-label">⏱️ Time Remaining</span>
+                                <span class="time-value countdown" id="travel-time-remaining">${remainingDisplay}</span>
+                            </div>
+                            <div class="time-stat" id="travel-eta-container" ${etaDisplay ? '' : 'style="display:none"'}>
+                                <span class="time-label">🕐 ETA</span>
+                                <span class="time-value" id="travel-eta-value">${etaDisplay}</span>
+                            </div>
+                        </div>
+                        <div class="travel-actions-during">
+                            <button class="travel-btn-danger" id="cancel-travel-btn">Cancel Journey</button>
                         </div>
                     </div>
-                    <div class="travel-time-info">
-                        <div class="time-stat">
-                            <span class="time-label">⏱️ Time Remaining</span>
-                            <span class="time-value countdown">${remainingDisplay}</span>
-                        </div>
-                        ${etaDisplay ? `
-                        <div class="time-stat">
-                            <span class="time-label">🕐 ETA</span>
-                            <span class="time-value">${etaDisplay}</span>
-                        </div>
-                        ` : ''}
-                    </div>
-                    <div class="travel-actions-during">
-                        <button class="travel-btn-danger" onclick="TravelPanelMap.cancelTravel()">✕ Cancel Journey</button>
-                    </div>
-                </div>
-            `;
+                `;
+            } else {
+                // 🖤 Subsequent updates - only change dynamic values, no full rebuild 💀
+                // Use cached references to avoid DOM queries every update
+                if (!this._travelDisplayCache) {
+                    this._travelDisplayCache = {
+                        progressFill: displayEl.querySelector('.travel-progress-fill'),
+                        progressPct: displayEl.querySelector('.progress-percent'),
+                        timeRemaining: displayEl.querySelector('#travel-time-remaining'),
+                        etaValue: displayEl.querySelector('#travel-eta-value'),
+                        etaContainer: displayEl.querySelector('#travel-eta-container')
+                    };
+                }
+                const cache = this._travelDisplayCache;
+
+                // Batch DOM writes to minimize reflows
+                if (cache.progressFill) {
+                    cache.progressFill.style.width = `${progressPercent}%`;
+                }
+                if (cache.progressPct) {
+                    cache.progressPct.textContent = `${progressPercent}%`;
+                }
+                if (cache.timeRemaining) {
+                    cache.timeRemaining.textContent = remainingDisplay;
+                }
+                if (cache.etaValue) {
+                    cache.etaValue.textContent = etaDisplay;
+                }
+                if (cache.etaContainer) {
+                    cache.etaContainer.style.display = etaDisplay ? '' : 'none';
+                }
+            }
 
             // Hide normal action buttons during travel
             if (actionsEl) actionsEl.classList.add('hidden');
@@ -2327,7 +2415,6 @@ const TravelPanelMap = {
                 font-size: 20px;
                 transform: translate(-50%, -50%);
                 filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
-                animation: walk-bounce 0.3s ease-in-out infinite;
                 pointer-events: none;
             `;
             this.mapElement.appendChild(this.travelMarker);
@@ -2351,7 +2438,7 @@ const TravelPanelMap = {
 
     // Cancel ongoing travel - calculates actual return journey from current path position
     cancelTravel() {
-        console.log('cancelTravel called');
+        console.log('🖤 cancelTravel called');
 
         // Set cancelling flag to prevent race condition with updateTravelProgressDisplay
         this.travelState.isCancelling = true;
@@ -2360,7 +2447,8 @@ const TravelPanelMap = {
 
         // Get current travel state - try multiple sources for start location
         let startLoc = this.travelState?.startLocation;
-        const startLocId = startLoc?.id || TravelSystem.playerPosition?.currentLocation;
+        // 🖤 FIX: Check TravelSystem exists before accessing 💀
+        const startLocId = startLoc?.id || (typeof TravelSystem !== 'undefined' ? TravelSystem.playerPosition?.currentLocation : null);
 
         // Fallback: try to get from TravelSystem's stored currentLocation
         if ((!startLoc || !startLoc.id) && typeof TravelSystem !== 'undefined') {
@@ -2387,10 +2475,19 @@ const TravelPanelMap = {
         }
 
         // Get current travel progress and calculate actual position
-        const currentProgress = TravelSystem.playerPosition.travelProgress || 0;
+        // Calculate progress from elapsed time for accuracy
         const originalDuration = TravelSystem.playerPosition.travelDuration || 30;
+        const travelStartTime = TravelSystem.playerPosition.travelStartTime || 0;
+        const currentGameTime = typeof TimeSystem !== 'undefined' && TimeSystem.getTotalMinutes ? TimeSystem.getTotalMinutes() : Date.now();
+        const elapsedTime = currentGameTime - travelStartTime;
+
+        // Use elapsed time / duration for more accurate progress
+        const currentProgress = Math.min(1, Math.max(0, elapsedTime / originalDuration));
+
         const currentDestId = TravelSystem.playerPosition.destination?.id;
         const currentDestLoc = locations[currentDestId];
+
+        console.log(`🖤 Cancel calc: elapsed=${elapsedTime}, originalDuration=${originalDuration}, progress=${currentProgress}`);
 
         // Calculate actual current X,Y position on the path
         let currentX = 0, currentY = 0;
@@ -2420,8 +2517,11 @@ const TravelPanelMap = {
             return;
         }
 
-        // Calculate return time based on actual distance traveled (progress * original duration)
-        const returnDuration = Math.max(1, Math.round(originalDuration * currentProgress));
+        // Calculate return time based on actual TIME traveled (elapsed time = return time)
+        // If you've been traveling for 20 minutes, it takes 20 minutes to get back
+        const returnDuration = Math.max(1, Math.round(elapsedTime));
+
+        console.log(`🖤 Return duration: elapsedTime=${elapsedTime}, returnDuration=${returnDuration}`);
 
         addMessage(`Turning back to ${startLoc.name}... (${returnDuration} min)`);
         console.log(`Cancel: was ${Math.round(currentProgress * 100)}% complete, returning in ${returnDuration} min`);
@@ -2469,17 +2569,42 @@ const TravelPanelMap = {
         }
 
         // Otherwise, start a return journey from current path position
+        // 🖤 CRITICAL: Keep isCancelling = true until return journey starts! 💀
+        // This prevents updateTravelProgressDisplay from calling onTravelComplete
+        // during the 100ms gap before _startRerouteTravelWithDuration executes
         this.travelState = {
             isActive: false,
-            startLocation: null,
+            startLocation: startLoc, // Keep start location for return journey
             destination: null,
             countdownInterval: null,
-            isCancelling: false
+            isCancelling: true, // 🖤 STAY TRUE until return journey starts! 💀
+            isReturning: true   // Mark this as a return journey
         };
 
+        // 🖤 Set flag so animation shows "RETURNING..." instead of "TRAVELING..." 💀
+        if (typeof TravelSystem !== 'undefined') {
+            TravelSystem.playerPosition._isReturning = true;
+        }
+
+        // Store reroute position NOW so it's available when animation starts
+        if (typeof TravelSystem !== 'undefined') {
+            TravelSystem.playerPosition._rerouteFromPosition = { x: currentX, y: currentY };
+        }
+
         // Start travel back to origin from current position
+        // Capture values for closure - ensure they're valid
+        const capturedReturnDuration = returnDuration;
+        const capturedStartLocId = startLoc.id;
+        const capturedX = currentX;
+        const capturedY = currentY;
+
+        console.log(`🖤 CANCEL: Setting up return journey - duration=${capturedReturnDuration}, to=${capturedStartLocId}, from=(${capturedX}, ${capturedY})`);
+
         setTimeout(() => {
-            this._startRerouteTravelWithDuration(startLoc.id, false, returnDuration, currentX, currentY);
+            // NOW clear the cancelling flag since return journey is starting
+            this.travelState.isCancelling = false;
+            console.log(`🖤 CANCEL TIMEOUT: Starting return with duration=${capturedReturnDuration}`);
+            this._startRerouteTravelWithDuration(capturedStartLocId, false, capturedReturnDuration, capturedX, capturedY);
         }, 100);
     },
 
@@ -2488,13 +2613,14 @@ const TravelPanelMap = {
         // Clear destination
         this.currentDestination = null;
 
-        // Reset travel state but clear the cancelling flag
+        // Reset travel state but clear the cancelling and returning flags
         this.travelState = {
             isActive: false,
             startLocation: null,
             destination: null,
             countdownInterval: null,
-            isCancelling: false
+            isCancelling: false,
+            isReturning: false // 🖤 Reset return flag 💀
         };
 
         // Hide travel marker
@@ -2545,6 +2671,7 @@ const TravelPanelMap = {
         this.travelState.startLocation = null;
         this.travelState.startTime = null;
         this.travelState.duration = null;
+        this.travelState.isReturning = false; // 🖤 Reset return flag 💀
 
         // Mark destination as reached with learned info (grayed out but informative)
         //  This keeps it visible so players can see what they learned from the journey
@@ -3022,7 +3149,7 @@ Bootstrap.register('TravelPanelMap', () => TravelPanelMap.init(), {
             background: linear-gradient(135deg, rgba(40, 60, 80, 0.8) 0%, rgba(30, 50, 70, 0.9) 100%);
             border-radius: 12px;
             border: 2px solid #ff9800;
-            animation: travel-glow 2s ease-in-out infinite;
+            /* NO ANIMATION - causes layout issues */
         }
 
         @keyframes travel-glow {
@@ -3039,7 +3166,7 @@ Bootstrap.register('TravelPanelMap', () => TravelPanelMap.init(), {
 
         .travel-status-header .travel-icon {
             font-size: 28px;
-            animation: walk-bounce 0.5s ease-in-out infinite;
+            /* 🖤 NO ANIMATION - walk-bounce causes layout thrash and panel stuttering 💀 */
         }
 
         .travel-status-header h3 {
@@ -3109,13 +3236,12 @@ Bootstrap.register('TravelPanelMap', () => TravelPanelMap.init(), {
 
         .travel-progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #ff9800 0%, #ffb74d 50%, #ff9800 100%);
-            background-size: 200% 100%;
-            animation: progress-shimmer 2s linear infinite;
+            background: linear-gradient(90deg, #ff9800 0%, #ffb74d 100%);
             border-radius: 12px;
             position: relative;
             min-width: 30px;
             transition: width 0.25s ease-out;
+            /* NO ANIMATION - static progress bar */
         }
 
         @keyframes progress-shimmer {
@@ -3129,7 +3255,7 @@ Bootstrap.register('TravelPanelMap', () => TravelPanelMap.init(), {
             top: 50%;
             transform: translateY(-50%);
             font-size: 18px;
-            animation: walk-bounce 0.4s ease-in-out infinite;
+            /* 🖤 NO ANIMATION - causes layout shifts in panel 💀 */
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
         }
 

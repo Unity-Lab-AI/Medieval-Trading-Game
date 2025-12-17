@@ -19,7 +19,7 @@ const SettingsPanel = {
     get defaultSettings() {
         // fallback defaults if GameConfig not loaded yet
         const fallback = {
-            audio: { masterVolume: 0.7, musicVolume: 0.5, sfxVolume: 0.7, voiceVolume: 70 },
+            audio: { masterVolume: 0.7, musicVolume: 0.24, sfxVolume: 0.7, voiceVolume: 80 },
             visual: { particlesEnabled: true, screenShakeEnabled: true, animationsEnabled: true, weatherEffectsEnabled: true, quality: 'medium', reducedMotion: false, flashWarnings: true },
             animation: { animationsEnabled: true, animationSpeed: 1.0, reducedMotion: false, quality: 'medium' },
             ui: { animationsEnabled: true, hoverEffectsEnabled: true, transitionsEnabled: true, reducedMotion: false, highContrast: false, fontSize: 'medium', theme: 'default', uiScale: 1.0 },
