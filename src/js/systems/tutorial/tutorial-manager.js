@@ -156,10 +156,8 @@ const TutorialManager = {
         // Load tutorial quests into the quest system
         this._loadTutorialQuests();
 
-        // Hand them their first quest - "press buttons, receive dopamine"
-        this._assignFirstQuest();
-
-        // Roll out the welcome mat
+        // Roll out the welcome mat FIRST - quest assignment happens after user dismisses it
+        // This prevents the quest from opening behind the welcome modal
         this._showWelcomeMessage();
 
         // Scream into the event void that the tutorial has begun
@@ -807,7 +805,9 @@ const TutorialManager = {
                         className: 'primary',
                         onClick: () => {
                             ModalSystem.hide();
-                            // DON'T auto-open the panel - let them do it themselves!
+                            // NOW assign the first quest - after the welcome modal is dismissed
+                            // This ensures the quest panel opens AFTER the modal, not behind it
+                            this._assignFirstQuest();
                         }
                     }
                 ]
