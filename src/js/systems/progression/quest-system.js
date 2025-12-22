@@ -3712,6 +3712,9 @@ const QuestSystem = {
             overlay.classList.add('active');
             this.questLogOpen = true;
             this.updateQuestLogUI();
+            
+            // FIX: Dispatch ui-action event for tutorial quest tracking
+            document.dispatchEvent(new CustomEvent('ui-action', { detail: { action: 'open_quest' } }));
         }
     },
 
@@ -4564,10 +4567,11 @@ const QuestSystem = {
             }
         });
 
-        // Make panel draggable
+        // Make panel draggable and constrain to game container
         if (typeof DraggablePanels !== 'undefined') {
             DraggablePanels.makeDraggable(panel);
             DraggablePanels.bringToFront(panel);
+            DraggablePanels.constrainPanelOnShow(panel);
         }
 
         //  Save position when panel is moved (via drag end)

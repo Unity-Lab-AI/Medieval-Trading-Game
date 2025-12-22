@@ -541,8 +541,12 @@ const TimeMachine = {
         }));
         if (this.isPaused) {
             document.dispatchEvent(new CustomEvent('game-paused', { detail: { speed: 'PAUSED' } }));
+            // FIX: Dispatch ui-action for quest system tracking
+            document.dispatchEvent(new CustomEvent('ui-action', { detail: { action: 'pause_game' } }));
         } else {
             document.dispatchEvent(new CustomEvent('game-unpaused', { detail: { speed } }));
+            // FIX: Dispatch ui-action for quest system tracking
+            document.dispatchEvent(new CustomEvent('ui-action', { detail: { action: 'unpause_game' } }));
         }
 
         console.log(`⏰ TIME MACHINE setSpeed: ${speed} | isPaused: ${this.isPaused} | isRunning: ${this.isRunning} | animFrameId: ${this.animationFrameId}`);

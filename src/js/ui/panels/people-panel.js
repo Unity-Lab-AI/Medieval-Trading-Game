@@ -737,10 +737,20 @@ const PeoplePanel = {
         this.isOpen = true;
         this.showListView();
         this.refresh();
+        
+        // Constrain panel to game container bounds
+        if (typeof DraggablePanels !== 'undefined' && DraggablePanels.constrainPanelOnShow) {
+            DraggablePanels.constrainPanelOnShow(panel);
+        }
 
         // Dispatch event for tutorial tracking
         document.dispatchEvent(new CustomEvent('panel-opened', {
             detail: { panelId: 'people-panel', action: 'open_people' }
+        }));
+        
+        // FIX: Also dispatch ui-action for quest system (works even outside tutorial mode)
+        document.dispatchEvent(new CustomEvent('ui-action', {
+            detail: { action: 'open_people', panelId: 'people-panel' }
         }));
 
         console.log('👥 PeoplePanel: Opened');

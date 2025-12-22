@@ -1274,8 +1274,22 @@ const TradeCartPanel = {
             detail: { items: [...this.cart], total: this.finalTotal, discount: this.discountPercent, merchant: this.currentMerchant, mode: 'buy' }
         }));
 
-        // dispatch item-purchased for EACH item (for buy objectives)
+        // FIX: Emit item-received AND item-purchased for each item in cart
+        // item-received is needed for 'collect' type objectives (e.g., "The Profit Motive" tutorial)
+        // item-purchased is needed for 'buy' type objectives
         for (const item of this.cart) {
+            // Emit item-received for collect objectives (tutorial quests use this)
+            document.dispatchEvent(new CustomEvent('item-received', {
+                detail: {
+                    item: item.itemId,
+                    itemId: item.itemId,
+                    quantity: item.quantity,
+                    source: 'trade_cart_buy'
+                }
+            }));
+            console.log(`📦 Item received event: ${item.quantity}x ${item.itemId} (quest tracking)`);
+            
+            // Emit item-purchased for buy objectives
             document.dispatchEvent(new CustomEvent('item-purchased', {
                 detail: { itemId: item.itemId, quantity: item.quantity, price: item.price * item.quantity, merchant: this.currentMerchant?.id }
             }));
@@ -1356,7 +1370,23 @@ const TradeCartPanel = {
         const message = `Sold ${itemCount} item(s) for ${this.finalTotal}g`;
         if (typeof addMessage === 'function') addMessage(message);
 
-        // dispatch event
+        // FIX: Emit item-sold events for each item in cart for quest tracking
+        // This fixes "The Profit Motive" and other sell objectives not completing
+        // when using TradeCartPanel (the primary selling interface)
+        for (const item of this.cart) {
+            document.dispatchEvent(new CustomEvent('item-sold', {
+                detail: {
+                    item: item.itemId,
+                    itemId: item.itemId, // include both for compatibility
+                    quantity: item.quantity,
+                    gold: item.unitPrice * item.quantity,
+                    source: 'trade_cart'
+                }
+            }));
+            console.log(`📦 Item sold event: ${item.quantity}x ${item.itemId} (quest tracking)`);
+        }
+
+        // dispatch trade-completed event (for trade objectives)
         document.dispatchEvent(new CustomEvent('trade-completed', {
             detail: { items: [...this.cart], total: this.finalTotal, merchant: this.currentMerchant, mode: 'sell' }
         }));

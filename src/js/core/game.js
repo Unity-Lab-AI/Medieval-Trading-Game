@@ -6631,6 +6631,9 @@ function openTravel() {
         // Fallback to old system
         populateDestinations();
     }
+    
+    // FIX: Dispatch ui-action event for tutorial quest tracking
+    document.dispatchEvent(new CustomEvent('ui-action', { detail: { action: 'open_travel' } }));
 }
 
 function closeTravel() {
@@ -6915,6 +6918,11 @@ function openInventory() {
     changeState(GameState.INVENTORY);
     populateInventory();
     console.log('🖤 openInventory complete');
+    
+    // FIX: Dispatch ui-action events for tutorial quest tracking
+    document.dispatchEvent(new CustomEvent('ui-action', { detail: { action: 'open_inventory' } }));
+    // Also trigger open_equipment since equipment is viewed via inventory
+    document.dispatchEvent(new CustomEvent('ui-action', { detail: { action: 'open_equipment' } }));
 }
 
 function closeInventory() {
@@ -6933,6 +6941,9 @@ function openTransportation() {
     changeState(GameState.TRANSPORTATION);
     updateTransportationInfo();
     populateTransportationOptions();
+    
+    // FIX: Dispatch ui-action event for tutorial quest tracking
+    document.dispatchEvent(new CustomEvent('ui-action', { detail: { action: 'open_transport' } }));
 }
 
 function closeTransportation() {
@@ -7281,6 +7292,9 @@ function useConsumable(item) {
     let effectMessage = `You used ${item.name}. `;
     const effects = [];
     
+    // Track what type of consumable for quest progress
+    let consumeType = null; // 'food', 'water', or null
+    
     for (const [stat, value] of Object.entries(item.effects)) {
         if (stat === 'duration') continue; // Skip duration, handled separately
         
@@ -7289,10 +7303,20 @@ function useConsumable(item) {
         
         let newValue = currentValue + value;
         
-        // Special handling for food and medical items based on user feedback
-        if (item.category === 'food' || item.category === 'consumables') {
-            // Food items refill health and stamina
-            if (stat === 'health') {
+        // FIX: Handle ALL stat effects for consumables (hunger, thirst, health, stamina)
+        if (item.category === 'food' || item.category === 'consumables' || item.category === 'medical') {
+            // Apply any stat effect the item has
+            if (stat === 'hunger') {
+                newValue = Math.max(0, Math.min(maxValue, newValue));
+                game.player.stats.hunger = newValue;
+                effects.push(`Hunger +${Math.min(value, maxValue - currentValue)}`);
+                consumeType = 'food'; // Mark as food for quest tracking
+            } else if (stat === 'thirst') {
+                newValue = Math.max(0, Math.min(maxValue, newValue));
+                game.player.stats.thirst = newValue;
+                effects.push(`Thirst +${Math.min(value, maxValue - currentValue)}`);
+                consumeType = 'water'; // Mark as water for quest tracking
+            } else if (stat === 'health') {
                 newValue = Math.max(0, Math.min(maxValue, newValue));
                 game.player.stats.health = newValue;
                 effects.push(`Health +${Math.min(value, maxValue - currentValue)}`);
@@ -7300,13 +7324,19 @@ function useConsumable(item) {
                 newValue = Math.max(0, Math.min(maxValue, newValue));
                 game.player.stats.stamina = newValue;
                 effects.push(`Stamina +${Math.min(value, maxValue - currentValue)}`);
-            }
-        } else if (item.category === 'medical') {
-            // Medical items refill health
-            if (stat === 'health') {
+            } else if (stat === 'energy') {
                 newValue = Math.max(0, Math.min(maxValue, newValue));
-                game.player.stats.health = newValue;
-                effects.push(`Health +${Math.min(value, maxValue - currentValue)}`);
+                game.player.stats.energy = newValue;
+                effects.push(`Energy +${Math.min(value, maxValue - currentValue)}`);
+            } else {
+                // Generic stat effect
+                newValue = Math.max(0, Math.min(maxValue, newValue));
+                game.player.stats[stat] = newValue;
+                if (value > 0) {
+                    effects.push(`${stat} +${Math.min(value, maxValue - currentValue)}`);
+                } else {
+                    effects.push(`${stat} ${value}`);
+                }
             }
         } else {
             // Handle temporary effects for other items
@@ -7360,6 +7390,21 @@ function useConsumable(item) {
     // Update UI
     updatePlayerStats();
     updateInventoryDisplay();
+    
+    // FIX TUTORIAL-004: Dispatch consume event for quest tracking
+    // This allows tutorial quest tutorial_4_1 (Staying Alive) to track food/water consumption
+    if (consumeType) {
+        document.dispatchEvent(new CustomEvent('item-consumed', {
+            detail: { item: item.id, item_type: consumeType, quantity: 1 }
+        }));
+        
+        // Also update quest progress directly for consume objectives
+        if (typeof QuestSystem !== 'undefined') {
+            QuestSystem.updateProgress('consume', { item: item.id, item_type: consumeType });
+        }
+        
+        console.log(`🍽️ Consumed ${item.name} (${consumeType}) - quest progress updated`);
+    }
 
     return true;
 }

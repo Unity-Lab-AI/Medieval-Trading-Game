@@ -2745,6 +2745,9 @@ function openAchievementPanel() {
         overlay.classList.add('active');
         populateAchievements();
         updateAchievementProgress();
+        
+        // FIX: Dispatch ui-action event for tutorial quest tracking
+        document.dispatchEvent(new CustomEvent('ui-action', { detail: { action: 'open_achievements' } }));
     }
 }
 

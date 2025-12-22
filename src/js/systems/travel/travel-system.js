@@ -2194,6 +2194,11 @@ const TravelSystem = {
         this.playerPosition.routeIndex = 0; // Current position in route
         this.playerPosition.hops = travelInfo.hops;
 
+        // FIX: Reset tutorial mid-travel encounter flags when starting new travel
+        if (typeof TutorialManager !== 'undefined' && TutorialManager.resetMidTravelEncounters) {
+            TutorialManager.resetMidTravelEncounters();
+        }
+
         console.log('🖤 travel initiated:', {
             from: currentLoc.name,
             to: destination.name,
@@ -2320,6 +2325,28 @@ const TravelSystem = {
             console.log('🖤 destination reached... finally.');
             this.completeTravel();
             return; // exit early, we're done wandering
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // TUTORIAL MID-TRAVEL ENCOUNTERS - Check for forced tutorial encounters
+        // These PAUSE travel until the encounter is resolved
+        // ═══════════════════════════════════════════════════════════════
+        if (typeof TutorialManager !== 'undefined' && TutorialManager.isActive) {
+            // Check if we have a pending encounter that blocks travel
+            if (TutorialManager.hasPendingEncounter?.()) {
+                // Don't progress travel while encounter is active
+                // Time is already paused by NPCEncounterSystem
+                return;
+            }
+            
+            // Check if we should trigger a mid-travel encounter
+            const destinationId = this.playerPosition.destination?.id || this.playerPosition.destination;
+            if (destinationId && TutorialManager.checkMidTravelEncounter?.(destinationId, this.playerPosition.travelProgress)) {
+                // Encounter was triggered - travel is now paused
+                // The encounter system will handle the rest
+                console.log('🚶 Travel PAUSED for tutorial encounter');
+                return;
+            }
         }
 
         //  Check for random encounters - TimeMachine controlled, max 2 per game day 

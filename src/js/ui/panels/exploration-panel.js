@@ -663,6 +663,13 @@ const ExplorationPanel = {
     open(locationId = null) {
         console.log('🔍 ExplorationPanel.open() called with locationId:', locationId);
 
+        // FIX TUTORIAL-006: Dispatch ui-action for tutorial quest tracking
+        // This allows tutorial quest tutorial_2_6 (Secrets of the Land) to complete its first objective
+        document.dispatchEvent(new CustomEvent('ui-action', {
+            detail: { action: 'open_explore', panel: 'exploration' }
+        }));
+        console.log('🎮 UI action dispatched: open_explore');
+
         const panel = document.getElementById(this.panelId);
         console.log('🔍 Panel element exists:', !!panel);
         if (!panel) {

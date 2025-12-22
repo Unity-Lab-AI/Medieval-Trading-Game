@@ -9,6 +9,91 @@
 
 ---
 
+# P0 CRITICAL FIXES APPLIED (2025-12-21) - TUTORIAL QUEST PROGRESSION
+
+## TUTORIAL-007: Road Encounters Trigger After Arrival Instead of During Travel - FIXED
+**Files:** 
+- `src/js/systems/tutorial/tutorial-manager.js`
+- `src/js/systems/travel/travel-system.js`
+- `src/js/npc/npc-encounters.js`
+
+**Issue:** Tutorial quest `tutorial_2_5` (Road Encounters) triggered the forced encounter AFTER the player arrived at Tutorial Forest, not during travel. The encounter appeared at the end of the path instead of pausing travel mid-journey.
+
+**Root Cause:** The encounter was triggered immediately when the quest was assigned (after completing `tutorial_2_4`), but the quest is only assigned AFTER arrival at the destination.
+
+**Fix Applied:**
+1. Added `_midTravelEncounters` config to TutorialManager that defines encounters that should trigger DURING travel to specific destinations
+2. Added `checkMidTravelEncounter()` method that TravelSystem calls during `updateTravelProgress()`
+3. When traveling to `tutorial_forest` with quest `tutorial_2_4` active, encounter triggers at 50% progress
+4. Travel PAUSES while encounter is active (via `hasPendingEncounter()` check)
+5. Travel RESUMES after encounter is dismissed (via `clearPendingEncounter()` called from NPCEncounterSystem)
+6. Added `resetMidTravelEncounters()` call when new travel starts
+
+**Result:** Forced tutorial encounters now:
+- Trigger mid-journey (at configurable progress %)
+- PAUSE travel until resolved
+- Cannot be skipped or ignored
+- Resume travel after player interacts with the encounter
+
+**Status:** FIXED
+
+---
+
+## TUTORIAL-001: Trade Cart Panel Missing item-sold Event - FIXED
+**File:** `src/js/ui/panels/trade-cart-panel.js:1359-1373`
+**Issue:** When selling items via TradeCartPanel, the `item-sold` event was never dispatched, so sell objectives (like "Sell wheat in Tutorial Town") never completed.
+**Fix:** Added `item-sold` event dispatch for each item in the cart during `completeSellTransaction()`.
+**Status:** FIXED
+
+## TUTORIAL-002: Trade Cart Panel Missing item-received Event - FIXED
+**File:** `src/js/ui/panels/trade-cart-panel.js:1277-1295`
+**Issue:** Tutorial quest "The Profit Motive" has `type: 'collect'` objective for wheat, which listens for `item-received` events. TradeCartPanel only dispatched `item-purchased`, not `item-received`.
+**Fix:** Added `item-received` event dispatch for each item during `completeBuyTransaction()`.
+**Status:** FIXED
+
+## TUTORIAL-003: UI Action Events Missing for Quest Progression - FIXED
+**Files:** Multiple - see list below
+**Issue:** Various UI panels/functions weren't dispatching `ui-action` events needed for `ui_action` type quest objectives.
+**Fixes Applied:**
+| File | Function | Action Added |
+|------|----------|--------------|
+| `src/js/ui/key-bindings.js` | `openFinancialSheet()` | `open_financial` |
+| `src/js/ui/key-bindings.js` | `openCharacterSheet()` | `open_character` |
+| `src/js/core/game.js` | `openTravel()` | `open_travel` |
+| `src/js/core/game.js` | `openInventory()` | `open_inventory`, `open_equipment` |
+| `src/js/core/game.js` | `openTransportation()` | `open_transport` |
+| `src/js/systems/progression/achievement-system.js` | `openAchievementPanel()` | `open_achievements` |
+| `src/js/ui/panels/settings-panel.js` | `openPanel()` | `open_settings` |
+| `src/js/systems/progression/quest-system.js` | `showQuestLog()` | `open_quest` |
+| `src/js/ui/panels/people-panel.js` | `open()` | `open_people` |
+| `src/js/core/time-machine.js` | `setSpeed()` | `pause_game`, `unpause_game`, `change_speed` |
+**Status:** FIXED
+
+## TUTORIAL-004: useConsumable() Not Handling Hunger/Thirst OR Quest Events - FIXED
+**File:** `src/js/core/game.js:7285-7410`
+**Issue:** The `useConsumable` function had two bugs:
+1. For food/consumable items, it ONLY applied `health` and `stamina` effects, ignoring `hunger` and `thirst`
+2. No `consume` event was dispatched for quest tracking (tutorial_4_1 "Staying Alive")
+**Fix:** Rewrote function to:
+- Apply ALL stat effects (hunger, thirst, health, stamina, energy)
+- Dispatch `item-consumed` event with `item_type` (food/water)
+- Call `QuestSystem.updateProgress('consume', ...)` directly
+**Status:** FIXED
+
+## TUTORIAL-005: Road Encounters Not Triggering Quest Progress - FIXED
+**File:** `src/js/npc/npc-encounters.js:324-340`
+**Issue:** The `triggerEncounter()` function never dispatched events for quest tracking. Tutorial quest tutorial_2_5 (Road Encounters) could never complete.
+**Fix:** Added `road-encounter` event dispatch and direct `QuestSystem.updateProgress('encounter', ...)` call.
+**Status:** FIXED
+
+## TUTORIAL-006: Exploration Panel Missing open_explore UI Action - FIXED
+**File:** `src/js/ui/panels/exploration-panel.js:663-673`
+**Issue:** ExplorationPanel.open() didn't dispatch the `open_explore` ui-action event needed for tutorial_2_6 first objective.
+**Fix:** Added `ui-action` event dispatch with `action: 'open_explore'`.
+**Status:** FIXED
+
+---
+
 # P0 CRITICAL FIXES APPLIED (2025-12-16)
 
 ## TRAVEL-001: Animated Emoji Bobbing - FIXED

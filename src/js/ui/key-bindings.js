@@ -398,6 +398,11 @@ const KeyBindings = {
             this.createCharacterSheetOverlay();
         }
         if (typeof addMessage === 'function') addMessage('👤 Character sheet opened [C]');
+        
+        // FIX: Dispatch ui-action event for tutorial quest tracking
+        document.dispatchEvent(new CustomEvent('ui-action', {
+            detail: { action: 'open_character', panelId: 'character-sheet-overlay' }
+        }));
     },
 
     // create character sheet overlay dynamically
@@ -794,6 +799,11 @@ const KeyBindings = {
         }
         this.createFinancialSheetOverlay();
         if (typeof addMessage === 'function') addMessage('💰 Financial sheet opened [F]');
+        
+        // FIX: Dispatch ui-action event for tutorial quest tracking
+        document.dispatchEvent(new CustomEvent('ui-action', {
+            detail: { action: 'open_financial', panelId: 'financial-sheet-overlay' }
+        }));
     },
 
     // create financial sheet overlay

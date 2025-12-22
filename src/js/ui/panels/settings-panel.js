@@ -1916,6 +1916,7 @@ const SettingsPanel = {
         }
 
         const scrollAmount = 150; // pixels to scroll per click
+        const wheelScrollAmount = 38; // pixels to scroll per mouse wheel (quarter of click)
 
         // scroll left - into the past
         scrollLeftBtn.addEventListener('click', () => {
@@ -1945,6 +1946,18 @@ const SettingsPanel = {
 
         // also update on resize because life is unpredictable
         window.addEventListener('resize', updateScrollButtons);
+
+        // mouse wheel horizontal scroll - because vertical scrolling is too mainstream
+        tabsContainer.addEventListener('wheel', (e) => {
+            // Only hijack scroll if there's horizontal overflow
+            if (tabsContainer.scrollWidth > tabsContainer.clientWidth) {
+                e.preventDefault();
+                tabsContainer.scrollBy({ 
+                    left: e.deltaY > 0 ? wheelScrollAmount : -wheelScrollAmount, 
+                    behavior: 'smooth' 
+                });
+            }
+        }, { passive: false });
 
         // initial update
         setTimeout(updateScrollButtons, 100);
@@ -4151,6 +4164,9 @@ const SettingsPanel = {
         this.loadAutoSaveIntervalUI();
 
         console.log('🖤 SettingsPanel opened, z-index:', this.panelElement.style.zIndex);
+        
+        // FIX: Dispatch ui-action event for tutorial quest tracking
+        document.dispatchEvent(new CustomEvent('ui-action', { detail: { action: 'open_settings' } }));
     },
 
     // close settings panel - escape back to reality

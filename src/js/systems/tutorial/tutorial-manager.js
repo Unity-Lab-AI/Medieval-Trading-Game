@@ -81,9 +81,25 @@ const TutorialManager = {
     },
 
     // Which quests trigger forced encounters when assigned?
+    // NOTE: tutorial_2_5 encounter now triggers MID-TRAVEL via _midTravelEncounters instead
     _encounterTriggers: {
-        'tutorial_2_5': 'tutorial_friendly_trader'  // Road Encounters quest
+        // 'tutorial_2_5': 'tutorial_friendly_trader'  // MOVED to _midTravelEncounters
     },
+
+    // Mid-travel forced encounters - trigger during travel to a destination
+    // These PAUSE travel, force the encounter, then resume travel
+    _midTravelEncounters: {
+        // When traveling TO tutorial_forest, trigger encounter at 50% progress
+        'tutorial_forest': {
+            encounterType: 'tutorial_trader',
+            triggerAtProgress: 0.5,  // 50% of the journey
+            requiredQuest: 'tutorial_2_4',  // Only trigger if this quest is active
+            triggered: false  // Track if already triggered this travel
+        }
+    },
+
+    // Track pending mid-travel encounter
+    _pendingMidTravelEncounter: null,
 
     // ═══════════════════════════════════════════════════════════════
     //  LET'S FUCKING GO - Start Tutorial
@@ -1322,6 +1338,61 @@ const TutorialManager = {
         }
 
         return false;
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    //  MID-TRAVEL ENCOUNTER CHECK - Called by TravelSystem during travel
+    //  Returns true if encounter was triggered (travel should pause)
+    // ═══════════════════════════════════════════════════════════════
+    checkMidTravelEncounter(destinationId, travelProgress) {
+        if (!this.isActive) return false;
+        
+        const encounterConfig = this._midTravelEncounters[destinationId];
+        if (!encounterConfig) return false;
+        
+        // Already triggered this encounter?
+        if (encounterConfig.triggered) return false;
+        
+        // Check if required quest is active
+        if (encounterConfig.requiredQuest) {
+            const isQuestActive = typeof QuestSystem !== 'undefined' && 
+                QuestSystem.activeQuests?.[encounterConfig.requiredQuest];
+            if (!isQuestActive) return false;
+        }
+        
+        // Check if we've reached the trigger point
+        if (travelProgress < encounterConfig.triggerAtProgress) return false;
+        
+        // TRIGGER THE ENCOUNTER!
+        console.log(`🎓 MID-TRAVEL ENCOUNTER TRIGGERED at ${Math.round(travelProgress * 100)}% to ${destinationId}`);
+        
+        // Mark as triggered so it doesn't repeat
+        encounterConfig.triggered = true;
+        this._pendingMidTravelEncounter = encounterConfig;
+        
+        // Force the encounter - this will pause time and show the encounter dialog
+        this.triggerTutorialEncounter(encounterConfig.encounterType);
+        
+        return true; // Signal to TravelSystem that travel should pause
+    },
+
+    // Reset mid-travel encounter state when travel starts
+    resetMidTravelEncounters() {
+        for (const destId in this._midTravelEncounters) {
+            this._midTravelEncounters[destId].triggered = false;
+        }
+        this._pendingMidTravelEncounter = null;
+    },
+
+    // Check if we have a pending encounter that needs resolution before travel can resume
+    hasPendingEncounter() {
+        return this._pendingMidTravelEncounter !== null;
+    },
+
+    // Called when encounter is resolved - allows travel to resume
+    clearPendingEncounter() {
+        this._pendingMidTravelEncounter = null;
+        console.log('🎓 Pending encounter cleared, travel can resume');
     }
 };
 

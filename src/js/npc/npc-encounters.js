@@ -326,6 +326,22 @@ const NPCEncounterSystem = {
             this.encounterHistory = this.encounterHistory.slice(-50);
         }
 
+        // FIX TUTORIAL-005: Dispatch encounter event for quest tracking
+        // This allows tutorial quest tutorial_2_5 (Road Encounters) to complete
+        document.dispatchEvent(new CustomEvent('road-encounter', {
+            detail: { 
+                encounter_type: encounter.type, 
+                npc: npcData,
+                context: context 
+            }
+        }));
+        
+        // Also update quest progress directly
+        if (typeof QuestSystem !== 'undefined') {
+            QuestSystem.updateProgress('encounter', { encounter_type: encounter.type });
+            console.log(`🎭 Encounter triggered: ${encounter.type} - quest progress updated`);
+        }
+
         // show encounter dialog
         this.showEncounterDialog(npcData, context);
     },
@@ -935,6 +951,12 @@ const NPCEncounterSystem = {
     dismissEncounter(encounterId) {
         this.activeEncounters = this.activeEncounters.filter(e => e.id !== encounterId);
         this.resumeTimeAfterEncounter();
+        
+        // FIX: Clear tutorial pending encounter so travel can resume
+        if (typeof TutorialManager !== 'undefined' && TutorialManager.clearPendingEncounter) {
+            TutorialManager.clearPendingEncounter();
+        }
+        
         console.log('🎭 Encounter dismissed');
     },
 
@@ -942,6 +964,12 @@ const NPCEncounterSystem = {
     endEncounter(npcId) {
         this.activeEncounters = this.activeEncounters.filter(e => e.npc?.id !== npcId);
         this.resumeTimeAfterEncounter();
+        
+        // FIX: Clear tutorial pending encounter so travel can resume
+        if (typeof TutorialManager !== 'undefined' && TutorialManager.clearPendingEncounter) {
+            TutorialManager.clearPendingEncounter();
+        }
+        
         console.log('🎭 Encounter ended');
     },
 
