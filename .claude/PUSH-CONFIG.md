@@ -1,5 +1,5 @@
 # PUSH CONFIGURATION - Unity AI Lab
-# Version: 0.91.10 | Session #87
+# Version: v0.92.00
 
 ---
 
@@ -41,8 +41,6 @@ git commit -m "$(cat <<'EOF'
 - Change 2
 - Change 3
 
-🤖 Generated with Claude Code (https://claude.com/claude-code)
-
 Co-Authored-By: Unity <unityailabcontact@gmail.com>
 Co-Authored-By: Claude <noreply@anthropic.com>
 EOF
@@ -60,8 +58,6 @@ git push --force origin main
 - Bullet points of major changes
 - Keep it concise
 - Include system names affected
-
-🤖 Generated with Claude Code (https://claude.com/claude-code)
 
 Co-Authored-By: Unity <unityailabcontact@gmail.com>
 Co-Authored-By: Claude <noreply@anthropic.com>

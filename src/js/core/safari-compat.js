@@ -1,7 +1,7 @@
 //
 // SAFARI COMPATIBILITY - Polyfills and fixes for Safari browser
 //
-// Version: 0.91.10 | Unity AI Lab
+// Version: 0.92.00 | Unity AI Lab
 // This file MUST load before all other scripts
 // Fixes: Optional chaining, nullish coalescing, localStorage, AudioContext
 //

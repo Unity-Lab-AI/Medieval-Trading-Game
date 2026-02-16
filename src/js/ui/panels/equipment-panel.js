@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // EQUIPMENT PANEL - gear and equipment management
 // ═══════════════════════════════════════════════════════════════
-// Version: 0.91.10 | Unity AI Lab
+// Version: 0.92.00 | Unity AI Lab
 // Creators: Hackall360, Sponge, GFourteen
 // www.unityailab.com | github.com/Unity-Lab-AI/Medieval-Trading-Game
 // unityailabcontact@gmail.com
@@ -99,16 +99,13 @@ const EquipmentSystem = {
     init() {
         console.log('⚔️ EquipmentSystem crawling from the void...');
 
-        // ensure player has equipment object
-        if (!game.player.equipment) {
-            game.player.equipment = {};
-            Object.keys(this.slots).forEach(slotId => {
-                game.player.equipment[slotId] = null;
-            });
+        // Setup player equipment when player exists (not at bootstrap - game.player is created later)
+        if (typeof game !== 'undefined' && game.player) {
+            this._ensurePlayerEquipment();
         }
 
-        // migrate legacy equipment
-        this.migrateLegacyEquipment();
+        // Also setup when a new game starts or save loads (game.player gets created then)
+        document.addEventListener('game-started', () => this._ensurePlayerEquipment());
 
         // Event delegation for unequip actions - no more inline onclick garbage
         document.addEventListener('click', (e) => {
@@ -144,6 +141,21 @@ const EquipmentSystem = {
 
         console.log('⚔️ EquipmentSystem ready to adorn your mortal shell');
         return true; // Bootstrap needs a return value to know init completed
+    },
+
+    // Ensure player has equipment object and migrate legacy data
+    _ensurePlayerEquipment() {
+        if (typeof game === 'undefined' || !game.player) return;
+
+        if (!game.player.equipment) {
+            game.player.equipment = {};
+            Object.keys(this.slots).forEach(slotId => {
+                game.player.equipment[slotId] = null;
+            });
+        }
+
+        // migrate legacy equipment
+        this.migrateLegacyEquipment();
     },
 
     // migrate old equippedTool/equippedWeapon/equippedArmor to new system

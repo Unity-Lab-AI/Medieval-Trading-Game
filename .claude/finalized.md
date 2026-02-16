@@ -25,6 +25,121 @@ When you finish something from `todo.md`:
 
 ## COMPLETED WORK
 
+### Session #88b - NPC TTS PIPELINE FIX + MISSING NPC TYPES (2026-02-15)
+
+- [x] **NPC TTS Direct Playback Fix** (people-panel.js)
+  - Added `_playTTSDirect()` helper method that calls KokoroTTS.speak() directly
+  - Bypasses NPCVoiceChatSystem.playVoice() middleware which was silently failing
+  - Replaced ALL 13 playVoice() calls in people-panel.js with _playTTSDirect()
+  - TTS now plays for: greetings, trades, quests, chat, farewells, all NPC interactions
+
+- [x] **Asterisk-Stripping TTS Bug Fix** (kokoro-tts.js + npc-voice.js)
+  - Bug: `.replace(/\*[^*]+\*/g, '')` removed ALL text inside asterisks (e.g. `*adjusts cloak* Hello` → ` Hello`)
+  - Fix: `.replace(/\*([^*]+)\*/g, '$1')` keeps text, strips only the `*` markers
+  - Fixed in kokoro-tts.js `_clean()` at line 543
+  - Fixed in npc-voice.js at line 1338
+
+- [x] **20 Missing NPC Types Added** (npc-data-embedded.js)
+  - Encounter NPCs: pilgrim, mercenary, spy, scribe, town_crier
+  - Voice-mapped NPCs: guard_captain, alchemist, bard, pirate, witch
+  - Boss NPCs: frost_lord, rat_king, captain_blacktide, guildmaster_crimson, blackheart, shadow_lieutenant, greedy_won, cache_guardian, corrupted_archdruid, shadow_king
+  - Each with full specs: type, category, voice, personality, speakingStyle, background, traits, greetings, farewells, services, questTypes, combatStats
+
+- [x] **Hooded Stranger Voice Fix** (npc-data-embedded.js)
+  - Changed voice from 'bm_fable' to 'am_onyx' for deeper mysterious tone
+
+- [x] **Quest NPC Coverage Audit** — All quest NPC types verified present in NPC_EMBEDDED_DATA
+- [x] **Doom NPC Gap Analysis** — Identified 174 doom NPCs with only 4 fields each, 160/174 missing full specs
+
+**Files Modified:**
+- `src/js/ui/panels/people-panel.js` — _playTTSDirect + 13 call replacements
+- `src/js/utils/kokoro-tts.js` — _clean() regex fix
+- `src/js/npc/npc-voice.js` — asterisk regex fix at line 1338
+- `src/js/npc/npc-data-embedded.js` — 20 NPC types added, hooded_stranger voice changed
+
+---
+
+### Session #88 - .claude MERGE + VERSION BUMP (2026-02-15)
+
+- [x] **.claude2 → .claude Migration** (14 tasks)
+  - Fixed python3 → python hooks for Windows compatibility
+  - Deleted 25+ SE-specific files (commands, agents, templates)
+  - Rewrote CLAUDE.md, ARCHITECTURE.md, workflow.md, README.md for MTG
+  - Updated config.json, settings.local.json for MTG scan patterns
+  - Updated user profiles, removed SE paths
+  - Fixed enforce-workflow-reads.py, timestamp.md — removed SE references
+  - Cleaned commit.md/feat.md examples for MTG
+  - Deleted SE plans, final SE reference grep (only gfour.md bio note remains)
+
+**Files Modified:** 14 .claude/ configuration and workflow files
+
+---
+
+### Session #87 - QUEST SYSTEM COMPREHENSIVE AUDIT (2026-02-15)
+
+- [x] **P0 Critical (30 tasks)**
+  - Kill/defeat verb mismatch: added `case 'kill':` + count-based type in checkProgress
+  - 40+ unhandled objective types: categorized into Groups A-H, all handlers implemented
+  - Trading profit broken: unified tradingConfig in game-world.js (base 0.8x sell, 3 paths)
+
+- [x] **P1 High Priority (28 tasks)**
+  - 23 missing NPC types added to npc-data-embedded.js
+  - 14 side quest chain turn-in NPC audit (all use giver fallback)
+  - Tutorial system: fixed merchant_village ref, verified all 28 quests + 5 locations
+
+- [x] **P2 Doom World (18 tasks)**
+  - Two doom systems documented (DATA layer + RUNTIME layer, no ID overlap)
+  - 29 missing doom items added to item-database.js
+  - 3 missing doom locations: resistance_hideout→smugglers_cove, hidden_bunker→northern_outpost, doom_core→royal_capital
+
+- [x] **P3 Chain Validation (15 tasks)**
+  - Added rare_artifact, shadow_key, rare_ring + 11 side quest reward items to item-database.js
+  - Fixed rewards.item (singular) bug in completeQuest() — 13 side quest rewards silently dropped
+  - Added rewards.title handler in completeQuest()
+
+- [x] **P3 Event Triggers (14 tasks)**
+  - 4 phantom events fixed: npc-talked (npc-voice.js), area-investigated (dungeon-exploration-system.js), player-decision (new modal system), item-crafted (crafting-engine.js all 3 paths)
+  - 2 new events: item-consumed (game.js + unified-item-system.js), encounter-started (npc-encounters.js)
+  - boss-defeated DOM dispatch added in combat-system.js alongside EventBus
+  - city-reputation-changed listener with level mapping (Hostile→Elite = 0→6)
+  - presentQuestDecision() modal + checkForPendingDecisions() auto-trigger
+  - Fixed decision/choice handlers to accept both `choices` (string[]) and `options` (object[] with .id)
+  - Extended location/NPC/combat/item listeners for doom objectives (search, scavenge, march, secure, confront, defend, battle, gather, receive, plant)
+  - 12 dedicated doom-* event listeners for future doom systems (doom-build, doom-establish, doom-recruit, doom-sabotage, doom-escort, doom-day-passed, doom-protect, doom-rally, doom-witness, doom-ceremony, doom-cleanse, doom-vote)
+
+- [x] **P4 Documentation (5 tasks)**
+  - Doom system relationship headers in both files
+  - doomLocations mapsTo documentation
+  - 5 P2 FIX comments → permanent docs
+  - tradingConfig consumer comments
+  - JSDoc on setupEventListeners()
+
+- [x] **P4 Consistency (4 tasks)**
+  - equipType: 'weapon' added to 7 doom weapons
+  - shadow_weapons reclassified to quest_items
+  - Version bump: 153 files updated to v0.92.00
+
+- [x] **P4 Cleanup (2 tasks)**
+  - 71 console.log audit: 21 KEEP, 50 flagged for console.debug (pending user approval)
+
+**Files Modified (Key):**
+- `src/js/systems/progression/quest-system.js` — 91 obj types, 35+ event listeners, decision modal
+- `src/js/data/items/item-database.js` — 14 quest items, 29 doom items, 7 equipType fixes
+- `src/js/npc/npc-data-embedded.js` — 23 NPC types
+- `src/js/data/game-world.js` — tradingConfig, 3 doom locations, NPC spawns
+- `src/js/npc/npc-voice.js` — npc-talked dispatcher
+- `src/js/systems/crafting/crafting-engine.js` — item-crafted dispatcher
+- `src/js/systems/combat/dungeon-exploration-system.js` — area-investigated dispatcher
+- `src/js/npc/npc-encounters.js` — encounter-started dispatcher
+- `src/js/systems/combat/combat-system.js` — boss-defeated DOM dispatch
+- `src/js/core/game.js` — item-consumed dispatcher
+- `src/js/data/items/unified-item-system.js` — item-consumed dispatcher
+- 153 files — version bump to v0.92.00
+
+**Total: 130 tasks completed across P0-P4. Quest system audit FULLY COMPLETE.**
+
+---
+
 ### Session #86 - BOOTSTRAP REFACTOR COMPLETE (2025-12-10)
 
 - [x] **Bootstrap System Rewrite** (~510 lines)
@@ -497,4 +612,4 @@ When adding completed items, use this format:
 ═══════════════════════════════════════════════════════════════════════
 ```
 
-*Archive of completed work for MTG v0.91.10+*
+*Archive of completed work for MTG v0.92.00+*

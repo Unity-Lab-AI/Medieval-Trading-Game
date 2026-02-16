@@ -100,11 +100,13 @@
 
 | Capability | Complexity | Status | Location |
 |------------|------------|--------|----------|
-| Quest System | High | Complete | `src/js/systems/progression/quest-system.js` |
+| Quest System | High | Complete | `src/js/systems/progression/quest-system.js` (91 objective types, 35+ event listeners, decision modal) |
 | Main Quests | High | Complete | `src/js/systems/progression/main-quests.js` |
 | Side Quests | Medium | Complete | `src/js/systems/progression/side-quests.js` |
-| Doom Quests | High | Complete | `src/js/systems/progression/doom-quests.js` |
-| Doom Quest System | Medium | Complete | `src/js/systems/progression/doom-quest-system.js` |
+| Tutorial Quests | Medium | Complete | `src/js/systems/progression/tutorial-quests.js` |
+| Doom Quests (Data) | High | Complete | `src/js/systems/progression/doom-quests.js` |
+| Doom Quest System (Runtime) | High | Complete | `src/js/systems/progression/doom-quest-system.js` |
+| Quest Event Wiring | High | Complete | 138+ quests across 19 chains, 5 definition files |
 | Achievement System | Medium | Complete | `src/js/systems/progression/achievement-system.js` |
 | Faction System | Medium | Complete | `src/js/systems/progression/faction-system.js` |
 | Reputation System | Medium | Complete | `src/js/systems/progression/reputation-system.js` |
@@ -247,10 +249,10 @@
 ## TOTAL STATS
 
 - **Total JS Files:** 95+
-- **Total JS Lines:** 58,486
+- **Total JS Lines:** 154,000+
 - **Systems Documented:** 90+
 - **Domains:** 14
-- **Completion Status:** v0.91.10 (Production-ready)
+- **Completion Status:** v0.92.00 (Production-ready)
 
 ---
 

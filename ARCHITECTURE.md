@@ -1,4 +1,4 @@
-# ARCHITECTURE.md - Medieval Trading Game v0.91.10
+# ARCHITECTURE.md - Medieval Trading Game v0.92.00
 
 ---
 
@@ -25,7 +25,7 @@ This is a **browser-based medieval trading game** built with vanilla JavaScript.
 ## DIRECTORY STRUCTURE
 
 ```
-MTGv0.91.10/
+MTGv0.92.00/
 ├── index.html              # Single entry point - THE page
 ├── config.js               # The dark heart of all settings (1400 lines)
 ├── .github/workflows/      # GitHub Actions for deployment
@@ -53,7 +53,7 @@ MTGv0.91.10/
     │       ├── criminals.json
     │       ├── merchants.json
     │       └── service.json
-    └── js/                 # All JavaScript (58k+ lines)
+    └── js/                 # All JavaScript (154k+ lines)
         ├── audio/          # Sound and music
         ├── config/         # z-index constants
         ├── core/           # Heart of the beast
@@ -164,6 +164,8 @@ LoadingManager.complete() shows main menu
 - `merchant-rank-system.js` - Player trading reputation
 - `trade-route-system.js` - Automated trade routes
 - `financial-tracker.js` - Profit/loss tracking
+- Unified tradingConfig in `game-world.js`, base 0.8x sell multiplier
+- 3 sell paths all using unified config now
 
 ### Travel (`src/js/systems/travel/`)
 - `travel-system.js` - Movement between locations
@@ -172,8 +174,10 @@ LoadingManager.complete() shows main menu
 - `gatehouse-system.js` - Zone access control (progression gates)
 
 ### Progression (`src/js/systems/progression/`)
-- `quest-system.js` - Quest engine
-- `main-quests.js`, `side-quests.js`, `doom-quests.js`
+- `quest-system.js` - Quest engine (91 objective type handlers, 35+ event listeners, decision modal)
+- 5 quest definition files: `main-quests.js`, `side-quests.js`, `tutorial-quests.js`, `doom-quests.js`, `doom-quest-system.js` — 138+ quests across 19 chains
+- Events bridge: item-received, npc-talked, player-decision, item-crafted, item-consumed, encounter-started, boss-defeated, city-reputation-changed, etc.
+- Doom quests: two complementary systems (DATA layer in `doom-quests.js` + RUNTIME layer in `doom-quest-system.js`)
 - `achievement-system.js` - Achievements/trophies
 - `faction-system.js` - Faction reputation
 - `skill-system.js` - Player skills

@@ -1,11 +1,28 @@
-// 
-// DOOM QUEST SYSTEM - Tales of tragedy and survival 
-// 
-// Version: 0.91.10 | Unity AI Lab
+//
+// DOOM QUEST SYSTEM - Tales of tragedy and survival
+//
+// Version: 0.92.00 | Unity AI Lab
 // Every quest is a story of loss. Every victory comes with grief.
 // The doom broke the world - these quests reflect that horror.
 // Unlocked after defeating the first boss and meeting the Ferryman.
-// 
+//
+// ── SYSTEM RELATIONSHIP ──────────────────────────────────────────────
+// This file is the RUNTIME LAYER for doom quests. It defines:
+//   - 12 main story quests across 3 acts (arrival, survival, striking back)
+//   - 8 standalone side quests (tragedy/moral choice themes)
+//   - Loaded via DoomQuestSystem.registerDoomQuests()
+//
+// The COMPANION file is doom-quests.js (DATA LAYER), which defines:
+//   - World metadata: doomInfo, doomEconomy, doomLocations, doomItems
+//   - 15 quests across 3 arcs: survival, resistance, boss
+//   - Loaded via DoomQuests.getAllQuests() at quest-system.js:936
+//
+// ZERO quest ID overlap between files. They are COMPLEMENTARY:
+//   - This file: doom_arrival, doom_fallen_throne, doom_lost_children, etc.
+//   - Data file: doom_survival_1-5, doom_resistance_1-5, doom_boss_1-5
+//   - Combined: 35 total doom quests
+// ─────────────────────────────────────────────────────────────────────
+//
 
 const DoomQuestSystem = {
     // 

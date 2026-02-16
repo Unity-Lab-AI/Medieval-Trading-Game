@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // NPC CHAT UI - where digital souls judge your life choices
 // ═══════════════════════════════════════════════════════════════
-// Version: 0.91.10 | Unity AI Lab
+// Version: 0.92.00 | Unity AI Lab
 // Creators: Hackall360, Sponge, GFourteen
 // www.unityailab.com | github.com/Unity-Lab-AI/Medieval-Trading-Game
 // unityailabcontact@gmail.com
@@ -706,7 +706,7 @@ const NPCChatUI = {
     // open/close - summoning and dismissing the conversation
     // ═══════════════════════════════════════════════════════════
 
-    open(npcData) {
+    open(npcData, prefetchedGreeting = null) {
         if (!npcData) {
             // No NPC data - silently return, nothing to show
             console.warn('NPCChatUI: No NPC data provided');
@@ -736,9 +736,18 @@ const NPCChatUI = {
             NPCVoiceChatSystem.startConversation(npcData.id || 'npc_' + Date.now(), npcData);
         }
 
-        // show greeting with typewriter effect and TTS
-        // 🦙 Use Ollama to generate greeting instead of hardcoded fallbacks
-        this.fetchAndDisplayGreeting(npcData);
+        // show greeting - use pre-fetched text if available, otherwise fetch from Ollama
+        if (prefetchedGreeting) {
+            // Already got OLLAMA response from caller - use it directly, no redundant request
+            this.addNPCMessage(prefetchedGreeting, true);
+            if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.settings?.voiceEnabled) {
+                const voice = npcData.voice || npcData.type || 'merchant';
+                NPCVoiceChatSystem.playVoice(prefetchedGreeting, voice, npcData.name || 'NPC');
+            }
+        } else {
+            // 🦙 Use Ollama to generate greeting instead of hardcoded fallbacks
+            this.fetchAndDisplayGreeting(npcData);
+        }
 
         // adjust quick responses to match this puppet's programmed abilities
         this.updateQuickResponses(npcData);
@@ -1208,7 +1217,47 @@ const NPCChatUI = {
             spy: '🕵️',
             informant: '👁️',
             merchant: '🛒',
-            vendor: '🏬'
+            vendor: '🏬',
+            // Common NPCs (already in game-world.js)
+            guard: '💂',
+            dockmaster: '🚢',
+            mason: '🧱',
+            farmer: '🌾',
+            miner: '⛏️',
+            sailor: '🧭',
+            monk: '🙏',
+            elder: '👴',
+            herbalist: '🌿',
+            bard: '🎵',
+            alchemist: '⚗️',
+            witch: '🔮',
+            fisherman: '🎣',
+            woodcutter: '🪓',
+            // Main/Side quest NPCs (P1-NPC additions)
+            miller: '🌾',
+            vintner: '🍇',
+            harbormaster: '⚓',
+            herald: '📯',
+            steward: '🏰',
+            huntmaster: '🏹',
+            sergeant: '🛡️',
+            sage: '🔮',
+            // Doom quest NPCs (P1-NPC additions)
+            survivor: '😰',
+            resistance_fighter: '✊',
+            resistance_leader: '🏴',
+            boatman: '🚣',
+            haunted_elder: '👻',
+            grief_stricken_elder: '😢',
+            survival_smuggler: '🥷',
+            corrupted_druid: '☠️',
+            starving_farmer: '🌱',
+            desperate_innkeeper: '🍻',
+            crazed_blacksmith: '⚒️',
+            fallen_noble: '💀',
+            starving_trapper: '🪤',
+            dying_herbalist: '🌻',
+            blind_lighthouse_keeper: '🏮'
         };
 
         return icons[type] || '👤';
@@ -1294,28 +1343,32 @@ const NPCChatUI = {
     // ═══════════════════════════════════════════════════════════
 
     /**
-     * Fetch greeting from Ollama and display it with typewriter effect + TTS
-     * Falls back to hardcoded greetings only if Ollama is unavailable
+     * Fetch greeting from Ollama — OLLAMA is the ONLY speech source when active
+     * Embedded data greetings ONLY used when OLLAMA is completely unavailable
      */
     async fetchAndDisplayGreeting(npcData) {
         const persona = this.getPersonaForNPC(npcData);
+        const ollamaActive = typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem._ollamaAvailable;
 
-        // Show typing indicator while fetching from Ollama
+        // OLLAMA not even running — embedded data greetings only path
+        if (!ollamaActive) {
+            this.displayFallbackGreeting(npcData, persona);
+            return;
+        }
+
+        // ═══ OLLAMA IS ACTIVE — IT HANDLES ALL SPEECH ═══
         this.showTypingIndicator();
 
         try {
-            // 🦙 Try to get AI-generated greeting from Ollama via NPCVoiceChatSystem
-            if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.getGreeting) {
+            if (NPCVoiceChatSystem.getGreeting) {
                 const greetingResponse = await NPCVoiceChatSystem.getGreeting(npcData);
 
                 this.hideTypingIndicator();
 
                 if (greetingResponse && greetingResponse.text) {
-                    // Use AI-generated greeting
                     console.log(`🦙 Got AI greeting for ${npcData.name}: "${greetingResponse.text.substring(0, 50)}..."`);
                     this.addNPCMessage(greetingResponse.text, true);
 
-                    // Play voice with NPC-appropriate voice selection
                     if (NPCVoiceChatSystem.settings?.voiceEnabled) {
                         const voice = npcData.voice || npcData.type || persona?.voice || 'merchant';
                         NPCVoiceChatSystem.playVoice(greetingResponse.text, voice, npcData.name || 'NPC');
@@ -1323,65 +1376,69 @@ const NPCChatUI = {
                     return;
                 }
 
-                // Check if fallbacks are disabled (AI-only mode)
-                if (greetingResponse && greetingResponse.fallbacksDisabled) {
-                    console.log('🎭 AI unavailable and fallbacks disabled - showing error message');
-                    this.addNPCMessage("*The NPC stares at you blankly. (AI service unavailable - check Ollama)*", true);
-                    return;
-                }
-            }
-
-            // Ollama unavailable - check if fallbacks are allowed
-            this.hideTypingIndicator();
-
-            if (typeof NPCVoiceChatSystem !== 'undefined' && !NPCVoiceChatSystem.settings?.allowTextFallbacks) {
-                console.log('🎭 Fallbacks disabled - not showing fallback greeting');
-                this.addNPCMessage("*The NPC seems distracted. (AI service unavailable)*", true);
+                // OLLAMA on but returned empty — use embedded data greeting
+                console.warn(`🦙 OLLAMA returned empty for ${npcData.name}`);
+                this.displayFallbackGreeting(npcData, persona);
                 return;
             }
 
-            // Fallbacks allowed - use hardcoded response
+            // NPCVoiceChatSystem loaded but getGreeting missing — use embedded data
+            this.hideTypingIndicator();
+            console.error('🦙 NPCVoiceChatSystem.getGreeting not found — using embedded greeting');
             this.displayFallbackGreeting(npcData, persona);
 
         } catch (error) {
-            console.warn('🎭 Greeting fetch failed:', error.message);
+            console.warn('🎭 OLLAMA greeting error:', error.message);
             this.hideTypingIndicator();
 
-            // Check fallback settings
-            if (typeof NPCVoiceChatSystem !== 'undefined' && !NPCVoiceChatSystem.settings?.allowTextFallbacks) {
-                this.addNPCMessage("*Connection error. (Check if Ollama is running)*", true);
-                return;
-            }
-
+            // OLLAMA on but errored — use embedded data greeting
             this.displayFallbackGreeting(npcData, persona);
         }
     },
 
     /**
-     * Display hardcoded fallback greeting when Ollama is unavailable
+     * Display NPC embedded data greeting when OLLAMA is unavailable or returns empty
      */
     displayFallbackGreeting(npcData, persona) {
         let greeting = null;
 
-        // Try persona greetings first
-        if (persona && persona.greetings && persona.greetings.length > 0) {
+        // Try NPC_EMBEDDED_DATA greetings first (character-specific lines)
+        const npcType = npcData.type || npcData.id || 'merchant';
+        if (typeof NPC_EMBEDDED_DATA !== 'undefined' && NPC_EMBEDDED_DATA[npcType]) {
+            const spec = NPC_EMBEDDED_DATA[npcType];
+            if (spec.greetings && spec.greetings.length > 0) {
+                greeting = spec.greetings[Math.floor(Math.random() * spec.greetings.length)];
+            }
+        }
+
+        // Try doom embedded data if in doom world
+        if (!greeting && typeof DOOM_NPC_EMBEDDED_DATA !== 'undefined' && DOOM_NPC_EMBEDDED_DATA[npcType]) {
+            const spec = DOOM_NPC_EMBEDDED_DATA[npcType];
+            if (spec.greetings && spec.greetings.length > 0) {
+                greeting = spec.greetings[Math.floor(Math.random() * spec.greetings.length)];
+            }
+        }
+
+        // Try persona greetings
+        if (!greeting && persona && persona.greetings && persona.greetings.length > 0) {
             greeting = persona.greetings[Math.floor(Math.random() * persona.greetings.length)];
         }
 
-        // Try NPCVoiceChatSystem fallback
-        if (!greeting && typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.getFallback) {
-            greeting = NPCVoiceChatSystem.getFallback(npcData.type || 'merchant', 'greet');
+        // Try npcData greetings (some NPCs carry their own)
+        if (!greeting && npcData.greetings && npcData.greetings.length > 0) {
+            greeting = npcData.greetings[Math.floor(Math.random() * npcData.greetings.length)];
         }
 
-        // Last resort fallback
+        // No embedded data found — don't display anything fake
         if (!greeting) {
-            greeting = "Greetings, traveler. How may I help you?";
+            console.warn(`🎭 No embedded greeting data found for ${npcData.name || npcData.type}`);
+            return;
         }
 
-        console.log(`🎭 Using fallback greeting for ${npcData.name}`);
+        console.log(`🎭 Using embedded data greeting for ${npcData.name}`);
         this.addNPCMessage(greeting, true);
 
-        // Still play voice for fallback
+        // Still play voice
         if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.settings?.voiceEnabled) {
             const voice = npcData.voice || npcData.type || persona?.voice || 'merchant';
             NPCVoiceChatSystem.playVoice(greeting, voice, npcData.name || 'NPC');

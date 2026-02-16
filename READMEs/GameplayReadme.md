@@ -8,7 +8,7 @@
 ═══════════════════════════════════════════════════════════════════════
 ```
 
-> **Version:** 0.91.10 | **Unity AI Lab** by Hackall360 Sponge GFourteen
+> **Version:** 0.92.00 | **Unity AI Lab** by Hackall360 Sponge GFourteen
 > *www.unityailab.com*
 > *Written at 3am while questioning the meaning of virtual economies*
 
@@ -79,13 +79,13 @@ Medieval Trading Game is a browser-based economic simulation where you play as a
 
 **Features:**
 - 🗺️ **42 Locations** - Cities, towns, villages, mines, forests, caves, ports, and dungeons
-- 📦 **200+ Items** - From basic food to legendary dragon scales (including 30+ dungeon loot items)
+- 📦 **200+ Items** - 12 categories including 14 quest reward items, 29 doom items, and 30+ dungeon loot
 - 🏠 **Property System** - Buy houses, shops, farms, mines, and taverns
 - 👥 **Employee System** - Hire workers to generate passive income
 - 🔨 **Crafting** - Turn raw materials into valuable goods
 - 🏆 **115 Achievements** - Including 15 hidden ones for the dedicated
 - 💀 **Survival Mechanics** - Health, hunger, thirst, and the ever-present specter of death
-- 🎯 **100+ Quests** - 5-act main story, 14 side chains, 15 Doom World quests
+- 🎯 **138+ Quests** - 5-act main story, 19 quest chains, Doom World survival & boss arcs
 - ⚔️ **Combat System** - Choice-based stat rolls with 13 enemy types and 8 dungeon bosses
 - 🌑 **Doom World** - Apocalyptic alternate dimension with inverted economy
 
@@ -384,6 +384,15 @@ Prices vary based on:
 | Capital | Everything (highest prices) |
 | Frontier Towns | Weapons, tools, survival gear |
 | Villages | Manufactured goods, tools |
+
+### Pricing Engine
+
+All buy/sell prices flow through a unified `tradingConfig`:
+- **Base sell multiplier:** 0.8x (you sell at 80% of base price)
+- **Location demand modifiers** adjust prices up or down based on what each region needs
+- **Cross-region trading** produces **72-150% profit** when buying cheap in one region and selling where demand is high
+- **Doom World survival goods** can produce up to **638% profit** due to extreme demand multipliers on water, medicine, and food
+- **Same-location arbitrage** correctly produces a loss — you can't buy and sell at the same market for profit
 
 ### Trade Routes
 
@@ -781,8 +790,10 @@ Herbs + Other → Potions
 | **Mine → Smithy** | Ore, Coal | Processed metal | 50-80% |
 | **Forest → Town** | Timber, Herbs | Planks, Medicine | 30-50% |
 | **Port → Inland** | Fish, Exotic goods | Seafood, Luxuries | 60-100% |
+| **Cross-Region** | Region-cheap goods | High-demand region | 72-150% |
 | **Capital → Villages** | Luxury goods | High-end items | 100-200% |
 | **Dungeon → Anywhere** | Loot | Everything | 200-500% |
+| **Normal → Doom World** | Survival goods | Water, medicine, food | Up to 638% |
 
 ---
 
@@ -1155,7 +1166,7 @@ As you travel the roads and visit locations, you may encounter random NPCs. The 
 
 ### Encounter Types
 
-**30+ NPC types** with role-appropriate inventories:
+**100+ NPC types** (including 23 Doom World types like survival_smuggler, doom_general, resistance_fighter, wasteland_scavenger, blighted_merchant, and more) with role-appropriate inventories:
 
 | Category | Types | Tradeable | Inventory Style |
 |----------|-------|-----------|-----------------|
@@ -1206,9 +1217,17 @@ Every NPC carries items befitting their role:
 
 ## 📜 QUEST SYSTEM
 
-*"100 tales of trade, conspiracy, and darkness."*
+*"138 tales of trade, conspiracy, survival, and darkness."*
 
-The game features **100 quests** spanning from humble beginnings to the final confrontation with ultimate evil.
+The game features **138+ quests** across 5 quest files (`main-quests.js`, `side-quests.js`, `tutorial-quests.js`, `doom-quests.js`, `doom-quest-system.js`) with **19 quest chains** spanning from humble beginnings to the final confrontation with ultimate evil.
+
+### How Quests Work
+
+Quests use **91 objective type handlers** to track progress across a huge range of activities:
+- **Core types:** collect, buy, trade, defeat, visit, talk, explore, deliver, craft, decision, choice, boss
+- **29 Doom-specific types** for survival scenarios in the Doom World
+- **Quest decisions:** Some objectives present modal prompts where you choose between options that affect the story
+- **Automatic tracking:** NPC conversations, crafting, consuming items, encounters, boss fights, and reputation changes all advance quest objectives without manual input
 
 ### Quest Tracking & Wayfinder
 
@@ -1238,20 +1257,27 @@ When you start a new game:
 
 *Wealth gates scale with difficulty: Easy (0.6x), Normal (1x), Hard (1.5x)*
 
-### Side Quests (50 Quests - 14 Chains)
+### Side Quests (19 Quest Chains)
 
-- **7 Combat Quest Chains** - Battle bandits, clear dungeons, hunt monsters
-- **7 Trade Quest Chains** - Establish routes, corner markets, build empires
+- **Combat Chains** - Battle bandits, clear dungeons, hunt monsters
+- **Trade Chains** - Establish routes, corner markets, build empires
+- **Exploration Chains** - Discover hidden locations and lost artifacts
 
-### Doom World Quests (15 Quests)
+### Doom World Quests
 
-Unlocked after entering the Doom World:
+Unlocked after entering the Doom World. These quests use 29 specialized objective types (scavenge, purify_water, fortify, signal_resistance, slay_doom_boss, etc.):
 
 | Arc | Quests | Description |
 |-----|--------|-------------|
 | **Survival** | 5 | Find food, water, shelter in the wasteland |
 | **Resistance** | 5 | Unite survivors, build resistance |
 | **Boss** | 5 | Path to confronting GREEDY WON |
+
+### Quest Reward Items
+
+14 unique items are only obtainable as quest rewards:
+- **rare_artifact**, **shadow_key**, **rare_ring**, **rat_king_tail**, **blacktide_cutlass**
+- **shadow_medallion**, **ironforge_seal**, **merchant_compass**, and more
 
 ---
 
@@ -1300,6 +1326,13 @@ In the Doom World, survival matters more than wealth:
 | **Gold** | 0.3x value |
 
 *Trade survival goods, not gold coins!*
+
+### Doom World Items (29 items)
+
+The Doom World introduces its own gear and survival supplies:
+- **Survival:** water_purifier, doom_rations, blighted_herbs, irradiated_water, scrap_metal, salvaged_parts
+- **Weapons (7 equippable):** blighted_sword, doom_slayer_blade, corrupted_axe, shadow_bow, void_staff, doom_hammer, cursed_dagger
+- **Quest items:** resistance_banner, doom_map_fragment, purification_crystal, and more
 
 ### Safe Zones (Portals Back)
 
@@ -1766,7 +1799,7 @@ The game features **57 achievements** across 12 categories, including 10 hidden 
 
 ## 📅 VERSION HISTORY
 
-### v0.91.10 - File Structure Cleanup (2025-12-13)
+### v0.92.00 - File Structure Cleanup (2025-12-13)
 
 **Session #87: Documentation & File Organization**
 
@@ -1778,7 +1811,7 @@ The game features **57 achievements** across 12 categories, including 10 hidden 
 
 ---
 
-### v0.91.10 - The Bootstrap Refactor (2025-12-10)
+### v0.92.00 - The Bootstrap Refactor (2025-12-10)
 
 **Sessions #70-86: Major Architecture Overhaul**
 
@@ -1803,7 +1836,7 @@ This release brings massive under-the-hood improvements for better stability, fa
 - ✅ Combat stat conflicts resolved
 - ✅ Quest location mismatches fixed (frostholm → frostholm_village)
 - ✅ Employee income cap (max 3x multiplier)
-- ✅ Doom NPC types fully populated (130+ definitions)
+- ✅ Doom NPC types fully populated (100+ definitions, 23 Doom-specific types)
 - ✅ All P0/P1/P2/P3 audit items resolved
 
 ---

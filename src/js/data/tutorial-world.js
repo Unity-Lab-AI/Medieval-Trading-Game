@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // TUTORIAL WORLD - The Pocket Dimension of Learning
 // ═══════════════════════════════════════════════════════════════
-// Version: 0.91.10 | Unity AI Lab
+// Version: 0.92.00 | Unity AI Lab
 // Creators: Hackall360, Sponge, GFourteen
 //
 // This is our isolated training sandbox - 5 locations designed
@@ -63,7 +63,7 @@ const TutorialWorld = {
                 bandages: 0.8
             },
 
-            npcs: ['tutorial_guide', 'tutorial_merchant_village', 'farmer'],
+            npcs: ['tutorial_guide', 'merchant', 'farmer'],
 
             // Tutorial-specific flags
             isTutorialLocation: true,

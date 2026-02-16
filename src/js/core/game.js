@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // GAME - medieval trading where capitalism meets darkness
 // ═══════════════════════════════════════════════════════════════
-// Version: 0.91.10 | Unity AI Lab
+// Version: 0.92.00 | Unity AI Lab
 // Creators: Hackall360, Sponge, GFourteen
 // www.unityailab.com | github.com/Unity-Lab-AI/Medieval-Trading-Game
 // unityailabcontact@gmail.com
@@ -7357,6 +7357,11 @@ function useConsumable(item) {
     effectMessage += effects.join(', ');
     addMessage(effectMessage);
 
+    // dispatch item-consumed for quest objective tracking (consume type)
+    document.dispatchEvent(new CustomEvent('item-consumed', {
+        detail: { item: item.id, item_type: item.category, quantity: 1 }
+    }));
+
     // Update UI
     updatePlayerStats();
     updateInventoryDisplay();
@@ -8103,9 +8108,10 @@ function sellItem(itemId, quantity = 1) {
     const currentLocation = GameWorld.locations[game.currentLocation.id];
     if (!currentLocation) return;
 
-    // Calculate sell price with reputation and charisma modifiers
+    // Calculate sell price using unified location-aware pricing system
     const reputationModifier = CityReputationSystem.getPriceModifier(currentLocation.id);
-    const baseSellPrice = Math.round(ItemDatabase.calculatePrice(itemId) * 0.7);
+    const itemOriginRegion = GameWorld.getItemOriginRegion(itemId);
+    const baseSellPrice = GameWorld.calculateSellPrice(currentLocation.id, itemId, itemOriginRegion);
 
     // Apply charisma modifier to sell price (higher charisma = better prices when selling)
     // Base: 5 charisma = no modifier, each point above/below = 2% difference

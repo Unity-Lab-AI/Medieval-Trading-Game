@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // TRADE CART PANEL - the shopping cart for medieval capitalism
 // ═══════════════════════════════════════════════════════════════
-// File Version: 0.91.10
+// File Version: 0.92.00
 // Click buy → add to cart → set quantity → haggle or pay up
 // Like Amazon but with more plague and less Prime shipping
 // ═══════════════════════════════════════════════════════════════

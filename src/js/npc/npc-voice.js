@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // NPC VOICE CHAT SYSTEM - digital souls learn to speak
 // ═══════════════════════════════════════════════════════════════
-// Version: 0.91.10 | Unity AI Lab
+// Version: 0.92.00 | Unity AI Lab
 // Creators: Hackall360, Sponge, GFourteen
 // www.unityailab.com | github.com/Unity-Lab-AI/Medieval-Trading-Game
 // unityailabcontact@gmail.com
@@ -44,10 +44,10 @@ const NPCVoiceChatSystem = {
             return 'mistral:7b-instruct';  // Default with tag
         },
         get ollamaTimeout() {
-            // 30 seconds - Ollama needs time to load model on first query
+            // 120 seconds - Ollama needs time to load model on first query, some responses take 10s+
             return (typeof GameConfig !== 'undefined' && GameConfig.api?.ollama?.timeout)
                 ? GameConfig.api.ollama.timeout
-                : 30000;
+                : 120000;
         },
 
         // TTS - using browser Web Speech API (no external service needed)
@@ -483,7 +483,11 @@ const NPCVoiceChatSystem = {
             // if action specified but templates not loaded yet, try to load them
             if (options.action && typeof NPCInstructionTemplates !== 'undefined' && !NPCInstructionTemplates._loaded) {
                 console.log('🎙️ NPCInstructionTemplates not loaded yet, loading now...');
-                await NPCInstructionTemplates.loadAllNPCData();
+                try {
+                    await NPCInstructionTemplates.loadAllNPCData();
+                } catch (loadErr) {
+                    console.warn('🎙️ NPCInstructionTemplates load failed, using NPCPromptBuilder fallback:', loadErr.message);
+                }
             }
 
             if (options.action && typeof NPCInstructionTemplates !== 'undefined' && NPCInstructionTemplates._loaded) {
@@ -610,7 +614,7 @@ RELATIONSHIP MEMORY:
             }
 
             const data = await response.json();
-            const rawAssistantMessage = data.response?.trim() || 'The NPC stares at you blankly...';
+            const rawAssistantMessage = data.response?.trim() || '';
 
             console.log('🎙️ NPC raw response received:', rawAssistantMessage.substring(0, 50) + '...');
 
@@ -675,26 +679,25 @@ RELATIONSHIP MEMORY:
             this._apiFailureCount = (this._apiFailureCount || 0) + 1;
             this._lastApiError = { error: error.message, time: Date.now(), npc: npcData?.type, isTimeout, isConnectionError };
 
-            // CHECK FALLBACK SETTING - only use hardcoded text if allowed
-            if (!this.settings.allowTextFallbacks) {
-                console.log('🎙️ Text fallbacks disabled - NPC will not respond');
+            // OLLAMA is the ONLY speech source when active — NEVER return fallback text
+            if (this._ollamaAvailable) {
+                console.log('🎙️ OLLAMA active but request failed — no fallback text, OLLAMA handles all speech');
                 return {
-                    text: null,  // No response - AI only mode
+                    text: null,
                     success: false,
                     error: error.message,
                     fallbackUsed: false,
-                    fallbacksDisabled: true,
-                    ollamaUnavailable: isTimeout || isConnectionError
+                    ollamaUnavailable: false
                 };
             }
 
-            // Fallbacks enabled - return a pre-written response
-            console.log('🎙️ Using text fallback (fallbacks enabled in settings)');
+            // OLLAMA not available at all — only then allow embedded data as response
+            console.log('🎙️ OLLAMA unavailable — returning null (callers use embedded data)');
             return {
-                text: this.getFallbackResponse(npcData),
+                text: null,
                 success: false,
                 error: error.message,
-                fallbackUsed: true,
+                fallbackUsed: false,
                 ollamaUnavailable: isTimeout || isConnectionError
             };
         }
@@ -1330,8 +1333,8 @@ RELATIONSHIP MEMORY:
         // the silence where commands once lived... beautiful
         clean = clean.replace(/\{(\w+)(?::([^}]+))?\}/g, '');
 
-        // remove action markers like *walks away* - keep the mystery
-        clean = clean.replace(/\*[^*]+\*/g, '');
+        // remove action markers like *walks away* but keep the text inside
+        clean = clean.replace(/\*([^*]+)\*/g, '$1');
 
         // remove markdown - TTS doesn't need your fancy formatting
         clean = clean.replace(/```[\s\S]*?```/g, '');
@@ -1900,6 +1903,15 @@ RELATIONSHIP MEMORY:
                 npcType: npcData.type,
                 npcName: npcData.name,
                 isQuestNPC: isQuestNPC
+            }
+        }));
+
+        // dispatch npc-talked for quest objective aliases (meet, contact, convince, deliver, etc.)
+        document.dispatchEvent(new CustomEvent('npc-talked', {
+            detail: {
+                npcType: npcData.type,
+                npcName: npcData.name,
+                location: (typeof game !== 'undefined' && game.currentLocation) ? game.currentLocation.id : null
             }
         }));
 

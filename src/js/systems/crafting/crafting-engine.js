@@ -1,7 +1,7 @@
 // 
 // CRAFTING ENGINE - turning failure into profit
 // 
-// Version: 0.91.10 | Unity AI Lab
+// Version: 0.92.00 | Unity AI Lab
 // Creators: Hackall360, Sponge, GFourteen
 // www.unityailab.com | github.com/Unity-Lab-AI/Medieval-Trading-Game
 // unityailabcontact@gmail.com
@@ -484,11 +484,17 @@ const CraftingEngine = {
             document.dispatchEvent(new CustomEvent('item-received', {
                 detail: { item: itemId, quantity: quantity, source: 'crafting' }
             }));
+            document.dispatchEvent(new CustomEvent('item-crafted', {
+                detail: { item: itemId, itemId: itemId, quantity: quantity }
+            }));
             return;
         }
         // Try InventorySystem
         if (typeof InventorySystem !== 'undefined' && InventorySystem.addItem) {
             InventorySystem.addItem(itemId, quantity);
+            document.dispatchEvent(new CustomEvent('item-crafted', {
+                detail: { item: itemId, itemId: itemId, quantity: quantity }
+            }));
             return;
         }
         // Fallback to game.player.inventory
@@ -496,6 +502,9 @@ const CraftingEngine = {
             game.player.inventory[itemId] = (game.player.inventory[itemId] || 0) + quantity;
             document.dispatchEvent(new CustomEvent('item-received', {
                 detail: { item: itemId, quantity: quantity, source: 'crafting' }
+            }));
+            document.dispatchEvent(new CustomEvent('item-crafted', {
+                detail: { item: itemId, itemId: itemId, quantity: quantity }
             }));
             return;
         }

@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // DOOM WORLD NPC SYSTEM - Where hope went to die
 // ═══════════════════════════════════════════════════════════════
-// Version: 0.91.10 | Unity AI Lab
+// Version: 0.92.00 | Unity AI Lab
 // The apocalypse changed everything. Same faces, different souls.
 // Gold is worthless. Food is gold. Survival is all that matters.
 // ═══════════════════════════════════════════════════════════════
@@ -86,7 +86,7 @@ const DoomWorldNPCs = {
         // RUINED CITIES - Monuments to what we lost
         // ═══════════════════════════════════════════════════════════
         northern_outpost: {
-            npcs: ['crazed_blacksmith', 'hollow_guard', 'broken_captain', 'plague_apothecary', 'desperate_merchant', 'trapped_miner'],
+            npcs: ['crazed_blacksmith', 'hollow_guard', 'broken_captain', 'plague_apothecary', 'desperate_merchant', 'trapped_miner', 'resistance_leader', 'resistance_fighter'],
             description: 'The forges have gone cold. Weapons are worth more than gold now. The blacksmith works day and night forging blades for those who can pay in food.',
             atmosphere: 'Cold forges. Empty streets. The clang of desperate metalwork echoes through ruins.'
         },
@@ -332,7 +332,7 @@ const DoomWorldNPCs = {
             atmosphere: 'Rotting boats. Empty nets. Sailors who won\'t meet your eyes.'
         },
         smugglers_cove: {
-            npcs: ['survival_smuggler', 'desperate_merchant', 'ruthless_fence'],
+            npcs: ['survival_smuggler', 'desperate_merchant', 'ruthless_fence', 'resistance_fighter'],
             description: 'The smugglers have become the law. They control what little remains.',
             atmosphere: 'Hidden caches. Suspicious eyes. The only functioning trade in the doom.'
         },

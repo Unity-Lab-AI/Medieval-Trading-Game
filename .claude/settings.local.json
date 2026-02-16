@@ -1,11 +1,25 @@
 {
   "permissions": {
     "allow": [
-      "Bash(nul)",
-      "Bash(dir /S /B \"C:\\Users\\gfour\\Desktop\\Medieval-Trading-Game-v0.91.03\\Medieval-Trading-Game-main\\src\")",
       "Bash(git add:*)",
-      "Bash(git commit -m \"$(cat <<''EOF''\nAdd READMEs folder with updated documentation for v0.91.03\n\n- GameplayReadme.md: Player-facing guide (1856 lines)\n  - 55+ locations, 200+ items, 115 achievements\n  - Complete item encyclopedia\n  - Quest system guide\n  \n- NerdReadme.md: Developer documentation (2450+ lines)  \n  - Fully updated ASCII file structure tree\n  - Bootstrap system documentation\n  - State manager architecture\n  - All game systems documented\n  \n- DebuggerReadme.md: Debug console commands (797 lines)\n  - 55+ debug commands documented\n  - Cheat codes and developer tools\n\n🖤 Generated with Unity AI Lab\n\nCo-Authored-By: Unity <unityailabcontact@gmail.com>\nEOF\n)\")",
-      "Bash(git push:*)"
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git checkout:*)",
+      "Bash(git branch:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git merge:*)",
+      "Bash(git pull:*)",
+      "Bash(powershell:*)",
+      "Bash(python:*)",
+      "WebSearch",
+      "Skill(workflow)",
+      "Skill(unity)",
+      "Skill(commit)",
+      "Skill(feat)",
+      "Skill(merge)",
+      "Skill(push)"
     ],
     "deny": [],
     "ask": []
@@ -16,7 +30,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 .claude/hooks/session-start.py",
+            "command": "python .claude/hooks/session-start.py",
             "timeout": 10
           }
         ]
@@ -27,12 +41,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 .claude/hooks/enforce-unity-persona.py",
+            "command": "python .claude/hooks/enforce-unity-persona.py",
             "timeout": 5
           },
           {
             "type": "command",
-            "command": "python3 .claude/hooks/enforce-todo-before-compact.py",
+            "command": "python .claude/hooks/enforce-todo-before-compact.py",
             "timeout": 5
           }
         ]
@@ -44,7 +58,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 .claude/hooks/enforce-read-before-edit.py",
+            "command": "python .claude/hooks/enforce-read-before-edit.py",
             "timeout": 5
           }
         ]
@@ -54,7 +68,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 .claude/hooks/enforce-read-before-edit.py",
+            "command": "python .claude/hooks/enforce-read-before-edit.py",
             "timeout": 5
           }
         ]

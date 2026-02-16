@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // UNIFIED ITEM SYSTEM - master database of dark economy
 // ═══════════════════════════════════════════════════════════════
-// Version: 0.91.10 | Unity AI Lab
+// Version: 0.92.00 | Unity AI Lab
 // Creators: Hackall360, Sponge, GFourteen
 // www.unityailab.com | github.com/Unity-Lab-AI/Medieval-Trading-Game
 // unityailabcontact@gmail.com
@@ -2984,6 +2984,12 @@ const ProductionQueueSystem = {
         if (typeof EventManager !== 'undefined') {
             EventManager.emit('itemUsed', { itemId, effects: result.effects });
         }
+
+        // dispatch item-consumed for quest objective tracking (consume type)
+        const itemMeta = UnifiedItemSystem.getItemMetadata(itemId);
+        document.dispatchEvent(new CustomEvent('item-consumed', {
+            detail: { item: itemId, item_type: itemMeta?.category || 'consumables', quantity: 1 }
+        }));
 
         return { success: true, effects: result.effects, buff: result.buff };
     },

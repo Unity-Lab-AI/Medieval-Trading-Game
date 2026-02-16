@@ -1,7 +1,7 @@
 // 
 //  REGIONAL SIDE QUESTS - Combat & Trade Chains 
 // 
-// Version: 0.91.10 | Unity AI Lab
+// Version: 0.92.00 | Unity AI Lab
 // 14 Quest Chains (2 per region) | ~50 Total Quests
 // Combat chains: Fight threats, protect civilians
 // Trade chains: Economic opportunities, merchant relationships
@@ -1107,7 +1107,7 @@ const SideQuests = {
                     id: 'capital_guard_3',
                     name: 'Palace Defense',
                     description: 'The assassins make their move. Defend the palace from attack.',
-                    giver: 'guard',
+                    giver: 'noble',
                     giverName: 'Duke Valdric',
                     location: 'royal_capital',
                     type: 'side',

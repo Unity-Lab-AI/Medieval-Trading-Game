@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // unified people panel - talk, trade, quest, exist... all in one dark place
 // ═══════════════════════════════════════════════════════════════
-// File Version: 0.91.10
+// File Version: 0.92.00
 // conjured by Unity AI Lab - every soul, every transaction, every whisper
 // the NPC list + embedded chat + trade + quest items in seamless harmony
 // ═══════════════════════════════════════════════════════════════
@@ -1134,76 +1134,79 @@ const PeoplePanel = {
         }
     },
 
-    // send greeting - now uses npcinstructiontemplates for npc-specific greetings
+    // send greeting - OLLAMA is the ONLY source of NPC speech when active
     async sendGreeting(npcData) {
-        // FIX BUG #1 & #5: Don't scroll for the initial "Approaching..." message
+        const hasVoiceSystem = typeof NPCVoiceChatSystem !== 'undefined';
+        const ollamaActive = hasVoiceSystem && NPCVoiceChatSystem._ollamaAvailable;
+
+        // OLLAMA not installed/running at all — embedded data greetings only
+        if (!hasVoiceSystem || !ollamaActive) {
+            const fallback = this.getFallbackGreeting(npcData);
+            if (fallback) {
+                this.addChatMessage(fallback, 'npc', false);
+                this.chatHistory.push({ role: 'assistant', content: fallback });
+                const voice = this.getNPCVoice(npcData);
+                this._playTTSDirect(fallback, voice, npcData.name || npcData.type || 'NPC').catch(() => {});
+            }
+            return;
+        }
+
+        // ═══ OLLAMA IS ACTIVE — IT HANDLES ALL SPEECH ═══
         this.addChatMessage('*Approaching...*', 'system', false);
+        NPCVoiceChatSystem.startConversation(npcData.id, npcData);
 
-        // generate greeting via api with standardized greeting action
-        if (typeof NPCVoiceChatSystem !== 'undefined') {
-            NPCVoiceChatSystem.startConversation(npcData.id, npcData);
+        const npcName = npcData.name || npcData.type || 'NPC';
+        const options = {
+            action: 'greeting',
+            availableQuests: this.getAvailableQuestsForNPC(),
+            activeQuests: this.getActiveQuestsForNPC(),
+            rumors: this.getRumors(),
+            nearbyLocations: this.getNearbyLocations()
+        };
 
-            try {
-                // use greeting action type for proper npc-specific instructions
-                const options = {
-                    action: 'greeting',
-                    availableQuests: this.getAvailableQuestsForNPC(),
-                    activeQuests: this.getActiveQuestsForNPC(),
-                    rumors: this.getRumors(),
-                    nearbyLocations: this.getNearbyLocations()
-                };
+        try {
+            console.log(`🎭 PeoplePanel: OLLAMA greeting for ${npcData.type || npcData.id}`);
 
-                console.log(`🎭 PeoplePanel: Sending greeting for ${npcData.type || npcData.id}`);
+            const response = await NPCVoiceChatSystem.generateNPCResponse(
+                npcData,
+                '[GREETING]',
+                [],
+                options
+            );
 
-                const response = await NPCVoiceChatSystem.generateNPCResponse(
-                    npcData,
-                    '[GREETING]',
-                    [],
-                    options
-                );
+            this.removeApproachingMessage();
 
-                if (!response || !response.text) {
-                    throw new Error('Empty greeting response');
-                }
-
-                // FIX BUG #3: Remove "Approaching..." message once greeting arrives
-                this.removeApproachingMessage();
-
-                // FIX BUG #1 & #5: Don't scroll for initial greeting - keep at top
+            if (response && response.text) {
                 this.addChatMessage(response.text, 'npc', false);
                 this.chatHistory.push({ role: 'assistant', content: response.text });
 
-                // play tts with npc-specific voice from templates
-                if (NPCVoiceChatSystem.settings?.voiceEnabled) {
-                    const voice = this.getNPCVoice(npcData);
-                    NPCVoiceChatSystem.playVoice(response.text, voice);
+                const voice = this.getNPCVoice(npcData);
+                console.log(`🎙️ PeoplePanel: TTS for ${npcName}, voice=${voice}`);
+                try {
+                    await this._playTTSDirect(response.text, voice, npcName);
+                } catch (ttsErr) {
+                    console.warn(`🎙️ PeoplePanel: TTS failed for ${npcName}:`, ttsErr);
                 }
-            } catch (e) {
-                console.error('🖤 Greeting error:', e);
-                // FIX BUG #3: Remove "Approaching..." even on error
-                this.removeApproachingMessage();
-                const fallback = this.getFallbackGreeting(npcData);
-                // FIX BUG #1 & #5: Don't scroll for fallback greeting
-                this.addChatMessage(fallback, 'npc', false);
-                this.chatHistory.push({ role: 'assistant', content: fallback });
-
-                // 🔧 FIX: Play TTS for fallback greetings too!
-                if (NPCVoiceChatSystem.settings?.voiceEnabled) {
+            } else {
+                // OLLAMA is on but returned empty — use embedded data greeting
+                console.warn(`🎭 PeoplePanel: OLLAMA returned empty for ${npcData.type || npcData.id}`);
+                const embeddedGreeting = this.getFallbackGreeting(npcData);
+                if (embeddedGreeting) {
+                    this.addChatMessage(embeddedGreeting, 'npc', false);
+                    this.chatHistory.push({ role: 'assistant', content: embeddedGreeting });
                     const voice = this.getNPCVoice(npcData);
-                    NPCVoiceChatSystem.playVoice(fallback, voice);
+                    this._playTTSDirect(embeddedGreeting, voice, npcName).catch(() => {});
                 }
             }
-        } else {
-            // FIX BUG #3: Remove "Approaching..." for fallback greeting too
+        } catch (err) {
+            console.error(`🎭 PeoplePanel: sendGreeting error for ${npcName}:`, err);
             this.removeApproachingMessage();
-            const fallback = this.getFallbackGreeting(npcData);
-            // FIX BUG #1 & #5: Don't scroll for fallback greeting
-            this.addChatMessage(fallback, 'npc', false);
 
-            // 🔧 FIX: Play TTS for fallback greetings when NPCVoiceChatSystem unavailable
-            if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.settings?.voiceEnabled) {
-                const voice = this.getNPCVoice(npcData);
-                NPCVoiceChatSystem.playVoice(fallback, voice);
+            // OLLAMA is on but errored — use embedded data greeting
+            const embeddedGreeting = this.getFallbackGreeting(npcData);
+            if (embeddedGreeting) {
+                this.addChatMessage(embeddedGreeting, 'npc', false);
+                this.chatHistory.push({ role: 'assistant', content: embeddedGreeting });
             }
         }
     },
@@ -1215,26 +1218,30 @@ const PeoplePanel = {
             if (tutorialGreeting) return tutorialGreeting;
         }
 
-        // Get player name for personalized greetings
-        const playerName = (typeof game !== 'undefined' && game.player?.name) ? game.player.name : 'Traveler';
+        // Use NPC_EMBEDDED_DATA greetings - the actual character-specific lines
+        const npcType = npcData.type || npcData.id;
+        if (typeof NPC_EMBEDDED_DATA !== 'undefined' && NPC_EMBEDDED_DATA[npcType]) {
+            const spec = NPC_EMBEDDED_DATA[npcType];
+            if (spec.greetings && spec.greetings.length > 0) {
+                return spec.greetings[Math.floor(Math.random() * spec.greetings.length)];
+            }
+        }
 
-        const greetings = {
-            innkeeper: "Welcome, traveler! Looking for a room or perhaps some ale?",
-            blacksmith: "*wipes sweat from brow* What can I forge for you today?",
-            merchant: "Ah, a customer! Come see my wares, friend.",
-            apothecary: "Greetings. Need potions? Remedies? I have what ails you.",
-            guard: "Halt. State your business.",
-            farmer: "Good day to you! Fresh produce for sale.",
-            // Tutorial NPCs
-            tutorial_merchant: "Welcome, new trader! I'm here to help you learn the basics of buying and selling.",
-            tutorial_guide: "Greetings! I'm here to guide you through this training area. Ask me anything!",
-            tutorial_trainer: "Ready to learn some combat basics? I'll teach you everything you need to survive out there.",
-            // 🎭 Hooded Stranger - the mysterious prophet from initial encounter
-            hooded_stranger: `So... the prophecy stirs. Another piece moves upon the board. Listen well, ${playerName}... Darkness gathers in the north. The Shadow Tower, long dormant, stirs once more. The wizard Malachar... he has returned. You are more than a simple trader, young one. Fate has brought you here for a reason. Seek out the village Elder here in Greendale. He will guide your first steps on this path.`,
-            prophet: `Ah... another soul drawn to this land by fate's cruel hand. The winds spoke of your arrival, ${playerName}. Dark times approach, and you have a part to play in what is to come.`,
-            default: "Hello there. What brings you here?"
-        };
-        return greetings[npcData.type] || greetings.default;
+        // Check doom embedded data if in doom world
+        if (typeof DOOM_NPC_EMBEDDED_DATA !== 'undefined' && DOOM_NPC_EMBEDDED_DATA[npcType]) {
+            const spec = DOOM_NPC_EMBEDDED_DATA[npcType];
+            if (spec.greetings && spec.greetings.length > 0) {
+                return spec.greetings[Math.floor(Math.random() * spec.greetings.length)];
+            }
+        }
+
+        // Check npcData itself for greetings (some NPCs carry their own)
+        if (npcData.greetings && npcData.greetings.length > 0) {
+            return npcData.greetings[Math.floor(Math.random() * npcData.greetings.length)];
+        }
+
+        // Last resort - no embedded data found, return null so caller decides
+        return null;
     },
 
     // send message
@@ -1279,10 +1286,9 @@ const PeoplePanel = {
                 this.chatHistory.push({ role: 'assistant', content: response.text });
 
                 // play tts with npc-specific voice
-                if (NPCVoiceChatSystem.settings?.voiceEnabled) {
-                    const voice = this.getNPCVoice(this.currentNPC);
-                    NPCVoiceChatSystem.playVoice(response.text, voice);
-                }
+                const voice = this.getNPCVoice(this.currentNPC);
+                const npcName = this.currentNPC?.name || this.currentNPC?.type || 'NPC';
+                this._playTTSDirect(response.text, voice, npcName).catch(() => {});
 
                 // update quest items in case something changed
                 this.updateQuestItems();
@@ -1298,11 +1304,9 @@ const PeoplePanel = {
             const fallbackMsg = "*seems distracted*";
             this.addChatMessage(fallbackMsg, 'npc');
 
-            // 🔧 FIX: Play TTS for fallback message in error handler
-            if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.settings?.voiceEnabled) {
-                const voice = this.getNPCVoice(this.currentNPC);
-                NPCVoiceChatSystem.playVoice(fallbackMsg, voice);
-            }
+            const voice = this.getNPCVoice(this.currentNPC);
+            const npcName = this.currentNPC?.name || this.currentNPC?.type || 'NPC';
+            this._playTTSDirect(fallbackMsg, voice, npcName).catch(() => {});
         }
 
         this.isWaitingForResponse = false;
@@ -1821,10 +1825,9 @@ const PeoplePanel = {
         this.chatHistory.push({ role: 'assistant', content: npcResponse });
 
         // play tts
-        if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.settings?.voiceEnabled) {
-            const voice = this.getNPCVoice(this.currentNPC);
-            NPCVoiceChatSystem.playVoice(npcResponse, voice);
-        }
+        const voice = this.getNPCVoice(this.currentNPC);
+        const npcName = this.currentNPC?.name || this.currentNPC?.type || 'NPC';
+        this._playTTSDirect(npcResponse, voice, npcName).catch(() => {});
 
         // update UI
         this.updateQuestItems();
@@ -1931,10 +1934,9 @@ const PeoplePanel = {
         this.chatHistory.push({ role: 'assistant', content: npcResponse });
 
         // play tts
-        if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.settings?.voiceEnabled) {
-            const voice = this.getNPCVoice(this.currentNPC);
-            NPCVoiceChatSystem.playVoice(npcResponse, voice);
-        }
+        const voice = this.getNPCVoice(this.currentNPC);
+        const npcName = this.currentNPC?.name || this.currentNPC?.type || 'NPC';
+        this._playTTSDirect(npcResponse, voice, npcName).catch(() => {});
 
         // update UI
         this.updateQuestItems();
@@ -1972,10 +1974,9 @@ const PeoplePanel = {
                 const errorMsg = `*shakes head* You haven't completed the previous tasks yet. Come back when you've finished them.`;
                 this.addChatMessage(errorMsg, 'npc');
                 this.chatHistory.push({ role: 'assistant', content: errorMsg });
-                if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.settings?.voiceEnabled) {
-                    const voice = this.getNPCVoice(this.currentNPC);
-                    NPCVoiceChatSystem.playVoice(errorMsg, voice);
-                }
+                const voice = this.getNPCVoice(this.currentNPC);
+                const npcName = this.currentNPC?.name || this.currentNPC?.type || 'NPC';
+                this._playTTSDirect(errorMsg, voice, npcName).catch(() => {});
                 return;
             }
         }
@@ -2014,10 +2015,9 @@ const PeoplePanel = {
         this.chatHistory.push({ role: 'assistant', content: npcResponse });
 
         // play tts
-        if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.settings?.voiceEnabled) {
-            const voice = this.getNPCVoice(this.currentNPC);
-            NPCVoiceChatSystem.playVoice(npcResponse, voice);
-        }
+        const voice = this.getNPCVoice(this.currentNPC);
+        const npcName = this.currentNPC?.name || this.currentNPC?.type || 'NPC';
+        this._playTTSDirect(npcResponse, voice, npcName).catch(() => {});
 
         // update UI
         this.updateQuestItems();
@@ -2068,10 +2068,9 @@ const PeoplePanel = {
         this.chatHistory.push({ role: 'assistant', content: npcResponse });
 
         // play tts
-        if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.settings?.voiceEnabled) {
-            const voice = this.getNPCVoice(this.currentNPC);
-            NPCVoiceChatSystem.playVoice(npcResponse, voice);
-        }
+        const voice = this.getNPCVoice(this.currentNPC);
+        const npcName = this.currentNPC?.name || this.currentNPC?.type || 'NPC';
+        this._playTTSDirect(npcResponse, voice, npcName).catch(() => {});
 
         // update UI
         this.updateQuestItems();
@@ -2174,10 +2173,9 @@ const PeoplePanel = {
             this.chatHistory.push({ role: 'assistant', content: cleanText });
 
             // play tts with NPC-specific voice (use clean text without commands)
-            if (NPCVoiceChatSystem.settings?.voiceEnabled) {
-                const voice = this.getNPCVoice(this.currentNPC);
-                NPCVoiceChatSystem.playVoice(cleanText, voice);
-            }
+            const voice = this.getNPCVoice(this.currentNPC);
+            const npcName = this.currentNPC?.name || this.currentNPC?.type || 'NPC';
+            this._playTTSDirect(cleanText, voice, npcName).catch(() => {});
 
             // update quest items and quick actions in case quest state changed
             this.updateQuestItems();
@@ -2195,11 +2193,9 @@ const PeoplePanel = {
             this.addChatMessage(fallback, 'npc');
             this.chatHistory.push({ role: 'assistant', content: fallback });
 
-            // 🔧 FIX: Play TTS for fallback message in error handler
-            if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.settings?.voiceEnabled) {
-                const voice = this.getNPCVoice(this.currentNPC);
-                NPCVoiceChatSystem.playVoice(fallback, voice);
-            }
+            const voice = this.getNPCVoice(this.currentNPC);
+            const npcName = this.currentNPC?.name || this.currentNPC?.type || 'NPC';
+            this._playTTSDirect(fallback, voice, npcName).catch(() => {});
 
             // critical: actually execute the quest action even in fallback!
             // If API fails but user clicked "Complete Quest", we should still complete it
@@ -2453,10 +2449,9 @@ const PeoplePanel = {
         this.chatHistory.push({ role: 'assistant', content: response });
 
         // play tts for the response
-        if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.settings?.voiceEnabled) {
-            const voice = this.getNPCVoice(this.currentNPC);
-            NPCVoiceChatSystem.playVoice(response, voice);
-        }
+        const voice = this.getNPCVoice(this.currentNPC);
+        const npcName = this.currentNPC?.name || this.currentNPC?.type || 'NPC';
+        this._playTTSDirect(response, voice, npcName).catch(() => {});
 
         // open the npc's inventory after a short delay for the message to show
         console.log('🛒 askAboutWares: About to call openFullTrade in 500ms');
@@ -3267,10 +3262,9 @@ Speak cryptically and briefly. You offer passage to the ${inDoom ? 'normal world
             this.chatHistory.push({ role: 'assistant', content: cleanText });
 
             // play tts with NPC-specific voice (use clean text without commands)
-            if (NPCVoiceChatSystem.settings?.voiceEnabled) {
-                const voice = this.getNPCVoice(this.currentNPC);
-                NPCVoiceChatSystem.playVoice(cleanText, voice);
-            }
+            const voice = this.getNPCVoice(this.currentNPC);
+            const npcName = this.currentNPC?.name || this.currentNPC?.type || 'NPC';
+            this._playTTSDirect(cleanText, voice, npcName).catch(() => {});
 
             // 🖤 Update quest items in case something changed
             this.updateQuestItems();
@@ -3294,11 +3288,9 @@ Speak cryptically and briefly. You offer passage to the ${inDoom ? 'normal world
             this.addChatMessage(fallback, 'npc');
             this.chatHistory.push({ role: 'assistant', content: fallback });
 
-            // 🔧 FIX: Play TTS for action fallback messages
-            if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.settings?.voiceEnabled) {
-                const voice = this.getNPCVoice(this.currentNPC);
-                NPCVoiceChatSystem.playVoice(fallback, voice);
-            }
+            const voice = this.getNPCVoice(this.currentNPC);
+            const npcName = this.currentNPC?.name || this.currentNPC?.type || 'NPC';
+            this._playTTSDirect(fallback, voice, npcName).catch(() => {});
 
             // execute the action even on fallback - the fallback message is just flavor
             this.executeActionFallback(actionType);
@@ -3367,6 +3359,45 @@ Speak cryptically and briefly. You offer passage to the ${inDoom ? 'normal world
             return NPCInstructionTemplates.getVoice(npcData.type || npcData.id);
         }
         return npcData.voice || 'nova';
+    },
+
+    // direct TTS playback - calls KokoroTTS directly like settings test does
+    // bypasses NPCVoiceChatSystem.playVoice() middleware for reliability
+    async _playTTSDirect(text, voice, npcName) {
+        // Check if KokoroTTS is ready (same check as settings test)
+        const kokoroReady = typeof KokoroTTS !== 'undefined' &&
+            (KokoroTTS._initialized || (KokoroTTS.isInitialized && KokoroTTS.isInitialized()));
+
+        if (kokoroReady) {
+            console.log(`🎙️ _playTTSDirect: KokoroTTS direct call for ${npcName}, voice=${voice}`);
+
+            // Show voice indicator
+            if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.showGlobalVoiceIndicator) {
+                NPCVoiceChatSystem.showGlobalVoiceIndicator(npcName);
+            }
+
+            try {
+                const success = await KokoroTTS.speak(text, voice, { source: npcName });
+                console.log(`🎙️ _playTTSDirect: KokoroTTS returned success=${success}`);
+                if (!success) {
+                    console.warn(`🎙️ _playTTSDirect: KokoroTTS.speak() returned false for ${npcName}`);
+                }
+            } finally {
+                // Always hide indicator when done
+                if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.hideGlobalVoiceIndicator) {
+                    NPCVoiceChatSystem.hideGlobalVoiceIndicator();
+                }
+            }
+            return;
+        }
+
+        // Fallback: try NPCVoiceChatSystem.playVoice if Kokoro not ready
+        if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.settings?.voiceEnabled) {
+            console.log(`🎙️ _playTTSDirect: Falling back to NPCVoiceChatSystem.playVoice for ${npcName}`);
+            await NPCVoiceChatSystem.playVoice(text, voice, npcName);
+        } else {
+            console.warn(`🎙️ _playTTSDirect: No TTS available for ${npcName}`);
+        }
     },
 
     // get available quests for current npc
@@ -3975,9 +4006,9 @@ Speak cryptically and briefly. You offer passage to the ${inDoom ? 'normal world
                     // Fall through to normal TTS if custom handler fails
                 }
 
-                // play tts - pass NPC name as source for indicator 🖤💀
-                if (playVoice && typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.settings?.voiceEnabled) {
-                    NPCVoiceChatSystem.playVoice(greeting, npcData.voice || 'am_onyx', npcData.name || 'Stranger');
+                // play tts - direct KokoroTTS call for reliability 🖤💀
+                if (playVoice) {
+                    this._playTTSDirect(greeting, npcData.voice || 'am_onyx', npcData.name || 'Stranger').catch(() => {});
                 }
             }, 300);
         } else {

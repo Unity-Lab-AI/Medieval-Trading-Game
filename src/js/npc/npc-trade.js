@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // NPC TRADE WINDOW - portable capitalism in a popup storefront
 // ═══════════════════════════════════════════════════════════════
-// Version: 0.91.10 | Unity AI Lab
+// Version: 0.92.00 | Unity AI Lab
 // Creators: Hackall360, Sponge, GFourteen
 // www.unityailab.com | github.com/Unity-Lab-AI/Medieval-Trading-Game
 // unityailabcontact@gmail.com
@@ -155,7 +155,7 @@ const NPCTradeWindow = {
                             <div class="npc-avatar">👤</div>
                         </div>
                         <div class="npc-chat-bubble" id="npc-chat-bubble">
-                            <p id="npc-dialogue">Welcome, traveler! What can I do for you?</p>
+                            <p id="npc-dialogue">...</p>
                         </div>
                     </div>
 
@@ -516,15 +516,21 @@ const NPCTradeWindow = {
 
             // Gold/currency is always worth 1g per unit - actual money!
             const isCurrency = itemId === 'gold' || (typeof ItemDatabase !== 'undefined' && ItemDatabase.getItem(itemId)?.category === 'currency');
-            // Player sells at 75% (min 1g), NPC sells at full price minus discount
-            // This allows profit margins when buying low (small towns) and selling high (big cities)
+            // Player sell price uses unified location-aware pricing from GameWorld
+            // NPC buy price uses base price minus discount
             // Currency (gold) is ALWAYS 1g regardless of side
-            const locationSellBonus = this.getLocationSellBonus(itemId);
-            const sellMultiplier = Math.min(0.95, 0.75 + locationSellBonus); // 75% base, up to 95% with bonuses
+            const locationId = game?.currentLocation?.id;
+            const itemOriginRegion = typeof GameWorld !== 'undefined' ? GameWorld.getItemOriginRegion(itemId) : null;
+            const unifiedSellPrice = (typeof GameWorld !== 'undefined' && locationId) ?
+                GameWorld.calculateSellPrice(locationId, itemId, itemOriginRegion) :
+                Math.max(1, Math.floor(price * 0.8));
+            // NPC buy price uses location-aware pricing from GameWorld
+            const locationBuyPrice = (typeof GameWorld !== 'undefined' && locationId) ?
+                GameWorld.calculateBuyPrice(locationId, itemId) : price;
             const displayPrice = isCurrency ? 1 :
                 (side === 'npc' ?
-                    Math.ceil(price * (1 - this.currentDiscount / 100)) :
-                    Math.max(1, Math.floor(price * sellMultiplier)));
+                    Math.max(1, Math.ceil(locationBuyPrice * (1 - this.currentDiscount / 100))) :
+                    Math.max(1, unifiedSellPrice));
 
             // Debug: Log gold pricing
             if (itemId === 'gold') {
@@ -914,9 +920,11 @@ const NPCTradeWindow = {
             if (isCurrency) {
                 playerItemValue += qty; // 1 gold = 1 value
             } else {
-                const locationSellBonus = this.getLocationSellBonus(itemId);
-                const sellMultiplier = Math.min(0.95, 0.75 + locationSellBonus);
-                const itemValue = Math.max(1, Math.floor(this.getItemPrice(itemId) * sellMultiplier));
+                const locationId = game?.currentLocation?.id;
+                const itemOriginRegion = typeof GameWorld !== 'undefined' ? GameWorld.getItemOriginRegion(itemId) : null;
+                const itemValue = (typeof GameWorld !== 'undefined' && locationId) ?
+                    Math.max(1, GameWorld.calculateSellPrice(locationId, itemId, itemOriginRegion)) :
+                    Math.max(1, Math.floor(this.getItemPrice(itemId) * 0.8));
                 playerItemValue += itemValue * qty;
             }
         }
@@ -928,8 +936,10 @@ const NPCTradeWindow = {
             if (isCurrency) {
                 npcItemValue += qty; // 1 gold = 1 value
             } else {
-                const price = this.getItemPrice(itemId);
-                const discountedPrice = Math.ceil(price * (1 - this.currentDiscount / 100));
+                const locationId = game?.currentLocation?.id;
+                const locationBuyPrice = (typeof GameWorld !== 'undefined' && locationId) ?
+                    GameWorld.calculateBuyPrice(locationId, itemId) : this.getItemPrice(itemId);
+                const discountedPrice = Math.ceil(locationBuyPrice * (1 - this.currentDiscount / 100));
                 npcItemValue += discountedPrice * qty;
             }
         }
@@ -981,9 +991,11 @@ const NPCTradeWindow = {
             if (isCurrency) {
                 playerTotalValue += qty; // 1 gold = 1 value
             } else {
-                const locationSellBonus = this.getLocationSellBonus(itemId);
-                const sellMultiplier = Math.min(0.95, 0.75 + locationSellBonus);
-                const itemValue = Math.max(1, Math.floor(this.getItemPrice(itemId) * sellMultiplier));
+                const locationId = game?.currentLocation?.id;
+                const itemOriginRegion = typeof GameWorld !== 'undefined' ? GameWorld.getItemOriginRegion(itemId) : null;
+                const itemValue = (typeof GameWorld !== 'undefined' && locationId) ?
+                    Math.max(1, GameWorld.calculateSellPrice(locationId, itemId, itemOriginRegion)) :
+                    Math.max(1, Math.floor(this.getItemPrice(itemId) * 0.8));
                 playerTotalValue += itemValue * qty;
             }
         }
@@ -994,8 +1006,10 @@ const NPCTradeWindow = {
             if (isCurrency) {
                 npcTotalValue += qty; // 1 gold = 1 value
             } else {
-                const price = this.getItemPrice(itemId);
-                const discountedPrice = Math.ceil(price * (1 - this.currentDiscount / 100));
+                const locationId = game?.currentLocation?.id;
+                const locationBuyPrice = (typeof GameWorld !== 'undefined' && locationId) ?
+                    GameWorld.calculateBuyPrice(locationId, itemId) : this.getItemPrice(itemId);
+                const discountedPrice = Math.ceil(locationBuyPrice * (1 - this.currentDiscount / 100));
                 npcTotalValue += discountedPrice * qty;
             }
         }

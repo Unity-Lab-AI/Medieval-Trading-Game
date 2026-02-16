@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // CREDITS SYSTEM - rolling credits for the main menu about button
 // ═══════════════════════════════════════════════════════════════
-// Version: 0.91.10 | Unity AI Lab
+// Version: 0.92.00 | Unity AI Lab
 // Creators: Hackall360, Sponge, GFourteen
 // www.unityailab.com | github.com/Unity-Lab-AI/Medieval-Trading-Game
 // unityailabcontact@gmail.com
@@ -43,7 +43,7 @@ const CreditsSystem = {
         ];
         const playtesters = config?.credits?.playtesters || [];
         const copyright = config?.credits?.copyright || '© 2025 Unity AI Lab. All rights reserved.';
-        const version = config?.version?.game || '0.91.10';
+        const version = config?.version?.game || '0.92.00';
 
         // Get social links
         const links = config?.links || {};

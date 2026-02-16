@@ -9,7 +9,7 @@
 ═══════════════════════════════════════════════════════════════════════
 ```
 
-> **Version:** 0.91.10 | **Last Updated:** Check git blame
+> **Version:** v0.92.00 | **Last Updated:** Check git blame
 
 ---
 
@@ -195,11 +195,11 @@ These three objects are the heart of everything. Touch with extreme care.
 
 ### Recommended Extraction Order
 
-1. ~~**DedupeLogger**~~ - ✅ EXTRACTED Session #77 → `src/js/core/dedupe-logger.js`
-2. ~~**GameLogger**~~ - ✅ EXTRACTED Session #77 → `src/js/core/game-logger.js`
-3. ~~**LeaderboardFeatures**~~ - ✅ EXTRACTED Session #77 → `src/js/core/leaderboard-features.js`
-4. ~~**GoldManager**~~ - ✅ EXTRACTED Session #77 → `src/js/core/gold-manager.js`
-5. ~~**LocationPanelStack**~~ - ✅ EXTRACTED Session #77 → `src/js/ui/location-panel-stack.js`
+1. ~~**DedupeLogger**~~ - EXTRACTED Session #77 -> `src/js/core/dedupe-logger.js`
+2. ~~**GameLogger**~~ - EXTRACTED Session #77 -> `src/js/core/game-logger.js`
+3. ~~**LeaderboardFeatures**~~ - EXTRACTED Session #77 -> `src/js/core/leaderboard-features.js`
+4. ~~**GoldManager**~~ - EXTRACTED Session #77 -> `src/js/core/gold-manager.js`
+5. ~~**LocationPanelStack**~~ - EXTRACTED Session #77 -> `src/js/ui/location-panel-stack.js`
 
 ### DO NOT EXTRACT (Too Risky)
 
@@ -332,7 +332,7 @@ window.TimeSystem.pause(); // might be undefined!
 // ═══════════════════════════════════════════════════════════════
 // MY-NEW-SYSTEM - what it does in one line
 // ═══════════════════════════════════════════════════════════════
-// Version: 0.90.01 | Unity AI Lab
+// Version: 0.92.00 | Unity AI Lab
 // ═══════════════════════════════════════════════════════════════
 
 const MyNewSystem = {

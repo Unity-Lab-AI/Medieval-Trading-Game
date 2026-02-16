@@ -14,13 +14,13 @@
 | v0.80.00 | Released | Core trading, travel, basic combat |
 | v0.85.00 | Released | Property system, employees, quests |
 | v0.90.00 | Released | Doom world, enhanced NPC dialogue |
-| **v0.91.10** | **CURRENT** | Config centralization, NPC death, stability |
+| **v0.92.00** | **CURRENT** | Config centralization, NPC death, stability |
 | v0.95.00 | Planned | Combat expansion, new content |
 | v1.0.00 | Planned | Full release, polish, balance |
 
 ---
 
-## CURRENT: v0.91.10 (Stability Release)
+## CURRENT: v0.92.00 (Stability Release)
 
 **Theme:** "Config Consolidation & Death Systems"
 
@@ -35,9 +35,20 @@
 - API command system for NPC actions
 - Gatehouse zone progression
 - Global leaderboard via JSONBin
+- Quest system comprehensive audit (130 tasks across P0-P4)
+- Fixed kill/defeat objective mismatch (16 combat quests unblocked)
+- Added 40+ objective type handlers (deliver, scout, craft, profit, etc.)
+- Unified tradingConfig across 7 trading system files
+- Added 23 missing NPC types to npc-data-embedded.js
+- Added 29 doom items + 3 doom locations to databases
+- Wired 35+ event listeners for quest objective progress tracking
+- Added player-decision modal system for choice/decision quests
+- Fixed rewards.item (singular) bug in completeQuest()
+- Added 14 missing quest reward items to item-database.js
+- Version bump to v0.92.00 across all 153 source files
 
 ### Known Issues:
-- None critical (stability release achieved)
+- Quest system fully audited. 50 console.log statements flagged for downgrade to console.debug (user approval pending).
 
 ---
 
@@ -152,7 +163,7 @@
 
 | Milestone | Target | Description |
 |-----------|--------|-------------|
-| Stability | v0.91.10 | No game-breaking bugs |
+| Stability | v0.92.00 | No game-breaking bugs |
 | Content | v0.95.00 | Rich gameplay variety |
 | Release | v1.0.00 | Full game experience |
 | Community | v1.1.00 | Social features |

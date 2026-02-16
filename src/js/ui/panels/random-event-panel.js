@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // RANDOM EVENT PANEL - when fate decides to mess with you
 // ═══════════════════════════════════════════════════════════════
-// File Version: 0.91.10
+// File Version: 0.92.00
 // conjured by Unity AI Lab - showing players what chaos befalls them
 // uses the same panel pattern as People Panel for consistency
 // ═══════════════════════════════════════════════════════════════

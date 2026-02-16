@@ -1,7 +1,7 @@
 // 
 // SKILL SYSTEM - power through practice and pain
 // 
-// Version: 0.91.10 | Unity AI Lab
+// Version: 0.92.00 | Unity AI Lab
 // Creators: Hackall360, Sponge, GFourteen
 // www.unityailab.com | github.com/Unity-Lab-AI/Medieval-Trading-Game
 // unityailabcontact@gmail.com
@@ -27,7 +27,7 @@
 // - Crafting: getCraftingBonuses() for the maker
 //
 // @author Unity AI Lab by Hackall360 Sponge GFourteen www.unityailab.com
-// @version 0.91.10
+// @version 0.92.00
 // 
 
 const SkillSystem = {

@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // GAME WORLD SYSTEM - where dreams die and gold lives in darkness
 // ═══════════════════════════════════════════════════════════════
-// Version: 0.91.10 | Unity AI Lab
+// Version: 0.92.00 | Unity AI Lab
 // Creators: Hackall360, Sponge, GFourteen
 // www.unityailab.com | github.com/Unity-Lab-AI/Medieval-Trading-Game
 // unityailabcontact@gmail.com
@@ -112,7 +112,7 @@ const GameWorld = {
             mapPosition: { x: 560, y: 280 },
             sells: ['silk', 'spices', 'tea', 'exotic_goods', 'porcelain', 'jade', 'perfume', 'rope', 'canvas', 'salt', 'mule', 'donkey', 'hand_cart', 'cart'],
             buys: ['fish', 'grain', 'timber', 'furs', 'iron_bar', 'gems', 'wine'],
-            npcs: ['merchant', 'dockmaster', 'guard', 'sailor', 'ferryman'] // Quest: jade_harbor quests need merchant, guard (innkeeper only at inns!)
+            npcs: ['merchant', 'dockmaster', 'guard', 'sailor', 'ferryman', 'harbormaster'] // Quest: jade_harbor quests need merchant, guard, harbormaster for jade_smugglers chain
         },
         greendale: {
             id: 'greendale',
@@ -765,7 +765,7 @@ const GameWorld = {
             mapPosition: { x: 240, y: 300 },
             sells: ['bricks', 'mortar', 'tools', 'hammer', 'pickaxe', 'nails', 'planks', 'furniture', 'hand_cart', 'cart'],
             buys: ['stone', 'timber', 'wood', 'iron_bar', 'clay', 'coal'],
-            npcs: ['merchant', 'guard', 'blacksmith', 'mason'] // VILLAGE - behind the gate
+            npcs: ['merchant', 'guard', 'blacksmith', 'mason', 'sergeant'] // VILLAGE - behind the gate, sergeant for western_bandits chain
         },
 
         // ═══════════════════════════════════════════════════════════
@@ -1607,23 +1607,40 @@ const GameWorld = {
         }
     },
 
-    // Capital market premium modifiers
-    capitalPricing: {
-        buyMultiplier: 1.5,  // Items cost 50% more to BUY at capital
-        sellMultiplier: 1.35 // You get 35% more when SELLING at capital
-    },
+    // ═══════════════════════════════════════════════════════════
+    // UNIFIED TRADING CONFIG - ALL price multipliers in ONE place
+    // This is THE source of truth for every buy/sell calculation
+    // Consumed by: calculateBuyPrice() and calculateSellPrice() below,
+    //   which are called from npc-trade.js and game.js
+    // ═══════════════════════════════════════════════════════════
+    tradingConfig: {
+        // Base sell multiplier - what % of base price you get when selling
+        // 0.8 means you get 80% of base price BEFORE location modifiers
+        // With demand bonus (1.4x), selling where needed = 0.8 * 1.4 = 1.12x = PROFIT
+        // Buying from producer = 0.65x base, so margin = 1.12 / 0.65 = 72% profit
+        baseSellMultiplier: 0.8,
 
-    // Doom World pricing - BARTER ECONOMY, gold is worthless!
-    // Food/water = most valuable, gold/luxury = nearly worthless
-    doomPricing: {
-        // When bringing normal goods TO doom world
-        normalGoodsInDoom: 1.5,   // Untainted goods are valuable
-        // When bringing doom goods TO normal world
-        doomGoodsInNormal: 1.8,   // Rare doom artifacts/materials
-        // When selling food/water in doom
-        survivalGoodsBonus: 3.0,  // Survival essentials are GOLD in doom
-        // When selling luxury in doom
-        luxuryPenalty: 0.1        // Gold/gems/silk nearly worthless
+        // Location supply/demand modifiers
+        localProductDiscount: 0.65,  // Buy price at producer (35% cheaper - they make it here)
+        importMarkup: 1.25,          // Buy price at importer (25% more - they need to ship it in)
+        demandBonus: 1.4,            // Sell price when location WANTS this item (+40%)
+        oversupplyPenalty: 0.75,     // Sell price when location already PRODUCES it (-25%)
+
+        // Capital city modifiers
+        capitalBuyMarkup: 1.5,       // Capital items cost 50% more to buy
+        capitalSellBonus: 1.35,      // Capital pays 35% more when you sell
+
+        // Doom World pricing - BARTER ECONOMY, gold is worthless!
+        doom: {
+            normalGoodsInDoom: 1.5,   // Untainted goods are valuable in doom
+            doomGoodsInNormal: 1.8,   // Rare doom artifacts/materials in normal world
+            survivalGoodsBonus: 3.0,  // Food/water are GOLD in doom
+            luxuryPenalty: 0.1        // Gold/gems/silk nearly worthless in doom
+        },
+
+        // NPC merchant personality range (used by npc-trade.js)
+        npcSellFloor: 0.85,          // Worst NPC sell multiplier (stingy merchant)
+        npcSellCeiling: 1.15         // Best NPC sell multiplier (generous/desperate)
     },
 
     // Check if currently in doom world
@@ -1733,7 +1750,7 @@ const GameWorld = {
 
             // Normal world goods are valuable imports in doom
             if (!this.isDoomItem(itemId) && !this.isLuxuryItem(itemId)) {
-                modifier *= this.doomPricing.normalGoodsInDoom;
+                modifier *= this.tradingConfig.doom.normalGoodsInDoom;
             }
 
             return modifier; // Skip normal world modifiers in doom
@@ -1745,18 +1762,18 @@ const GameWorld = {
 
         // Capital premium - everything costs more here
         if (location.type === 'capital' || location.region === 'capital') {
-            modifier *= this.capitalPricing.buyMultiplier;
+            modifier *= this.tradingConfig.capitalBuyMarkup;
         }
 
         // If location SELLS this item (produces it), it's CHEAPER to buy here
         if (location.sells && location.sells.includes(itemId)) {
-            modifier *= 0.65; // 35% discount on locally produced goods
+            modifier *= this.tradingConfig.localProductDiscount;
         }
 
         // If location BUYS this item (needs it), it's more EXPENSIVE
         // (they import it, so markup)
         if (location.buys && location.buys.includes(itemId)) {
-            modifier *= 1.25; // 25% markup on imported goods
+            modifier *= this.tradingConfig.importMarkup;
         }
 
         return modifier;
@@ -1784,7 +1801,7 @@ const GameWorld = {
 
             // Bringing survival goods from normal world = HUGE bonus
             if (isSurvival && !isDoomItem) {
-                modifier *= this.doomPricing.survivalGoodsBonus;
+                modifier *= this.tradingConfig.doom.survivalGoodsBonus;
                 // Regional origin bonus on top
                 if (itemOriginRegion) {
                     const doomBonuses = this.regionTradeBonus.doom;
@@ -1796,12 +1813,12 @@ const GameWorld = {
 
             // Luxury goods are nearly worthless in doom
             if (isLuxury) {
-                modifier *= this.doomPricing.luxuryPenalty;
+                modifier *= this.tradingConfig.doom.luxuryPenalty;
             }
 
             // Regular normal goods still get a bonus
             if (!isDoomItem && !isSurvival && !isLuxury) {
-                modifier *= this.doomPricing.normalGoodsInDoom;
+                modifier *= this.tradingConfig.doom.normalGoodsInDoom;
             }
 
             return modifier; // Skip normal world modifiers
@@ -1813,7 +1830,7 @@ const GameWorld = {
 
         // Doom goods are rare and valuable in the normal world!
         if (isDoomItem) {
-            modifier *= this.doomPricing.doomGoodsInNormal;
+            modifier *= this.tradingConfig.doom.doomGoodsInNormal;
             // Apply regional bonus for doom goods
             const regionBonuses = this.regionTradeBonus[location.region];
             if (regionBonuses && regionBonuses.doom) {
@@ -1823,18 +1840,18 @@ const GameWorld = {
 
         // Capital premium - you get more for selling here
         if (location.type === 'capital' || location.region === 'capital') {
-            modifier *= this.capitalPricing.sellMultiplier;
+            modifier *= this.tradingConfig.capitalSellBonus;
         }
 
         // If location BUYS this item (needs it), pay MORE for it
         if (location.buys && location.buys.includes(itemId)) {
-            modifier *= 1.4; // 40% bonus - they want this!
+            modifier *= this.tradingConfig.demandBonus;
         }
 
         // If location SELLS this item (produces it), pay LESS
         // (they have plenty, don't need yours)
         if (location.sells && location.sells.includes(itemId)) {
-            modifier *= 0.75; // 25% penalty - oversupplied
+            modifier *= this.tradingConfig.oversupplyPenalty;
         }
 
         // Regional trade bonus - goods from far away are worth more
@@ -1883,9 +1900,10 @@ const GameWorld = {
         const item = ItemDatabase?.getItem?.(itemId);
         if (!item) return 0;
 
-        // Base sell price is 60% of base (40% cut for merchant)
+        // Base sell price uses unified config multiplier
+        // 0.8 = 80% of base, so with demand bonus (1.4x) you get 1.12x = PROFIT
         const basePrice = ItemDatabase.calculatePrice(itemId);
-        const baseSellPrice = Math.round(basePrice * 0.6);
+        const baseSellPrice = Math.round(basePrice * this.tradingConfig.baseSellMultiplier);
         const locationMod = this.getSellPriceModifier(locationId, itemId, itemOriginRegion);
 
         return Math.round(baseSellPrice * locationMod);

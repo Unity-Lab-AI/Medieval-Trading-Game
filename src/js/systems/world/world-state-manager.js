@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // WORLD-STATE-MANAGER - single source of truth for world/location state
 // ═══════════════════════════════════════════════════════════════
-// Version: 0.91.10 | Unity AI Lab
+// Version: 0.92.00 | Unity AI Lab
 // Creators: Hackall360, Sponge, GFourteen
 // ═══════════════════════════════════════════════════════════════
 // Unifies scattered location state from:

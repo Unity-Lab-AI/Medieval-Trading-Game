@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // TUTORIAL QUESTS - Comprehensive Game Teaching System
 // ═══════════════════════════════════════════════════════════════
-// Version: 0.91.10 | Unity AI Lab
+// Version: 0.92.00 | Unity AI Lab
 // 30+ Tutorial Quests across 7 Acts
 // Teaches: EVERY UI element, button, tooltip, system, and mechanic
 // ═══════════════════════════════════════════════════════════════
@@ -13,7 +13,7 @@ const TutorialQuests = {
     tutorialInfo: {
         name: 'Merchant\'s Apprentice',
         totalActs: 6,  // FIX: Acts 0-5 = 6 acts (not 7)
-        totalQuests: 29,  // FIX: 4+5+6+5+5+4 = 29 quests (not 32)
+        totalQuests: 28,  // FIX: 3+5+6+5+5+4 = 28 quests (tutorial_0_4 deleted)
         estimatedTime: '20-35 minutes',
         description: 'A comprehensive tutorial that teaches EVERY game mechanic through guided quests. Master trading, travel, combat, survival, and all UI systems before starting your real adventure.'
     },

@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // OLLAMA AUTO-INSTALLER - Downloads and installs Ollama automatically
 // ═══════════════════════════════════════════════════════════════
-// Version: 0.91.10 | Unity AI Lab
+// Version: 0.92.00 | Unity AI Lab
 // Auto-installs Ollama to game directory and downloads required models
 // ═══════════════════════════════════════════════════════════════
 

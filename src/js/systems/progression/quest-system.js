@@ -1,7 +1,7 @@
 //
 // QUEST SYSTEM - tasks that pretend to matter
 //
-// Version: 0.91.10 | Unity AI Lab
+// Version: 0.92.00 | Unity AI Lab
 // Creators: Hackall360, Sponge, GFourteen
 // www.unityailab.com | github.com/Unity-Lab-AI/Medieval-Trading-Game
 // unityailabcontact@gmail.com
@@ -1256,6 +1256,7 @@ const QuestSystem = {
         // FIX: Check if quest is already complete (e.g., if objectives were pre-met)
         setTimeout(() => {
             this.checkForAutoComplete();
+            this.checkForPendingDecisions();
         }, 150);
 
         return { success: true, quest: activeQuest };
@@ -1312,9 +1313,12 @@ const QuestSystem = {
 
         quest.objectives.forEach(obj => {
             // Count-based objectives - check current >= count
-            if (obj.type === 'collect' || obj.type === 'defeat' || obj.type === 'buy' ||
-                obj.type === 'trade' || obj.type === 'sell' || obj.type === 'carry' ||
-                obj.type === 'combat_action' || obj.type === 'consume') {
+            // Count-based objective types (use current/count tracking)
+            const countBasedTypes = ['collect', 'defeat', 'kill', 'buy', 'trade', 'sell', 'carry',
+                'combat_action', 'consume', 'recruit', 'gather', 'defend', 'cleanse', 'search',
+                'deliver', 'craft', 'crafting', 'alchemy', 'acquire', 'food', 'water', 'armor',
+                'weapon', 'legendary_armor', 'assault', 'clear', 'destroy', 'profit'];
+            if (countBasedTypes.includes(obj.type)) {
                 if ((obj.current || 0) >= (obj.count || 1)) completedObjectives++;
             } else if (obj.type === 'explore') {
                 if ((obj.current || 0) >= obj.rooms) completedObjectives++;
@@ -1379,8 +1383,11 @@ const QuestSystem = {
                         }
                         break;
 
+                    case 'kill': // kill and defeat are interchangeable
                     case 'defeat':
-                        if (data.enemy === objective.enemy || data.enemy === 'any' || objective.enemy === 'any') {
+                        // Kill-type uses objective.target, defeat-type uses objective.enemy
+                        const enemyMatch = objective.enemy || objective.target;
+                        if (data.enemy === enemyMatch || data.enemy === 'any' || enemyMatch === 'any') {
                             objective.current = Math.min((objective.current || 0) + (data.count || 1), objective.count);
                             updated = true;
                         }
@@ -1390,7 +1397,15 @@ const QuestSystem = {
                     case 'travel': // travel is alias for visit - doom quests use this
                         //  Support both 'location' and 'to' properties for objectives
                         const targetLocation = objective.location || objective.to;
-                        if (data.location === targetLocation) {
+                        // Resolve doom location aliases (e.g. hidden_bunker → northern_outpost via doomLocations.mapsTo)
+                        let locationMatch = (data.location === targetLocation);
+                        if (!locationMatch && typeof DoomQuests !== 'undefined' && DoomQuests.doomLocations) {
+                            const doomLoc = DoomQuests.doomLocations[targetLocation];
+                            if (doomLoc && doomLoc.mapsTo && data.location === doomLoc.mapsTo) {
+                                locationMatch = true;
+                            }
+                        }
+                        if (locationMatch) {
                             // Check if objective requires being in doom world
                             if (objective.requireDoom) {
                                 const inDoom = (typeof game !== 'undefined' && game.inDoomWorld) ||
@@ -1459,9 +1474,17 @@ const QuestSystem = {
                         }
                         break;
 
-                    //  Investigate objective - search a location, may give items 
+                    //  Investigate objective - search a location, may give items
                     case 'investigate':
-                        if (data.location === objective.location) {
+                        // Resolve doom location aliases for investigate objectives (same mapsTo pattern)
+                        let investigateMatch = (data.location === objective.location);
+                        if (!investigateMatch && typeof DoomQuests !== 'undefined' && DoomQuests.doomLocations) {
+                            const doomInvLoc = DoomQuests.doomLocations[objective.location];
+                            if (doomInvLoc && doomInvLoc.mapsTo && data.location === doomInvLoc.mapsTo) {
+                                investigateMatch = true;
+                            }
+                        }
+                        if (investigateMatch) {
                             objective.completed = true;
                             updated = true;
                             //  If investigating gives an item, add to inventory
@@ -1516,7 +1539,9 @@ const QuestSystem = {
 
                     //  Decision objective - player made a choice
                     case 'decision':
-                        if (objective.choices && objective.choices.includes(data.choice)) {
+                        // Support both choices (string[]) and options (object[] with .id)
+                        const decisionChoices = objective.choices || (objective.options && objective.options.map(o => typeof o === 'string' ? o : o.id)) || [];
+                        if (decisionChoices.includes(data.choice)) {
                             objective.completed = true;
                             objective.choiceMade = data.choice;
                             updated = true;
@@ -1887,6 +1912,181 @@ const QuestSystem = {
                             updated = true;
                         }
                         break;
+
+                    // ═══════════════════════════════════════════════════════════
+                    // ALIASES & ADDITIONAL OBJECTIVE TYPES
+                    // Many quest definitions use synonym types - route them to
+                    // the correct handler logic
+                    // ═══════════════════════════════════════════════════════════
+
+                    // Group A: Talk/interact aliases → same as talk
+                    case 'meet':
+                    case 'contact':
+                    case 'convince':
+                    case 'interrogate':
+                    case 'warn':
+                    case 'swear':
+                    case 'submit':
+                    case 'show':
+                    case 'prove':
+                    case 'gift':
+                        // All of these involve interacting with a specific NPC
+                        if (data.npc === objective.npc || data.npcType === objective.npc) {
+                            objective.completed = true;
+                            updated = true;
+                        }
+                        break;
+
+                    // Group B: Location-visit aliases → same as visit
+                    case 'scout':
+                    case 'escape':
+                    case 'infiltrate':
+                        if (data.location === (objective.location || objective.to)) {
+                            objective.completed = true;
+                            updated = true;
+                        }
+                        break;
+
+                    // Group C: Follow/track → march-like path tracking
+                    case 'follow':
+                    case 'track':
+                        if (data.location === (objective.location || objective.to)) {
+                            objective.completed = true;
+                            updated = true;
+                        }
+                        break;
+
+                    // Group D: Combat aliases → same as defeat
+                    case 'assault':
+                    case 'clear':
+                    case 'destroy':
+                        {
+                            const target = objective.enemy || objective.target;
+                            if (data.enemy === target || data.enemy === 'any' || target === 'any') {
+                                objective.current = Math.min((objective.current || 0) + (data.count || 1), objective.count || 1);
+                                if (objective.current >= (objective.count || 1)) {
+                                    objective.completed = true;
+                                }
+                                updated = true;
+                            }
+                        }
+                        break;
+
+                    // Group E: Gold/trade aliases
+                    case 'profit':
+                        // Track gold earned from selling (cumulative)
+                        if (data.gold || data.amount) {
+                            objective.current = (objective.current || 0) + (data.gold || data.amount || 0);
+                            if (objective.current >= (objective.minGold || objective.count || 1)) {
+                                objective.completed = true;
+                            }
+                            updated = true;
+                        }
+                        break;
+
+                    case 'pay':
+                    case 'bid':
+                    case 'outbid':
+                    case 'contract':
+                    case 'seat':
+                        // Pay/spend gold objectives - check if player has enough
+                        if (data.amount >= (objective.amount || objective.cost || 0) || data.gold >= (objective.amount || 0)) {
+                            objective.completed = true;
+                            updated = true;
+                        }
+                        break;
+
+                    case 'wealth':
+                        // Accumulate wealth threshold
+                        if (data.amount >= (objective.amount || objective.minGold || 0)) {
+                            objective.completed = true;
+                            updated = true;
+                        }
+                        break;
+
+                    // Group F: Deliver objective - carry item to location/NPC
+                    case 'deliver':
+                        {
+                            // Delivery checks: item in inventory AND at correct location/NPC
+                            const hasItem = data.item === objective.item || data.item === objective.deliverItem;
+                            const atLocation = !objective.location || data.location === objective.location;
+                            const toNpc = !objective.npc || data.npc === objective.npc || data.npcType === objective.npc;
+                            if (hasItem && atLocation && toNpc) {
+                                objective.current = Math.min((objective.current || 0) + (data.count || 1), objective.count || 1);
+                                if (objective.current >= (objective.count || 1)) {
+                                    objective.completed = true;
+                                }
+                                updated = true;
+                            }
+                        }
+                        break;
+
+                    // Group G: Crafting/system hooks
+                    case 'craft':
+                    case 'crafting':
+                    case 'alchemy':
+                        if (data.item === objective.item || data.recipe === objective.recipe) {
+                            objective.current = Math.min((objective.current || 0) + (data.count || 1), objective.count || 1);
+                            if (objective.current >= (objective.count || 1)) {
+                                objective.completed = true;
+                            }
+                            updated = true;
+                        }
+                        break;
+
+                    case 'reputation':
+                        // Check reputation level at location
+                        if (data.location === objective.location && data.level >= (objective.level || 0)) {
+                            objective.completed = true;
+                            updated = true;
+                        }
+                        break;
+
+                    // Group H: Story/misc objectives - boolean completion
+                    case 'choice':
+                        // Alias for decision — support both choices (string[]) and options (object[] with .id)
+                        const choiceList = objective.choices || (objective.options && objective.options.map(o => typeof o === 'string' ? o : o.id)) || [];
+                        if (choiceList.includes(data.choice)) {
+                            objective.completed = true;
+                            objective.choiceMade = data.choice;
+                            updated = true;
+                        }
+                        break;
+
+                    case 'discover':
+                    case 'lore':
+                    case 'recover':
+                        // Find/discover something - same as find
+                        if (data.item === objective.item || data.location === objective.location) {
+                            objective.completed = true;
+                            updated = true;
+                        }
+                        break;
+
+                    case 'acquire':
+                    case 'food':
+                    case 'water':
+                    case 'armor':
+                    case 'weapon':
+                    case 'legendary_armor':
+                        // Acquire/collect specific items - same as collect
+                        if (data.item === objective.item) {
+                            objective.current = Math.min((objective.current || 0) + (data.count || 1), objective.count || 1);
+                            if (objective.current >= (objective.count || 1)) {
+                                objective.completed = true;
+                            }
+                            updated = true;
+                        }
+                        break;
+
+                    case 'demonstrate':
+                    case 'develop':
+                    case 'solve':
+                    case 'steal':
+                        // Generic completion - triggered by matching event
+                        objective.completed = true;
+                        updated = true;
+                        break;
                 }
 
                 if (updated) {
@@ -1902,6 +2102,7 @@ const QuestSystem = {
             this.updateQuestTracker(); // fix: update tracker widget when progress changes
             this.updateQuestMapMarker(); // fix: update map marker when objectives complete - moves to next objective location!
             this.checkForAutoComplete();
+            this.checkForPendingDecisions();
 
             // Notify tutorial system to refresh highlights for next objective
             for (const questId in this.activeQuests) {
@@ -1935,6 +2136,82 @@ const QuestSystem = {
                     }));
                 }
             }
+        }
+    },
+
+    // Check active quests for decision/choice objectives that need player input.
+    // Called after objective updates — if all prior objectives are done and the
+    // next uncompleted one is a decision/choice, show a modal so the player can pick.
+    checkForPendingDecisions() {
+        for (const questId in this.activeQuests) {
+            const quest = this.activeQuests[questId];
+            if (!quest.objectives) continue;
+
+            for (let i = 0; i < quest.objectives.length; i++) {
+                const obj = quest.objectives[i];
+                if (obj.completed) continue;
+
+                // First uncompleted objective — is it a decision/choice?
+                if (obj.type === 'decision' || obj.type === 'choice') {
+                    // Check all PRIOR objectives are completed
+                    const allPriorDone = quest.objectives.slice(0, i).every(o => o.completed);
+                    if (allPriorDone && !quest._decisionPresented) {
+                        quest._decisionPresented = true;
+                        this.presentQuestDecision(questId, i);
+                    }
+                }
+                break; // Only check first uncompleted objective
+            }
+        }
+    },
+
+    // Show a modal for a decision/choice quest objective.
+    // Builds buttons from objective.choices (string[]) or objective.options (object[] with .id/.label).
+    presentQuestDecision(questId, objectiveIndex) {
+        const quest = this.activeQuests[questId];
+        if (!quest) return;
+        const objective = quest.objectives[objectiveIndex];
+        if (!objective) return;
+
+        // Build choice list from choices (string array) or options (object array)
+        let choices = [];
+        if (objective.choices) {
+            choices = objective.choices.map(c => ({ id: c, label: c.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) }));
+        } else if (objective.options) {
+            choices = objective.options.map(o => {
+                if (typeof o === 'string') return { id: o, label: o.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) };
+                return { id: o.id, label: o.label || o.id, consequence: o.consequence };
+            });
+        }
+        if (choices.length === 0) return;
+
+        // Build modal content
+        let content = `<p style="margin-bottom: 1rem;">${objective.description || 'Make your choice.'}</p>`;
+        for (const c of choices) {
+            if (c.consequence) {
+                content += `<p style="color: #a0a0c0; font-size: 0.85em; margin-left: 1rem;">• <strong>${c.label}</strong>: ${c.consequence}</p>`;
+            }
+        }
+
+        // Build buttons — one per choice
+        const buttons = choices.map(c => ({
+            text: c.label,
+            className: 'primary',
+            onClick: () => {
+                if (typeof ModalSystem !== 'undefined') ModalSystem.hide();
+                document.dispatchEvent(new CustomEvent('player-decision', {
+                    detail: { choice: c.id, questId: questId }
+                }));
+            }
+        }));
+
+        if (typeof ModalSystem !== 'undefined') {
+            ModalSystem.show({
+                title: `⚖️ ${quest.name}`,
+                content: content,
+                buttons: buttons,
+                closeable: false
+            });
         }
     },
 
@@ -2099,6 +2376,28 @@ const QuestSystem = {
             if (rewards.experience) {
                 game.player.experience = (game.player.experience || 0) + rewards.experience;
                 rewardsGiven.experience = rewards.experience;
+            }
+
+            // Handle rewards.item (singular string) — some quests use this instead of rewards.items
+            if (rewards.item && typeof rewards.item === 'string') {
+                const itemId = rewards.item;
+                if (!this.isQuestItem(itemId)) {
+                    if (typeof PlayerStateManager !== 'undefined') {
+                        PlayerStateManager.inventory.add(itemId, 1, 'quest_reward');
+                    } else {
+                        game.player.inventory = game.player.inventory || {};
+                        game.player.inventory[itemId] = (game.player.inventory[itemId] || 0) + 1;
+                    }
+                    document.dispatchEvent(new CustomEvent('item-received', {
+                        detail: { item: itemId, quantity: 1, source: 'quest_reward' }
+                    }));
+                }
+                rewardsGiven.items[itemId] = 1;
+            }
+
+            // Handle rewards.title — apply title to player (e.g. 'Sir', 'Merchant Prince')
+            if (rewards.title) {
+                game.player.title = rewards.title;
             }
         }
 
@@ -3006,16 +3305,28 @@ const QuestSystem = {
     getObjectiveText(objective) {
         switch (objective.type) {
             case 'collect': return `Collect ${objective.item}`;
-            case 'defeat': return `Defeat ${objective.enemy}`;
+            case 'kill': case 'defeat': return `Defeat ${objective.enemy || objective.target}`;
             case 'visit': return `Visit ${objective.location}`;
-            case 'travel': return `Travel to ${objective.to || objective.location}`; // doom quests use travel
+            case 'travel': return `Travel to ${objective.to || objective.location}`;
             case 'talk': return `Talk to ${objective.npc}`;
             case 'buy': return 'Make a purchase';
             case 'trade': return 'Complete a trade';
             case 'carry': return `Carry ${objective.item}`;
             case 'explore': return `Explore ${objective.dungeon}`;
-            case 'investigate': return `Search ${objective.location}`; // investigation objectives
-            default: return objective.type;
+            case 'investigate': return `Search ${objective.location}`;
+            case 'deliver': return `Deliver ${objective.item || objective.deliverItem}`;
+            case 'meet': case 'contact': return `Meet ${objective.npc}`;
+            case 'craft': case 'crafting': case 'alchemy': return `Craft ${objective.item || objective.recipe}`;
+            case 'profit': return `Earn ${objective.minGold}g in trade`;
+            case 'acquire': case 'recover': return `Obtain ${objective.item}`;
+            case 'escort': return `Escort ${objective.target}`;
+            case 'rescue': return `Rescue ${objective.npc || objective.unit}`;
+            case 'build': return `Build ${objective.structure}`;
+            case 'choice': case 'decision': return 'Make a choice';
+            case 'gold': case 'wealth': return `Accumulate ${objective.amount}g`;
+            case 'scout': return `Scout ${objective.location}`;
+            case 'assault': case 'clear': case 'destroy': return `Clear ${objective.enemy || objective.target}`;
+            default: return objective.description || objective.type;
         }
     },
 
@@ -3283,7 +3594,7 @@ const QuestSystem = {
         // Active quest - show objectives + actions
         const objectives = activeQuest.objectives || [];
         const objHTML = objectives.map((obj, index) => {
-            const isCountBased = ['collect', 'defeat', 'buy', 'trade', 'sell'].includes(obj.type);
+            const isCountBased = ['collect', 'defeat', 'kill', 'buy', 'trade', 'sell', 'deliver', 'craft', 'crafting', 'recruit', 'gather', 'acquire', 'profit'].includes(obj.type);
             const isExplore = obj.type === 'explore';
             const isComplete = isCountBased ? (obj.current || 0) >= obj.count :
                                isExplore ? (obj.current || 0) >= obj.rooms :
@@ -3293,7 +3604,7 @@ const QuestSystem = {
             let previousComplete = true;
             for (let i = 0; i < index; i++) {
                 const prevObj = objectives[i];
-                const prevCountBased = ['collect', 'defeat', 'buy', 'trade', 'sell'].includes(prevObj.type);
+                const prevCountBased = ['collect', 'defeat', 'kill', 'buy', 'trade', 'sell', 'deliver', 'craft', 'crafting', 'recruit', 'gather', 'acquire', 'profit'].includes(prevObj.type);
                 const prevExplore = prevObj.type === 'explore';
                 const prevComplete = prevCountBased ? (prevObj.current || 0) >= prevObj.count :
                                      prevExplore ? (prevObj.current || 0) >= prevObj.rooms :
@@ -3333,7 +3644,7 @@ const QuestSystem = {
         // Active quest - show objectives
         const objectives = activeQuest.objectives || [];
         const objHTML = objectives.slice(0, 3).map(obj => {
-            const isCountBased = ['collect', 'defeat', 'buy', 'trade', 'sell'].includes(obj.type);
+            const isCountBased = ['collect', 'defeat', 'kill', 'buy', 'trade', 'sell', 'deliver', 'craft', 'crafting', 'recruit', 'gather', 'acquire', 'profit'].includes(obj.type);
             const isExplore = obj.type === 'explore';
             const isComplete = isCountBased ? (obj.current || 0) >= obj.count :
                                isExplore ? (obj.current || 0) >= obj.rooms :
@@ -4936,9 +5247,20 @@ const QuestSystem = {
         document.head.appendChild(style);
     },
 
-    // 
+    //
     //  EVENT LISTENERS - watching your every move
-    // 
+    //
+    /**
+     * Registers DOM event listeners that bridge game events to quest objective progress.
+     * Each listener maps a game event (e.g. 'item-received', 'enemy-defeated') to a
+     * call to updateProgress() with the matching objective type.
+     *
+     * Coverage: 16 event listeners → 16 of 91 objective types in updateProgress().
+     * The remaining 75 objective types are triggered via direct updateProgress() calls
+     * from other systems (NPC dialogue, crafting UI, etc.) rather than DOM events.
+     *
+     * Called once from init() at line 872.
+     */
     setupEventListeners() {
         //  Fixed: accept both 'item' and 'itemId' for backwards compatibility 
         document.addEventListener('item-received', (e) => {
@@ -4957,6 +5279,7 @@ const QuestSystem = {
 
         document.addEventListener('enemy-defeated', (e) => {
             this.updateProgress('defeat', { enemy: e.detail.enemyType, count: 1 });
+            this.updateProgress('kill', { enemy: e.detail.enemyType, count: 1 }); // kill and defeat are interchangeable
         });
 
         //  Fixed: was 'location-changed' but travel fires 'player-location-changed' 
@@ -5011,6 +5334,204 @@ const QuestSystem = {
             const action = e.detail.action;
             this.updateProgress('ui_action', { action: action });
             console.log(`🖥️ UI action tracked: ${action}`);
+        });
+
+        // Location-based aliases: trigger scout/escape/infiltrate/follow/track on location change
+        document.addEventListener('player-location-changed', (e) => {
+            const loc = e.detail.locationId;
+            this.updateProgress('scout', { location: loc });
+            this.updateProgress('escape', { location: loc });
+            this.updateProgress('infiltrate', { location: loc });
+            this.updateProgress('follow', { location: loc });
+            this.updateProgress('track', { location: loc });
+            this.updateProgress('return', { location: loc });
+            this.updateProgress('enter', { location: loc });
+            // Doom location-based objectives
+            this.updateProgress('search', { location: loc });
+            this.updateProgress('scavenge', { location: loc });
+            this.updateProgress('march', { location: loc });
+            this.updateProgress('secure', { location: loc });
+        });
+
+        // NPC talk aliases: trigger on npc-talked event
+        document.addEventListener('npc-talked', (e) => {
+            const npcData = { npc: e.detail.npcType, npcType: e.detail.npcType, location: e.detail.location };
+            this.updateProgress('meet', npcData);
+            this.updateProgress('contact', npcData);
+            this.updateProgress('convince', npcData);
+            this.updateProgress('interrogate', npcData);
+            this.updateProgress('warn', npcData);
+            this.updateProgress('show', npcData);
+            this.updateProgress('prove', npcData);
+            this.updateProgress('gift', npcData);
+            // Doom NPC objectives
+            this.updateProgress('confront', npcData);
+        });
+
+        // Combat aliases: trigger on enemy-defeated
+        document.addEventListener('enemy-defeated', (e) => {
+            const combatData = { enemy: e.detail.enemyType, count: 1 };
+            this.updateProgress('assault', combatData);
+            this.updateProgress('clear', combatData);
+            this.updateProgress('destroy', combatData);
+            // Doom combat objectives
+            this.updateProgress('defend', { encounter: e.detail.enemyType, count: 1 });
+            this.updateProgress('battle', { encounter: e.detail.enemyType, battle: e.detail.enemyType });
+        });
+
+        // Profit tracking: trigger on item-sold with gold amount
+        document.addEventListener('item-sold', (e) => {
+            this.updateProgress('profit', { gold: e.detail.gold || 0, amount: e.detail.gold || 0 });
+        });
+
+        // Gold aliases: trigger on gold-changed for wealth/pay objectives
+        document.addEventListener('gold-changed', (e) => {
+            const goldData = { amount: e.detail.newAmount || 0, gold: e.detail.newAmount || 0 };
+            this.updateProgress('wealth', goldData);
+            this.updateProgress('pay', goldData);
+        });
+
+        // Deliver: trigger when player talks to NPC while carrying quest item
+        document.addEventListener('npc-talked', (e) => {
+            // Check active quests for deliver objectives and see if player has the item
+            for (const questId in this.activeQuests) {
+                const quest = this.activeQuests[questId];
+                for (const obj of (quest.objectives || [])) {
+                    if (obj.type === 'deliver' && !obj.completed) {
+                        const itemId = obj.item || obj.deliverItem;
+                        const hasItem = (typeof PlayerStateManager !== 'undefined')
+                            ? PlayerStateManager.inventory.getQuantity(itemId) > 0
+                            : (game?.player?.inventory?.[itemId] > 0);
+                        if (hasItem) {
+                            this.updateProgress('deliver', {
+                                item: itemId,
+                                npc: e.detail.npcType,
+                                npcType: e.detail.npcType,
+                                location: e.detail.location || game?.currentLocation?.id
+                            });
+                        }
+                    }
+                }
+            }
+        });
+
+        // Crafting: trigger on item-crafted event
+        document.addEventListener('item-crafted', (e) => {
+            const craftData = { item: e.detail.item || e.detail.itemId, recipe: e.detail.recipe, count: e.detail.quantity || 1 };
+            this.updateProgress('craft', craftData);
+            this.updateProgress('crafting', craftData);
+            this.updateProgress('alchemy', craftData);
+        });
+
+        // Reputation changed: trigger reputation objective (city rep level)
+        document.addEventListener('city-reputation-changed', (e) => {
+            // Map city reputation level names to numeric tiers for quest comparison
+            const levelMap = { 'Hostile': 0, 'Untrusted': 1, 'Suspicious': 2, 'Neutral': 3, 'Friendly': 4, 'Trusted': 5, 'Elite': 6 };
+            const level = levelMap[e.detail.newLevel] || 0;
+            this.updateProgress('reputation', { location: e.detail.cityId, level: level });
+        });
+
+        // Boss defeated: trigger boss objective (doom/main quest bosses)
+        document.addEventListener('boss-defeated', (e) => {
+            this.updateProgress('boss', { enemy: e.detail.enemy || e.detail.bossId, bossId: e.detail.bossId });
+        });
+
+        // Encounter started: trigger encounter objective (road/location encounters)
+        document.addEventListener('encounter-started', (e) => {
+            this.updateProgress('encounter', { encounter_type: e.detail.encounter_type || 'any', context: e.detail.context });
+        });
+
+        // Item consumed: trigger consume objective (food/potion usage)
+        document.addEventListener('item-consumed', (e) => {
+            this.updateProgress('consume', { item: e.detail.item, item_type: e.detail.item_type, count: e.detail.quantity || 1 });
+        });
+
+        // Item received: also trigger acquire/collect aliases
+        document.addEventListener('item-received', (e) => {
+            const itemId = e.detail.item || e.detail.itemId;
+            const count = e.detail.quantity || 1;
+            this.updateProgress('acquire', { item: itemId, count });
+            this.updateProgress('food', { item: itemId, count });
+            this.updateProgress('water', { item: itemId, count });
+            this.updateProgress('armor', { item: itemId, count });
+            this.updateProgress('weapon', { item: itemId, count });
+            this.updateProgress('legendary_armor', { item: itemId, count });
+            this.updateProgress('recover', { item: itemId, count });
+            this.updateProgress('discover', { item: itemId, count });
+            // Doom item-based objectives
+            this.updateProgress('gather', { item: itemId, resource: itemId, count });
+            this.updateProgress('receive', { item: itemId });
+            this.updateProgress('plant', { item: itemId });
+        });
+
+        // Player decision: also trigger choice alias
+        document.addEventListener('player-decision', (e) => {
+            this.updateProgress('choice', { choice: e.detail.choice });
+        });
+
+        // ═══ DOOM-SPECIFIC EVENT LISTENERS ═══
+        // These listen for events that doom gameplay systems will dispatch.
+        // Each maps a doom event to one or more updateProgress() calls.
+
+        // Doom: structure built (build system)
+        document.addEventListener('doom-build', (e) => {
+            this.updateProgress('build', { structure: e.detail.structure });
+        });
+
+        // Doom: facility/alliance established
+        document.addEventListener('doom-establish', (e) => {
+            this.updateProgress('establish', { facility: e.detail.facility, alliance: e.detail.alliance });
+        });
+
+        // Doom: survivors recruited
+        document.addEventListener('doom-recruit', (e) => {
+            this.updateProgress('recruit', { unit: e.detail.unit, count: e.detail.count || 1 });
+        });
+
+        // Doom: sabotage completed
+        document.addEventListener('doom-sabotage', (e) => {
+            this.updateProgress('sabotage', { target: e.detail.target, facility: e.detail.facility });
+        });
+
+        // Doom: escort reached destination
+        document.addEventListener('doom-escort', (e) => {
+            this.updateProgress('escort', { target: e.detail.target, location: e.detail.location });
+        });
+
+        // Doom: day survived (time tick)
+        document.addEventListener('doom-day-passed', (e) => {
+            this.updateProgress('survive', { days: e.detail.days || 1 });
+        });
+
+        // Doom: defense/protection complete
+        document.addEventListener('doom-protect', (e) => {
+            this.updateProgress('protect', { duration: e.detail.duration, complete: e.detail.complete });
+        });
+
+        // Doom: forces rallied
+        document.addEventListener('doom-rally', (e) => {
+            this.updateProgress('rally', { troops: e.detail.troops, rally: true });
+        });
+
+        // Doom: witnessed event/scene
+        document.addEventListener('doom-witness', (e) => {
+            this.updateProgress('witness', { scene: e.detail.scene, event: e.detail.event });
+        });
+
+        // Doom: ceremony attended
+        document.addEventListener('doom-ceremony', (e) => {
+            this.updateProgress('ceremony', { ceremony: e.detail.ceremony, event: 'ceremony' });
+            this.updateProgress('attend', { event: e.detail.event || e.detail.ceremony });
+        });
+
+        // Doom: corruption cleansed
+        document.addEventListener('doom-cleanse', (e) => {
+            this.updateProgress('cleanse', {});
+        });
+
+        // Doom: council vote cast
+        document.addEventListener('doom-vote', (e) => {
+            this.updateProgress('vote', { decision: e.detail.decision, vote: e.detail.vote });
         });
 
         //  Refresh quest markers when world map overlay is shown

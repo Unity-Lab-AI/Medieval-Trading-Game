@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // NPC INSTRUCTION TEMPLATES - the soul of every conversation
 // ═══════════════════════════════════════════════════════════════
-// Version: 0.91.10 | Unity AI Lab
+// Version: 0.92.00 | Unity AI Lab
 // Creators: Hackall360, Sponge, GFourteen
 // www.unityailab.com | github.com/Unity-Lab-AI/Medieval-Trading-Game
 //
@@ -73,7 +73,7 @@ const NPCInstructionTemplates = {
             speakingStyle: 'casual and polite',
             background: 'A local going about their business.',
             traits: ['neutral'],
-            greetings: ['Hello there.', 'Good day.', 'What do you need?'],
+            greetings: ['*looks up* What do you need?', '*nods* Something I can help with?', 'Hmm? What is it?'],
             farewells: ['Goodbye.', 'Take care.', 'See you around.'],
             browseGoods: {
                 instruction: 'Respond naturally to the player. Be helpful and in-character.',
@@ -326,7 +326,7 @@ YOUR TASK: Generate a greeting for this traveler who just approached you.
 - Speak DIRECTLY as your character
 
 Example tone (but create something UNIQUE, don't copy these):
-${spec.greetings?.slice(0, 2).map(g => `- "${g}"`).join('\n') || '- "Greetings, traveler."'}
+${spec.greetings?.slice(0, 2).map(g => `- "${g}"`).join('\n') || '- "What brings you here?"'}
 
 Now generate your greeting:`;
     },
@@ -367,11 +367,12 @@ RESPONSE RULES:
 1. Stay completely in character at ALL times
 2. Keep responses to 2-3 sentences. Be concise but informative.
 3. Never break character or mention being an AI
-4. If player asks about quests, use the QUEST SYSTEM section above
-5. Use quest commands like {assignQuest:questId} or {completeQuest:questId} when appropriate
-6. CRITICAL: For quest NPCs, prioritize quest dialogue over generic chat
-7. If you have quests available, mention them naturally in conversation
-8. Commands go in curly braces and are invisible to player - weave them naturally
+4. DO NOT use asterisks or action descriptions like *looks around* or *nods* — speak DIRECTLY as your character with actual dialogue
+5. If player asks about quests, use the QUEST SYSTEM section above
+6. Use quest commands like {assignQuest:questId} or {completeQuest:questId} when appropriate
+7. CRITICAL: For quest NPCs, prioritize quest dialogue over generic chat
+8. If you have quests available, mention them naturally in conversation
+9. Commands go in curly braces and are invisible to player - weave them naturally
 
 AVAILABLE COMMANDS:
 - {assignQuest:questId} - Give a quest to the player
@@ -666,6 +667,10 @@ Example: "Ah yes, ${questName}. You're ${progress}. ${objectives.length > 0 && o
 
     // get voice for NPC type
     getVoice(npcType) {
+        const inDoom = (typeof game !== 'undefined' && game.inDoomWorld);
+        if (inDoom && typeof DoomNPCInstructionTemplates !== 'undefined') {
+            return DoomNPCInstructionTemplates.getDoomNPCVoice(npcType);
+        }
         const spec = this.getNPCSpec(npcType);
         return spec?.voice || 'nova';
     },

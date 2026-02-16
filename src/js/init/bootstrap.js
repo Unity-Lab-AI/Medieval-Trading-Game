@@ -316,12 +316,23 @@ const Bootstrap = {
                 }
             }, timeout);
 
-            Promise.resolve(fn())
-                .then(result => {
+            let result;
+            try {
+                result = fn();
+            } catch (syncError) {
+                // fn() threw synchronously - clear timeout and reject immediately
+                settled = true;
+                clearTimeout(timeoutId);
+                reject(syncError);
+                return;
+            }
+
+            Promise.resolve(result)
+                .then(value => {
                     if (!settled) {
                         settled = true;
                         clearTimeout(timeoutId);
-                        resolve(result);
+                        resolve(value);
                     }
                 })
                 .catch(error => {

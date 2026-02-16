@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // NPC ENCOUNTER SYSTEM - strangers with opinions to share
 // ═══════════════════════════════════════════════════════════════
-// Version: 0.91.10 | Unity AI Lab
+// Version: 0.92.00 | Unity AI Lab
 // Creators: Hackall360, Sponge, GFourteen
 // www.unityailab.com | github.com/Unity-Lab-AI/Medieval-Trading-Game
 // unityailabcontact@gmail.com
@@ -325,6 +325,11 @@ const NPCEncounterSystem = {
         if (this.encounterHistory.length > 50) {
             this.encounterHistory = this.encounterHistory.slice(-50);
         }
+
+        // dispatch encounter-started for quest objective tracking (encounter type)
+        document.dispatchEvent(new CustomEvent('encounter-started', {
+            detail: { encounter_type: encounter.type, context: context, npc: npcData.type || npcData.name }
+        }));
 
         // show encounter dialog
         this.showEncounterDialog(npcData, context);
@@ -753,19 +758,24 @@ const NPCEncounterSystem = {
 
     // show encounter dialog with API TTS for greeting
     async showEncounterDialog(npcData, context) {
-        // get an appropriate greeting message (fallback)
-        const fallbackGreeting = npcData.greetings?.[Math.floor(Math.random() * npcData.greetings.length)]
-            || "Greetings, traveler.";
+        // get greeting from NPC data or embedded data - no generic garbage
+        const npcType = npcData.type || npcData.id;
+        let fallbackGreeting = npcData.greetings?.[Math.floor(Math.random() * npcData.greetings.length)];
+        if (!fallbackGreeting && typeof NPC_EMBEDDED_DATA !== 'undefined' && NPC_EMBEDDED_DATA[npcType]?.greetings?.length) {
+            const spec = NPC_EMBEDDED_DATA[npcType];
+            fallbackGreeting = spec.greetings[Math.floor(Math.random() * spec.greetings.length)];
+        }
+        if (!fallbackGreeting) fallbackGreeting = null;
 
-        // try to get API-generated greeting
+        // OLLAMA handles all speech when active — embedded data only when OLLAMA is off
+        const ollamaActive = typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem._ollamaAvailable;
         let greeting = fallbackGreeting;
         let useAPIVoice = false;
 
         try {
-            if (typeof NPCVoiceChatSystem !== 'undefined' && NPCVoiceChatSystem.settings?.voiceEnabled) {
-                console.log(`🎭 Generating encounter greeting for ${npcData.type}...`);
+            if (ollamaActive) {
+                console.log(`🎭 OLLAMA encounter greeting for ${npcData.type}...`);
 
-                // FIX: Include quest context so NPCs can reference player's active quests
                 const activeQuests = typeof QuestSystem !== 'undefined' && QuestSystem.activeQuests
                     ? Object.values(QuestSystem.activeQuests).map(q => ({
                         id: q.id,
@@ -791,10 +801,14 @@ const NPCEncounterSystem = {
                 if (response && response.text) {
                     greeting = response.text;
                     useAPIVoice = true;
+                } else {
+                    // OLLAMA on but returned empty — greeting stays as embedded data
+                    console.warn(`🎭 OLLAMA encounter empty for ${npcData.type}`);
                 }
             }
         } catch (e) {
-            console.warn('🎭 Encounter greeting API failed, using fallback:', e);
+            // OLLAMA on but errored — greeting stays as embedded data
+            console.warn('🎭 Encounter OLLAMA greeting error:', e);
         }
 
         // create context message

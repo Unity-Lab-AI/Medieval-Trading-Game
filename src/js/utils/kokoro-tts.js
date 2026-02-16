@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // KOKORO TTS - Real AI voices for NPCs (Web Worker version)
 // ═══════════════════════════════════════════════════════════════
-// Version: 0.91.10 | Unity AI Lab
+// Version: 0.92.00 | Unity AI Lab
 // RUNS IN WEB WORKER to prevent UI freezing during generation!
 // REQUIRES: Local server (use START_GAME.bat or START_GAME.sh)
 // ═══════════════════════════════════════════════════════════════
@@ -75,6 +75,14 @@ const KokoroTTS = {
         'ghost': 'bf_isabella', 'demon': 'am_onyx', 'angel': 'bf_lily',
         'goblin': 'am_puck', 'orc': 'am_fenrir', 'elf': 'bf_alice',
         'dwarf': 'am_adam', 'dragon': 'bm_daniel',
+        // Doom world NPC fallbacks (safety net — most use DOOM_NPC_EMBEDDED_DATA voice)
+        'fallen_noble': 'bf_emma', 'crazed_blacksmith': 'am_onyx', 'haunted_elder': 'bm_lewis',
+        'corrupted_druid': 'bm_lewis', 'dying_herbalist': 'af_jessica', 'starving_farmer': 'bm_george',
+        'desperate_innkeeper': 'af_nova', 'blind_lighthouse_keeper': 'bm_lewis',
+        'starving_trapper': 'bm_george', 'grief_stricken_elder': 'bm_lewis',
+        'survival_smuggler': 'bm_daniel', 'doom_crone': 'bf_isabella',
+        'cannibal_chief': 'am_onyx', 'rat_king_survivor': 'am_puck',
+        'mad_treasure_hunter': 'am_echo', 'feral_bandit': 'am_fenrir',
         '_default_female': 'af_bella', '_default_male': 'am_michael', '_default': 'am_michael'
     },
 
@@ -544,7 +552,7 @@ const KokoroTTS = {
         if (!text) return '';
         return text
             .replace(/\{[\w:,]+\}/g, '')
-            .replace(/\*[^*]+\*/g, '')
+            .replace(/\*([^*]+)\*/g, '$1')
             .replace(/<[^>]*>/g, '')
             .replace(/[\u{1F300}-\u{1F9FF}]/gu, '')
             .replace(/\s+/g, ' ')

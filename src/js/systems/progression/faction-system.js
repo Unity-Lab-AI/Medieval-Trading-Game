@@ -1,7 +1,7 @@
 // 
 // FACTION SYSTEM - loyalty is a currency here
 // 
-// Version: 0.91.10 | Unity AI Lab
+// Version: 0.92.00 | Unity AI Lab
 // Creators: Hackall360, Sponge, GFourteen
 // www.unityailab.com | github.com/Unity-Lab-AI/Medieval-Trading-Game
 // unityailabcontact@gmail.com
@@ -971,7 +971,8 @@ const FactionSystem = {
         // Update content with discovered factions
         this.updateFactionPanelContent();
 
-        // Show panel
+        // Show panel — clear hidden class (PanelManager may add it on close)
+        panel.classList.remove('hidden');
         panel.style.display = 'flex';
 
         // Bring to front using DraggablePanels if available, otherwise set z-index directly
@@ -997,8 +998,11 @@ const FactionSystem = {
     toggleFactionPanel() {
         console.log('🏛️ FactionSystem: toggleFactionPanel() called');
         const panel = document.getElementById('faction-panel');
-        console.log('🏛️ FactionSystem: Panel found:', !!panel, panel ? panel.style.display : 'N/A');
-        if (panel && panel.style.display !== 'none') {
+        // Check actual visibility — PanelManager may close via hidden class OR inline style
+        const isVisible = panel && !panel.classList.contains('hidden') &&
+            window.getComputedStyle(panel).display !== 'none';
+        console.log('🏛️ FactionSystem: Panel found:', !!panel, 'visible:', isVisible);
+        if (isVisible) {
             this.hideFactionPanel();
         } else {
             this.showFactionPanel();

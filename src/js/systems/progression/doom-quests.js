@@ -1,11 +1,27 @@
-// 
-//  DOOM WORLD QUESTS - The Apocalyptic Reality 
-// 
-// Version: 0.91.10 | Unity AI Lab
+//
+//  DOOM WORLD QUESTS - The Apocalyptic Reality
+//
+// Version: 0.92.00 | Unity AI Lab
 // 15 Doom World Exclusive Quests + Greedy Won Boss
 // Survival, Resistance, and Boss arcs
 // Access via defeating dungeon bosses (Shadow Tower/Ruins of Malachar)
-// 
+//
+// ── SYSTEM RELATIONSHIP ──────────────────────────────────────────────
+// This file is the DATA LAYER for doom quests. It defines:
+//   - doomInfo, doomEconomy, doomLocations, doomItems (world metadata)
+//   - 15 quests across 3 arcs: survival (5), resistance (5), boss (5)
+//   - Loaded into QuestSystem via DoomQuests.getAllQuests() at quest-system.js:936
+//
+// The COMPANION file is doom-quest-system.js (RUNTIME LAYER), which defines:
+//   - 12 main story quests (3 acts) + 8 standalone side quests (20 total)
+//   - Loaded via DoomQuestSystem.registerDoomQuests() at quest-system.js
+//
+// ZERO quest ID overlap between files. They are COMPLEMENTARY:
+//   - This file: doom_survival_1-5, doom_resistance_1-5, doom_boss_1-5
+//   - Runtime file: doom_arrival, doom_fallen_throne, doom_lost_children, etc.
+//   - Combined: 35 total doom quests
+// ─────────────────────────────────────────────────────────────────────
+//
 
 const DoomQuests = {
     // 
@@ -58,9 +74,15 @@ const DoomQuests = {
         }
     },
 
-    // 
+    //
     //  DOOM WORLD LOCATIONS
-    // 
+    //
+    // Locations prefixed with doom_ are visual overlays of real game-world locations.
+    // Three entries use `mapsTo` — these are phantom quest locations that don't exist
+    // in game-world.js. The quest-system.js travel and investigate handlers resolve
+    // mapsTo aliases so objectives targeting e.g. "hidden_bunker" complete when the
+    // player arrives at the real "northern_outpost" location.
+    //
     doomLocations: {
         doom_greendale: {
             normalName: 'Greendale',
@@ -142,12 +164,45 @@ const DoomQuests = {
             safeZone: true,
             hasPortal: true,
             portalDestination: 'normal_world'
+        },
+        // Phantom locations — quest objectives reference these IDs, mapsTo resolves to real locations
+        resistance_hideout: {
+            normalName: "Smuggler's Cove",
+            doomName: 'Resistance Hideout',
+            description: 'A hidden resistance base in the old smuggling tunnels. Commander Vera runs operations from here.',
+            hasMarket: false,
+            safeZone: true,
+            mapsTo: 'smugglers_cove',
+            threats: []
+        },
+        hidden_bunker: {
+            normalName: 'Northern Outpost',
+            doomName: 'The Hidden Bunker',
+            description: 'The resistance command center, fortified deep within the northern outpost. General Aldric leads from here.',
+            hasMarket: false,
+            safeZone: true,
+            mapsTo: 'northern_outpost',
+            threats: []
+        },
+        doom_core: {
+            normalName: 'Royal Capital',
+            doomName: 'The Doom Core',
+            description: 'The heart of the apocalypse itself. Where Greedy Won draws power from the doom anchor.',
+            hasMarket: false,
+            safeZone: false,
+            mapsTo: 'royal_capital',
+            isBossLocation: true,
+            threats: ['doom_anchor', 'shadow_elite', 'greedy_won']
         }
     },
 
-    // 
+    //
     //  DOOM WORLD EXCLUSIVE ITEMS
-    // 
+    //
+    // NOTE: basePrice values here are METADATA ONLY — they are NOT used at runtime.
+    // Actual game prices come from ItemDatabase.getItem() in item-database.js.
+    // These values may differ significantly from ItemDatabase prices.
+    //
     doomItems: {
         doom_rations: {
             id: 'doom_rations',

@@ -1,7 +1,7 @@
 // 
 // ACHIEVEMENT SYSTEM - hollow victories for hollow souls
 // 
-// Version: 0.91.10 | Unity AI Lab
+// Version: 0.92.00 | Unity AI Lab
 // Creators: Hackall360, Sponge, GFourteen
 // www.unityailab.com | github.com/Unity-Lab-AI/Medieval-Trading-Game
 // unityailabcontact@gmail.com
@@ -2742,6 +2742,10 @@ const AchievementSystem = {
 function openAchievementPanel() {
     const overlay = document.getElementById('achievement-overlay');
     if (overlay) {
+        // Clear any inline display override (PanelManager.closePanel sets display:none inline
+        // which blocks the CSS .active rule from taking effect)
+        overlay.style.display = '';
+        overlay.classList.remove('hidden');
         overlay.classList.add('active');
         populateAchievements();
         updateAchievementProgress();
@@ -2753,6 +2757,7 @@ function closeAchievementPanel() {
     const overlay = document.getElementById('achievement-overlay');
     if (overlay) {
         overlay.classList.remove('active');
+        overlay.style.display = '';  // Clear inline display so CSS takes over cleanly
     }
 }
 

@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // GAME CONFIG - the dark heart of all settings
 // ═══════════════════════════════════════════════════════════════
-// Version: 0.91.10 | Unity AI Lab
+// Version: 0.92.00 | Unity AI Lab
 // Creators: Hackall360, Sponge, GFourteen
 // www.unityailab.com | github.com/Unity-Lab-AI/Medieval-Trading-Game
 // unityailabcontact@gmail.com
@@ -12,10 +12,10 @@ const GameConfig = {
     // 📋 VERSION INFO - tracking our descent into madness
     // ═══════════════════════════════════════════════════════════════
     version: {
-        game: '0.91.10',        // NPC death, trade locks, config overhaul
-        file: '0.91.10',        // keeping pace with the darkness
-        build: '2025.12',      // born in the depths of 2025
-        releaseDate: '2025'    // the year we unleashed this beast
+        game: '0.92.00',        // Quest system audit, doom world fixes, weapon consistency
+        file: '0.92.00',        // keeping pace with the darkness
+        build: '2026.02',      // forged in the fires of 2026
+        releaseDate: '2026'    // the year we conquered the void
     },
 
     // ═══════════════════════════════════════════════════════════════

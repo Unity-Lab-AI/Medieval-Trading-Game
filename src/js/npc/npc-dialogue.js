@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // NPC DIALOGUE SYSTEM - unified voice of all digital souls
 // ═══════════════════════════════════════════════════════════════
-// Version: 0.91.10 | Unity AI Lab
+// Version: 0.92.00 | Unity AI Lab
 // Creators: Hackall360, Sponge, GFourteen
 // www.unityailab.com | github.com/Unity-Lab-AI/Medieval-Trading-Game
 // unityailabcontact@gmail.com
@@ -998,7 +998,7 @@ Be sympathetic, desperate but not pathetic.`
                 NPCChatUI.open(npc, dialogue?.text || this.getMerchantFallback(npcType));
             } else if (typeof addMessage === 'function') {
                 // Fallback to message system
-                addMessage(`${npc.name}: "${dialogue?.text || 'Hello, traveler.'}"`, 'npc');
+                addMessage(`${npc.name}: "${dialogue?.text || this.getMerchantFallback(npcType)}"`, 'npc');
             }
 
             return dialogue;

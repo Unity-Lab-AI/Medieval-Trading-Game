@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // PANEL MANAGER - window state orchestration
 // ═══════════════════════════════════════════════════════════════
-// Version: 0.91.10 | Unity AI Lab
+// Version: 0.92.00 | Unity AI Lab
 // Creators: Hackall360, Sponge, GFourteen
 // www.unityailab.com | github.com/Unity-Lab-AI/Medieval-Trading-Game
 // unityailabcontact@gmail.com
@@ -561,8 +561,9 @@ const PanelManager = {
         // active-class panels need different dark magic
         if (info && info.useActiveClass) {
             panel.classList.remove('active');
-            // overlays also need display:none to fully hide
-            panel.style.display = 'none';
+            // Clear inline display so CSS rules take over cleanly
+            // (setting inline display:none blocks CSS .active from re-showing the panel)
+            panel.style.display = '';
             // some panels have special close rituals
             if (panelId === 'achievement-overlay' && typeof closeAchievementPanel === 'function') {
                 closeAchievementPanel();
@@ -570,6 +571,7 @@ const PanelManager = {
         } else {
             // send normal panels into the hidden realm
             panel.classList.add('hidden');
+            panel.style.display = 'none';
         }
 
         // erase this panel from our stack of open windows

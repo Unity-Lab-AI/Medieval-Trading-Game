@@ -1,7 +1,7 @@
 # 🖤 DEBOOGER README - The Secret Arts of Game Manipulation 🖤🐛
 ## Medieval Trading Game - Debooger Console Documentation
 
-**Version:** 0.91.10 - Ollama AI Auto-Install & Auto-Download
+**Version:** 0.92.00 - Ollama AI Auto-Install & Auto-Download
 **Last Updated:** 2025-12-13
 **Access:** Click the 🐛 Debooger button (bottom-right) OR set `GameConfig.debooger.enabled = true`
 **Total Commands:** 55+
@@ -86,7 +86,7 @@ All 55 debug commands in alphabetical order:
 4. [Gold & Economy Commands](#gold--economy-commands) 💰
 5. [Travel & Location Commands](#travel--location-commands) 🗺️
 6. [Time Commands](#time-commands) ⏰
-7. [State Manager Debug Commands](#state-manager-debug-commands) 🔧 **(NEW v0.91)**
+7. [State Manager Debug Commands](#state-manager-debug-commands) 🔧 **(NEW v0.92)**
 8. [Achievement Commands](#achievement-commands) 🏆
 9. [Leaderboard Commands](#leaderboard-commands) 👑
 10. [Item & Inventory Commands](#item--inventory-commands) 📦
@@ -405,7 +405,7 @@ Quick commands to jump to season start:
 
 *"When you need to peek under the hood of the new architecture..."*
 
-These commands help debug the state management system added in v0.91.
+These commands help debug the state management system added in v0.92.
 
 ### validate
 Validates state consistency between the new state managers and legacy `game.*` object. Checks for mismatches.

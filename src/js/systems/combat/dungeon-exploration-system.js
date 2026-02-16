@@ -1,7 +1,7 @@
 // 
 // DUNGEON EXPLORATION SYSTEM - greed meets darkness
 // 
-// Version: 0.91.10 | Unity AI Lab
+// Version: 0.92.00 | Unity AI Lab
 // Creators: Hackall360, Sponge, GFourteen
 // www.unityailab.com | github.com/Unity-Lab-AI/Medieval-Trading-Game
 // unityailabcontact@gmail.com
@@ -4331,6 +4331,11 @@ const DungeonExplorationSystem = {
             }
         });
         document.dispatchEvent(investigateEvent);
+
+        // Fire area-investigated for quest-system.js investigate objective listener
+        document.dispatchEvent(new CustomEvent('area-investigated', {
+            detail: { location: location.id, area: event.id }
+        }));
 
         // Fire exploration-complete event with full details for advanced quest tracking
         const explorationCompleteEvent = new CustomEvent('exploration-complete', {

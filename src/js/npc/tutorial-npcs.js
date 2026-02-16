@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // TUTORIAL NPCS - The Cast of Characters Who Hand-Hold Noobs
 // ═══════════════════════════════════════════════════════════════
-// Version: 0.91.10 | Unity AI Lab
+// Version: 0.92.00 | Unity AI Lab
 // Creators: Hackall360, Sponge, GFourteen
 //
 // These magnificent bastards are ACTORS in our tutorial play.
@@ -518,7 +518,8 @@ const TutorialNPCs = {
     // Pick a random greeting (keeps things fresh)
     getGreeting(npcId) {
         const npc = this.getNPC(npcId);
-        if (!npc || !npc.greetings || npc.greetings.length === 0) {
+        if (!npc) return null; // Not a tutorial NPC - let other fallback systems handle it
+        if (!npc.greetings || npc.greetings.length === 0) {
             return "Hello, traveler.";
         }
         return npc.greetings[Math.floor(Math.random() * npc.greetings.length)];
@@ -527,7 +528,8 @@ const TutorialNPCs = {
     // Pick a random goodbye (variety is the spice of life)
     getFarewell(npcId) {
         const npc = this.getNPC(npcId);
-        if (!npc || !npc.farewells || npc.farewells.length === 0) {
+        if (!npc) return null; // Not a tutorial NPC - let other fallback systems handle it
+        if (!npc.farewells || npc.farewells.length === 0) {
             return "Farewell.";
         }
         return npc.farewells[Math.floor(Math.random() * npc.farewells.length)];

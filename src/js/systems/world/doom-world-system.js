@@ -1,7 +1,7 @@
 // 
 //  DOOM WORLD SYSTEM - The Apocalypse Controller 
 // 
-// Version: 0.91.10 | Unity AI Lab
+// Version: 0.92.00 | Unity AI Lab
 // Master controller that coordinates all doom world systems:
 // - World state switching (normal <-> doom)
 // - Boatman NPC spawning after boss defeat

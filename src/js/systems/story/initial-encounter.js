@@ -1,7 +1,7 @@
 // 
 // INITIAL ENCOUNTER - where your nightmare begins
 // 
-// Version: 0.91.10 | Unity AI Lab
+// Version: 0.92.00 | Unity AI Lab
 // Creators: Hackall360, Sponge, GFourteen
 // www.unityailab.com | github.com/Unity-Lab-AI/Medieval-Trading-Game
 // unityailabcontact@gmail.com
@@ -515,7 +515,7 @@ const InitialEncounterSystem = {
     },
 
     //  STRANGER ENCOUNTER - the mysterious figure speaks
-    //  Uses proper NPC workflow via NPCInstructionTemplates + Ollama
+    //  Goes through Ollama with NPC arrays as context (same as ALL other NPCs)
     showStrangerEncounter(playerName) {
         // Build proper NPC data that will use hooded_stranger spec from NPC_EMBEDDED_DATA
         const strangerNpcData = {
@@ -529,19 +529,19 @@ const InitialEncounterSystem = {
             emoji: this.mysteriousStranger.emoji
         };
 
-        console.log('🎭 Showing hooded stranger encounter - PeoplePanel will generate via normal NPC workflow');
+        console.log('🎭 Showing hooded stranger encounter - Ollama will generate using NPC arrays');
 
         //  Use unified PeoplePanel for the intro encounter!
         if (typeof PeoplePanel !== 'undefined' && PeoplePanel.showSpecialEncounter) {
             const introNarrative = `A figure in a dark cloak steps forward from the shadows. You cannot see their face beneath the hood, but you sense ancient eyes studying you...`;
 
-            // Let PeoplePanel handle everything via sendGreeting (same as all other NPCs)
+            // null = let sendGreeting generate via Ollama using hooded_stranger NPC arrays
             PeoplePanel.showSpecialEncounter(strangerNpcData, {
                 introText: introNarrative,
-                greeting: null,  // null = let PeoplePanel generate via sendGreeting
+                greeting: null,  // Ollama generates using NPC arrays from npc-data-embedded.js
                 disableChat: true,  // No freeform chat during intro
                 disableBack: true,  // No escape from destiny
-                playVoice: true,  // Let PeoplePanel play voice via normal TTS flow
+                playVoice: true,  // TTS will speak the Ollama response
                 customActions: [
                     {
                         label: 'Accept Quest: First Steps',
@@ -582,7 +582,7 @@ const InitialEncounterSystem = {
                     title: '🎭 The Hooded Stranger',
                     content: `
                         <p style="margin-bottom: 1rem; color: #a0a0c0;">A figure in a dark cloak steps forward from the shadows. You cannot see their face beneath the hood, but you sense ancient eyes studying you.</p>
-                        <p style="font-style: italic; color: #c0a0ff; font-size: 1.1em; margin-bottom: 1rem; line-height: 1.6;">"${strangerDialogue}"</p>
+                        <p style="font-style: italic; color: #c0a0ff; font-size: 1.1em; margin-bottom: 1rem; line-height: 1.6;">"${this._getDefaultStrangerDialogue(playerName, 'Ah... another soul drawn to this land.')}"</p>
                         <p style="color: #f0a0a0; margin-top: 1rem;">The stranger's voice fades like mist in morning light...</p>
                     `,
                     closeable: false,

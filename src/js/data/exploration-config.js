@@ -1,7 +1,7 @@
 //
 // EXPLORATION CONFIG - location-specific exploration options
 //
-// Version: 0.91.10 | Unity AI Lab
+// Version: 0.92.00 | Unity AI Lab
 // This file maps each location type to its available explorations
 // Quest explorations are separate and unlocked by active quests
 //

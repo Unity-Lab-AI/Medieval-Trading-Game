@@ -1,7 +1,7 @@
 // 
 // COMBAT SYSTEM - when words fail, blades speak
 // 
-// Version: 0.91.10 | Unity AI Lab
+// Version: 0.92.00 | Unity AI Lab
 // Creators: Hackall360, Sponge, GFourteen
 // www.unityailab.com | github.com/Unity-Lab-AI/Medieval-Trading-Game
 // unityailabcontact@gmail.com
@@ -1393,6 +1393,10 @@ const CombatSystem = {
                         totalDefeated: game.player.defeatedBosses.length
                     });
                 }
+                // DOM dispatch for quest-system listener (boss objective type)
+                document.dispatchEvent(new CustomEvent('boss-defeated', {
+                    detail: { bossId: combat.enemy.id, enemy: combat.enemy.id, bossName: combat.enemy.name }
+                }));
             }
         }
 

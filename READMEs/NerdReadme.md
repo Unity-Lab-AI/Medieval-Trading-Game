@@ -8,7 +8,7 @@
 ═══════════════════════════════════════════════════════════════════════
 ```
 
-> **Version:** 0.91.10 | **Conjured by: Unity AI Lab - The Fucking Legends**
+> **Version:** 0.92.00 | **Conjured by: Unity AI Lab - The Fucking Legends**
 > *Hackall360 | Sponge | GFourteen*
 > Written in the witching hours when the bugs come out to play
 >
@@ -76,7 +76,7 @@ This game follows a loosely-coupled module architecture where each system is its
 2. **`GameWorld`** - All locations, paths, and world data
 3. **`TimeMachine`** - The heartbeat: time, seasons, stat decay, time skipping
 
-**New State Managers (v0.91+):**
+**New State Managers (v0.92+):**
 4. **`PlayerStateManager`** - Single source of truth for gold, inventory, equipment, stats
 5. **`WorldStateManager`** - Single source of truth for location, doom state, visited locations
 6. **`UIStateManager`** - Panel state, ESC priority stack, localStorage persistence
@@ -261,7 +261,7 @@ EventBus.flushQueue();  // Fire all queued at once
 ## 📁 FILE STRUCTURE
 
 ```
-MTG v0.91.10/
+MTG v0.92.00/
 ├── index.html                    # The summoning circle (entry point)
 ├── config.js                     # Game configuration (GameConfig)
 │
@@ -763,6 +763,32 @@ Travel animations use `TimeMachine.getTotalMinutes()` to sync player marker move
 
 ## 💰 ECONOMY SYSTEMS
 
+### Unified Trading Config
+
+*"One config to rule all three sell paths."*
+
+All pricing flows through a unified `tradingConfig` object in `game-world.js`, consumed by `calculateBuyPrice()` and `calculateSellPrice()`. All 3 sell paths (game.js, npc-trade.js, game-world.js) now use this unified config.
+
+```javascript
+GameWorld.tradingConfig = {
+    baseSellMultiplier: 0.8,      // 80% of base price before location mods
+    localProductDiscount: 0.65,   // Buy price at producer (35% cheaper)
+    importMarkup: 1.25,           // Buy price at importer (25% more)
+    demandBonus: 1.4,             // Sell price where item is wanted (+40%)
+    oversupplyPenalty: 0.75,      // Sell price where item is produced (-25%)
+    capitalBuyMarkup: 1.5,        // Capital items cost 50% more
+    capitalSellBonus: 1.35,       // Capital pays 35% more for sells
+    doom: {
+        normalGoodsInDoom: 1.5,   // Untainted goods valuable in doom
+        doomGoodsInNormal: 1.8,   // Doom artifacts valuable in normal
+        survivalGoodsBonus: 3.0,  // Food/water are GOLD in doom
+        luxuryPenalty: 0.1        // Gems/silk nearly worthless in doom
+    },
+    npcSellFloor: 0.85,          // Worst NPC sell multiplier
+    npcSellCeiling: 1.15         // Best NPC sell multiplier
+};
+```
+
 ### trading-system.js - The Art of the Deal
 
 *"Buy low, sell high, try not to starve."*
@@ -1228,6 +1254,21 @@ getResourceWeight(resourceId) {
 
 The Doom World is an alternate dimension accessible through dungeon portals after defeating bosses. It shares the same map layout but with corrupted locations, inverted economy, and separate discovery tracking.
 
+### Two Complementary Quest Systems
+
+The doom quest architecture is split into two complementary files with **zero quest ID overlap**:
+
+| File | Role | Content |
+|------|------|---------|
+| `doom-quests.js` | **DATA layer** | 15 quests (3 arcs: survival x5, resistance x5, boss x5) + world metadata (`doomInfo`, `doomEconomy`, `doomLocations`, `doomItems`). Loaded via `DoomQuests.getAllQuests()`. |
+| `doom-quest-system.js` | **RUNTIME layer** | 19 quests (11 main story across 3 acts + 8 standalone side quests with tragedy/moral choice themes). Loaded via `DoomQuestSystem.registerDoomQuests()`. |
+
+**doomLocations mapsTo Alias System:**
+Quest locations like `hidden_bunker` map to real game locations like `northern_outpost` via the `doomLocations.mapsTo` field. The `updateProgress()` method resolves these aliases for visit, travel, and investigate objectives so quests can reference fictional doom location names while matching against actual map locations.
+
+**29 Doom-Specific Objective Types** with dedicated event listeners:
+`build`, `establish`, `recruit`, `secure`, `defend`, `battle`, `survive`, `protect`, `rally`, `rescue`, `escort`, `march`, `enter`, `return`, `search`, `scavenge`, `find`, `witness`, `confront`, `gather`, `sabotage`, `plant`, `receive`, `cleanse`, `ceremony`, `attend`, `vote`, `boss`, `travel`
+
 ### Access Requirements
 
 1. Defeat a dungeon boss (Shadow Dungeon or Forest Dungeon)
@@ -1627,7 +1668,55 @@ canAttackNPC(npcType, location) {
 
 ## 📜 QUEST SYSTEM
 
-*"100 quests to tell the tale of a merchant's rise... or fall."*
+*"148 quests to tell the tale of a merchant's rise... or fall."*
+
+### Quest Engine Architecture
+
+The core quest engine lives in `quest-system.js` (~5700 lines). The `updateProgress()` method contains a massive switch statement with **91 objective type handlers**, covering everything from basic collect/kill/visit to 29 doom-specific types (build, establish, recruit, sabotage, escort, survive, protect, rally, witness, ceremony, cleanse, vote, etc.).
+
+**5 Quest Definition Files:**
+
+| File | Quests | Role |
+|------|--------|------|
+| `main-quests.js` (~1320 lines) | 35 quests (5 acts x 7) | Main story arc |
+| `side-quests.js` (~1970 lines) | ~50 quests (14 chains) | Side quest chains |
+| `tutorial-quests.js` (~1260 lines) | 28 quests (6 chapters) | Tutorial progression |
+| `doom-quests.js` (~1024 lines) | 15 quests (3 arcs) | **DATA layer** - survival/resistance/boss arcs |
+| `doom-quest-system.js` (~706 lines) | 19 quests (11 main + 8 side) | **RUNTIME layer** - `registerDoomQuests()` |
+
+**19 quest chains** with `prerequisite`/`nextQuest` linking across all definition files.
+
+### setupEventListeners() - Event Bridge
+
+`setupEventListeners()` registers **38 DOM event listeners** bridging game events to quest objectives. These listen on **31 unique event names**:
+
+**Core Events (19):**
+`item-received`, `item-purchased`, `trade-completed`, `enemy-defeated`, `player-location-changed`, `npc-interaction`, `npc-talked`, `area-investigated`, `dungeon-room-explored`, `gold-changed`, `item-sold`, `player-decision`, `combat-action`, `ui-action`, `item-crafted`, `city-reputation-changed`, `boss-defeated`, `encounter-started`, `item-consumed`
+
+**Doom-Specific Events (12):**
+`doom-build`, `doom-establish`, `doom-recruit`, `doom-sabotage`, `doom-escort`, `doom-day-passed`, `doom-protect`, `doom-rally`, `doom-witness`, `doom-ceremony`, `doom-cleanse`, `doom-vote`
+
+Many listeners trigger multiple `updateProgress()` calls for objective aliases (e.g. `player-location-changed` fires visit, travel, scout, escape, infiltrate, follow, track, return, enter, search, scavenge, march, secure).
+
+### presentQuestDecision() - Choice System
+
+Modal system for `decision`/`choice` objectives. Auto-triggers via `checkForPendingDecisions()` after objective updates when prior objectives are all complete and the next uncompleted one is a decision type.
+
+### completeQuest() - Reward Handling
+
+Handles all reward types with race-condition protection (`_completionInProgress` lock):
+
+```javascript
+// Reward types handled:
+rewards.gold        // Gold via GoldManager.setGold()
+rewards.experience  // XP accumulation
+rewards.reputation  // Via ReputationSystem.addDirectReputation()
+rewards.items       // Plural: { item_id: quantity } object
+rewards.item        // Singular: string item ID (legacy compat)
+rewards.title       // Player title string (e.g. 'Doom Ender')
+```
+
+Also handles `choiceRewards` for decision quests (per-choice reward sets) and `getScaledRewards()` for chain-position-based progression balancing.
 
 ### Unified Quest Info Panel
 
@@ -1669,7 +1758,7 @@ QuestSystem.getQuestInfoForLocation(locationId);
 // Returns: { questName, questId, objective, isTracked } or null
 ```
 
-### Quest Structure: 100 Total Quests
+### Quest Structure: 148 Total Quests
 
 ```javascript
 const QuestSystem = {
@@ -1682,17 +1771,31 @@ const QuestSystem = {
         act5: 7   // "The Shadow's End" - final confrontation
     },
 
-    // Side Quest Chains (50 quests - 14 chains)
+    // Side Quest Chains (~50 quests - 14 chains)
     sideQuests: {
         combatChains: 7,  // Combat-focused quest chains
         tradeChains: 7    // Trade-focused quest chains
     },
 
-    // Doom World Quests (15 quests + final boss)
+    // Tutorial Quests (28 quests - 6 chapters)
+    tutorialQuests: {
+        chapter0: 3,  // First steps
+        chapter1: 5,  // Trading basics
+        chapter2: 6,  // World exploration
+        chapter3: 5,  // Combat training
+        chapter4: 5,  // Advanced trading
+        chapter5: 4   // Final lessons
+    },
+
+    // Doom World Quests (34 total, split across 2 complementary files)
     doomQuests: {
+        // doom-quests.js (DATA layer): 15 quests, 3 arcs
         survivalArc: 5,    // Survival in the wasteland
         resistanceArc: 5,  // Building resistance
-        bossArc: 5         // Path to Greedy Won
+        bossArc: 5,        // Path to Greedy Won
+        // doom-quest-system.js (RUNTIME layer): 19 quests
+        mainStory: 11,     // 3-act main doom story
+        sideQuests: 8      // Standalone tragedy/moral choice quests
     }
 };
 ```
@@ -1712,9 +1815,15 @@ const WealthGates = {
 
 ### Key Quest Files
 
-- `quest-system.js` - Main 100-quest management
-- `doom-quests.js` - Doom World specific content
-- `initial-encounter.js` - Tutorial/intro sequence
+| File | Lines | Purpose |
+|------|-------|---------|
+| `quest-system.js` | ~5700 | Core engine: 91 objective types, 38 event listeners, quest tracking/UI |
+| `main-quests.js` | ~1320 | 35 main story quests across 5 acts |
+| `side-quests.js` | ~1970 | ~50 side quests in 14 chains |
+| `tutorial-quests.js` | ~1260 | 28 tutorial quests across 6 chapters |
+| `doom-quests.js` | ~1024 | DATA: 15 doom quests + world metadata (doomLocations, doomEconomy, doomItems) |
+| `doom-quest-system.js` | ~706 | RUNTIME: 19 doom quests + `registerDoomQuests()` integration |
+| `initial-encounter.js` | - | Tutorial/intro sequence |
 
 ---
 
@@ -2006,13 +2115,13 @@ SettingsPanel.clearAllData() {
 
 ---
 
-## 🦙 OLLAMA AI SYSTEM (v0.91.10 - Auto-Install & Auto-Download)
+## 🦙 OLLAMA AI SYSTEM (v0.92.00 - Auto-Install & Auto-Download)
 
 *"NPCs with actual opinions. What could go wrong?"*
 
 The game uses **Ollama** for AI-powered NPC dialogue with **automatic installation prompts** and **model auto-download**. When Ollama isn't available, NPCs use pre-written fallback responses from `npc-fallbacks.json`.
 
-### Automatic Setup Flow (v0.91.10+)
+### Automatic Setup Flow (v0.92.00+)
 
 1. **First Launch** - Game checks if Ollama is running at `localhost:11434`
 2. **Not Found** - Shows install prompt with options:
@@ -2362,7 +2471,7 @@ We try to maintain backwards compatibility. We fail sometimes. Your old saves mi
 
 *"Things we'd do if we had infinite time and zero responsibilities."*
 
-**DONE (v0.91):**
+**DONE (v0.92):**
 - [x] Proper event bus architecture (EventBus with batch support)
 - [x] State management (PlayerStateManager, WorldStateManager, UIStateManager)
 - [x] Proper initialization system (Bootstrap with dependency resolution)
@@ -2447,7 +2556,7 @@ permissions:
 
 ## 📅 VERSION HISTORY
 
-### v0.91.10 - File Structure Cleanup (2025-12-13)
+### v0.92.00 - File Structure Cleanup (2025-12-13)
 
 **Session #87: The Great Root Cleanup**
 
@@ -2469,7 +2578,7 @@ permissions:
 
 ---
 
-### v0.91.10 - The Bootstrap Refactor (2025-12-10)
+### v0.92.00 - The Bootstrap Refactor (2025-12-10)
 
 **Sessions #70-86: The Great Architectural Unfuckening**
 
@@ -2607,6 +2716,6 @@ permissions:
 
     May your builds compile and your bugs be reproducible.
 
-                                    - Unity AI Lab, v0.91.10, 2025
+                                    - Unity AI Lab, v0.92.00, 2025
 ═══════════════════════════════════════════════════════════════════════
 ```

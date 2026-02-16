@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // DOOM NPC INSTRUCTION TEMPLATES - Voices from the apocalypse
 // ═══════════════════════════════════════════════════════════════
-// Version: 0.91.10 | Unity AI Lab
+// Version: 0.92.00 | Unity AI Lab
 // Every NPC has been broken by the doom. Their responses reflect
 // desperation, trauma, survival instinct, and loss.
 // ═══════════════════════════════════════════════════════════════
@@ -88,143 +88,189 @@ NEVER be cheerful. NEVER offer false hope. Show your trauma through your words.`
         tainted: 'Something dark touched you. Changed you. Corrupted you.',
         not_alone: 'Something else is in here with you. Speaks in your head.',
         mad: 'Sanity shattered. Words tumble out wrong. Logic is a stranger.',
+
+        // Additional demeanors referenced by doom NPCs
+        stranded: 'Stuck with no way out. Every direction is a wall.',
+        defensive: 'Barricaded. Fortified. Nothing gets in without your say.',
+        fierce: 'Protective rage. Cross the line and find out what happens.',
+        fortified: 'Built walls around everything. Physical and emotional. Fortress mentality.',
+        watchful: 'Eyes always scanning. Something is coming. Be ready.',
+        sightless: 'Blind but seeing more than the sighted. Ironic clarity.',
+        spooked: 'Something scared you that shouldn\'t exist. It\'s still out there.',
+        mute: 'Voice taken or surrendered. Communicate in whispers and gestures.',
+        resolute: 'Unbending. Unbreaking. Will hold this position until death.',
+        isolated: 'Alone so long that company feels alien. Forgot how to talk.',
+        surrounded: 'Danger on all sides. Siege mentality. No safe direction.',
+        visionary: 'See things others can\'t. Futures. Pasts. The truth between.',
+        weary: 'Bone-tired. Soul-tired. Every step costs double.',
+        trapped: 'No way out. Walls closing in. Running out of options and air.',
     },
 
     // ═══════════════════════════════════════════════════════════════
     // ACTION-SPECIFIC DOOM INSTRUCTIONS
     // ═══════════════════════════════════════════════════════════════
 
+    // Build rich character context from embedded data
+    _buildCharacterContext(spec) {
+        let ctx = '';
+        if (spec.personality) ctx += `\nPERSONALITY: ${spec.personality}`;
+        if (spec.speakingStyle) ctx += `\nSPEAKING STYLE: ${spec.speakingStyle}`;
+        if (spec.background) ctx += `\nBACKGROUND: ${spec.background}`;
+        if (spec.traits?.length) ctx += `\nTRAITS: ${spec.traits.join(', ')}`;
+        if (spec.voiceInstructions) ctx += `\nVOICE: ${spec.voiceInstructions}`;
+        return ctx;
+    },
+
+    // Build greeting examples from embedded data
+    _buildExamples(array, label) {
+        if (!array?.length) return '';
+        return `\n${label} (use as style guide, do NOT copy verbatim):\n${array.map(g => `- "${g}"`).join('\n')}`;
+    },
+
     // GREETING in the doom
     _buildDoomGreetingInstruction(spec, context) {
         const demeanor = this.demeanors[spec.demeanor] || this.demeanors.broken;
+        const charCtx = this._buildCharacterContext(spec);
+        const greetingExamples = this._buildExamples(spec.greetings, 'GREETING EXAMPLES');
         return `${this._doomContext}
-You are ${spec.title || spec.type} in ${context.locationName || 'the ruins'}. ${demeanor}
-The player approaches. Greet them with ONE desperate sentence acknowledging the doom.
-Maybe warn them. Maybe beg for food. Maybe just stare.
-Example: "Still alive? That's more than most can say..." or "Please... do you have water?"`;
+You are ${spec.title || spec.type} in ${context.locationName || 'the ruins'}.
+DEMEANOR: ${demeanor}${charCtx}${greetingExamples}
+
+The player approaches. Greet them in character - ONE to TWO sentences.`;
     },
 
     // TRADING in the doom (barter system)
     _buildDoomTradeInstruction(spec, context) {
         const demeanor = this.demeanors[spec.demeanor] || this.demeanors.calculating;
+        const charCtx = this._buildCharacterContext(spec);
         return `${this._doomContext}
-You are ${spec.title || spec.type}. ${demeanor}
+You are ${spec.title || spec.type}.
+DEMEANOR: ${demeanor}${charCtx}
 GOLD IS WORTHLESS. Only trade food, water, weapons, medicine, and survival gear.
 Say ONE sentence about what you need most (food/water/weapons).
-Then include {openMarket} to open the barter panel.
-Example: "I'd kill for clean water... what have you got? {openMarket}"`;
+Then include {openMarket} to open the barter panel.`;
     },
 
     // BROWSING GOODS in the doom
     _buildDoomBrowseGoodsInstruction(spec, context) {
         const demeanor = this.demeanors[spec.demeanor] || this.demeanors.desperate;
+        const charCtx = this._buildCharacterContext(spec);
         const inventory = context.inventory || [];
         const items = inventory.slice(0, 3).join(', ') || 'scraps and survival gear';
         return `${this._doomContext}
-You are ${spec.title || spec.type}. ${demeanor}
+You are ${spec.title || spec.type}.
+DEMEANOR: ${demeanor}${charCtx}
 Show your meager wares: ${items}. Say ONE sentence about what you're hoarding.
-Then include {openMarket}.
-Example: "All I have left... took it from the dead. {openMarket}"`;
+Then include {openMarket}.`;
     },
 
     // QUEST GIVING in the doom
     _buildDoomQuestGiveInstruction(spec, context) {
         const demeanor = this.demeanors[spec.demeanor] || this.demeanors.desperate;
+        const charCtx = this._buildCharacterContext(spec);
         const quest = context.availableQuest;
         const questName = quest?.name || 'a desperate task';
         const questDesc = quest?.description || 'We need help to survive.';
         return `${this._doomContext}
-You are ${spec.title || spec.type}. ${demeanor}
+You are ${spec.title || spec.type}.
+DEMEANOR: ${demeanor}${charCtx}
 You have a desperate task: "${questName}" - ${questDesc}
 Explain in TWO sentences why this matters for survival. Sound desperate but not begging.
-Then include {startQuest:${quest?.id || 'doom_quest'}}.
-Example: "The water source is poisoned. If someone doesn't reach the spring... we all die. {startQuest:doom_water}"`;
+Then include {startQuest:${quest?.id || 'doom_quest'}}.`;
     },
 
     // QUEST PROGRESS in the doom
     _buildDoomQuestProgressInstruction(spec, context) {
         const demeanor = this.demeanors[spec.demeanor] || this.demeanors.hopeless;
+        const charCtx = this._buildCharacterContext(spec);
         const quest = context.activeQuest;
         return `${this._doomContext}
-You are ${spec.title || spec.type}. ${demeanor}
+You are ${spec.title || spec.type}.
+DEMEANOR: ${demeanor}${charCtx}
 The player is working on: "${quest?.name || 'survival'}".
 Progress: ${quest?.progress || 'unknown'}.
-Say ONE sentence - either encouragement tinged with despair, or grim acknowledgment.
-Example: "You're still trying? ...Maybe there's hope after all. Or maybe we're all fools."`;
+Say ONE sentence - either encouragement tinged with despair, or grim acknowledgment.`;
     },
 
     // QUEST COMPLETE in the doom
     _buildDoomQuestCompleteInstruction(spec, context) {
         const demeanor = this.demeanors[spec.demeanor] || this.demeanors.mourning;
+        const charCtx = this._buildCharacterContext(spec);
         const quest = context.completedQuest;
         return `${this._doomContext}
-You are ${spec.title || spec.type}. ${demeanor}
+You are ${spec.title || spec.type}.
+DEMEANOR: ${demeanor}${charCtx}
 The player completed: "${quest?.name || 'the task'}".
 Express gratitude mixed with grief - you're alive, but at what cost?
-Say ONE sentence, then include {completeQuest:${quest?.id || 'quest'}}.
-Example: "You did it... we live another day. {completeQuest:doom_water} But my brother didn't make it."`;
+Say ONE sentence, then include {completeQuest:${quest?.id || 'quest'}}.`;
     },
 
     // LOCATION INFO in the doom
     _buildDoomLocationInfoInstruction(spec, context) {
         const demeanor = this.demeanors[spec.demeanor] || this.demeanors.tormented;
+        const charCtx = this._buildCharacterContext(spec);
         const locationDesc = context.locationDescription || 'This place is death.';
         return `${this._doomContext}
-You are ${spec.title || spec.type}. ${demeanor}
+You are ${spec.title || spec.type}.
+DEMEANOR: ${demeanor}${charCtx}
 Describe ${context.locationName || 'this place'} in the doom: ${locationDesc}
-Say ONE sentence about what happened here and who died.
-Example: "Greendale Ashes... we burned our own crops to stop the plague. The children... the children were still in the fields."`;
+Say ONE sentence about what happened here and who died.`;
     },
 
     // DIRECTIONS in the doom
     _buildDoomDirectionsInstruction(spec, context) {
         const demeanor = this.demeanors[spec.demeanor] || this.demeanors.paranoid;
+        const charCtx = this._buildCharacterContext(spec);
         const destination = context.destination || 'safety';
         return `${this._doomContext}
-You are ${spec.title || spec.type}. ${demeanor}
+You are ${spec.title || spec.type}.
+DEMEANOR: ${demeanor}${charCtx}
 The player asks how to reach ${destination}.
-Give directions in ONE sentence, but warn of dangers on the path.
-Example: "The Fallen Throne? North, past the mass graves. Travel by day - things hunt at night."`;
+Give directions in ONE sentence, but warn of dangers on the path.`;
     },
 
     // GOSSIP/RUMORS in the doom
     _buildDoomGossipInstruction(spec, context) {
         const demeanor = this.demeanors[spec.demeanor] || this.demeanors.manic;
+        const charCtx = this._buildCharacterContext(spec);
         return `${this._doomContext}
-You are ${spec.title || spec.type}. ${demeanor}
+You are ${spec.title || spec.type}.
+DEMEANOR: ${demeanor}${charCtx}
 Share a dark rumor about the doom in ONE sentence.
-Could be about: other survivors, the Shadow Throne, creatures in the dark, lost supplies, safe havens that aren't safe.
-Example: "They say the druids tried to stop it. Now they serve the darkness."`;
+Could be about: other survivors, the Shadow Throne, creatures in the dark, lost supplies, safe havens that aren't safe.`;
     },
 
     // HEALING/MEDICINE in the doom
     _buildDoomHealingInstruction(spec, context) {
         const demeanor = this.demeanors[spec.demeanor] || this.demeanors.clinical;
+        const charCtx = this._buildCharacterContext(spec);
         return `${this._doomContext}
-You are ${spec.title || spec.type}. ${demeanor}
+You are ${spec.title || spec.type}.
+DEMEANOR: ${demeanor}${charCtx}
 The player needs healing. Medicine is precious - more valuable than gold.
-Say ONE sentence about the cost (food, water, or service in return), then include {openHealing}.
-Example: "I'll treat you... for three days' worth of food. {openHealing} Medicine doesn't grow in ruins."`;
+Say ONE sentence about the cost (food, water, or service in return), then include {openHealing}.`;
     },
 
     // INNKEEPER/REST in the doom
     _buildDoomRestInstruction(spec, context) {
         const demeanor = this.demeanors[spec.demeanor] || this.demeanors.protective || this.demeanors.jumpy;
+        const charCtx = this._buildCharacterContext(spec);
         return `${this._doomContext}
-You are ${spec.title || spec.type} running a refuge. ${demeanor}
+You are ${spec.title || spec.type} running a refuge.
+DEMEANOR: ${demeanor}${charCtx}
 The player needs rest. Shelter is rare and precious.
-Say ONE sentence about the cost (food/water) and safety, then include {openRest}.
-Example: "A safe corner, one night, costs a day's ration. {openRest} And you take a watch shift."`;
+Say ONE sentence about the cost (food/water) and safety, then include {openRest}.`;
     },
 
     // CRAFTING in the doom
     _buildDoomCraftingInstruction(spec, context) {
         const demeanor = this.demeanors[spec.demeanor] || this.demeanors.obsessed;
+        const charCtx = this._buildCharacterContext(spec);
         return `${this._doomContext}
-You are ${spec.title || spec.type}. ${demeanor}
+You are ${spec.title || spec.type}.
+DEMEANOR: ${demeanor}${charCtx}
 Crafting keeps you sane. The player wants something made.
-Say ONE sentence about what materials you need (survival items only), then include {openCrafting}.
-Example: "A weapon? Bring me iron, leather, and food for the forge fire. {openCrafting}"`;
+Say ONE sentence about what materials you need (survival items only), then include {openCrafting}.`;
     },
 
     // CHAT/CONVERSATION in the doom (with quest context)
@@ -246,9 +292,13 @@ Example: "A weapon? Bring me iron, leather, and food for the forge fire. {openCr
             questContext += `\nCOMPLETABLE QUESTS: ${completeInfo}. Include the command to complete them. Reward with grim acknowledgment.`;
         }
 
+        const charCtx = this._buildCharacterContext(spec);
+        const greetingExamples = this._buildExamples(spec.greetings, 'GREETING STYLE EXAMPLES');
+
         // Build doom-appropriate response
         return `${this._doomContext}
-You are ${spec.title || spec.type} in ${context.locationName || 'the doom'}. ${demeanor}
+You are ${spec.title || spec.type} in ${context.locationName || 'the doom'}.
+DEMEANOR: ${demeanor}${charCtx}${greetingExamples}
 
 The player is speaking with you. Respond in character - traumatized, desperate, broken by the doom.
 Keep responses SHORT - one to three sentences maximum. Every word costs energy you don't have.
@@ -370,12 +420,33 @@ Remember: Gold is worthless. Hope is dead. Survival is all that matters.`;
     // MAIN BUILD FUNCTION
     // ═══════════════════════════════════════════════════════════════
 
+    // Helper: get doom NPC voice for TTS
+    getDoomNPCVoice(npcType) {
+        // Check doom embedded data first
+        if (typeof DOOM_NPC_EMBEDDED_DATA !== 'undefined' && DOOM_NPC_EMBEDDED_DATA[npcType]?.voice) {
+            return DOOM_NPC_EMBEDDED_DATA[npcType].voice;
+        }
+        // Fall back to base type voice from normal NPC data
+        const baseType = DoomWorldNPCs?.npcTypes?.[npcType]?.base;
+        if (baseType && typeof NPC_EMBEDDED_DATA !== 'undefined' && NPC_EMBEDDED_DATA[baseType]?.voice) {
+            return NPC_EMBEDDED_DATA[baseType].voice;
+        }
+        return 'am_michael'; // default fallback
+    },
+
     buildDoomInstruction(npcType, action, context = {}) {
-        const spec = {
-            type: npcType,
-            title: DoomWorldNPCs?.npcTypes?.[npcType]?.title || npcType,
-            demeanor: DoomWorldNPCs?.npcTypes?.[npcType]?.demeanor || 'broken'
-        };
+        // Get FULL spec from doom embedded data if available
+        let spec;
+        if (typeof DOOM_NPC_EMBEDDED_DATA !== 'undefined' && DOOM_NPC_EMBEDDED_DATA[npcType]) {
+            spec = DOOM_NPC_EMBEDDED_DATA[npcType];
+        } else {
+            // Minimal fallback (existing behavior)
+            spec = {
+                type: npcType,
+                title: DoomWorldNPCs?.npcTypes?.[npcType]?.title || npcType,
+                demeanor: DoomWorldNPCs?.npcTypes?.[npcType]?.demeanor || 'broken'
+            };
+        }
 
         // Check for type-specific template first
         const typeTemplate = this.doomNPCTemplates[npcType];
